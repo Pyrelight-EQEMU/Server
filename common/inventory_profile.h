@@ -131,7 +131,7 @@ namespace EQ
 		ItemInstance* GetCursorItem();
 
 		// Swap items in inventory
-		enum SwapItemFailState : int8 { swapInvalid = -1, swapPass = 0, swapNotAllowed, swapNullData, swapRaceClass, swapDeity, swapLevel };
+		enum SwapItemFailState : int8 { swapInvalid = -1, swapPass = 0, swapNotAllowed, swapNullData, swapRaceClass, swapDeity, swapLevel, swapItemLore, swapAugLore };
 		bool SwapItem(int16 source_slot, int16 destination_slot, SwapItemFailState& fail_state, uint16 race_id = RACE_DOUG_0, uint8 class_id = NO_CLASS, uint16 deity_id = deity::DeityType::DeityUnknown, uint8 level = 0);
 
 		// Remove item from inventory

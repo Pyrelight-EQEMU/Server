@@ -401,10 +401,12 @@ public:
 	inline bool GetPVP(bool inc_temp = true) const { return m_pp.pvp != 0 || (inc_temp && temp_pvp); }
 	inline bool GetGM() const { return m_pp.gm != 0; }
 
-	inline void SetBaseClass(uint32 i) { m_pp.class_=i; }
+	void SetBaseClass(uint32 class_id);
 	inline void SetBaseRace(uint32 i) { m_pp.race=i; }
 	inline void SetBaseGender(uint32 i) { m_pp.gender=i; }
 	inline void SetDeity(uint32 i) {m_pp.deity=i;deity=i;}
+
+	void SetActiveClass(uint8 class_id);
 
 	void SetTrackingID(uint32 entity_id);
 
@@ -1724,6 +1726,7 @@ private:
 	void DoManaRegen();
 	void DoStaminaHungerUpdate();
 	void CalcRestState();
+	void ClearRestingDetrimentalEffects();
 	// if they have aggro (AggroCount != 0) their timer is saved in m_pp.RestTimer, else we need to get current timer
 	inline uint32 GetRestTimer() const { return AggroCount ? m_pp.RestTimer : rest_timer.GetRemainingTime() / 1000; }
 	void UpdateRestTimer(uint32 new_timer);

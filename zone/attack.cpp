@@ -565,7 +565,7 @@ bool Mob::AvoidDamage(Mob *other, DamageHitInfo &hit)
 	}
 
 	// dodge
-	if (CanThisClassDodge() && (InFront || GetClass() == MONK)) {
+	if (CanThisClassDodge() && (InFront || GetClass() == MONK || GetClass() == BEASTLORD)) {
 		if (IsClient())
 			CastToClient()->CheckIncreaseSkill(EQ::skills::SkillDodge, other, -10);
 		// check auto discs ... I guess aa/items too :P
@@ -746,7 +746,11 @@ int Mob::GetClassRaceACBonus()
 {
 	int ac_bonus = 0;
 	auto level = GetLevel();
-	if (GetClass() == MONK) {
+	//Pyrelight Custom Code
+	// This is the code for the overweight AC penalty which we don't want to apply
+	// for Beastlords.
+	/*
+	if (GetClass() == MONK || GetClass() == BEASTLORD) {
 		int hardcap = 30;
 		int softcap = 14;
 		if (level > 99) {
@@ -830,6 +834,7 @@ int Mob::GetClassRaceACBonus()
 			ac_bonus -= static_cast<int>(temp * multiplier);
 		}
 	}
+	*/
 
 	if (GetClass() == ROGUE) {
 		int level_scaler = level - 26;
@@ -1048,6 +1053,19 @@ void Mob::MeleeMitigation(Mob *attacker, DamageHitInfo &hit, ExtraAttackOptions 
 
 	// +0.5 for rounding, min to 1 dmg
 	hit.damage_done = std::max(static_cast<int>(roll * static_cast<double>(hit.base_damage) + 0.5), 1);
+
+	//Pyrelight Custom Code
+	// Heroic STR increases damage by 0.1%
+	if (attacker->IsClient() && attacker->GetHeroicSTR() > 0) {
+		hit.damage_done *= ((attacker->GetHeroicSTR() / 1000) + 1);
+	}
+
+	//Pyrelight Custom Code
+	// Heroic STA Blocks up to 50% of damage at a rate of 10 damage per 1 point of the stat
+	if (defender->IsClient() && defender->GetHeroicSTA() > 0) {
+		hit.damage_done = std::max(static_cast<int64>(0.50 * hit.damage_done), static_cast<int64>(hit.damage_done - (10 * defender->GetHeroicSTA())));
+	}
+	
 
 	Log(Logs::Detail, Logs::Attack, "mitigation %d vs offense %d. base %d rolled %f damage %d", mitigation, hit.offense, hit.base_damage, roll, hit.damage_done);
 }
@@ -3220,21 +3238,31 @@ uint8 Mob::GetWeaponDamageBonus(const EQ::ItemData *weapon, bool offhand)
 		return 1 + ((level - 28) / 3); // how does weaponless scale?
 
 	auto delay = weapon->Delay;
-	if (weapon->IsType1HWeapon() || weapon->ItemType == EQ::item::ItemTypeMartial) {
+	if (weapon->IsType1HWeapon()) {
+		auto bonus = 0;
 		// we assume sinister strikes is checked before calling here
 		if (!offhand) {
 			if (delay <= 39)
-				return 1 + ((level - 28) / 3);
+				bonus = 1 + ((level - 28) / 3);
 			else if (delay < 43)
-				return 2 + ((level - 28) / 3) + ((delay - 40) / 3);
+				bonus = 2 + ((level - 28) / 3) + ((delay - 40) / 3);
 			else if (delay < 45)
-				return 3 + ((level - 28) / 3) + ((delay - 40) / 3);
+				bonus = 3 + ((level - 28) / 3) + ((delay - 40) / 3);
 			else if (delay >= 45)
-				return 4 + ((level - 28) / 3) + ((delay - 40) / 3);
+				bonus = 4 + ((level - 28) / 3) + ((delay - 40) / 3);
 		}
 		else {
-			return 1 + ((level - 40) / 3) * (delay / 30); // YOOO shit's useless waste of AAs
+			bonus = 1 + ((level - 40) / 3) * (delay / 30); // YOOO shit's useless waste of AAs
 		}
+
+		//Pyrelight Custom Code
+		// This adds a special effect for the Monk epic which doubles the damage bonus
+		// for martial (h2h) weapons.
+		if (weapon->ItemType == EQ::item::ItemTypeMartial && IsClient() && CastToClient()->GetItemIDAt(12) == 10652 && GetLevel() > 46) {
+			bonus = bonus * 2;
+		}
+
+		return bonus;
 	}
 	else {
 		// 2h damage bonus
@@ -3296,23 +3324,9 @@ int Mob::GetHandToHandDamage(void)
 		12, 12, 12, 12, 13, 13, 13, 13, 13, 14, // 41-50
 		14, 14, 14, 14, 14, 14, 14, 14, 14, 14, // 51-60
 		14, 14 };                                // 61-62
-	static uint8 bst_dmg[] = { 99,
-		4, 4, 4, 4, 4, 5, 5, 5, 5, 5,        // 1-10
-		5, 6, 6, 6, 6, 6, 6, 7, 7, 7,        // 11-20
-		7, 7, 7, 8, 8, 8, 8, 8, 8, 9,        // 21-30
-		9, 9, 9, 9, 9, 10, 10, 10, 10, 10,   // 31-40
-		10, 11, 11, 11, 11, 11, 11, 12, 12 }; // 41-49
-	if (GetClass() == MONK) {
-		if (IsClient() && CastToClient()->GetItemIDAt(12) == 10652 && GetLevel() > 50)
-			return 9;
-		if (level > 62)
-			return 15;
+
+	if (GetClass() == MONK || GetClass() == BEASTLORD) {
 		return mnk_dmg[level];
-	}
-	else if (GetClass() == BEASTLORD) {
-		if (level > 49)
-			return 13;
-		return bst_dmg[level];
 	}
 	return 2;
 }
@@ -3334,47 +3348,18 @@ int Mob::GetHandToHandDelay(void)
 		return iksar - epic / 21 + 38;
 	}
 
-	int delay = 35;
-	static uint8 mnk_hum_delay[] = { 99,
+	static uint8 mnk_delay[] = { 99,
 		35, 35, 35, 35, 35, 35, 35, 35, 35, 35, // 1-10
 		35, 35, 35, 35, 35, 35, 35, 35, 35, 35, // 11-20
 		35, 35, 35, 35, 35, 35, 35, 34, 34, 34, // 21-30
 		34, 33, 33, 33, 33, 32, 32, 32, 32, 31, // 31-40
 		31, 31, 31, 30, 30, 30, 30, 29, 29, 29, // 41-50
 		29, 28, 28, 28, 28, 27, 27, 27, 27, 26, // 51-60
-		24, 22 };                                // 61-62
-	static uint8 mnk_iks_delay[] = { 99,
-		35, 35, 35, 35, 35, 35, 35, 35, 35, 35, // 1-10
-		35, 35, 35, 35, 35, 35, 35, 35, 35, 35, // 11-20
-		35, 35, 35, 35, 35, 35, 35, 35, 35, 34, // 21-30
-		34, 34, 34, 34, 34, 33, 33, 33, 33, 33, // 31-40
-		33, 32, 32, 32, 32, 32, 32, 31, 31, 31, // 41-50
-		31, 31, 31, 30, 30, 30, 30, 30, 30, 29, // 51-60
-		25, 23 };                                // 61-62
-	static uint8 bst_delay[] = { 99,
-		35, 35, 35, 35, 35, 35, 35, 35, 35, 35, // 1-10
-		35, 35, 35, 35, 35, 35, 35, 35, 35, 35, // 11-20
-		35, 35, 35, 35, 35, 35, 35, 35, 34, 34, // 21-30
-		34, 34, 34, 33, 33, 33, 33, 33, 32, 32, // 31-40
-		32, 32, 32, 31, 31, 31, 31, 31, 30, 30, // 41-50
-		30, 30, 30, 29, 29, 29, 29, 29, 28, 28, // 51-60
-		28, 28, 28, 27, 27, 27, 27, 27, 26, 26, // 61-70
-		26, 26, 26 };                            // 71-73
+		24, 22 };                        // 61-62
 
-	if (GetClass() == MONK) {
-		// Have a look to see if we have epic fists on
-		if (IsClient() && CastToClient()->GetItemIDAt(12) == 10652 && GetLevel() > 50)
-			return 16;
+	if (GetClass() == MONK || GetClass() == BEASTLORD) {\
 		int level = GetLevel();
-		if (level > 62)
-			return GetRace() == IKSAR ? 21 : 20;
-		return GetRace() == IKSAR ? mnk_iks_delay[level] : mnk_hum_delay[level];
-	}
-	else if (GetClass() == BEASTLORD) {
-		int level = GetLevel();
-		if (level > 73)
-			return 25;
-		return bst_delay[level];
+		return mnk_delay[level];
 	}
 	return 35;
 }
@@ -4076,7 +4061,7 @@ void Mob::CommonDamage(Mob* attacker, int64 &damage, const uint16 spell_id, cons
 				}
 			}
 			else if (skill_used == EQ::skills::SkillKick &&
-				(attacker->GetLevel() > 55 || attacker->IsNPC()) && GetClass() == WARRIOR) {
+				(attacker->GetLevel() > 55 || attacker->IsNPC()) && (GetClass() == WARRIOR || GetClass() == PALADIN)) {
 				can_stun = true;
 			}
 
@@ -5037,7 +5022,7 @@ void Mob::TryCriticalHit(Mob *defender, DamageHitInfo &hit, ExtraAttackOptions *
 	// We either require an innate crit chance or some SPA 169 to crit
 	bool innate_crit = false;
 	int crit_chance = GetCriticalChanceBonus(hit.skill);
-	if ((GetClass() == WARRIOR || GetClass() == BERSERKER) && GetLevel() >= 12)
+	if (((GetClass() == WARRIOR || GetClass() == PALADIN) || (GetClass() == BERSERKER || GetClass() == SHADOWKNIGHT)) && GetLevel() >= 12)
 		innate_crit = true;
 	else if (GetClass() == RANGER && GetLevel() >= 12 && hit.skill == EQ::skills::SkillArchery)
 		innate_crit = true;
@@ -5060,8 +5045,8 @@ void Mob::TryCriticalHit(Mob *defender, DamageHitInfo &hit, ExtraAttackOptions *
 			dex_bonus = 255 + ((dex_bonus - 255) / 5);
 		dex_bonus += 45; // chances did not match live without a small boost
 
-						 // so if we have an innate crit we have a better chance, except for ber throwing
-		if (!innate_crit || (GetClass() == BERSERKER && hit.skill == EQ::skills::SkillThrowing))
+		// so if we have an innate crit we have a better chance, except for ber throwing
+		if (!innate_crit || ((GetClass() == BERSERKER || GetClass() == SHADOWKNIGHT) && hit.skill == EQ::skills::SkillThrowing))
 			dex_bonus = dex_bonus * 3 / 5;
 
 		if (crit_chance)
@@ -5265,7 +5250,7 @@ void Mob::DoRiposte(Mob *defender)
 	if (DoubleRipChance && zone->random.Roll(DoubleRipChance)) {
 		LogCombat("Preforming a return SPECIAL ATTACK ([{}] percent chance)", DoubleRipChance);
 
-		if (defender->GetClass() == MONK)
+		if (defender->GetClass() == MONK || defender->GetClass() == BEASTLORD)
 			defender->MonkSpecialAttack(this, defender->aabonuses.GiveDoubleRiposte[SBIndex::DOUBLE_RIPOSTE_SKILL]);
 		else if (defender->IsClient()) // so yeah, even if you don't have the skill you can still do the attack :P (and we don't crash anymore)
 			defender->CastToClient()->DoClassAttacks(this, defender->aabonuses.GiveDoubleRiposte[SBIndex::DOUBLE_RIPOSTE_SKILL], true);
@@ -5282,7 +5267,7 @@ void Mob::ApplyMeleeDamageMods(uint16 skill, int64 &damage, Mob *defender, Extra
 		dmgbonusmod += opts->melee_damage_bonus_flat;
 
 	if (defender) {
-		if (defender->IsOfClientBotMerc() && defender->GetClass() == WARRIOR) {
+		if (defender->IsOfClientBotMerc() && (defender->GetClass() == WARRIOR || defender->GetClass() == PALADIN)) {
 			dmgbonusmod -= 5;
 		}
 		// 168 defensive
@@ -5426,7 +5411,7 @@ const DamageTable &Mob::GetDamageTable() const
 		{ 415, 15,  40 }, // 105
 	};
 
-	bool monk = GetClass() == MONK;
+	bool monk = GetClass() == MONK || GetClass() == BEASTLORD;
 	bool melee = IsWarriorClass();
 	// tables caped at 105 for now -- future proofed for a while at least :P
 	int level = std::min(static_cast<int>(GetLevel()), 105);
@@ -5858,7 +5843,7 @@ void Mob::CommonOutgoingHitSuccess(Mob* defender, DamageHitInfo &hit, ExtraAttac
 
 	// BER weren't parsing the halving
 	if (hit.skill == EQ::skills::SkillArchery ||
-		(hit.skill == EQ::skills::SkillThrowing && GetClass() != BERSERKER))
+		(hit.skill == EQ::skills::SkillThrowing && (GetClass() != BERSERKER && GetClass() != SHADOWKNIGHT)))
 		hit.damage_done /= 2;
 
 	if (hit.damage_done < 1)
@@ -5896,7 +5881,7 @@ void Mob::CommonOutgoingHitSuccess(Mob* defender, DamageHitInfo &hit, ExtraAttac
 				hit.damage_done = ass;
 		}
 	}
-	else if (hit.skill == EQ::skills::SkillFrenzy && GetClass() == BERSERKER && GetLevel() > 50) {
+	else if (hit.skill == EQ::skills::SkillFrenzy && (GetClass() == BERSERKER || GetClass() == SHADOWKNIGHT) && GetLevel() > 50) {
 		extra_mincap = 4 * GetLevel() / 5;
 	}
 
@@ -6304,10 +6289,51 @@ void Mob::DoMainHandAttackRounds(Mob *target, ExtraAttackOptions *opts)
 
 	if (RuleB(Combat, UseLiveCombatRounds)) {
 		// A "quad" on live really is just a successful dual wield where both double attack
-		// The mobs that could triple lost the ability to when the triple attack skill was added in
-		Attack(target, EQ::invslot::slotPrimary, false, false, false, opts);
+		// The mobs that could triple lost the ability to when the triple attack skill was added in		
+		if (Attack(target, EQ::invslot::slotPrimary, false, false, false, opts)) {
+			//Pyrelight Custom Code
+			// Heroic AGI has the most complicated extra effect.
+			// Having it gives you a chance to perform extra attacks. Getting an extra attack 'depletes' some amount of your
+			// effective HAGI and gives you a chance to use the remaining to make another. There is always a 25% chance to fail
+			// the extra attack, and if any attack here misses then the chain stops.
+			if (IsClient() && GetHeroicAGI() > 0) {
+				auto effective_hagi = GetHeroicAGI();
+				while (effective_hagi > 0) {
+					if (zone->random.Roll(75) && zone->random.Roll(effective_hagi)) {
+						if (Attack(target, EQ::invslot::slotPrimary, false, false, false, opts)) {
+							effective_hagi = effective_hagi - zone->random.Real(1,150);
+						} else {
+							break;
+						}						
+					} else {
+						break;
+					}
+				}
+			}
+		}	
+
 		if (CanThisClassDoubleAttack() && CheckDoubleAttack()) {
-			Attack(target, EQ::invslot::slotPrimary, false, false, false, opts);
+			if (Attack(target, EQ::invslot::slotPrimary, false, false, false, opts)) {
+				//Pyrelight Custom Code
+				// Heroic AGI has the most complicated extra effect.
+				// Having it gives you a chance to perform extra attacks. Getting an extra attack 'depletes' some amount of your
+				// effective HAGI and gives you a chance to use the remaining to make another. There is always a 25% chance to fail
+				// the extra attack, and if any attack here misses then the chain stops.
+				if (IsClient() && GetHeroicAGI() > 0) {
+					auto effective_hagi = GetHeroicAGI();
+					while (effective_hagi > 0) {
+						if (zone->random.Roll(75) && zone->random.Roll(effective_hagi)) {
+							if (Attack(target, EQ::invslot::slotPrimary, false, false, false, opts)) {
+								effective_hagi = effective_hagi - zone->random.Real(1,150);
+							} else {
+								break;
+							}						
+						} else {
+							break;
+						}
+					}
+				}
+			}	
 			if ((IsPet() || IsTempPet()) && IsPetOwnerClient()) {
 				int chance = spellbonuses.PC_Pet_Flurry + itembonuses.PC_Pet_Flurry + aabonuses.PC_Pet_Flurry;
 				if (chance && zone->random.Roll(chance))
@@ -6364,10 +6390,49 @@ void Mob::DoOffHandAttackRounds(Mob *target, ExtraAttackOptions *opts)
 		(RuleB(Combat, UseLiveCombatRounds) && GetSpecialAbility(SPECATK_QUAD))) ||
 		GetEquippedItemFromTextureSlot(EQ::textures::weaponSecondary) != 0) {
 		if (CheckDualWield()) {
-			Attack(target, EQ::invslot::slotSecondary, false, false, false, opts);
+			if (Attack(target, EQ::invslot::slotSecondary, false, false, false, opts)) {
+				//Pyrelight Custom Code
+				// Heroic AGI has the most complicated extra effect.
+				// Having it gives you a chance to perform extra attacks. Getting an extra attack 'depletes' some amount of your
+				// effective HAGI and gives you a chance to use the remaining to make another. There is always a 25% chance to fail
+				// the extra attack, and if any attack here misses then the chain stops.
+				if (IsClient() && GetHeroicAGI() > 0) {
+					auto effective_hagi = GetHeroicAGI();
+					while (effective_hagi > 0) {
+						if (zone->random.Roll(75) && zone->random.Roll(effective_hagi)) {
+							if (Attack(target, EQ::invslot::slotPrimary, false, false, false, opts)) {
+								effective_hagi = effective_hagi - zone->random.Real(1,150);
+							} else {
+								break;
+							}						
+						} else {
+							break;
+						}
+					}
+				}
+			}
 			if (CanThisClassDoubleAttack() && GetLevel() > 35 && CheckDoubleAttack()) {
-				Attack(target, EQ::invslot::slotSecondary, false, false, false, opts);
-
+				if (Attack(target, EQ::invslot::slotPrimary, false, false, false, opts)) {
+					//Pyrelight Custom Code
+					// Heroic AGI has the most complicated extra effect.
+					// Having it gives you a chance to perform extra attacks. Getting an extra attack 'depletes' some amount of your
+					// effective HAGI and gives you a chance to use the remaining to make another. There is always a 25% chance to fail
+					// the extra attack, and if any attack here misses then the chain stops.
+					if (IsClient() && GetHeroicAGI() > 0) {
+						auto effective_hagi = GetHeroicAGI();
+						while (effective_hagi > 0) {
+							if (zone->random.Roll(75) && zone->random.Roll(effective_hagi)) {
+								if (Attack(target, EQ::invslot::slotPrimary, false, false, false, opts)) {
+									effective_hagi = effective_hagi - zone->random.Real(1,150);
+								} else {
+									break;
+								}						
+							} else {
+								break;
+							}
+						}
+					}
+				}
 				if ((IsPet() || IsTempPet()) && IsPetOwnerClient()) {
 					int chance = spellbonuses.PC_Pet_Flurry + itembonuses.PC_Pet_Flurry + aabonuses.PC_Pet_Flurry;
 					if (chance && zone->random.Roll(chance))

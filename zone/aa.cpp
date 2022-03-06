@@ -922,8 +922,8 @@ void Client::SendAlternateAdvancementRank(int aa_id, int level) {
 		return;
 	}
 
-	if(!(ability->classes & (1 << GetClass()))) {
-		return;
+	if(!(ability->classes & (1 << GetClass())) && !IsClient()) {
+		return;		
 	}
 
 	if(!CanUseAlternateAdvancementRank(rank)) {
@@ -945,10 +945,22 @@ void Client::SendAlternateAdvancementRank(int aa_id, int level) {
 	aai->spell = rank->spell;
 	aai->spell_type = rank->spell_type;
 	aai->spell_refresh = rank->recast_time;
-	aai->classes = ability->classes;
+
+	if (!(aa_ranks.find(aa_id) == aa_ranks.end())) {
+		aai->classes = 0xFFFF;
+	} else {
+		aai->classes = ability->classes;
+	}
+
+	if(!(ability->classes & (1 << GetClass()))) {
+		aai->grant_only = 1;
+	} else {
+		aai->grant_only = ability->grant_only;
+	}
+
 	aai->level_req = rank->level_req;
 	aai->current_level = level;
-	aai->max_level = ability->GetMaxLevel(this);
+	aai->max_level = ability->GetMaxLevel(this);	
 	aai->prev_id = rank->prev_id;
 
 	if((rank->next && !CanUseAlternateAdvancementRank(rank->next)) || ability->charges > 0) {
@@ -956,11 +968,11 @@ void Client::SendAlternateAdvancementRank(int aa_id, int level) {
 	} else {
 		aai->next_id = rank->next_id;
 	}
+
 	aai->total_cost = rank->total_cost;
 	aai->expansion = rank->expansion;
 	aai->category = ability->category;
 	aai->charges = ability->charges;
-	aai->grant_only = ability->grant_only;
 	aai->total_effects = rank->effects.size();
 	aai->total_prereqs = rank->prereqs.size();
 
@@ -1503,6 +1515,15 @@ AA::Rank *Zone::GetAlternateAdvancementRank(int rank_id) {
 	return nullptr;
 }
 
+AA::Rank *Zone::GetAlternateAdvancementRankBySpell(int spell_id) {
+    for (const auto& [id, rank] : aa_ranks) {
+        if (rank->spell == spell_id) {
+            return rank.get();
+        }
+    }
+    return nullptr;
+}
+
 std::pair<AA::Ability*, AA::Rank*> Zone::GetAlternateAdvancementAbilityAndRank(int id, int points_spent) {
 	AA::Ability *ability = GetAlternateAdvancementAbility(id);
 
@@ -1579,8 +1600,8 @@ bool Mob::CanUseAlternateAdvancementRank(AA::Rank *rank) {
 	if(!ability)
 		return false;
 
-	if(!(ability->classes & (1 << GetClass()))) {
-		return false;
+	if(!(ability->classes & (1 << GetClass())) && !IsClient()) {
+		return false;		
 	}
 
 	// Passive and Active Shroud AAs
@@ -1644,6 +1665,11 @@ bool Mob::CanPurchaseAlternateAdvancementRank(AA::Rank *rank, bool check_price, 
 
 	if(!ability)
 		return false;
+	
+	if(!(ability->classes & (1 << GetClass())) && check_grant) {
+		Message(Chat::Red, "You cannot purchase cross-class AA without having that class active.");
+		return false;		
+	}
 
 	if(!CanUseAlternateAdvancementRank(rank)) {
 		return false;
@@ -2073,4 +2099,3 @@ void Client::TogglePurchaseAlternativeAdvancementRank(int rank_id){
 	SendAlternateAdvancementStats();
 	CalcBonuses();
 }
-

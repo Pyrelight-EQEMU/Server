@@ -2434,6 +2434,7 @@ void Mob::ApplySpellsBonuses(uint16 spell_id, uint8 casterlevel, StatBonuses *ne
 			{
 				new_bonus->DamageShield += effect_value;
 				new_bonus->DamageShieldSpellID = spell_id;
+
 				//When using npc_spells_effects MAX value can be set to determine DS Type
 				if (IsAISpellEffect && max_value)
 					new_bonus->DamageShieldType = GetDamageShieldType(spell_id, max_value);
