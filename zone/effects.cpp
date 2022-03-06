@@ -42,6 +42,18 @@ float Mob::GetActSpellRange(uint16 spell_id, float range)
 
 int64 Mob::GetActSpellDamage(uint16 spell_id, int64 value, Mob* target) {
 
+	if (spells[spell_id].target_type == ST_Self)
+		return value;
+
+	if (IsNPC())
+		value += value*CastToNPC()->GetSpellFocusDMG()/100;
+
+	// Pyrelight Custom Code
+	// Heroic WIS reduces incoming spell damage by 10 points per point of HWIS, never to exceed 50% of total damage
+	if (target->IsClient() && target->GetHeroicWIS() > 0) {
+		value = std::min(static_cast<int64>(0.50 * value), value - (target->GetHeroicWIS() * 10));
+	}
+
 	if (spells[spell_id].target_type == ST_Self) {
 		return value;
 	}
@@ -91,6 +103,12 @@ int64 Mob::GetActSpellDamage(uint16 spell_id, int64 value, Mob* target) {
 			Critical = true;
 			ratio += itembonuses.SpellCritDmgIncrease + spellbonuses.SpellCritDmgIncrease + aabonuses.SpellCritDmgIncrease;
 			ratio += itembonuses.SpellCritDmgIncNoStack + spellbonuses.SpellCritDmgIncNoStack + aabonuses.SpellCritDmgIncNoStack;
+
+			//Pyrelight Custom Code
+			// Heroic INT gives +0.01% critical damage
+			if (IsClient() && GetHeroicINT() > 0) {
+				ratio += (GetHeroicINT()/10);	
+			}
 		}
 
 		else if ((IsOfClientBot() && GetClass() == WIZARD) || (IsMerc() && GetClass() == CASTERDPS)) {
@@ -143,6 +161,12 @@ int64 Mob::GetActSpellDamage(uint16 spell_id, int64 value, Mob* target) {
 				this, true, 100, Chat::SpellCrit, FilterSpellCrits,
 				OTHER_CRIT_BLAST, nullptr, GetName(), itoa(-value));
 
+			//Pyrelight Custom Code
+			// Heroic WIS Blocks up to 50% of damage at a rate of 10 damage per 1 point of the stat
+			if (target->IsClient() && target->GetHeroicWIS() > 0) {
+				value = std::max(static_cast<int64>(0.50 * value), static_cast<int64>(value - (10 * target->GetHeroicWIS())));
+			}
+
 			if (IsClient())
 				MessageString(Chat::SpellCrit, YOU_CRIT_BLAST, itoa(-value));
 
@@ -174,7 +198,7 @@ int64 Mob::GetActSpellDamage(uint16 spell_id, int64 value, Mob* target) {
 	}
 
 	if (RuleB(Spells, IgnoreSpellDmgLvlRestriction) && !spells[spell_id].no_heal_damage_item_mod && itembonuses.SpellDmg)
-		value -= GetExtraSpellAmt(spell_id, itembonuses.SpellDmg, base_value);
+		value -= GetExtraSpellAmt(spell_id, itembonuses.SpellDmg, value);
 
 	else if (
 		!spells[spell_id].no_heal_damage_item_mod &&
@@ -182,6 +206,12 @@ int64 Mob::GetActSpellDamage(uint16 spell_id, int64 value, Mob* target) {
 		spells[spell_id].classes[(GetClass() % 17) - 1] >= GetLevel() - 5
 	) {
 		value -= GetExtraSpellAmt(spell_id, GetSpellDmg(), base_value);
+	}
+
+	//Pyrelight Custom Code
+	// Heroic WIS Blocks up to 50% of damage at a rate of 10 damage per 1 point of the stat
+	if (target->IsClient() && target->GetHeroicWIS() > 0) {
+		value = std::max(static_cast<int64>(0.50 * value), static_cast<int64>(value - (10 * target->GetHeroicWIS())));
 	}
 
 	return value;
@@ -253,6 +283,13 @@ int64 Mob::GetActDoTDamage(uint16 spell_id, int64 value, Mob* target, bool from_
 	if (!spells[spell_id].good_effect && chance > 0 && (zone->random.Roll(chance))) {
 		int64 ratio = 200;
 		ratio += itembonuses.DotCritDmgIncrease + spellbonuses.DotCritDmgIncrease + aabonuses.DotCritDmgIncrease;
+
+		//Pyrelight Custom Code
+		// Heroic INT gives +0.01% critical damage
+		if (IsClient() && GetHeroicINT() > 0) {
+			ratio += (GetHeroicINT()/10);	
+		}
+
 		value = base_value*ratio/100;
 		value += int64(base_value*GetFocusEffect(focusImprovedDamage, spell_id, nullptr, from_buff_tic)/100)*ratio/100;
 		value += int64(base_value*GetFocusEffect(focusImprovedDamage2, spell_id, nullptr, from_buff_tic)/100)*ratio/100;
@@ -289,7 +326,7 @@ int64 Mob::GetActDoTDamage(uint16 spell_id, int64 value, Mob* target, bool from_
 		if (extra_dmg) {
 			int duration = CalcBuffDuration(this, target, spell_id);
 			if (duration > 0)
-				extra_dmg /= duration;
+				extra_dmg /= (duration/2);
 		}
 
 		value -= extra_dmg;
@@ -332,10 +369,19 @@ int64 Mob::GetActDoTDamage(uint16 spell_id, int64 value, Mob* target, bool from_
 		if (extra_dmg) {
 			int duration = CalcBuffDuration(this, target, spell_id);
 			if (duration > 0)
-				extra_dmg /= duration;
+				extra_dmg /= (duration/2);
 		}
 
 		value -= extra_dmg;
+	}
+
+	if (IsNPC() && CastToNPC()->GetSpellScale())
+		value = int64(static_cast<float>(value) * CastToNPC()->GetSpellScale() / 100.0f);
+
+	//Pyrelight Custom Code
+	// Heroic WIS Blocks up to 50% of damage at a rate of 10 damage per 1 point of the stat
+	if (target->IsClient() && target->GetHeroicWIS() > 0) {
+		value = std::max(static_cast<int64>(0.50 * value), static_cast<int64>(value - (10 * target->GetHeroicWIS())));
 	}
 
 	return value;
@@ -682,7 +728,7 @@ bool Client::TrainDiscipline(uint32 itemid) {
 			return false;
 		} else if (m_pp.disciplines.values[r] == 0) {
 			m_pp.disciplines.values[r] = spell_id;
-			database.SaveCharacterDisc(CharacterID(), r, spell_id);
+			database.SaveCharacterDisc(CharacterID(), r, spell_id, &m_pp);
 			SendDisciplineUpdate();
 			Message(Chat::White, "You have learned a new discipline!");
 			return true;
@@ -781,7 +827,7 @@ void Client::TrainDiscBySpellID(int32 spell_id)
 	for(i = 0; i < MAX_PP_DISCIPLINES; i++) {
 		if(m_pp.disciplines.values[i] == 0) {
 			m_pp.disciplines.values[i] = spell_id;
-			database.SaveCharacterDisc(CharacterID(), i, spell_id);
+			database.SaveCharacterDisc(CharacterID(), i, spell_id, &m_pp);
 			SendDisciplineUpdate();
 			Message(Chat::Yellow, "You have learned a new combat ability!");
 			return;
@@ -917,7 +963,7 @@ bool Client::UseDiscipline(uint32 spell_id, uint32 target) {
 					return false;
 				}
 			}
-			SendDisciplineTimer(spells[spell_id].timer_id, reduced_recast);
+			SendDisciplineTimer(spells[spell_id].timer_id, reduced_recast);			
 		}
 	}
 
@@ -982,7 +1028,7 @@ void Client::SendDisciplineTimer(uint32 timer_id, uint32 duration)
 		dts->Duration = duration;
 		QueuePacket(outapp);
 		safe_delete(outapp);
-	}
+	}	
 }
 
 /**
@@ -1321,7 +1367,7 @@ void EntityList::AEAttack(
 			) {
 
 			for (int i = 0; i < attack_rounds; i++) {
-				if (!attacker->IsClient() || attacker->GetClass() == MONK || attacker->GetClass() == RANGER) {
+				if (!attacker->IsClient() || attacker->GetClass() == MONK || attacker->GetClass() == RANGER || attacker->GetClass() == BEASTLORD) {
 					attacker->Attack(current_mob, Hand, false, false, is_from_spell);
 				} else {
 					attacker->CastToClient()->DoAttackRounds(current_mob, Hand, is_from_spell);

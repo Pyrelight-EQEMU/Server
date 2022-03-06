@@ -432,7 +432,8 @@ bool Mob::DoCastSpell(uint16 spell_id, uint16 target_id, CastingSlot slot,
 	// we calculated this above, now enforce it
 	if (mana_cost > 0 && slot != CastingSlot::Item || (IsBot() && !CastToBot()->IsBotNonSpellFighter())) {
 		int my_curmana = GetMana();
-		int my_maxmana = GetMaxMana();
+		int my_maxmana = GetMaxMana();		
+
 		if (my_curmana < mana_cost) {// not enough mana
 			//this is a special case for NPCs with no mana...
 			if (IsNPC() && my_curmana == my_maxmana) {
@@ -443,7 +444,7 @@ bool Mob::DoCastSpell(uint16 spell_id, uint16 target_id, CastingSlot slot,
 		}
 	}
 
-	if (mana_cost > GetMana()) {
+	if (mana_cost > GetMana() && GetMana() != 0) {
 		mana_cost = GetMana();
 	}
 
@@ -2621,8 +2622,9 @@ bool Mob::SpellFinished(uint16 spell_id, Mob *spell_target, CastingSlot slot, in
 			mana_used *= 2;
 		}
 		// clamp if we some how got focused above our current mana
-		if (GetMana() < mana_used)
+		if (GetMana() < mana_used && GetMaxMana() != 0)
 			mana_used = GetMana();
+
 		LogSpells("Spell [{}]: consuming [{}] mana", spell_id, mana_used);
 		if (!DoHPToManaCovert(mana_used)) {
 			SetMana(GetMana() - mana_used);
@@ -2654,6 +2656,7 @@ bool Mob::SpellFinished(uint16 spell_id, Mob *spell_target, CastingSlot slot, in
 			}
 			if (aa_id) {
 				AA::Rank *rank = zone->GetAlternateAdvancementRank(aa_id);
+				
 				//handle expendable AA's
 				if (rank && rank->base_ability) {
 					ExpendAlternateAdvancementCharge(rank->base_ability->id);
@@ -5468,7 +5471,7 @@ void Client::MemSpell(uint16 spell_id, int slot, bool update_client)
 	m_pp.mem_spells[slot] = spell_id;
 	LogSpells("Spell [{}] memorized into slot [{}]", spell_id, slot);
 
-	database.SaveCharacterMemorizedSpell(CharacterID(), m_pp.mem_spells[slot], slot);
+	database.SaveCharacterMemorizedSpell(CharacterID(), m_pp.mem_spells[slot], slot, &m_pp);
 
 	if(update_client) {
 		MemorizeSpell(slot, spell_id, memSpellMemorize);
@@ -5476,7 +5479,7 @@ void Client::MemSpell(uint16 spell_id, int slot, bool update_client)
 }
 
 void Client::UnmemSpell(int slot, bool update_client)
-{
+{	
 	if (slot >= EQ::spells::SPELL_GEM_COUNT || slot < 0) {
 		return;
 	}
@@ -5484,7 +5487,7 @@ void Client::UnmemSpell(int slot, bool update_client)
 	LogSpells("Spell [{}] forgotten from slot [{}]", m_pp.mem_spells[slot], slot);
 	m_pp.mem_spells[slot] = 0xFFFFFFFF;
 
-	database.DeleteCharacterMemorizedSpell(CharacterID(), m_pp.mem_spells[slot], slot);
+	database.DeleteCharacterMemorizedSpell(CharacterID(), m_pp.mem_spells[slot], slot, &m_pp);
 
 	if(update_client) {
 		MemorizeSpell(slot, m_pp.mem_spells[slot], memSpellForget);
@@ -5569,7 +5572,7 @@ void Client::ScribeSpell(uint16 spell_id, int slot, bool update_client, bool def
 
 	// defer save if we're bulk saving elsewhere
 	if (!defer_save) {
-		database.SaveCharacterSpell(CharacterID(), spell_id, slot);
+		database.SaveCharacterSpell(CharacterID(), spell_id, slot, &m_pp);
 	}
 	LogSpells("Spell [{}] scribed into spell book slot [{}]", spell_id, slot);
 
@@ -5588,7 +5591,7 @@ void Client::UnscribeSpell(int slot, bool update_client, bool defer_save)
 	m_pp.spell_book[slot] = 0xFFFFFFFF;
 
 	if (!defer_save) {
-		database.DeleteCharacterSpell(CharacterID(), m_pp.spell_book[slot], slot);
+		database.DeleteCharacterSpell(CharacterID(), m_pp.spell_book[slot], slot, &m_pp);
 	}
 
 	if (update_client && slot < EQ::spells::DynamicLookup(ClientVersion(), GetGM())->SpellbookSize) {
@@ -5633,7 +5636,7 @@ void Client::UntrainDisc(int slot, bool update_client, bool defer_save)
 	m_pp.disciplines.values[slot] = 0;
 
 	if (!defer_save) {
-		database.DeleteCharacterDisc(CharacterID(), slot);
+		database.DeleteCharacterDisc(CharacterID(), slot, &m_pp);
 	}
 
 	if (update_client) {

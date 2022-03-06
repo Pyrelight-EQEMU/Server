@@ -1671,8 +1671,10 @@ void Client::Handle_Connect_OP_ZoneEntry(const EQApplicationPacket *app)
 
 				// Taunt persists when zoning on newer clients, overwrite default.
 				if (m_ClientVersionBit & EQ::versions::maskUFAndLater) {
-					if (!firstlogon) {
-						pet->SetTaunting(m_petinfo.taunting);
+					pet->SetTaunting(m_petinfo.taunting);
+					if (RuleB(Pets, TauntTogglesPetTanking)) {
+						pet->SetSpecialAbility(41, pet->CastToNPC()->IsTaunting());
+						pet->SetSpecialAbility(25, !pet->CastToNPC()->IsTaunting());
 					}
 				}
 			}
@@ -2980,7 +2982,7 @@ void Client::Handle_OP_ApplyPoison(const EQApplicationPacket *app)
 
 	bool IsPoison = (poison && poison->ItemType == EQ::item::ItemTypePoison);
 
-	if (IsPoison && GetClass() == ROGUE) {
+	if (IsPoison && (GetClass() == ROGUE || GetClass() == ENCHANTER)) {
 
 		// Live always checks for skillup, even when poison is too high
 		CheckIncreaseSkill(EQ::skills::SkillApplyPoison, nullptr, 10);
@@ -5745,7 +5747,7 @@ void Client::Handle_OP_DeleteSpell(const EQApplicationPacket *app)
 
 	if (m_pp.spell_book[dss->spell_slot] != SPELLBOOK_UNKNOWN) {
 		m_pp.spell_book[dss->spell_slot] = SPELLBOOK_UNKNOWN;
-		database.DeleteCharacterSpell(CharacterID(), m_pp.spell_book[dss->spell_slot], dss->spell_slot);
+		database.DeleteCharacterSpell(CharacterID(), m_pp.spell_book[dss->spell_slot], dss->spell_slot, &m_pp);
 		dss->success = 1;
 	}
 	else
@@ -10749,6 +10751,8 @@ void Client::Handle_OP_PetCommands(const EQApplicationPacket *app)
 		mypet->SayString(this, Chat::PetResponse, PET_GETLOST_STRING);
 		mypet->CastToNPC()->Depop();
 
+		LogDebug("m_petinfo.taunting : [{}] ", m_petinfo.taunting);
+
 		//Oddly, the client (Titanium) will still allow "/pet get lost" command despite me adding the code below. If someone can figure that out, you can uncomment this code and use it.
 		/*
 		if((mypet->GetPetType() == petAnimation && GetAA(aaAnimationEmpathy) >= 2) || mypet->GetPetType() != petAnimation) {
@@ -10804,30 +10808,42 @@ void Client::Handle_OP_PetCommands(const EQApplicationPacket *app)
 	}
 	case PET_TAUNT: {
 		if ((mypet->GetPetType() == petAnimation && aabonuses.PetCommands[PetCommand]) || mypet->GetPetType() != petAnimation) {
-			if (mypet->CastToNPC()->IsTaunting())
-			{
-				MessageString(Chat::PetResponse, PET_NO_TAUNT);
-				mypet->CastToNPC()->SetTaunting(false);
+			bool taunt_status = mypet->CastToNPC()->IsTaunting();			
+			if (RuleB(Pets, TauntTogglesPetTanking)) {
+				if (!taunt_status) {
+					mypet->SetSpecialAbility(25, 0);
+					mypet->SetSpecialAbility(41, 1);
+				} else {					
+					mypet->SetSpecialAbility(25, 1);
+					mypet->SetSpecialAbility(41, 0);
+					entity_list.RemoveFromTargets(mypet);
+				}
 			}
-			else
-			{
-				MessageString(Chat::PetResponse, PET_DO_TAUNT);
-				mypet->CastToNPC()->SetTaunting(true);
-			}
+			mypet->CastToNPC()->SetTaunting(!taunt_status);
+			MessageString(Chat::PetResponse, !taunt_status ? PET_DO_TAUNT : PET_NO_TAUNT);			
 		}
 		break;
 	}
 	case PET_TAUNT_ON: {
 		if ((mypet->GetPetType() == petAnimation && aabonuses.PetCommands[PetCommand]) || mypet->GetPetType() != petAnimation) {
-			MessageString(Chat::PetResponse, PET_DO_TAUNT);
-			mypet->CastToNPC()->SetTaunting(true);
+			mypet->CastToNPC()->SetTaunting(true);		
+			if (RuleB(Pets, TauntTogglesPetTanking)) {
+				mypet->SetSpecialAbility(25, 0);			
+				mypet->SetSpecialAbility(41, 1);			
+			}
+			MessageString(Chat::PetResponse, PET_DO_TAUNT);		
 		}
 		break;
 	}
 	case PET_TAUNT_OFF: {
 		if ((mypet->GetPetType() == petAnimation && aabonuses.PetCommands[PetCommand]) || mypet->GetPetType() != petAnimation) {
-			MessageString(Chat::PetResponse, PET_NO_TAUNT);
 			mypet->CastToNPC()->SetTaunting(false);
+			if (RuleB(Pets, TauntTogglesPetTanking)) {
+				mypet->SetSpecialAbility(41, 0);
+				mypet->SetSpecialAbility(25, 1);
+				entity_list.RemoveFromTargets(mypet);
+			}
+			MessageString(Chat::PetResponse, PET_NO_TAUNT);	
 		}
 		break;
 	}
@@ -14426,11 +14442,11 @@ void Client::Handle_OP_SwapSpell(const EQApplicationPacket *app)
 	m_pp.spell_book[swapspell->to_slot] = swapspelltemp;
 
 	/* Save Spell Swaps */
-	if (!database.SaveCharacterSpell(CharacterID(), m_pp.spell_book[swapspell->from_slot], swapspell->from_slot)) {
-		database.DeleteCharacterSpell(CharacterID(), m_pp.spell_book[swapspell->from_slot], swapspell->from_slot);
+	if (!database.SaveCharacterSpell(CharacterID(), m_pp.spell_book[swapspell->from_slot], swapspell->from_slot, &m_pp)) {
+		database.DeleteCharacterSpell(CharacterID(), m_pp.spell_book[swapspell->from_slot], swapspell->from_slot, &m_pp);
 	}
-	if (!database.SaveCharacterSpell(CharacterID(), swapspelltemp, swapspell->to_slot)) {
-		database.DeleteCharacterSpell(CharacterID(), swapspelltemp, swapspell->to_slot);
+	if (!database.SaveCharacterSpell(CharacterID(), swapspelltemp, swapspell->to_slot, &m_pp)) {
+		database.DeleteCharacterSpell(CharacterID(), swapspelltemp, swapspell->to_slot, &m_pp);
 	}
 
 	QueuePacket(app);
@@ -14962,7 +14978,7 @@ void Client::Handle_OP_Trader(const EQApplicationPacket *app)
 	// I don't know what they are for (yet), but it doesn't seem to matter that we ignore them.
 
 
-	uint32 max_items = 80;
+	uint32 max_items = EQ::invtype::BAZAAR_SIZE;
 
 	/*
 	if (GetClientVersion() >= EQClientRoF)

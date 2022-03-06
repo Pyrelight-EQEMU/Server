@@ -128,7 +128,7 @@ uint64 Client::CalcEXP(uint8 consider_level, bool ignore_modifiers) {
 
 		if (RuleB(Character, UseRaceClassExpBonuses)) {
 			if (
-				GetClass() == WARRIOR ||
+				(GetClass() == WARRIOR || GetClass() == PALADIN) ||
 				GetClass() == ROGUE ||
 				GetBaseRace() == HALFLING
 			) {
@@ -295,7 +295,7 @@ void Client::CalculateStandardAAExp(uint64 &add_aaxp, uint8 conlevel, bool resex
 			aatotalmod *= 1.05;
 		}
 
-		if (GetClass() == ROGUE || GetClass() == WARRIOR) {
+		if (GetClass() == ROGUE || (GetClass() == WARRIOR || GetClass() == PALADIN)) {
 			aatotalmod *= 1.05;
 		}
 	}
@@ -413,7 +413,7 @@ void Client::CalculateExp(uint64 in_add_exp, uint64 &add_exp, uint64 &add_aaxp, 
 		add_exp = static_cast<uint64>(in_add_exp * (static_cast<float>(XPRate) / 100.0f));
 	}
 
-	// Make sure it was initialized.
+	// Make sure it was initialized.	
 	add_aaxp = 0;
 
 	if (!resexp)
@@ -443,7 +443,7 @@ void Client::CalculateExp(uint64 in_add_exp, uint64 &add_exp, uint64 &add_aaxp, 
 				totalmod *= 1.05;
 			}
 
-			if (GetClass() == ROGUE || GetClass() == WARRIOR) {
+			if (GetClass() == ROGUE || (GetClass() == WARRIOR || GetClass() == PALADIN)) {
 				totalmod *= 1.05;
 			}
 		}
@@ -474,7 +474,7 @@ void Client::CalculateExp(uint64 in_add_exp, uint64 &add_exp, uint64 &add_aaxp, 
 			add_exp *= zone->level_exp_mod[GetLevel()].ExpMod;
 		}
 	}
-
+	
 	if (RuleR(Character, FinalExpMultiplier) >= 0) {
 		add_exp *= RuleR(Character, FinalExpMultiplier);
 	}
@@ -561,6 +561,7 @@ void Client::AddEXP(uint64 in_add_exp, uint8 conlevel, bool resexp) {
 		}
 	}
 
+	
 	// AA Sanity Checking for players who set aa exp and deleveled below allowed aa level.
 	if (GetLevel() <= 50 && m_epp.perAA > 0) {
 		Message(Chat::Yellow, "You are below the level allowed to gain AA Experience. AA Experience set to 0%");
@@ -816,7 +817,8 @@ void Client::SetEXP(uint64 set_exp, uint64 set_aaxp, bool isrezzexp) {
 	m_pp.exp = set_exp;
 	m_pp.expAA = set_aaxp;
 
-	if (GetLevel() < 51) {
+	
+	if (GetLevel() < 51) {	
 		m_epp.perAA = 0;	// turn off aa exp if they drop below 51
 	} else {
 		SendAlternateAdvancementStats();    //otherwise, send them an AA update
@@ -1059,7 +1061,7 @@ uint32 Client::GetEXPForLevel(uint16 check_level)
 			classmod = 1.1;
 		} else if(GetClass() == ROGUE) {
 			classmod = 0.91;
-		} else if(GetClass() == WARRIOR) {
+		} else if((GetClass() == WARRIOR || GetClass() == PALADIN)) {
 			classmod = 0.9;
 		}
 

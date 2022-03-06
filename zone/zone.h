@@ -105,6 +105,7 @@ public:
 
 	AA::Ability *GetAlternateAdvancementAbility(int id);
 	AA::Ability *GetAlternateAdvancementAbilityByRank(int rank_id);
+	AA::Rank *GetAlternateAdvancementRankBySpell(int spell_id);
 	AA::Rank *GetAlternateAdvancementRank(int rank_id);
 	bool is_zone_time_localized;
 	bool process_mobs_while_empty;

@@ -257,6 +257,7 @@ RULE_BOOL(Pets, UnTargetableSwarmPet, false, "Setting whether swarm pets should 
 RULE_REAL(Pets, PetPowerLevelCap, 10, "Maximum number of levels a player pet can go up with pet power")
 RULE_BOOL(Pets, CanTakeNoDrop, false, "Setting whether anyone can give no-drop items to pets")
 RULE_BOOL(Pets, LivelikeBreakCharmOnInvis, true, "Default: true will break charm on any type of invis (hide/ivu/iva/etc) false will only break if the pet can not see you (ex. you have an undead pet and cast IVU")
+RULE_BOOL(Pets, TauntTogglesPetTanking, false, "Setting to true allows player to toggle the 'Allow Tank' (41) special attack flag on their pet by using the Taunt button in the pet window.")
 RULE_CATEGORY_END()
 
 RULE_CATEGORY(GM)
@@ -447,6 +448,7 @@ RULE_BOOL(Spells, UseItemCastMessage, false, "Enable to use the \"item begins to
 RULE_BOOL(Spells, TargetsTargetRequiresCombatRange, true, "Disable to remove combat range requirement from Target's Target Spell Target Type")
 RULE_BOOL(Spells, NPCBuffLevelRestrictions, false, "Impose BuffLevelRestrictions on NPCs if true")
 RULE_BOOL(Spells, ResurrectionEffectsBlock, true, "If enabled, resurrection effects cannot be overwritten.")
+RULE_BOOL(Spells, RuneUseHealAmt, false, "Applies Heal Amount stat to Rune-type effects.")
 RULE_CATEGORY_END()
 
 RULE_CATEGORY(Combat)

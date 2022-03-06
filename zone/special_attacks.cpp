@@ -391,7 +391,7 @@ void Client::OPCombatAbility(const CombatAbility_Struct *ca_atk)
 		int32 max_dmg = GetBaseSkillDamage(EQ::skills::SkillFrenzy, GetTarget());
 		DoAnim(anim1HWeapon, 0, false);
 
-		if (GetClass() == BERSERKER) {
+		if (GetClass() == BERSERKER || GetClass() == SHADOWKNIGHT) {
 			int chance = GetLevel() * 2 + GetSkill(EQ::skills::SkillFrenzy);
 			if (zone->random.Roll0(450) < chance)
 				AtkRounds++;
@@ -421,8 +421,7 @@ void Client::OPCombatAbility(const CombatAbility_Struct *ca_atk)
 	switch (GetClass()) {
 	case BERSERKER:
 	case WARRIOR:
-	case RANGER:
-	case BEASTLORD:
+	case RANGER:	
 		if (ca_atk->m_atk != 100 || ca_atk->m_skill != EQ::skills::SkillKick)
 			break;
 		if (GetTarget() != this) {
@@ -439,6 +438,7 @@ void Client::OPCombatAbility(const CombatAbility_Struct *ca_atk)
 			DoSpecialAttackDamage(GetTarget(), EQ::skills::SkillKick, dmg, 0, ht, ReuseTime);
 		}
 		break;
+	case BEASTLORD:
 	case MONK: {
 		ReuseTime = MonkSpecialAttack(GetTarget(), ca_atk->m_skill) - 1 - skill_reduction;
 
@@ -489,6 +489,7 @@ void Client::OPCombatAbility(const CombatAbility_Struct *ca_atk)
 		}
 		break;
 	}
+	case ENCHANTER:
 	case ROGUE: {
 		if (ca_atk->m_atk != 100 || ca_atk->m_skill != EQ::skills::SkillBackstab)
 			break;
@@ -818,6 +819,23 @@ void Client::RangedAttack(Mob* other, bool CanDoubleAttack) {
 	//Shoots projectile and/or applies the archery damage
 	DoArcheryAttackDmg(other, RangeWeapon, Ammo,0,0,0,0,0,0, AmmoItem, ammo_slot);
 
+	//Pyrelight Custom Code
+	// HAGI ranged flurries work a little different, only a fail to trigger can cause the chain to stop
+	// little bitty buff to ranged attacks.
+	// We can use more arrows than we have, but fuck it whatever I'm not getting into fixing that
+	auto effective_agi = GetHeroicAGI();
+	auto num_attacks = 1;
+
+	while (effective_agi > 0) {
+		if (zone->random.Roll(75) && zone->random.Roll(effective_agi)) {
+			DoArcheryAttackDmg(other, RangeWeapon, Ammo,0,0,0,0,0,0, AmmoItem, ammo_slot);
+			effective_agi = effective_agi - zone->random.Real(1,150);
+			num_attacks++;
+		} else {
+			break;
+		}
+	}
+
 	//EndlessQuiver AA base1 = 100% Chance to avoid consumption arrow.
 	int ChanceAvoidConsume = aabonuses.ConsumeProjectile + itembonuses.ConsumeProjectile + spellbonuses.ConsumeProjectile;
 
@@ -831,7 +849,7 @@ void Client::RangedAttack(Mob* other, bool CanDoubleAttack) {
 			(ChanceAvoidConsume < 100 && zone->random.Int(0,99) > ChanceAvoidConsume)
 		)
 	) {
-		DeleteItemInInventory(ammo_slot, 1, true);
+		DeleteItemInInventory(ammo_slot, num_attacks, true);
 		LogCombat("Consumed Archery Ammo from slot {}.", ammo_slot);
 	} else if (!consumes_ammo) {
 		LogCombat("Archery Ammo Consumption is disabled.");
@@ -1436,9 +1454,25 @@ void Client::ThrowingAttack(Mob* other, bool CanDoubleAttack) { //old was 51
 
 	DoThrowingAttackDmg(other, RangeWeapon, item, 0, 0, 0, 0, 0,ammo_slot);
 
+	//Pyrelight Custom Code
+	// HAGI ranged flurries work a little different, only a fail to trigger can cause the chain to stop
+	// little bitty buff to ranged attacks.
+	auto effective_agi = GetHeroicAGI();
+	auto num_attacks = 1;
+
+	while (effective_agi > 0) {
+		if (zone->random.Roll(75) && zone->random.Roll(effective_agi)) {
+			DoThrowingAttackDmg(other, RangeWeapon, item, 0, 0, 0, 0, 0,ammo_slot);
+			effective_agi = effective_agi - zone->random.Real(1,150);
+			num_attacks++;
+		} else {
+			break;
+		}
+	}
+
 	// Consume Ammo, unless Ammo Consumption is disabled
 	if (RuleB(Combat, ThrowingConsumesAmmo)) {
-		DeleteItemInInventory(ammo_slot, 1, true);
+		DeleteItemInInventory(ammo_slot, num_attacks, true);
 		LogCombat("Consumed Throwing Ammo from slot {}.", ammo_slot);
 	} else {
 		LogCombat("Throwing Ammo Consumption is disabled.");
@@ -1793,12 +1827,13 @@ void NPC::DoClassAttacks(Mob *target) {
 			}
 			break;
 		}
+		case SHADOWKNIGHT: case SHADOWKNIGHTGM:
 		case BERSERKER: case BERSERKERGM:{
 			int AtkRounds = 1;
 			int32 max_dmg = GetBaseSkillDamage(EQ::skills::SkillFrenzy);
 			DoAnim(anim2HSlashing, 0, false);
 
-			if (GetClass() == BERSERKER) {
+			if (GetClass() == BERSERKER || GetClass() == SHADOWKNIGHT) {
 				int chance = GetLevel() * 2 + GetSkill(EQ::skills::SkillFrenzy);
 				if (zone->random.Roll0(450) < chance)
 					AtkRounds++;
@@ -1831,8 +1866,7 @@ void NPC::DoClassAttacks(Mob *target) {
 			}
 			break;
 		}
-		case CLERIC: case CLERICGM: //clerics can bash too.
-		case SHADOWKNIGHT: case SHADOWKNIGHTGM:
+		case CLERIC: case CLERICGM: //clerics can bash too.				
 		case PALADIN: case PALADINGM:{
 			if(level >= RuleI(Combat, NPCBashKickLevel)){
 				DoAnim(animTailRake, 0, false);
@@ -1885,10 +1919,10 @@ void Client::DoClassAttacks(Mob *ca_target, uint16 skill, bool IsRiposte)
 		case BEASTLORD:
 			skill_to_use = EQ::skills::SkillKick;
 			break;
+		case SHADOWKNIGHT:
 		case BERSERKER:
 			skill_to_use = EQ::skills::SkillFrenzy;
-			break;
-		case SHADOWKNIGHT:
+			break;		
 		case PALADIN:
 			skill_to_use = EQ::skills::SkillBash;
 			break;
@@ -1958,7 +1992,7 @@ void Client::DoClassAttacks(Mob *ca_target, uint16 skill, bool IsRiposte)
 		ReuseTime = (FrenzyReuseTime - 1) / HasteMod;
 
 		// bards can do riposte frenzy for some reason
-		if (!IsRiposte && GetClass() == BERSERKER) {
+		if (!IsRiposte && (GetClass() == BERSERKER || GetClass() == SHADOWKNIGHT)) {
 			int chance = GetLevel() * 2 + GetSkill(EQ::skills::SkillFrenzy);
 			if (zone->random.Roll0(450) < chance)
 				AtkRounds++;
