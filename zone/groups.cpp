@@ -871,6 +871,16 @@ bool Group::IsGroupMember(const char *Name)
 	return false;
 }
 
+Mob* Group::GetGroupMember(const char* Name)
+{
+	if (Name)
+		for (uint32 i = 0; i < MAX_GROUP_MEMBERS; i++)
+			if ((strlen(Name) == strlen(membername[i])) && !strncmp(membername[i], Name, strlen(Name)))
+				return members[i];
+
+	return nullptr;
+}
+
 void Group::GroupMessage(Mob* sender, uint8 language, uint8 lang_skill, const char* message) {
 	uint32 i;
 	for (i = 0; i < MAX_GROUP_MEMBERS; i++) {

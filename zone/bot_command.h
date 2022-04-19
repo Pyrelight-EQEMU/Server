@@ -52,7 +52,9 @@ public:
 		SpT_Size,
 		SpT_Stance,
 		SpT_SummonCorpse,
-		SpT_WaterBreathing
+		SpT_WaterBreathing,
+		SpT_Heal,
+		SpT_Nuke
 	} SpType;
 	static const int SpellTypeFirst = SpT_BindAffinity;
 	static const int SpellTypeLast = SpT_WaterBreathing;
@@ -140,6 +142,30 @@ public:
 		StT_Defensive
 	} StType;
 
+	typedef enum HealType {
+		HT_None = 0,
+		HT_Fast,
+		HT_Slow,
+		HT_OverTime,
+		HT_Group,
+		HT_GroupOverTime,
+		HT_Complete
+	} HType;
+
+	// Has to stay aligned with RESIST of Spdat.h
+	typedef enum DamageType {
+		DT_None = 0,
+		DT_Magic = 1,
+		DT_Fire = 2,
+		DT_Cold = 3,
+		DT_Poison = 4,
+		DT_Disease = 5,
+		DT_Chromatic = 6,
+		DT_Prismatic = 7,
+		DT_Physical = 8,
+		DT_Corruption = 9
+	} DType;
+
 	static std::string SpellTypeEnumToString(BCEnum::SpType spell_type) {
 		switch (spell_type) {
 		case SpT_BindAffinity:
@@ -180,6 +206,10 @@ public:
 			return "SpT_SummonCorpse";
 		case SpT_WaterBreathing:
 			return "SpT_WaterBreathing";
+		case SpT_Heal:
+			return "SpT_Heal";
+		case SpT_Nuke:
+			return "SpT_Nuke";
 		default:
 			return "SpT_None";
 		}
@@ -230,6 +260,8 @@ class STResurrectEntry;
 class STSendHomeEntry;
 class STSizeEntry;
 class STStanceEntry;
+class STHealEntry;
+class STNukeEntry;
 
 class STBaseEntry
 {
@@ -274,6 +306,8 @@ public:
 	bool IsSendHome() const { return (m_bcst == BCEnum::SpT_SendHome); }
 	bool IsSize() const { return (m_bcst == BCEnum::SpT_Size); }
 	bool IsStance() const { return (m_bcst == BCEnum::SpT_Stance); }
+	bool IsHeal() const { return (m_bcst == BCEnum::SpT_Heal); }
+	bool IsNuke() const { return (m_bcst == BCEnum::SpT_Nuke); }
 
 	virtual STCharmEntry* SafeCastToCharm() { return nullptr; }
 	virtual STCureEntry* SafeCastToCure() { return nullptr; }
@@ -286,6 +320,8 @@ public:
 	virtual STSendHomeEntry* SafeCastToSendHome() { return nullptr; }
 	virtual STSizeEntry* SafeCastToSize() { return nullptr; }
 	virtual STStanceEntry* SafeCastToStance() { return nullptr; }
+	virtual STHealEntry* SafeCastToHeal() { return nullptr; }
+	virtual STNukeEntry* SafeCastToNuke() { return nullptr; }
 };
 
 class STCharmEntry : public STBaseEntry
@@ -517,6 +553,51 @@ public:
 };
 
 
+class STHealEntry : public STBaseEntry {
+public:
+
+	BCEnum::HealType heal_type;
+	
+	STHealEntry() {
+		m_bcst = BCEnum::SpT_Heal;
+		heal_type = BCEnum::HT_None;
+	}
+
+	STHealEntry(STHealEntry* prototype) : STBaseEntry(prototype) {
+		m_bcst = BCEnum::SpT_Heal;
+		heal_type = prototype->heal_type;
+	}
+	
+	virtual ~STHealEntry() { return; };
+
+	virtual bool IsDerived() { return true; }
+
+	virtual STHealEntry* SafeCastToHeal() { return ((m_bcst == BCEnum::SpT_Heal) ? (static_cast<STHealEntry*>(this)) : (nullptr)); }
+};
+
+class STNukeEntry : public STBaseEntry {
+public:
+
+	BCEnum::DamageType damage_type;
+
+	STNukeEntry() {
+		m_bcst = BCEnum::SpT_Heal;
+		damage_type = BCEnum::DT_None;
+	}
+
+	STNukeEntry(STNukeEntry* prototype) : STBaseEntry(prototype) {
+		m_bcst = BCEnum::SpT_Heal;
+		damage_type = prototype->damage_type;
+	}
+
+	virtual ~STNukeEntry() { return; };
+
+	virtual bool IsDerived() { return true; }
+
+	virtual STNukeEntry* SafeCastToNuke() { return ((m_bcst == BCEnum::SpT_Nuke) ? (static_cast<STNukeEntry*>(this)) : (nullptr)); }
+};
+
+
 typedef std::list<STBaseEntry*> bcst_list;
 typedef std::map<BCEnum::SpType, bcst_list> bcst_map;
 
@@ -567,6 +648,7 @@ void bot_command_escape(Client *c, const Seperator *sep);
 void bot_command_find_aliases(Client *c, const Seperator *sep);
 void bot_command_follow(Client *c, const Seperator *sep);
 void bot_command_guard(Client *c, const Seperator *sep);
+void bot_command_heal(Client* c, const Seperator* sep);
 void bot_command_heal_rotation(Client *c, const Seperator *sep);
 void bot_command_help(Client *c, const Seperator *sep);
 void bot_command_hold(Client *c, const Seperator *sep);
@@ -576,6 +658,7 @@ void bot_command_invisibility(Client *c, const Seperator *sep);
 void bot_command_item_use(Client *c, const Seperator *sep);
 void bot_command_levitation(Client *c, const Seperator *sep);
 void bot_command_lull(Client *c, const Seperator *sep);
+void bot_command_nuke(Client* c, const Seperator* sep);
 void bot_command_mesmerize(Client *c, const Seperator *sep);
 void bot_command_movement_speed(Client *c, const Seperator *sep);
 void bot_command_owner_option(Client *c, const Seperator *sep);

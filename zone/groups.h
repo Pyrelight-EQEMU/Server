@@ -67,6 +67,7 @@ public:
 #endif
 	bool	IsGroupMember(Mob* client);
 	bool	IsGroupMember(const char *Name);
+	Mob*	GetGroupMember(const char *Name);
 	bool	Process();
 	bool	IsGroup()			{ return true; }
 	void	SendGroupJoinOOZ(Mob* NewMember);

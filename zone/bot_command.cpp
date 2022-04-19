@@ -103,6 +103,7 @@ namespace
 #define EFFECTIDTOINDEX(x) ((x >= EffectIDFirst && x <= EffectIDLast) ? (x - 1) : (0))
 #define AILMENTIDTOINDEX(x) ((x >= BCEnum::AT_Blindness && x <= BCEnum::AT_Corruption) ? (x - 1) : (0))
 #define RESISTANCEIDTOINDEX(x) ((x >= BCEnum::RT_Fire && x <= BCEnum::RT_Corruption) ? (x - 1) : (0))
+#define VALIDATEDAMAGEID(x) ((x >= BCEnum::DT_Magic && x <= BCEnum::DT_Corruption) ? (x) : (0))
 
 	// ActionableTarget action_type
 #define FRIENDLY true
@@ -306,6 +307,46 @@ public:
 				case SE_WaterBreathing:
 					entry_prototype = new STBaseEntry(BCEnum::SpT_WaterBreathing);
 					break;
+				// [TAG] TODO: Figure this out
+				// [TAG] EFFECT1 = attrib1 in Lucy				
+				// Complete Heal = 0
+				// Celestial Elixir = 100
+				// Tunare's Renewal = 147
+				case SE_HealOverTime:
+					// >0 = heal, <0 = nuke
+					if (spells[spell_id].base_value[EFFECTIDTOINDEX(1)] > 0)
+					{
+						entry_prototype = new STBaseEntry(BCEnum::SpT_Heal);
+						entry_prototype->SafeCastToHeal()->heal_type = BCEnum::HT_OverTime;
+					}
+					break;
+				case SE_CompleteHeal:
+					if (spells[spell_id].base_value[EFFECTIDTOINDEX(1)] > 0)
+					{
+						entry_prototype = new STBaseEntry(BCEnum::SpT_Heal);
+						entry_prototype->SafeCastToHeal()->heal_type = BCEnum::HT_Complete;
+					}
+					break;
+				case SE_PercentalHeal:
+					if (spells[spell_id].base_value[EFFECTIDTOINDEX(1)] > 0)
+					{
+						entry_prototype = new STBaseEntry(BCEnum::SpT_Heal);
+						entry_prototype->SafeCastToHeal()->heal_type = BCEnum::HT_Slow;
+					}
+					break;
+				case SE_CurrentHP:
+					if (spells[spell_id].base_value[EFFECTIDTOINDEX(1)] > 0)
+					{
+						entry_prototype = new STBaseEntry(BCEnum::SpT_Heal);
+						entry_prototype->SafeCastToHeal()->heal_type = BCEnum::HT_Fast;
+					}
+					else
+					{						
+						entry_prototype = new STBaseEntry(BCEnum::SpT_Nuke);
+						entry_prototype->SafeCastToNuke()->damage_type = static_cast<BCEnum::DType>(VALIDATEDAMAGEID(spells[spell_id].resist_type));
+					}
+
+					break;					
 				default:
 					break;
 				}
@@ -529,6 +570,15 @@ public:
 					if (entry_prototype->IsStance())
 						spell_entry = new STStanceEntry(entry_prototype->SafeCastToStance());
 					break;
+				case BCEnum::SpT_Heal:
+					if (entry_prototype->IsHeal())
+						spell_entry = new STHealEntry(entry_prototype->SafeCastToHeal());
+					break;
+				case BCEnum::SpT_Nuke:
+					if (entry_prototype->IsNuke())
+						spell_entry = new STNukeEntry(entry_prototype->SafeCastToNuke());
+					break;
+					
 				default:
 					spell_entry = new STBaseEntry(entry_prototype);
 					break;
@@ -1374,6 +1424,7 @@ int bot_command_init(void)
 		bot_command_add("findaliases", "Find available aliases for a bot command", 0, bot_command_find_aliases) ||
 		bot_command_add("follow", "Orders bots to follow a designated target (option 'chain' auto-links eligible spawned bots)", 0, bot_command_follow) ||
 		bot_command_add("guard", "Orders bots to guard their current positions", 0, bot_command_guard) ||
+		bot_command_add("heal", "Order bots to use a healing spell", 0, bot_command_heal) ||
 		bot_command_add("healrotation", "Lists the available bot heal rotation [subcommands]", 0, bot_command_heal_rotation) ||
 		bot_command_add("healrotationadaptivetargeting", "Enables or disables adaptive targeting within the heal rotation instance", 0, bot_subcommand_heal_rotation_adaptive_targeting) ||
 		bot_command_add("healrotationaddmember", "Adds a bot to a heal rotation instance", 0, bot_subcommand_heal_rotation_add_member) ||
@@ -1409,6 +1460,7 @@ int bot_command_init(void)
 		bot_command_add("lull", "Orders a bot to cast a pacification spell", 0, bot_command_lull) ||
 		bot_command_add("mesmerize", "Orders a bot to cast a mesmerization spell", 0, bot_command_mesmerize) ||
 		bot_command_add("movementspeed", "Orders a bot to cast a movement speed enhancement spell", 0, bot_command_movement_speed) ||
+		bot_command_add("nuke", "Order bots to use a direct damage spell", 0, bot_command_nuke) ||
 		bot_command_add("owneroption", "Sets options available to bot owners", 0, bot_command_owner_option) ||
 		bot_command_add("pet", "Lists the available bot pet [subcommands]", 0, bot_command_pet) ||
 		bot_command_add("petgetlost", "Orders a bot to remove its summoned pet", 0, bot_subcommand_pet_get_lost) ||
@@ -3361,6 +3413,157 @@ void bot_command_guard(Client *c, const Seperator *sep)
 	}
 	else {
 		c->Message(m_action, "%i of your bots are %sguarding their positions.", sbl.size(), (clear ? "no longer " : ""));
+	}
+}
+
+void bot_command_heal(Client* c, const Seperator* sep)
+{
+	bcst_list* local_list = &bot_command_spells[BCEnum::SpT_Heal];
+	if (helper_spell_list_fail(c, local_list, BCEnum::SpT_Heal) || helper_command_alias_fail(c, "bot_command_heal", sep->arg[0], "heal"))
+		return;
+
+	if (helper_is_help_or_usage(sep->arg[1])) {
+		c->Message(m_usage, "usage: (<friendly_target>) %s [actionable: target | byname | maintank] ([actionable_name]) [Heal Type: fast | slow | complete | hot | group | grouphot]", sep->arg[0]);
+		helper_send_usage_required_bots(c, BCEnum::SpT_Heal);
+		return;
+	}
+
+	// Find my target
+	int16 argn = 1;
+	std::string targettype_arg = sep->arg[argn++];
+	std::string target_name = "";
+	ActionableTarget::Types actionable_targets;
+	Mob* target_mob;
+
+	// Find the target name if selection byname or Main Tank
+	if		(!targettype_arg.compare("byname"))		target_name = sep->arg[argn++];
+	else if (!targettype_arg.compare("maintank"))	target_name = c->GetGroup()->GetMainTankName();
+
+	if (c->GetGroup() && !target_name.empty())
+		target_mob = c->GetGroup()->GetGroupMember(target_name.c_str());
+	
+	// if we found no one by name, or we select by target.. I pick the client's target
+	if (target_mob == nullptr)
+		target_mob = actionable_targets.Select(c, BCEnum::TT_Single, FRIENDLY);
+
+	if (target_mob == nullptr)
+	{
+		c->Message(m_fail, "No target found to cast this heal");
+		return;
+	}
+
+	// Find out the type of heal to casst
+	std::string healtype_arg = sep->arg[argn++];
+	BCEnum::HealType heal_type = BCEnum::HT_Slow;	// By default, we cast the slow efficient heal
+
+	if (!healtype_arg.compare("fast"))				heal_type = BCEnum::HT_Fast;
+	else if (!healtype_arg.compare("slow"))			heal_type = BCEnum::HT_Slow;
+	else if (!healtype_arg.compare("hot"))			heal_type = BCEnum::HT_OverTime;
+	else if (!healtype_arg.compare("group"))		heal_type = BCEnum::HT_Group;
+	else if (!healtype_arg.compare("grouphot"))		heal_type = BCEnum::HT_GroupOverTime;
+	else if (!healtype_arg.compare("complete"))		heal_type = BCEnum::HT_Complete;
+
+	Bot* my_bot = nullptr;
+	std::list<Bot*> sbl;
+	MyBots::PopulateSBL_BySpawnedBots(c, sbl);
+
+	bool cast_success = false;
+	// Go through all the spells to find the one to cast
+	for (auto list_iter : *local_list)
+	{
+		auto local_entry = list_iter->SafeCastToHeal();
+
+		// is it a valid spell ?
+		if (helper_spell_check_fail(local_entry))
+			continue;
+
+		// is the currently selected spell the type we want ?
+		if (local_entry->heal_type != heal_type)
+			continue;
+
+		// select the best bot in my group that can cast the spell
+		my_bot = ActionableBots::Select_ByMinLevelAndClass(c, local_entry->target_type, sbl, local_entry->spell_level, local_entry->caster_class, target_mob);
+		if (!my_bot)
+			continue;
+
+		// cast the spell
+		cast_success = helper_cast_standard_spell(my_bot, target_mob, local_entry->spell_id);
+		break;
+	}
+
+	helper_no_available_bots(c, my_bot);
+}
+
+void bot_command_nuke(Client* c, const Seperator* sep)
+{
+	bcst_list* local_list = &bot_command_spells[BCEnum::SpT_Nuke];
+
+	if (helper_spell_list_fail(c, local_list, BCEnum::SpT_Nuke) || helper_command_alias_fail(c, "bot_command_nuke", sep->arg[0], "nuke"))
+		return;
+
+	if (helper_is_help_or_usage(sep->arg[1])) {
+
+		c->Message(m_usage, "usage: (<friendly_target>) %s [(Optional) Target Type: single | undead | animal | summoned | plant | ae | pbae] [(Optional) Damage Type: magic | fire | cold | poison | disease | corruption]", sep->arg[0]);
+		helper_send_usage_required_bots(c, BCEnum::SpT_Nuke);
+		return;
+	}
+
+	std::string target_arg = sep->arg[1];
+	std::string damage_arg = sep->arg[2];
+
+	// Default cast if no option: Single target, damage type does not matter
+	BCEnum::TargetType target_type = BCEnum::TT_Single;
+	auto damage_type = BCEnum::DT_None;
+
+	if		(!target_arg.compare("single"))		target_type = BCEnum::TT_Single;
+	else if (!target_arg.compare("undead"))		target_type = BCEnum::TT_Undead;
+	else if (!target_arg.compare("animal"))		target_type = BCEnum::TT_Animal;
+	else if (!target_arg.compare("summoned"))	target_type = BCEnum::TT_Summoned;
+	else if (!target_arg.compare("plant"))		target_type = BCEnum::TT_Plant;
+	else if (!target_arg.compare("ae"))			target_type = BCEnum::TT_AETarget;
+	else if (!target_arg.compare("pbae"))		target_type = BCEnum::TT_AECaster;
+
+	if		(!damage_arg.compare("magic"))		damage_type = BCEnum::DT_Magic;
+	else if (!damage_arg.compare("fire"))		damage_type = BCEnum::DT_Fire;
+	else if (!damage_arg.compare("cold"))		damage_type = BCEnum::DT_Cold;
+	else if (!damage_arg.compare("poison"))		damage_type = BCEnum::DT_Poison;
+	else if (!damage_arg.compare("disease"))	damage_type = BCEnum::DT_Disease;
+	
+
+	ActionableTarget::Types actionable_targets;
+	Bot* my_bot = nullptr;
+	std::list<Bot*> sbl;
+	MyBots::PopulateSBL_BySpawnedBots(c, sbl);
+
+	bool cast_success = false;
+	for (auto list_iter : *local_list)
+	{
+		auto local_entry = list_iter->SafeCastToNuke();
+
+		// is it a valid spell ?
+		if (helper_spell_check_fail(local_entry))
+			continue;
+
+		// we want a generic damage type, or filter only the specified type
+		if ((damage_type != BCEnum::DT_None) && (local_entry->damage_type != damage_type))
+			continue;
+
+		// Filter by spell target type (Single by default)
+		if (local_entry->target_type != target_type)
+			continue;
+
+		// get a target enemy mob
+		auto target_mob = actionable_targets.Select(c, local_entry->target_type, ENEMY);
+		if (!target_mob)
+			continue;
+
+		// select the proper bot in my group that can cast the spell
+		my_bot = ActionableBots::Select_ByMinLevelAndClass(c, local_entry->target_type, sbl, local_entry->spell_level, local_entry->caster_class, target_mob);
+		if (!my_bot)
+			continue;
+
+		cast_success = helper_cast_standard_spell(my_bot, target_mob, local_entry->spell_id);
+		break;
 	}
 }
 
@@ -8441,14 +8644,17 @@ void bot_subcommand_inventory_window(Client *c, const Seperator *sep)
 
 	for (int i = EQ::invslot::EQUIPMENT_BEGIN; i <= EQ::invslot::EQUIPMENT_END; ++i) {
 		const EQ::ItemData* item = nullptr;
-		const EQ::ItemInstance* inst = my_bot->CastToBot()->GetBotItem(i);
+		const EQ::ItemInstance* inst = my_bot->CastToBot()->GetBotItem(i);		
+		const EQ::ItemInstance* augmentinst = nullptr;
+
 		if (inst)
 			item = inst->GetItem();
 
 		window_text.append("<c \"#FFFFFF\">");
 		window_text.append(EQ::invslot::GetInvPossessionsSlotName(i));
 		window_text.append(": ");
-		if (item) {
+		if (item) 
+		{
 			//window_text.append("</c>");
 			//linker.SetItemInst(inst);
 			//item_link = linker.GenerateLink();
@@ -8456,6 +8662,18 @@ void bot_subcommand_inventory_window(Client *c, const Seperator *sep)
 
 			window_text.append("<c \"#00FF00\">");
 			window_text.append(StringFormat("%s", item->Name));
+			
+			// Added Augmentation display
+			for (int i = EQ::invaug::SOCKET_BEGIN; i <= EQ::invaug::SOCKET_END; i++)
+			{
+				augmentinst = inst->GetAugment(i);
+				if (augmentinst && augmentinst->GetItem())
+				{
+					window_text.append("<br>");
+					window_text.append("<c \"##009900\">");
+					window_text.append(StringFormat(" - %s", augmentinst->GetItem()->Name));
+				}
+			}
 		}
 		else {
 			window_text.append("<c \"#FFFF00\">");
