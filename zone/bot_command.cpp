@@ -1423,7 +1423,7 @@ int bot_command_init(void)
 		bot_command_add("escape", "Orders a bot to send a target group to a safe location within the zone", 0, bot_command_escape) ||
 		bot_command_add("findaliases", "Find available aliases for a bot command", 0, bot_command_find_aliases) ||
 		bot_command_add("follow", "Orders bots to follow a designated target (option 'chain' auto-links eligible spawned bots)", 0, bot_command_follow) ||
-		bot_command_add("guard", "Orders bots to guard their current positions", 0, bot_command_guard) ||
+		bot_command_add("guard", "Orders bots to guard their current positions", 0, bot_command_guard) ||		
 		bot_command_add("heal", "Order bots to use a healing spell", 0, bot_command_heal) ||
 		bot_command_add("healrotation", "Lists the available bot heal rotation [subcommands]", 0, bot_command_heal_rotation) ||
 		bot_command_add("healrotationadaptivetargeting", "Enables or disables adaptive targeting within the heal rotation instance", 0, bot_subcommand_heal_rotation_adaptive_targeting) ||
@@ -1451,9 +1451,10 @@ int bot_command_init(void)
 		bot_command_add("identify", "Orders a bot to cast an item identification spell", 0, bot_command_identify) ||
 		bot_command_add("inventory", "Lists the available bot inventory [subcommands]", 0, bot_command_inventory) ||
 		bot_command_add("inventorygive", "Gives the item on your cursor to a bot", 0, bot_subcommand_inventory_give) ||
+		bot_command_add("inventoryhasaug", "Check if the bot has the augmentation on the cursor equipped somewhere on his gear", 0, bot_subcommand_inventory_hasaug) ||
 		bot_command_add("inventorylist", "Lists all items in a bot's inventory", 0, bot_subcommand_inventory_list) ||
 		bot_command_add("inventoryremove", "Removes an item from a bot's inventory", 0, bot_subcommand_inventory_remove) ||
-		bot_command_add("inventorywindow", "Displays all items in a bot's inventory in a pop-up window", 0, bot_subcommand_inventory_window) ||
+		bot_command_add("inventorywindow", "Displays all items in a bot's inventory in a pop-up window", 0, bot_subcommand_inventory_window) ||		
 		bot_command_add("invisibility", "Orders a bot to cast a cloak of invisibility, or allow them to be seen", 0, bot_command_invisibility) ||
 		bot_command_add("itemuse", "Elicits a report from spawned bots that can use the item on your cursor (option 'empty' yields only empty slots)", 0, bot_command_item_use) ||
 		bot_command_add("levitation", "Orders a bot to cast a levitation spell", 0, bot_command_levitation) ||
@@ -3743,6 +3744,7 @@ void bot_command_inventory(Client *c, const Seperator *sep)
 	subcommand_list.push_back("inventorylist");
 	subcommand_list.push_back("inventoryremove");
 	subcommand_list.push_back("inventorywindow");
+	subcommand_list.push_back("inventoryhasaug");
 	/* VS2012 code - end */
 
 	/* VS2013 code
@@ -8685,6 +8687,88 @@ void bot_subcommand_inventory_window(Client *c, const Seperator *sep)
 
 	c->SendPopupToClient(window_title.c_str(), window_text.c_str());
 }
+
+void bot_subcommand_inventory_hasaug(Client* c, const Seperator* sep)
+{
+	if (helper_command_alias_fail(c, "bot_subcommand_inventory_hasaug", sep->arg[0], "inventoryhasaug"))
+		return;
+
+	if (helper_is_help_or_usage(sep->arg[1])) {
+		c->Message(m_usage, "usage: %s ([actionable: target | byname] ([actionable_name]))", sep->arg[0]);
+		return;
+	}
+	int ab_mask = (ActionableBots::ABM_Target | ActionableBots::ABM_ByName);
+
+	std::list<Bot*> sbl;
+	if (ActionableBots::PopulateSBL(c, sep->arg[1], sbl, ab_mask, sep->arg[2]) == ActionableBots::ABT_None)
+		return;
+
+	auto my_bot = sbl.front();
+	if (!my_bot) {
+		c->Message(m_unknown, "ActionableBots returned 'nullptr'");
+		return;
+	}
+
+	const auto aug_instance = c->GetInv().GetItem(EQ::invslot::slotCursor);
+	if (!aug_instance) {
+
+		c->Message(m_fail, "No item found on cursor!");
+		return;
+	}
+
+	auto aug_item = aug_instance->GetItem();
+	if (!aug_item) {
+
+		c->Message(m_fail, "No data found for cursor item!");
+		return;
+	}
+
+	const EQ::ItemInstance* inst = nullptr;
+	const EQ::ItemData* item = nullptr;
+	bool isUsing2Hweapon = false;
+	bool augFound = false;
+
+	EQ::SayLinkEngine linker;
+	linker.SetLinkType(EQ::saylink::SayLinkItemInst);
+
+	uint32 inventory_count = 0;
+	for (int i = EQ::invslot::EQUIPMENT_BEGIN; i <= EQ::invslot::EQUIPMENT_END; ++i) 
+	{
+		if ((i == EQ::invslot::slotSecondary) && isUsing2Hweapon)
+			continue;
+
+		inst = my_bot->CastToBot()->GetBotItem(i);
+		if (!inst || !inst->GetItem()) // Empty slot
+			continue;
+
+		item = inst->GetItem();
+		if ((i == EQ::invslot::slotPrimary) && item->IsType2HWeapon()) 
+			isUsing2Hweapon = true;
+
+		// got a valid instance, check if it has my aug
+		for (int i = EQ::invaug::SOCKET_BEGIN; i <= EQ::invaug::SOCKET_END; i++)
+		{
+			auto aug_inst_itr = inst->GetAugment(i);
+			if (aug_inst_itr && aug_inst_itr->GetItem())
+			{
+				linker.SetItemInst(inst);
+				c->Message(m_message, "I am using this augmentation in item %s in my %s (slot %i)", linker.GenerateLink().c_str(), EQ::invslot::GetInvPossessionsSlotName(i), i);
+				augFound = true;
+				// could return here, but I believe some server have non lore augs
+			}
+		}
+
+		++inventory_count;
+	}
+
+	if (!augFound)
+	{
+		linker.SetItemInst(aug_instance);
+		c->Message(m_message, "I do not have %s equipped", linker.GenerateLink().c_str());
+	}
+
+}
+
 
 void bot_subcommand_pet_get_lost(Client *c, const Seperator *sep)
 {
