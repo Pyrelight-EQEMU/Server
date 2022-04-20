@@ -312,6 +312,24 @@ void Adventure::Finished(AdventureWinStatus ws)
 					af->points = 0;
 				}
 
+				// Compute the extra points
+				auto points = af->points * RuleR(Adventure, LDoNPointsMultiplier);
+				af->points = static_cast<int>(points);
+
+				if (RuleB(Adventure, LDoNSpeedBonusEnabled))
+				{
+					auto givenTime = 1000 * GetTemplate()->zone_in_time;
+					auto remainingTimeForBonus = givenTime - (givenTime * RuleR(Adventure, LDoNSpeedBonusTimeFactor));
+
+					if ((ws == AWS_Win) && (current_timer->GetRemainingTime()< remainingTimeForBonus))
+					{
+						points = af->points * RuleR(Adventure, LDoNSpeedBonusPointsMultiplier);
+						af->points = static_cast<int>(points);
+
+						SendAdventureMessage(Chat::Red, "Well done, you have completed your adventure very quickly, here are some extra points.");
+					}
+				}
+
 				zoneserver_list.SendPacket(current->zone(), current->instance(), pack);
 				database.UpdateAdventureStatsEntry(database.GetCharacterID((*iter).c_str()), GetTemplate()->theme, (ws != AWS_Lose) ? true : false);
 				delete pack;

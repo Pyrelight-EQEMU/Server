@@ -701,6 +701,10 @@ RULE_INT(Adventure, ItemIDToEnablePorts, 41000, "ItemID to enable adventure port
 RULE_INT(Adventure, LDoNTrapDistanceUse, 625, "LDoN trap distance use")
 RULE_REAL(Adventure, LDoNBaseTrapDifficulty, 15.0, "LDoN base trap difficulty")
 RULE_REAL(Adventure, LDoNCriticalFailTrapThreshold, 10.0, "LDoN critical fail trap threshold")
+RULE_REAL(Adventure, LDoNPointsMultiplier, 1.0, "Multiplier for LDoN mission points")
+RULE_BOOL(Adventure, LDoNSpeedBonusEnabled, false, "Gain Additionnal points if you complete an adventure in a short time")
+RULE_REAL(Adventure, LDoNSpeedBonusTimeFactor, 0.2, "Completion time Modifier to earn bonus points (0.1 = 10% of the template time)")
+RULE_REAL(Adventure, LDoNSpeedBonusPointsMultiplier, 1.4, "Points multiplier for speed bonus")
 RULE_CATEGORY_END()
 
 RULE_CATEGORY(AA)
