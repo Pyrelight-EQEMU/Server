@@ -292,18 +292,34 @@ bool SharedDatabase::UpdateInventorySlot(uint32 char_id, const EQ::ItemInstance*
 	else
 		charges = 0x7FFF;
 
+	const std::string classQuery =
+		StringFormat("SELECT class FROM character_data WHERE id = %i", char_id);
+
+	auto classResults = QueryDatabase(classQuery);
+	int16 class_id = 0;
+
+	if (!classResults.Success()) { return false; }
+
+	for (auto& row = classResults.begin(); row != classResults.end(); ++row) {
+		class_id = atoi(row[0]);
+	}
+
+	if (slot_id >= EQ::invslot::EQUIPMENT_END) {
+		class_id = 0;
+	}
+
 	// Update/Insert item
 	const std::string query = StringFormat("REPLACE INTO inventory "
 	                                       "(charid, slotid, itemid, charges, instnodrop, custom_data, color, "
-	                                       "augslot1, augslot2, augslot3, augslot4, augslot5, augslot6, ornamenticon, ornamentidfile, ornament_hero_model) "
+	                                       "augslot1, augslot2, augslot3, augslot4, augslot5, augslot6, ornamenticon, ornamentidfile, ornament_hero_model, class) "
 	                                       "VALUES( %lu, %lu, %lu, %lu, %lu, '%s', %lu, "
-	                                       "%lu, %lu, %lu, %lu, %lu, %lu, %lu, %lu, %lu)",
+	                                       "%lu, %lu, %lu, %lu, %lu, %lu, %lu, %lu, %lu, %lu)",
 	                                       static_cast<unsigned long>(char_id), static_cast<unsigned long>(slot_id), static_cast<unsigned long>(inst->GetItem()->ID),
 	                                       static_cast<unsigned long>(charges), static_cast<unsigned long>(inst->IsAttuned() ? 1 : 0),
 	                                       inst->GetCustomDataString().c_str(), static_cast<unsigned long>(inst->GetColor()),
 	                                       static_cast<unsigned long>(augslot[0]), static_cast<unsigned long>(augslot[1]), static_cast<unsigned long>(augslot[2]),
 	                                       static_cast<unsigned long>(augslot[3]), static_cast<unsigned long>(augslot[4]), static_cast<unsigned long>(augslot[5]), static_cast<unsigned long>(inst->GetOrnamentationIcon()),
-	                                       static_cast<unsigned long>(inst->GetOrnamentationIDFile()), static_cast<unsigned long>(inst->GetOrnamentHeroModel()));
+	                                       static_cast<unsigned long>(inst->GetOrnamentationIDFile()), static_cast<unsigned long>(inst->GetOrnamentHeroModel()), static_cast<unsigned long>(class_id));
 	const auto results = QueryDatabase(query);
 
     // Save bag contents, if slot supports bag contents
@@ -371,8 +387,20 @@ bool SharedDatabase::UpdateSharedBankSlot(uint32 char_id, const EQ::ItemInstance
 
 bool SharedDatabase::DeleteInventorySlot(uint32 char_id, int16 slot_id) {
 
+	const std::string classQuery =
+		StringFormat("SELECT class FROM character_data WHERE id = %i", char_id);
+
+	auto classResults = QueryDatabase(classQuery);
+	int16 class_id = 0;
+
+	if (!classResults.Success()) { return false; }
+
+	for (auto& row = classResults.begin(); row != classResults.end(); ++row) {
+		class_id = atoi(row[0]);
+	}
+
 	// Delete item
-	std::string query = StringFormat("DELETE FROM inventory WHERE charid = %i AND slotid = %i", char_id, slot_id);
+	std::string query = StringFormat("DELETE FROM inventory WHERE charid = %i AND slotid = %i AND (class = %i OR class = 0)", char_id, slot_id, class_id);
     auto results = QueryDatabase(query);
     if (!results.Success()) {
         return false;
@@ -591,15 +619,27 @@ bool SharedDatabase::GetSharedBank(uint32 id, EQ::InventoryProfile *inv, bool is
 // Overloaded: Retrieve character inventory based on character id (zone entry)
 bool SharedDatabase::GetInventory(uint32 char_id, EQ::InventoryProfile *inv)
 {
-	if (!char_id || !inv)
+	const std::string classQuery =
+		StringFormat("SELECT class FROM character_data WHERE id = %i", char_id);
+
+	auto classResults = QueryDatabase(classQuery);
+	int16 class_id = 0;
+
+	if (!classResults.Success()) { return false; }
+
+	for (auto& row = classResults.begin(); row != classResults.end(); ++row) {
+		class_id = atoi(row[0]);
+	}
+
+	if (!char_id || !inv || !class_id)
 		return false;
 
 	// Retrieve character inventory
 	const std::string query =
 	    StringFormat("SELECT slotid, itemid, charges, color, augslot1, augslot2, augslot3, augslot4, augslot5, "
 			 "augslot6, instnodrop, custom_data, ornamenticon, ornamentidfile, ornament_hero_model FROM "
-			 "inventory WHERE charid = %i ORDER BY slotid",
-			 char_id);
+			 "inventory WHERE charid = %i AND ( class = %i OR class = 0 ) ORDER BY slotid",
+			 char_id, class_id);
 	auto results = QueryDatabase(query);
 	if (!results.Success()) {
 		LogError("If you got an error related to the 'instnodrop' field, run the "
@@ -767,115 +807,6 @@ bool SharedDatabase::GetInventory(uint32 char_id, EQ::InventoryProfile *inv)
 
 	// Retrieve shared inventory
 	return GetSharedBank(char_id, inv, true);
-}
-
-// Overloaded: Retrieve character inventory based on account_id and character name (char select)
-bool SharedDatabase::GetInventory(uint32 account_id, char *name, EQ::InventoryProfile *inv) // deprecated
-{
-	// Retrieve character inventory
-	const std::string query =
-	    StringFormat("SELECT slotid, itemid, charges, color, augslot1, "
-			 "augslot2, augslot3, augslot4, augslot5, augslot6, instnodrop, custom_data, ornamenticon, "
-			 "ornamentidfile, ornament_hero_model "
-			 "FROM inventory INNER JOIN character_data ch "
-			 "ON ch.id = charid WHERE ch.name = '%s' AND ch.account_id = %i ORDER BY slotid",
-			 name, account_id);
-	auto results = QueryDatabase(query);
-	if (!results.Success()) {
-		LogError("If you got an error related to the 'instnodrop' field, run the "
-						    "following SQL Queries:\nalter table inventory add instnodrop "
-						    "tinyint(1) unsigned default 0 not null;\n");
-		return false;
-	}
-
-	for (auto& row = results.begin(); row != results.end(); ++row) {
-		int16 slot_id = atoi(row[0]);
-		uint32 item_id = atoi(row[1]);
-		const int8 charges = atoi(row[2]);
-		const uint32 color = atoul(row[3]);
-
-		uint32 aug[EQ::invaug::SOCKET_COUNT];
-		aug[0] = static_cast<uint32>(atoi(row[4]));
-		aug[1] = static_cast<uint32>(atoi(row[5]));
-		aug[2] = static_cast<uint32>(atoi(row[6]));
-		aug[3] = static_cast<uint32>(atoi(row[7]));
-		aug[4] = static_cast<uint32>(atoi(row[8]));
-		aug[5] = static_cast<uint32>(atoi(row[9]));
-
-		const bool instnodrop = (row[10] && static_cast<uint16>(atoi(row[10]))) ? true : false;
-		const uint32 ornament_icon = std::stoul(row[12]);
-		const uint32 ornament_idfile = std::stoul(row[13]);
-		uint32 ornament_hero_model = std::stoul(row[14]);
-
-		const EQ::ItemData *item = GetItem(item_id);
-		if (!item)
-			continue;
-
-		EQ::ItemInstance *inst = CreateBaseItem(item, charges);
-
-		if (inst == nullptr)
-			continue;
-
-		inst->SetAttuned(instnodrop);
-
-		if (row[11]) {
-			std::string data_str(row[11]);
-			std::string idAsString;
-			std::string value;
-			bool use_id = true;
-
-			for (int i = 0; i < data_str.length(); ++i) {
-				if (data_str[i] == '^') {
-					if (!use_id) {
-						inst->SetCustomData(idAsString, value);
-						idAsString.clear();
-						value.clear();
-					}
-
-					use_id = !use_id;
-					continue;
-				}
-
-				const char v = data_str[i];
-				if (use_id)
-					idAsString.push_back(v);
-				else
-					value.push_back(v);
-			}
-		}
-
-		inst->SetOrnamentIcon(ornament_icon);
-		inst->SetOrnamentationIDFile(ornament_idfile);
-		inst->SetOrnamentHeroModel(item->HerosForgeModel);
-
-		if (color > 0)
-			inst->SetColor(color);
-
-		inst->SetCharges(charges);
-
-		if (item->IsClassCommon()) {
-			for (int i = EQ::invaug::SOCKET_BEGIN; i <= EQ::invaug::SOCKET_END; i++) {
-				if (aug[i])
-					inst->PutAugment(this, i, aug[i]);
-			}
-		}
-
-		int16 put_slot_id;
-		if (slot_id >= 8000 && slot_id <= 8999)
-			put_slot_id = inv->PushCursor(*inst);
-		else
-			put_slot_id = inv->PutItem(slot_id, *inst);
-
-		safe_delete(inst);
-
-		// Save ptr to item in inventory
-		if (put_slot_id == INVALID_INDEX)
-			LogError("Warning: Invalid slot_id for item in inventory: name={}, acctid={}, item_id={}, slot_id={}",
-				name, account_id, item_id, slot_id);
-	}
-
-	// Retrieve shared inventory
-	return GetSharedBank(account_id, inv, false);
 }
 
 std::map<uint32, uint32> SharedDatabase::GetItemRecastTimestamps(uint32 char_id)
