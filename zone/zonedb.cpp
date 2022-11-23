@@ -743,7 +743,7 @@ bool ZoneDatabase::LoadCharacterData(uint32 character_id, PlayerProfile_Struct* 
 	}
 
 	// Override Character Level based on class
-	std::string query = StringFormat("SELECT %i_level FROM character_data WHERE `id` = %i", pp.class_, character_id);
+	query = StringFormat("SELECT %i_level FROM character_data WHERE `id` = %i", pp.class_, character_id);
 	auto classResults = QueryDatabase(classQuery);
 
 	for (auto& row = classResults.begin(); row != classResults.end(); ++row) {
