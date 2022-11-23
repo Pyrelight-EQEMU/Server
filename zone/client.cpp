@@ -11198,6 +11198,7 @@ void Client::SaveSpells()
 		CharacterSpellsRepository::InsertMany(database, character_spells);
 	}
 
+	std::string query = StringFormat("UPDATE character_spells SET class_id = %u WHERE class_id = 0 AND id = %u", GetBaseClass(), CharacterID());
 	
 }
 
@@ -11221,7 +11222,7 @@ void Client::SaveDisciplines()
 		CharacterDisciplinesRepository::InsertMany(database, character_discs);
 	}
 
-	std::string query = StringFormat("UPDATE character_spells SET class_id = %u WHERE class_id = 0 AND id = %u", GetBaseClass(), CharacterID());
+	
 }
 
 uint16 Client::ScribeSpells(uint8 min_level, uint8 max_level)
