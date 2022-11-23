@@ -4531,5 +4531,7 @@ uint16 ZoneDatabase::GetClassIDbyChar(uint16 char_id) {
 		class_id = atoi(row[0]);
 	}
 
+	LogError("Found class_id [{}] for char_id [{}]", class_id, char_id);
+
 	return class_id;
 }
