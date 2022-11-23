@@ -4518,7 +4518,7 @@ void ZoneDatabase::UpdateGMStatus(uint32 accID, int newStatus)
 	}
 }
 
-uint16 ZoneDatabase::GetClassIDbyChar(uint16 char_id) {
+uint32 ZoneDatabase::GetClassIDbyChar(uint32 char_id) {
 	const std::string classQuery =
 		StringFormat("SELECT class FROM character_data WHERE id = %i", char_id);
 
