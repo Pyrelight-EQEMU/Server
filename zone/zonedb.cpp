@@ -848,12 +848,13 @@ bool ZoneDatabase::LoadCharacterLeadershipAA(uint32 character_id, PlayerProfile_
 }
 
 bool ZoneDatabase::LoadCharacterDisciplines(uint32 character_id, PlayerProfile_Struct* pp){
+	auto class_id = GetClassIDbyChar(character_id);
 	std::string query = StringFormat(
 		"SELECT				  "
 		"disc_id			  "
 		"FROM				  "
 		"`character_disciplines`"
-		"WHERE `id` = %u ORDER BY `slot_id`", character_id);
+		"WHERE `id` = %u AND `class_id` = %u ORDER BY `slot_id`", character_id, class_id);
 	auto results = database.QueryDatabase(query);
 	int i = 0;
 
@@ -1098,7 +1099,8 @@ bool ZoneDatabase::SaveCharacterSkill(uint32 character_id, uint32 skill_id, uint
 }
 
 bool ZoneDatabase::SaveCharacterDisc(uint32 character_id, uint32 slot_id, uint32 disc_id){
-	std::string query = StringFormat("REPLACE INTO `character_disciplines` (id, slot_id, disc_id) VALUES (%u, %u, %u)", character_id, slot_id, disc_id);
+	auto class_id = GetClassIDbyChar(character_id);
+	std::string query = StringFormat("REPLACE INTO `character_disciplines` (id, slot_id, disc_id, class_id) VALUES (%u, %u, %u, %u)", character_id, slot_id, disc_id, class_id);
 	auto results = QueryDatabase(query);
 	LogDebug("ZoneDatabase::SaveCharacterDisc for character ID: [{}], slot:[{}] disc_id:[{}] done", character_id, slot_id, disc_id);
 	return true;
@@ -1529,7 +1531,8 @@ bool ZoneDatabase::DeleteCharacterSpell(uint32 character_id, uint32 spell_id, ui
 }
 
 bool ZoneDatabase::DeleteCharacterDisc(uint32 character_id, uint32 slot_id){
-	std::string query = StringFormat("DELETE FROM `character_disciplines` WHERE `slot_id` = %u AND `id` = %u", slot_id, character_id);
+	auto class_id = GetClassIDbyChar(character_id);
+	std::string query = StringFormat("DELETE FROM `character_disciplines` WHERE `slot_id` = %u AND `id` = %u AND `class_id` = %u", slot_id, character_id, class_id);
 	QueryDatabase(query);
 	return true;
 }
