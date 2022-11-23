@@ -743,8 +743,8 @@ bool ZoneDatabase::LoadCharacterData(uint32 character_id, PlayerProfile_Struct* 
 	}
 
 	// Override Character Level based on class
-	query = StringFormat("SELECT %i_level FROM character_data WHERE `id` = %i", pp.class_, character_id);
-	auto classResults = QueryDatabase(classQuery);
+	query = StringFormat("SELECT %i_level FROM character_data WHERE `id` = %i", pp->class_, character_id);
+	auto classResults = QueryDatabase(query);
 
 	for (auto& row = classResults.begin(); row != classResults.end(); ++row) {
 		pp->level = atoi(row[0]);
@@ -1365,7 +1365,7 @@ bool ZoneDatabase::SaveCharacterData(uint32 character_id, uint32 account_id, Pla
 		"%u,"  // e_last_invsnapshot
 		"'%s'" // mailkey					  mail_key
 		")",
-		pp.class_,
+		pp->class_,
 		character_id,					  // " id,                        "
 		account_id,						  // " account_id,                "
 		Strings::Escape(pp->name).c_str(),						  // " `name`,                    "
