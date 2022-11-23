@@ -778,13 +778,16 @@ bool ZoneDatabase::LoadCharacterMemmedSpells(uint32 character_id, PlayerProfile_
 }
 
 bool ZoneDatabase::LoadCharacterSpellBook(uint32 character_id, PlayerProfile_Struct* pp){
+	auto class_id = GetClassIDbyChar(character_id);
 	std::string query = StringFormat(
 		"SELECT					"
 		"slot_id,				"
 		"`spell_id`				"
 		"FROM					"
 		"`character_spells`		"
-		"WHERE `id` = %u ORDER BY `slot_id`", character_id);
+		"WHERE `id` = %u 		"
+		"AND `class_id` = %u	"
+		"ORDER BY `slot_id`", character_id, class_id);
 	auto results = database.QueryDatabase(query);
 
 	/* Initialize Spells */
@@ -1503,9 +1506,7 @@ bool ZoneDatabase::SaveCharacterAA(uint32 character_id, uint32 aa_id, uint32 cur
 }
 
 bool ZoneDatabase::SaveCharacterMemorizedSpell(uint32 character_id, uint32 spell_id, uint32 slot_id){
-
 	auto class_id = GetClassIDbyChar(character_id);
-
 	if (spell_id > SPDAT_RECORDS){ return false; }
 	std::string query = StringFormat("REPLACE INTO `character_memmed_spells` (id, slot_id, spell_id, class_id) VALUES (%u, %u, %u, %u)", character_id, slot_id, spell_id, class_id);
 	QueryDatabase(query);
@@ -1513,14 +1514,16 @@ bool ZoneDatabase::SaveCharacterMemorizedSpell(uint32 character_id, uint32 spell
 }
 
 bool ZoneDatabase::SaveCharacterSpell(uint32 character_id, uint32 spell_id, uint32 slot_id){
+	auto class_id = GetClassIDbyChar(character_id);
 	if (spell_id > SPDAT_RECORDS){ return false; }
-	std::string query = StringFormat("REPLACE INTO `character_spells` (id, slot_id, spell_id) VALUES (%u, %u, %u)", character_id, slot_id, spell_id);
+	std::string query = StringFormat("REPLACE INTO `character_spells` (id, slot_id, spell_id, class_id) VALUES (%u, %u, %u, %u)", character_id, slot_id, spell_id, class_id);
 	QueryDatabase(query);
 	return true;
 }
 
 bool ZoneDatabase::DeleteCharacterSpell(uint32 character_id, uint32 spell_id, uint32 slot_id){
-	std::string query = StringFormat("DELETE FROM `character_spells` WHERE `slot_id` = %u AND `id` = %u", slot_id, character_id);
+	auto class_id = GetClassIDbyChar(character_id);
+	std::string query = StringFormat("DELETE FROM `character_spells` WHERE `slot_id` = %u AND `id` = %u AND class_id = %u", slot_id, character_id, class_id);
 	QueryDatabase(query);
 	return true;
 }
