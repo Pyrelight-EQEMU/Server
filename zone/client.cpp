@@ -11198,7 +11198,7 @@ void Client::SaveSpells()
 		CharacterSpellsRepository::InsertMany(database, character_spells);
 	}
 
-	std::string query = StringFormat("UPDATE character_spells SET class_id = %u | class_id WHERE class_id = 0 AND id = %u", GetPlayerClassBit(m_pp.class_), CharacterID());
+	std::string query = StringFormat("UPDATE character_spells SET class_id = %u WHERE class_id = 0 AND id = %u", m_pp.class_, CharacterID());
 	database.QueryDatabase(query);	
 }
 
