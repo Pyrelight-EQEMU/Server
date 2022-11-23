@@ -32,6 +32,10 @@ namespace EQ
 {
 	using RoF2::IINVALID;
 	using RoF2::INULL;
+	
+	namespace inventory {
+		
+	} /*inventory*/
 
 	namespace invtype {
 		using namespace RoF2::invtype::enum_;
@@ -144,34 +148,34 @@ namespace EQ
 	} // namespace invslot
 
 	namespace invbag {
-		using Titanium::invbag::SLOT_INVALID;
-		using Titanium::invbag::SLOT_BEGIN;
-		using Titanium::invbag::SLOT_END;
-		using Titanium::invbag::SLOT_COUNT;
+		using RoF2::invbag::SLOT_INVALID;
+		using RoF2::invbag::SLOT_BEGIN;
+		using RoF2::invbag::SLOT_END;
+		using RoF2::invbag::SLOT_COUNT;
 
-		using Titanium::invbag::GENERAL_BAGS_BEGIN;
+		const int16 GENERAL_BAGS_BEGIN = 2510;
 		const int16 GENERAL_BAGS_COUNT = invslot::GENERAL_COUNT * SLOT_COUNT;
 		const int16 GENERAL_BAGS_END = (GENERAL_BAGS_BEGIN + GENERAL_BAGS_COUNT) - 1;
 
 		const int16 GENERAL_BAGS_8_COUNT = 8 * SLOT_COUNT;
 		const int16 GENERAL_BAGS_8_END = (GENERAL_BAGS_BEGIN + GENERAL_BAGS_8_COUNT) - 1;
 
-		const int16 CURSOR_BAG_BEGIN = 351;
+		const int16 CURSOR_BAG_BEGIN = 3510;
 		const int16 CURSOR_BAG_COUNT = SLOT_COUNT;
 		const int16 CURSOR_BAG_END = (CURSOR_BAG_BEGIN + CURSOR_BAG_COUNT) - 1;
 
-		using Titanium::invbag::BANK_BAGS_BEGIN;
+		const int16 BANK_BAGS_BEGIN = 20310;
 		const int16 BANK_BAGS_COUNT = (invtype::BANK_SIZE * SLOT_COUNT);
 		const int16 BANK_BAGS_END = (BANK_BAGS_BEGIN + BANK_BAGS_COUNT) - 1;
 
 		const int16 BANK_BAGS_16_COUNT = 16 * SLOT_COUNT;
 		const int16 BANK_BAGS_16_END = (BANK_BAGS_BEGIN + BANK_BAGS_16_COUNT) - 1;
 
-		using Titanium::invbag::SHARED_BANK_BAGS_BEGIN;
+		const int16 SHARED_BANK_BAGS_BEGIN = 25310;
 		const int16 SHARED_BANK_BAGS_COUNT = invtype::SHARED_BANK_SIZE * SLOT_COUNT;
 		const int16 SHARED_BANK_BAGS_END = (SHARED_BANK_BAGS_BEGIN + SHARED_BANK_BAGS_COUNT) - 1;
 
-		using Titanium::invbag::TRADE_BAGS_BEGIN;
+		const int16 TRADE_BAGS_BEGIN = 3031;
 		const int16 TRADE_BAGS_COUNT = invtype::TRADE_SIZE * SLOT_COUNT;
 		const int16 TRADE_BAGS_END = (TRADE_BAGS_BEGIN + TRADE_BAGS_COUNT) - 1;
 
@@ -406,7 +410,7 @@ namespace EQ
 	namespace profile {
 		using RoF2::profile::BANDOLIERS_SIZE;
 		using RoF2::profile::BANDOLIER_ITEM_COUNT;
-
+		
 		using RoF2::profile::POTION_BELT_SIZE;
 
 		using RoF2::profile::SKILL_ARRAY_SIZE;

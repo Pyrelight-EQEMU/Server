@@ -1276,7 +1276,7 @@ void Corpse::LootItem(Client *client, const EQApplicationPacket *app)
 
 	const EQ::ItemData *item = nullptr;
 	EQ::ItemInstance *inst = nullptr;
-	ServerLootItem_Struct *item_data = nullptr, *bag_item_data[10] = {};
+	ServerLootItem_Struct *item_data = nullptr, *bag_item_data[RoF2::invbag::SLOT_COUNT] = {};
 
 	memset(bag_item_data, 0, sizeof(bag_item_data));
 	if (GetPlayerKillItem() > 1) {
