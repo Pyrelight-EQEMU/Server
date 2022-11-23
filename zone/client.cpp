@@ -63,6 +63,7 @@ extern volatile bool RunLoops;
 #include "../common/expedition_lockout_timer.h"
 #include "cheat_manager.h"
 
+#include "../common/repositories/bug_reports_repository.h"
 #include "../common/repositories/char_recipe_list_repository.h"
 #include "../common/repositories/character_spells_repository.h"
 #include "../common/repositories/character_disciplines_repository.h"
@@ -11809,4 +11810,170 @@ void Client::AddAAPoints(uint32 points)
 
 bool Client::SendGMCommand(std::string message, bool ignore_status) {
 	return command_dispatch(this, message, ignore_status) >= 0 ? true : false;
+}
+
+void Client::RegisterBug(BugReport_Struct* r) {
+	if (!r) {
+		return;
+	};
+
+	auto b = BugReportsRepository::NewEntity();
+
+	b.zone                = zone->GetShortName();
+	b.client_version_id   = static_cast<uint32_t>(ClientVersion());
+	b.client_version_name = EQ::versions::ClientVersionName(ClientVersion());
+	b.account_id          = AccountID();
+	b.character_id        = CharacterID();
+	b.character_name      = GetName();
+	b.reporter_spoof      = (strcmp(GetCleanName(), r->reporter_name) != 0 ? 1 : 0);
+	b.category_id         = r->category_id;
+	b.category_name       = r->category_name;
+	b.reporter_name       = r->reporter_name;
+	b.ui_path             = r->ui_path;
+	b.pos_x               = r->pos_x;
+	b.pos_y               = r->pos_y;
+	b.pos_z               = r->pos_z;
+	b.heading             = r->heading;
+	b.time_played         = r->time_played;
+	b.target_id           = r->target_id;
+	b.target_name         = r->target_name;
+	b.optional_info_mask  = r->optional_info_mask;
+	b._can_duplicate      = ((r->optional_info_mask & EQ::bug::infoCanDuplicate) != 0 ? 1 : 0);
+	b._crash_bug          = ((r->optional_info_mask & EQ::bug::infoCrashBug) != 0 ? 1 : 0);
+	b._target_info        = ((r->optional_info_mask & EQ::bug::infoTargetInfo) != 0 ? 1 : 0);
+	b._character_flags    = ((r->optional_info_mask & EQ::bug::infoCharacterFlags) != 0 ? 1 : 0);
+	b._unknown_value      = ((r->optional_info_mask & EQ::bug::infoUnknownValue) != 0 ? 1 : 0);
+	b.bug_report          = r->bug_report;
+	b.system_info         = r->system_info;
+
+	auto n = BugReportsRepository::InsertOne(database, b);
+	if (!n.id) {
+		Message(Chat::White, "Failed to created your bug report."); // Client sends success message
+		return;
+	}
+
+	LogBugs("id [{}] report [{}] account [{}] name [{}] charid [{}] zone [{}]", n.id, r->bug_report, AccountID(), GetCleanName(), CharacterID(), zone->GetShortName());
+
+	worldserver.SendEmoteMessage(
+		0,
+		0,
+		AccountStatus::QuestTroupe,
+		Chat::Yellow,
+		fmt::format(
+			"{} has created a new bug report, would you like to {} it?",
+			GetCleanName(),
+			Saylink::Silent(
+				fmt::format(
+					"#bugs view {}",
+					n.id
+				),
+				"view"
+			)
+		).c_str()
+	);
+}
+
+std::vector<Mob*> Client::GetApplySpellList(
+	ApplySpellType apply_type,
+	bool allow_pets,
+	bool is_raid_group_only,
+	bool allow_bots
+) {
+	std::vector<Mob*> l;
+
+	if (apply_type == ApplySpellType::Raid && IsRaidGrouped()) {
+		auto* r = GetRaid();
+		auto group_id = r->GetGroup(this);
+		if (r && EQ::ValueWithin(group_id, 0, (MAX_RAID_GROUPS - 1))) {
+			for (auto i = 0; i < MAX_RAID_MEMBERS; i++) {
+				auto* m = r->members[i].member;
+				if (m && m->IsClient() && (!is_raid_group_only || r->GetGroup(m) == group_id)) {
+					l.push_back(m);
+
+					if (allow_pets && m->HasPet()) {
+						l.push_back(m->GetPet());
+					}
+
+#ifdef BOTS
+					if (allow_bots) {
+						const auto& sbl = entity_list.GetBotListByCharacterID(m->CharacterID());
+						for (const auto& b : sbl) {
+							l.push_back(b);
+						}
+					}
+#endif
+				}
+			}
+		}
+	} else if (apply_type == ApplySpellType::Group && IsGrouped()) {
+		auto* g = GetGroup();
+		if (g) {
+			for (auto i = 0; i < MAX_GROUP_MEMBERS; i++) {
+				auto* m = g->members[i];
+				if (m && m->IsClient()) {
+					l.push_back(m->CastToClient());
+
+					if (allow_pets && m->HasPet()) {
+						l.push_back(m->GetPet());
+					}
+
+#ifdef BOTS
+					if (allow_bots) {
+						const auto& sbl = entity_list.GetBotListByCharacterID(m->CastToClient()->CharacterID());
+						for (const auto& b : sbl) {
+							l.push_back(b);
+						}
+					}
+#endif
+				}
+			}
+		}
+	} else {
+		l.push_back(this);
+
+		if (allow_pets && HasPet()) {
+			l.push_back(GetPet());
+		}
+
+#ifdef BOTS
+		if (allow_bots) {
+			const auto& sbl = entity_list.GetBotListByCharacterID(CharacterID());
+			for (const auto& b : sbl) {
+				l.push_back(b);
+			}
+		}
+#endif
+	}
+
+	return l;
+}
+
+void Client::ApplySpell(
+	int spell_id,
+	int duration,
+	ApplySpellType apply_type,
+	bool allow_pets,
+	bool is_raid_group_only,
+	bool allow_bots
+) {
+	const auto& l = GetApplySpellList(apply_type, allow_pets, is_raid_group_only, allow_bots);
+
+	for (const auto& m : l) {
+		m->ApplySpellBuff(spell_id, duration);
+	}
+}
+
+void Client::SetSpellDuration(
+	int spell_id,
+	int duration,
+	ApplySpellType apply_type,
+	bool allow_pets,
+	bool is_raid_group_only,
+	bool allow_bots
+) {
+	const auto& l = GetApplySpellList(apply_type, allow_pets, is_raid_group_only, allow_bots);
+
+	for (const auto& m : l) {
+		m->SetBuffDuration(spell_id, duration);
+	}
 }

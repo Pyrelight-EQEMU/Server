@@ -339,36 +339,6 @@ void Perl_Client_MovePCInstance(Client* self, uint32 zone_id, uint32 instance_id
 	self->MovePC(zone_id, instance_id, x, y, z, heading);
 }
 
-void Perl_Client_MoveZone(Client* self, const char* zone_short_name) // @categories Script Utility
-{
-	self->MoveZone(zone_short_name);
-}
-
-void Perl_Client_MoveZoneGroup(Client* self, const char* zone_short_name) // @categories Script Utility, Group
-{
-	self->MoveZoneGroup(zone_short_name);
-}
-
-void Perl_Client_MoveZoneRaid(Client* self, const char* zone_short_name) // @categories Script Utility, Raid
-{
-	self->MoveZoneRaid(zone_short_name);
-}
-
-void Perl_Client_MoveZoneInstance(Client* self, uint16 instance_id) // @categories Adventures and Expeditions, Script Utility
-{
-	self->MoveZoneInstance(instance_id);
-}
-
-void Perl_Client_MoveZoneInstanceGroup(Client* self, uint16 instance_id) // @categories Adventures and Expeditions, Script Utility, Group
-{
-	self->MoveZoneInstanceGroup(instance_id);
-}
-
-void Perl_Client_MoveZoneInstanceRaid(Client* self, uint16 instance_id) // @categories Adventures and Expeditions, Script Utility, Raid
-{
-	self->MoveZoneInstanceRaid(instance_id);
-}
-
 void Perl_Client_ChangeLastName(Client* self, std::string last_name) // @categories Account and Character
 {
 	self->ChangeLastName(last_name);
@@ -2506,6 +2476,238 @@ void Perl_Client_SendMarqueeMessage(Client* self, uint32 type, uint32 priority, 
 	self->SendMarqueeMessage(type, priority, fade_in, fade_out, duration, message);
 }
 
+void Perl_Client_MoveZone(Client* self, const char* zone_short_name) // @categories Script Utility
+{
+	self->MoveZone(zone_short_name);
+}
+
+void Perl_Client_MoveZone(Client* self, const char* zone_short_name, float x, float y, float z) // @categories Script Utility
+{
+	self->MoveZone(zone_short_name, glm::vec4(x, y, z, 0.0f));
+}
+
+void Perl_Client_MoveZone(Client* self, const char* zone_short_name, float x, float y, float z, float heading) // @categories Script Utility
+{
+	self->MoveZone(zone_short_name, glm::vec4(x, y, z, heading));
+}
+
+void Perl_Client_MoveZoneGroup(Client* self, const char* zone_short_name) // @categories Script Utility, Group
+{
+	self->MoveZoneGroup(zone_short_name);
+}
+
+void Perl_Client_MoveZoneGroup(Client* self, const char* zone_short_name, float x, float y, float z) // @categories Script Utility
+{
+	self->MoveZoneGroup(zone_short_name, glm::vec4(x, y, z, 0.0f));
+}
+
+void Perl_Client_MoveZoneGroup(Client* self, const char* zone_short_name, float x, float y, float z, float heading) // @categories Script Utility
+{
+	self->MoveZoneGroup(zone_short_name, glm::vec4(x, y, z, heading));
+}
+
+void Perl_Client_MoveZoneRaid(Client* self, const char* zone_short_name) // @categories Script Utility, Raid
+{
+	self->MoveZoneRaid(zone_short_name);
+}
+
+void Perl_Client_MoveZoneRaid(Client* self, const char* zone_short_name, float x, float y, float z) // @categories Script Utility
+{
+	self->MoveZoneRaid(zone_short_name, glm::vec4(x, y, z, 0.0f));
+}
+
+void Perl_Client_MoveZoneRaid(Client* self, const char* zone_short_name, float x, float y, float z, float heading) // @categories Script Utility
+{
+	self->MoveZoneRaid(zone_short_name, glm::vec4(x, y, z, heading));
+}
+
+void Perl_Client_MoveZoneInstance(Client* self, uint16 instance_id) // @categories Adventures and Expeditions, Script Utility
+{
+	self->MoveZoneInstance(instance_id);
+}
+
+void Perl_Client_MoveZoneInstance(Client* self, uint16 instance_id, float x, float y, float z) // @categories Adventures and Expeditions, Script Utility
+{
+	self->MoveZoneInstance(instance_id, glm::vec4(x, y, z, 0.0f));
+}
+
+void Perl_Client_MoveZoneInstance(Client* self, uint16 instance_id, float x, float y, float z, float heading) // @categories Adventures and Expeditions, Script Utility
+{
+	self->MoveZoneInstance(instance_id, glm::vec4(x, y, z, heading));
+}
+
+void Perl_Client_MoveZoneInstanceGroup(Client* self, uint16 instance_id) // @categories Adventures and Expeditions, Script Utility, Group
+{
+	self->MoveZoneInstanceGroup(instance_id);
+}
+
+void Perl_Client_MoveZoneInstanceGroup(Client* self, uint16 instance_id, float x, float y, float z) // @categories Adventures and Expeditions, Script Utility
+{
+	self->MoveZoneInstanceGroup(instance_id, glm::vec4(x, y, z, 0.0f));
+}
+
+void Perl_Client_MoveZoneInstanceGroup(Client* self, uint16 instance_id, float x, float y, float z, float heading) // @categories Adventures and Expeditions, Script Utility
+{
+	self->MoveZoneInstanceGroup(instance_id, glm::vec4(x, y, z, heading));
+}
+
+void Perl_Client_MoveZoneInstanceRaid(Client* self, uint16 instance_id) // @categories Adventures and Expeditions, Script Utility, Raid
+{
+	self->MoveZoneInstanceRaid(instance_id);
+}
+
+void Perl_Client_MoveZoneInstanceRaid(Client* self, uint16 instance_id, float x, float y, float z) // @categories Adventures and Expeditions, Script Utility
+{
+	self->MoveZoneInstanceRaid(instance_id, glm::vec4(x, y, z, 0.0f));
+}
+
+void Perl_Client_MoveZoneInstanceRaid(Client* self, uint16 instance_id, float x, float y, float z, float heading) // @categories Adventures and Expeditions, Script Utility
+{
+	self->MoveZoneInstanceRaid(instance_id, glm::vec4(x, y, z, heading));
+}
+
+void Perl_Client_ApplySpell(Client* self, int spell_id)
+{
+	self->ApplySpell(spell_id);
+}
+
+void Perl_Client_ApplySpell(Client* self, int spell_id, int duration)
+{
+	self->ApplySpell(spell_id, duration);
+}
+
+void Perl_Client_ApplySpell(Client* self, int spell_id, int duration, bool allow_pets)
+{
+	self->ApplySpell(spell_id, duration, ApplySpellType::Solo, allow_pets);
+}
+
+#ifdef BOTS
+void Perl_Client_ApplySpell(Client* self, int spell_id, int duration, bool allow_pets, bool allow_bots)
+{
+	self->ApplySpell(spell_id, duration, ApplySpellType::Solo, allow_pets, true, allow_bots);
+}
+#endif
+
+void Perl_Client_ApplySpellGroup(Client* self, int spell_id)
+{
+	self->ApplySpell(spell_id, 0, ApplySpellType::Group);
+}
+
+void Perl_Client_ApplySpellGroup(Client* self, int spell_id, int duration)
+{
+	self->ApplySpell(spell_id, duration, ApplySpellType::Group);
+}
+
+void Perl_Client_ApplySpellGroup(Client* self, int spell_id, int duration, bool allow_pets)
+{
+	self->ApplySpell(spell_id, duration, ApplySpellType::Group, allow_pets);
+}
+
+#ifdef BOTS
+void Perl_Client_ApplySpellGroup(Client* self, int spell_id, int duration, bool allow_pets, bool allow_bots)
+{
+	self->ApplySpell(spell_id, duration, ApplySpellType::Group, allow_pets, true, allow_bots);
+}
+#endif
+
+void Perl_Client_ApplySpellRaid(Client* self, int spell_id)
+{
+	self->ApplySpell(spell_id, 0, ApplySpellType::Raid);
+}
+
+void Perl_Client_ApplySpellRaid(Client* self, int spell_id, int duration)
+{
+	self->ApplySpell(spell_id, duration, ApplySpellType::Raid);
+}
+
+void Perl_Client_ApplySpellRaid(Client* self, int spell_id, int duration, bool allow_pets)
+{
+	self->ApplySpell(spell_id, duration, ApplySpellType::Raid, allow_pets);
+}
+
+void Perl_Client_ApplySpellRaid(Client* self, int spell_id, int duration, bool allow_pets, bool is_raid_group_only)
+{
+	self->ApplySpell(spell_id, duration, ApplySpellType::Raid, allow_pets, is_raid_group_only);
+}
+
+#ifdef BOTS
+void Perl_Client_ApplySpellRaid(Client* self, int spell_id, int duration, bool allow_pets, bool is_raid_group_only, bool allow_bots)
+{
+	self->ApplySpell(spell_id, duration, ApplySpellType::Raid, allow_pets, is_raid_group_only, allow_bots);
+}
+#endif
+
+void Perl_Client_SetSpellDuration(Client* self, int spell_id)
+{
+	self->SetSpellDuration(spell_id);
+}
+
+void Perl_Client_SetSpellDuration(Client* self, int spell_id, int duration)
+{
+	self->SetSpellDuration(spell_id, duration);
+}
+
+void Perl_Client_SetSpellDuration(Client* self, int spell_id, int duration, bool allow_pets)
+{
+	self->SetSpellDuration(spell_id, duration, ApplySpellType::Solo, allow_pets);
+}
+
+#ifdef BOTS
+void Perl_Client_SetSpellDuration(Client* self, int spell_id, int duration, bool allow_pets, bool allow_bots)
+{
+	self->SetSpellDuration(spell_id, duration, ApplySpellType::Solo, allow_pets, true, allow_bots);
+}
+#endif
+
+void Perl_Client_SetSpellDurationGroup(Client* self, int spell_id)
+{
+	self->SetSpellDuration(spell_id, 0, ApplySpellType::Group);
+}
+
+void Perl_Client_SetSpellDurationGroup(Client* self, int spell_id, int duration)
+{
+	self->SetSpellDuration(spell_id, duration, ApplySpellType::Group);
+}
+
+void Perl_Client_SetSpellDurationGroup(Client* self, int spell_id, int duration, bool allow_pets)
+{
+	self->SetSpellDuration(spell_id, duration, ApplySpellType::Group, allow_pets);
+}
+
+#ifdef BOTS
+void Perl_Client_SetSpellDurationGroup(Client* self, int spell_id, int duration, bool allow_pets, bool allow_bots)
+{
+	self->SetSpellDuration(spell_id, duration, ApplySpellType::Group, allow_pets, true, allow_bots);
+}
+#endif
+
+void Perl_Client_SetSpellDurationRaid(Client* self, int spell_id)
+{
+	self->ApplySpell(spell_id, 0, ApplySpellType::Raid);
+}
+
+void Perl_Client_SetSpellDurationRaid(Client* self, int spell_id, int duration)
+{
+	self->ApplySpell(spell_id, duration, ApplySpellType::Raid);
+}
+
+void Perl_Client_SetSpellDurationRaid(Client* self, int spell_id, int duration, bool allow_pets)
+{
+	self->SetSpellDuration(spell_id, duration, ApplySpellType::Raid, allow_pets);
+}
+
+void Perl_Client_SetSpellDurationRaid(Client* self, int spell_id, int duration, bool allow_pets, bool is_raid_group_only)
+{
+	self->SetSpellDuration(spell_id, duration, ApplySpellType::Raid, allow_pets, is_raid_group_only);
+}
+
+#ifdef BOTS
+void Perl_Client_SetSpellDurationRaid(Client* self, int spell_id, int duration, bool allow_pets, bool is_raid_group_only, bool allow_bots)
+{
+	self->SetSpellDuration(spell_id, duration, ApplySpellType::Raid, allow_pets, is_raid_group_only, allow_bots);
+}
+#endif
+
 #ifdef BOTS
 
 int Perl_Client_GetBotRequiredLevel(Client* self)
@@ -2601,6 +2803,25 @@ void perl_register_client()
 	package.add("AddPVPPoints", &Perl_Client_AddPVPPoints);
 	package.add("AddSkill", &Perl_Client_AddSkill);
 	package.add("Admin", &Perl_Client_Admin);
+	package.add("ApplySpell", (void(*)(Client*, int))&Perl_Client_ApplySpell);
+	package.add("ApplySpell", (void(*)(Client*, int, int))&Perl_Client_ApplySpell);
+	package.add("ApplySpell", (void(*)(Client*, int, int, bool))&Perl_Client_ApplySpell);
+#ifdef BOTS
+	package.add("ApplySpell", (void(*)(Client*, int, int, bool, bool))&Perl_Client_ApplySpell);
+#endif
+	package.add("ApplySpellGroup", (void(*)(Client*, int))&Perl_Client_ApplySpellGroup);
+	package.add("ApplySpellGroup", (void(*)(Client*, int, int))&Perl_Client_ApplySpellGroup);
+	package.add("ApplySpellGroup", (void(*)(Client*, int, int, bool))&Perl_Client_ApplySpellGroup);
+#ifdef BOTS
+	package.add("ApplySpellGroup", (void(*)(Client*, int, int, bool, bool))&Perl_Client_ApplySpellGroup);
+#endif
+	package.add("ApplySpellRaid", (void(*)(Client*, int))&Perl_Client_ApplySpellRaid);
+	package.add("ApplySpellRaid", (void(*)(Client*, int, int))&Perl_Client_ApplySpellRaid);
+	package.add("ApplySpellRaid", (void(*)(Client*, int, int, bool))&Perl_Client_ApplySpellRaid);
+	package.add("ApplySpellRaid", (void(*)(Client*, int, int, bool, bool))&Perl_Client_ApplySpellRaid);
+#ifdef BOTS
+	package.add("ApplySpellRaid", (void(*)(Client*, int, int, bool, bool, bool))&Perl_Client_ApplySpellRaid);
+#endif
 	package.add("AssignTask", (void(*)(Client*, int))&Perl_Client_AssignTask);
 	package.add("AssignTask", (void(*)(Client*, int, int))&Perl_Client_AssignTask);
 	package.add("AssignTask", (void(*)(Client*, int, int, bool))&Perl_Client_AssignTask);
@@ -2848,12 +3069,24 @@ void perl_register_client()
 	package.add("MovePCDynamicZone", (void(*)(Client*, perl::scalar, int))&Perl_Client_MovePCDynamicZone);
 	package.add("MovePCDynamicZone", (void(*)(Client*, perl::scalar, int, bool))&Perl_Client_MovePCDynamicZone);
 	package.add("MovePCInstance", &Perl_Client_MovePCInstance);
-	package.add("MoveZone", &Perl_Client_MoveZone);
-	package.add("MoveZoneGroup", &Perl_Client_MoveZoneGroup);
-	package.add("MoveZoneInstance", &Perl_Client_MoveZoneInstance);
-	package.add("MoveZoneInstanceGroup", &Perl_Client_MoveZoneInstanceGroup);
-	package.add("MoveZoneInstanceRaid", &Perl_Client_MoveZoneInstanceRaid);
-	package.add("MoveZoneRaid", &Perl_Client_MoveZoneRaid);
+	package.add("MoveZone", (void(*)(Client*, const char*))&Perl_Client_MoveZone);
+	package.add("MoveZone", (void(*)(Client*, const char*, float, float, float))&Perl_Client_MoveZone);
+	package.add("MoveZone", (void(*)(Client*, const char*, float, float, float, float))&Perl_Client_MoveZone);
+	package.add("MoveZoneGroup", (void(*)(Client*, const char*))&Perl_Client_MoveZoneGroup);
+	package.add("MoveZoneGroup", (void(*)(Client*, const char*, float, float, float))&Perl_Client_MoveZoneGroup);
+	package.add("MoveZoneGroup", (void(*)(Client*, const char*, float, float, float, float))&Perl_Client_MoveZoneGroup);
+	package.add("MoveZoneInstance", (void(*)(Client*, uint16))&Perl_Client_MoveZoneInstance);
+	package.add("MoveZoneInstance", (void(*)(Client*, uint16, float, float, float))&Perl_Client_MoveZoneInstance);
+	package.add("MoveZoneInstance", (void(*)(Client*, uint16, float, float, float, float))&Perl_Client_MoveZoneInstance);
+	package.add("MoveZoneInstanceGroup", (void(*)(Client*, uint16))&Perl_Client_MoveZoneInstanceGroup);
+	package.add("MoveZoneInstanceGroup", (void(*)(Client*, uint16, float, float, float))&Perl_Client_MoveZoneInstanceGroup);
+	package.add("MoveZoneInstanceGroup", (void(*)(Client*, uint16, float, float, float, float))&Perl_Client_MoveZoneInstanceGroup);
+	package.add("MoveZoneInstanceRaid", (void(*)(Client*, uint16))&Perl_Client_MoveZoneInstanceRaid);
+	package.add("MoveZoneInstanceRaid", (void(*)(Client*, uint16, float, float, float))&Perl_Client_MoveZoneInstanceRaid);
+	package.add("MoveZoneInstanceRaid", (void(*)(Client*, uint16, float, float, float, float))&Perl_Client_MoveZoneInstanceRaid);
+	package.add("MoveZoneRaid", (void(*)(Client*, const char*))&Perl_Client_MoveZoneRaid);
+	package.add("MoveZoneRaid", (void(*)(Client*, const char*, float, float, float))&Perl_Client_MoveZoneRaid);
+	package.add("MoveZoneRaid", (void(*)(Client*, const char*, float, float, float, float))&Perl_Client_MoveZoneRaid);
 	package.add("NPCSpawn", (void(*)(Client*, NPC*, const char*))&Perl_Client_NPCSpawn);
 	package.add("NPCSpawn", (void(*)(Client*, NPC*, const char*, uint32))&Perl_Client_NPCSpawn);
 	package.add("NotifyNewTitlesAvailable", &Perl_Client_NotifyNewTitlesAvailable);
@@ -2983,6 +3216,25 @@ void perl_register_client()
 	package.add("SetSecondaryWeaponOrnamentation", &Perl_Client_SetSecondaryWeaponOrnamentation);
 	package.add("SetSkill", &Perl_Client_SetSkill);
 	package.add("SetSkillPoints", &Perl_Client_SetSkillPoints);
+	package.add("SetSpellDuration", (void(*)(Client*, int))&Perl_Client_SetSpellDuration);
+	package.add("SetSpellDuration", (void(*)(Client*, int, int))&Perl_Client_SetSpellDuration);
+	package.add("SetSpellDuration", (void(*)(Client*, int, int, bool))&Perl_Client_SetSpellDuration);
+#ifdef BOTS
+	package.add("SetSpellDuration", (void(*)(Client*, int, int, bool, bool))&Perl_Client_SetSpellDuration);
+#endif
+	package.add("SetSpellDurationGroup", (void(*)(Client*, int))&Perl_Client_SetSpellDurationGroup);
+	package.add("SetSpellDurationGroup", (void(*)(Client*, int, int))&Perl_Client_SetSpellDurationGroup);
+	package.add("SetSpellDurationGroup", (void(*)(Client*, int, int, bool))&Perl_Client_SetSpellDurationGroup);
+#ifdef BOTS
+	package.add("SetSpellDurationGroup", (void(*)(Client*, int, int, bool, bool))&Perl_Client_SetSpellDurationGroup);
+#endif
+	package.add("SetSpellDurationRaid", (void(*)(Client*, int))&Perl_Client_SetSpellDurationRaid);
+	package.add("SetSpellDurationRaid", (void(*)(Client*, int, int))&Perl_Client_SetSpellDurationRaid);
+	package.add("SetSpellDurationRaid", (void(*)(Client*, int, int, bool))&Perl_Client_SetSpellDurationRaid);
+	package.add("SetSpellDurationRaid", (void(*)(Client*, int, int, bool, bool))&Perl_Client_SetSpellDurationRaid);
+#ifdef BOTS
+	package.add("SetSpellDurationRaid", (void(*)(Client*, int, int, bool, bool, bool))&Perl_Client_SetSpellDurationRaid);
+#endif
 	package.add("SetStartZone", (void(*)(Client*, uint32))&Perl_Client_SetStartZone);
 	package.add("SetStartZone", (void(*)(Client*, uint32, float, float, float))&Perl_Client_SetStartZone);
 	package.add("SetStartZone", (void(*)(Client*, uint32, float, float, float, float))&Perl_Client_SetStartZone);
