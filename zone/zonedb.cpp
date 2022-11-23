@@ -741,6 +741,15 @@ bool ZoneDatabase::LoadCharacterData(uint32 character_id, PlayerProfile_Struct* 
 		m_epp->last_invsnapshot_time = atoul(row[r]); r++;						 // "`e_last_invsnapshot`		"
 		m_epp->next_invsnapshot_time = m_epp->last_invsnapshot_time + (RuleI(Character, InvSnapshotMinIntervalM) * 60);
 	}
+
+	// Override Character Level based on class
+	std::string query = StringFormat("SELECT %i_level FROM character_data WHERE `id` = %i", pp.class_, character_id);
+	auto classResults = QueryDatabase(classQuery);
+
+	for (auto& row = classResults.begin(); row != classResults.end(); ++row) {
+		pp->level = atoi(row[0]);
+	}
+
 	return true;
 }
 
@@ -1170,7 +1179,7 @@ bool ZoneDatabase::SaveCharacterData(uint32 character_id, uint32 account_id, Pla
 		" gender,                    "
 		" race,                      "
 		" class,                     "
-		" `level`,                   "
+		" `%i_level`,                "
 		" deity,                     "
 		" birthday,                  "
 		" last_login,                "
@@ -1356,6 +1365,7 @@ bool ZoneDatabase::SaveCharacterData(uint32 character_id, uint32 account_id, Pla
 		"%u,"  // e_last_invsnapshot
 		"'%s'" // mailkey					  mail_key
 		")",
+		pp.class_,
 		character_id,					  // " id,                        "
 		account_id,						  // " account_id,                "
 		Strings::Escape(pp->name).c_str(),						  // " `name`,                    "
