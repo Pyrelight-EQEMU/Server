@@ -1925,7 +1925,7 @@ bool Client::SwapItem(MoveItem_Struct* move_in) {
 		return false;
 	}
 	//verify shared bank transactions in the database
-	if (src_inst && ((src_slot_id >= EQ::invslot::SHARED_BANK_BEGIN && src_slot_id <= EQ::invbag::SHARED_BANK_END) || ( src_slot_id >= EQ::invslot::SHARED_BANK_BAGS_BEGIN && src_slot_id <= EQ::invbag::SHARED_BANK_BAGS_END ))) {
+	if (src_inst && ((src_slot_id >= EQ::invslot::SHARED_BANK_BEGIN && src_slot_id <= Titanium::invslot::SHARED_BANK_END) || ( src_slot_id >= EQ::invbag::SHARED_BANK_BAGS_BEGIN && src_slot_id <= EQ::invbag::SHARED_BANK_BAGS_END ))) {
 		if(!database.VerifyInventory(account_id, src_slot_id, src_inst)) {
 			LogError("Player [{}] on account [{}] was found exploiting the shared bank.\n", GetName(), account_name);
 			DeleteItemInInventory(dst_slot_id,0,true);
@@ -1940,7 +1940,7 @@ bool Client::SwapItem(MoveItem_Struct* move_in) {
 			}
 		}
 	}
-	if (dst_inst && ((dst_slot_id >= EQ::invslot::SHARED_BANK_BEGIN && dst_slot_id <= EQ::invbag::SHARED_BANK_END) || ( dst_slot_id >= EQ::invslot::SHARED_BANK_BAGS_BEGIN && dst_slot_id <= EQ::invbag::SHARED_BANK_BAGS_END ))) {
+	if (dst_inst && ((dst_slot_id >= EQ::invslot::SHARED_BANK_BEGIN && dst_slot_id <= Titanium::invslot::SHARED_BANK_END) || ( dst_slot_id >= EQ::invbag::SHARED_BANK_BAGS_BEGIN && dst_slot_id <= EQ::invbag::SHARED_BANK_BAGS_END ))) {
 		if(!database.VerifyInventory(account_id, dst_slot_id, dst_inst)) {
 			LogError("Player [{}] on account [{}] was found exploting the shared bank.\n", GetName(), account_name);
 			DeleteItemInInventory(src_slot_id,0,true);
@@ -1960,7 +1960,7 @@ bool Client::SwapItem(MoveItem_Struct* move_in) {
 	// Check for No Drop Hacks
 	Mob* with = trade->With();
 	if (((with && with->IsClient() && !with->CastToClient()->IsBecomeNPC() && dst_slot_id >= EQ::invslot::TRADE_BEGIN && dst_slot_id <= EQ::invslot::TRADE_END) ||
-		((dst_slot_id >= EQ::invslot::SHARED_BANK_BEGIN && dst_slot_id <= EQ::invbag::SHARED_BANK_END) || ( dst_slot_id >= EQ::invslot::SHARED_BANK_BAGS_BEGIN && dst_slot_id <= EQ::invbag::SHARED_BANK_BAGS_END )))
+		((dst_slot_id >= EQ::invslot::SHARED_BANK_BEGIN && dst_slot_id <= Titanium::invslot::SHARED_BANK_END) || ( dst_slot_id >= EQ::invbag::SHARED_BANK_BAGS_BEGIN && dst_slot_id <= EQ::invbag::SHARED_BANK_BAGS_END )))
 	&& GetInv().CheckNoDrop(src_slot_id)
 	&& !CanTradeFVNoDropItem()) {
 		auto ndh_inst = m_inv[src_slot_id];
