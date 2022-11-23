@@ -621,6 +621,7 @@ public:
 
 	/* Things which really dont belong here... */
 	int16	CommandRequirement(const char* commandname);
+	uint16 GetClassIDbyChar(uint16 char_id);
 
 #ifdef BOTS
 	// bot database add-on to eliminate the need for a second database connection
