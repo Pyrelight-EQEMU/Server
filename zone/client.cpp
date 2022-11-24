@@ -11983,10 +11983,9 @@ void Client::SetSpellDuration(
 	}
 }
 
-void Client::SetActiveClass(uint8 class_id) {
+void Client::SetBaseClass(uint8 class_id) {
 	// Save Current Data
 	Save();
-
 	// Query Multiclass data for new class
 	std::string query = StringFormat("SELECT class,level,exp " 
 									 "FROM multiclass_data " 
