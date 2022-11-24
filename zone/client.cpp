@@ -11988,9 +11988,9 @@ void Client::SetActiveClass(uint8 class_id) {
 	Save();
 
 	// Query Multiclass data for new class
-	std::string query = StringFormat("SELECT class,level,exp" 
-									  "FROM multiclass_data" 
-									  "WHERE id = %u AND class= %u", 
+	std::string query = StringFormat("SELECT class,level,exp " 
+									 "FROM multiclass_data " 
+									 "WHERE id = %u AND class= %u", 
 									  CharacterID(),
 									  class_id); 
 
