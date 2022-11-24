@@ -11993,7 +11993,7 @@ void Client::SetBaseClass(uint32 class_id) {
 									  CharacterID(),
 									  class_id); 
 	auto results = database.QueryDatabase(query);
-	if (results.Success()) { 
+	if (results.RowCunt() > 0) { 
 		int r = 0;
 		for (auto& row = results.begin(); row != results.end(); ++row) {
 			m_pp.class_ = atoi(row[r]); r++;	
@@ -12003,8 +12003,6 @@ void Client::SetBaseClass(uint32 class_id) {
 	} else {
 		m_pp.class_ = class_id;
 		m_pp.level = 1;
-		m_pp.exp = 1;
+		m_pp.exp = 1;		
 	}
-	// Save to finalize
-	Save();
 }
