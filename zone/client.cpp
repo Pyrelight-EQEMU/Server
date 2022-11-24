@@ -11993,7 +11993,7 @@ void Client::SetBaseClass(uint32 class_id) {
 									  CharacterID(),
 									  class_id); 
 	auto results = database.QueryDatabase(query);
-	if (results.RowCunt() > 0) { 
+	if (results.RowCount() > 0) { 
 		int r = 0;
 		for (auto& row = results.begin(); row != results.end(); ++row) {
 			m_pp.class_ = atoi(row[r]); r++;	
