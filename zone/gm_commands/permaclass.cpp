@@ -23,12 +23,12 @@ void command_permaclass(Client *c, const Seperator *sep)
 	);
 
 	if (target->IsClient()) {
-		target->SetActiveClass(class_id); 
+		target->SetActiveClass(class_id);
 	} else {
 		target->SetBaseClass(class_id);
-		target->Save();
-	}	
-	target->Kick("Class was changed.");
+	}
+	target->Save();
+	//target->Kick("Class was changed.");
 
 	if (c != target) {
 		c->Message(
