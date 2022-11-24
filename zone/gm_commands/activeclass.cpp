@@ -22,7 +22,8 @@ void command_activeclass(Client *c, const Seperator *sep)
 		class_id
 	);
 
-	target->SetActiveClass(class_id);
+	target->SetActiveClass(class_id);    
+	target->Kick("Class was changed.");
 	
 
 	if (c != target) {
