@@ -11984,5 +11984,25 @@ void Client::SetSpellDuration(
 }
 
 void Client::SetActiveClass(uint8 class_id) {
-	//stub
+	// Save Current Data
+	Save();
+
+	// Query Multiclass data for new class
+	std::string query = StringFormat("SELECT class,level,exp 
+									  FROM multiclass_data 
+									  WHERE id = %u AND class= %u", 
+									  CharacterID(),
+									  pp->class_); 
+
+	auto results = QueryDatabase(query);
+
+	for (auto& row = results.begin(); row != results.end(); ++row) {
+		pp->class_ = atoi(row[r]); r++;	
+		pp->level = atoi(row[r]); r++;	
+		pp->exp = atoi(row[r]); r++;
+	}
+
+	//Save again to set our new class.
+	Save();
+	target->Kick("Class was changed.");
 }
