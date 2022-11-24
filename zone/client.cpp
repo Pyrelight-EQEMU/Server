@@ -11994,6 +11994,8 @@ void Client::SetActiveClass(uint8 class_id) {
 									  CharacterID(),
 									  m_pp.class_); 
 
+	LogError("Attempting query: [{}]", query);
+
 	auto results = database.QueryDatabase(query); int r = 0;
 	for (auto& row = results.begin(); row != results.end(); ++row) {
 		m_pp.class_ = atoi(row[r]); r++;	
