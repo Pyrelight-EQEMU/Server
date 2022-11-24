@@ -11993,12 +11993,18 @@ void Client::SetBaseClass(uint32 class_id) {
 									  CharacterID(),
 									  class_id); 
 
-	LogError("Attempting query: [{}]", query);
-
-	auto results = database.QueryDatabase(query); int r = 0;
-	for (auto& row = results.begin(); row != results.end(); ++row) {
-		m_pp.class_ = atoi(row[r]); r++;	
-		m_pp.level = atoi(row[r]); r++;	
-		m_pp.exp = atoi(row[r]); r++;
+	if (classResults.Success()) { 
+		auto results = database.QueryDatabase(query); int r = 0;
+		for (auto& row = results.begin(); row != results.end(); ++row) {
+			m_pp.class_ = atoi(row[r]); r++;	
+			m_pp.level = atoi(row[r]); r++;	
+			m_pp.exp = atoi(row[r]); r++;
+		}
+	} else {
+		m_pp.class_ = class_id;
+		m_pp.level = 1;
+		m_pp.exp = 1;
 	}
+	// Save to finalize
+	Save();
 }
