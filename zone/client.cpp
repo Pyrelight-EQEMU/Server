@@ -11984,10 +11984,5 @@ void Client::SetSpellDuration(
 }
 
 void Client::SetActiveClass(uint8 class_id) {
-	auto curr_class = m_pp.level_;
-	auto curr_level = pp->level;
-	auto curr_exp   = pp->exp;
-
-	//std::string query = StringFormat("SELECT FROM "
-
+	//stub
 }
