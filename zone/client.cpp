@@ -11197,6 +11197,9 @@ void Client::SaveSpells()
 	if (!character_spells.empty()) {
 		CharacterSpellsRepository::InsertMany(database, character_spells);
 	}
+
+	std::string query = StringFormat("UPDATE character_spells SET class_id = %u WHERE class_id = 0 AND id = %u", m_pp.class_, CharacterID());
+	database.QueryDatabase(query);	
 }
 
 void Client::SaveDisciplines()
@@ -11218,6 +11221,8 @@ void Client::SaveDisciplines()
 	if (!character_discs.empty()) {
 		CharacterDisciplinesRepository::InsertMany(database, character_discs);
 	}
+
+	
 }
 
 uint16 Client::ScribeSpells(uint8 min_level, uint8 max_level)
@@ -11975,5 +11980,29 @@ void Client::SetSpellDuration(
 
 	for (const auto& m : l) {
 		m->SetBuffDuration(spell_id, duration);
+	}
+}
+
+void Client::SetBaseClass(uint32 class_id) {
+	// Save Current Data
+	Save();
+	// Query Multiclass data for new class
+	std::string query = StringFormat("SELECT class,level,exp " 
+									 "FROM multiclass_data " 
+									 "WHERE id = %u AND class= %u", 
+									  CharacterID(),
+									  class_id); 
+	auto results = database.QueryDatabase(query);
+	if (results.RowCount() > 0) { 
+		int r = 0;
+		for (auto& row = results.begin(); row != results.end(); ++row) {
+			m_pp.class_ = atoi(row[r]); r++;	
+			m_pp.level = atoi(row[r]); r++;	
+			m_pp.exp = atoi(row[r]); r++;
+		}
+	} else {
+		m_pp.class_ = class_id;
+		m_pp.level = 1;
+		m_pp.exp = 1;		
 	}
 }
