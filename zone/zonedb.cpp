@@ -1455,7 +1455,7 @@ bool ZoneDatabase::SaveCharacterData(uint32 character_id, uint32 account_id, Pla
 	auto results = database.QueryDatabase(query);
 	
 	//Save our current state into multiclass_data table
-	query = StringFormat("REPLACE INTO `multiclass_data` (id,class,level,exp) VALUES ("%u","%u","%u","%u"", pp->id, pp->class_, pp->level, pp->exp);
+	query = StringFormat("REPLACE INTO `multiclass_data` (id,class,level,exp) VALUES (%u,%u,%u,%u)", pp->id, pp->class_, pp->level, pp->exp);
 	results = database.QueryDatabase(query);
 	
 	LogDebug("ZoneDatabase::SaveCharacterData [{}], done Took [{}] seconds", character_id, ((float)(std::clock() - t)) / CLOCKS_PER_SEC);
