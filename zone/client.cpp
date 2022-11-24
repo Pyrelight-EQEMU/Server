@@ -12003,6 +12003,7 @@ void Client::SetBaseClass(uint32 class_id) {
 	} else {
 		m_pp.class_ = class_id;
 		m_pp.level = 1;
-		m_pp.exp = 1;		
+		m_pp.exp = 1;
+		Save();		
 	}
 }
