@@ -11992,7 +11992,7 @@ void Client::SetActiveClass(uint8 class_id) {
 									  "FROM multiclass_data" 
 									  "WHERE id = %u AND class= %u", 
 									  CharacterID(),
-									  m_pp.class_); 
+									  class_id); 
 
 	LogError("Attempting query: [{}]", query);
 
