@@ -12002,7 +12002,4 @@ void Client::SetActiveClass(uint8 class_id) {
 		m_pp.level = atoi(row[r]); r++;	
 		m_pp.exp = atoi(row[r]); r++;
 	}
-
-	//Save again to set our new class.
-	Save();
 }
