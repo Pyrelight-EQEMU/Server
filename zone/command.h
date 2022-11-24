@@ -190,7 +190,6 @@ void command_peekinv(Client *c, const Seperator *sep);
 void command_peqzone(Client *c, const Seperator *sep);
 void command_peqzone_flags(Client *c, const Seperator *sep);
 void command_permaclass(Client *c, const Seperator *sep);
-void command_activeclass(Client *c, const Seperator *sep);
 void command_permagender(Client *c, const Seperator *sep);
 void command_permarace(Client *c, const Seperator *sep);
 void command_petitems(Client *c, const Seperator *sep);
