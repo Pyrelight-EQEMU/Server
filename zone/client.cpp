@@ -11994,7 +11994,7 @@ void Client::SetActiveClass(uint8 class_id) {
 									  CharacterID(),
 									  pp->class_); 
 
-	auto results = QueryDatabase(query);
+	auto results = database.QueryDatabase(query);
 
 	for (auto& row = results.begin(); row != results.end(); ++row) {
 		pp->class_ = atoi(row[r]); r++;	
