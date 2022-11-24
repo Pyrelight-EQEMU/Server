@@ -27,9 +27,8 @@ void command_permaclass(Client *c, const Seperator *sep)
 	} else {
 		target->SetBaseClass(class_id);
 		target->Save();
-
 	}	
-	//target->Kick("Class was changed.");
+	target->Kick("Class was changed.");
 
 	if (c != target) {
 		c->Message(
