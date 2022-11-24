@@ -11992,13 +11992,13 @@ void Client::SetActiveClass(uint8 class_id) {
 									  "FROM multiclass_data" 
 									  "WHERE id = %u AND class= %u", 
 									  CharacterID(),
-									  m_pp->class_); 
+									  m_pp.class_); 
 
 	auto results = database.QueryDatabase(query); int r = 0;
 	for (auto& row = results.begin(); row != results.end(); ++row) {
-		m_pp->class_ = atoi(row[r]); r++;	
-		m_pp->level = atoi(row[r]); r++;	
-		m_pp->exp = atoi(row[r]); r++;
+		m_pp.class_ = atoi(row[r]); r++;	
+		m_pp.level = atoi(row[r]); r++;	
+		m_pp.exp = atoi(row[r]); r++;
 	}
 
 	//Save again to set our new class.
