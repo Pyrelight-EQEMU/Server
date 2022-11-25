@@ -2697,7 +2697,8 @@ void Client::Handle_OP_AltCurrencySell(const EQApplicationPacket *app)
 				continue;
 
 			if (item->ID == inst->GetItem()->ID) {
-				cost = ml.alt_currency_cost;
+				// 06/11/2016 This formula matches RoF2 client side calculation.
+				cost = (ml.alt_currency_cost + 1) * item->LDoNSellBackRate / 100;
 				found = true;
 				break;
 			}
@@ -2801,7 +2802,8 @@ void Client::Handle_OP_AltCurrencySellSelection(const EQApplicationPacket *app)
 					continue;
 
 				if (item->ID == inst->GetItem()->ID) {
-					cost = ml.alt_currency_cost;
+					// 06/11/2016 This formula matches RoF2 client side calculation.
+					cost = (ml.alt_currency_cost + 1) * item->LDoNSellBackRate / 100;
 					found = true;
 					break;
 				}
