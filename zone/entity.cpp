@@ -5185,7 +5185,7 @@ std::vector<Bot *> EntityList::GetBotListByCharacterID(uint32 character_id, uint
 	return client_bot_list;
 }
 
-std::vector<Bot *> EntityList::GetBotListByClientName(std::string client_name)
+std::vector<Bot *> EntityList::GetBotListByClientName(std::string client_name, uint8 class_id)
 {
 	std::vector<Bot *> client_bot_list;
 
@@ -5196,7 +5196,8 @@ std::vector<Bot *> EntityList::GetBotListByClientName(std::string client_name)
 	for (const auto& b : bot_list) {
 		if (
 			b->GetOwner() &&
-			Strings::ToLower(b->GetOwner()->GetCleanName()) == Strings::ToLower(client_name)
+			Strings::ToLower(b->GetOwner()->GetCleanName()) == Strings::ToLower(client_name) &&
+			(!class_id || b->GetClass() == class_id)
 		) {
 			client_bot_list.push_back(b);
 		}
@@ -5828,9 +5829,13 @@ int EntityList::MovePlayerCorpsesToGraveyard(bool force_move_from_instance)
 }
 
 void EntityList::DespawnGridNodes(int32 grid_id) {
-	for (auto mob_iterator : mob_list) {
-		Mob *mob = mob_iterator.second;
-		if (mob->IsNPC() && mob->GetRace() == 2254 && mob->EntityVariableExists("grid_id") && atoi(mob->GetEntityVariable("grid_id")) == grid_id) {
+	for (auto m : mob_list) {
+		Mob *mob = m.second;
+		if (
+			mob->IsNPC() &&
+			mob->GetRace() == 2254 &&
+			mob->EntityVariableExists("grid_id") &&
+			std::stoi(mob->GetEntityVariable("grid_id")) == grid_id) {
 			mob->Depop();
 		}
 	}
