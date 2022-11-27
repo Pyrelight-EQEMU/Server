@@ -751,17 +751,14 @@ bool ZoneDatabase::LoadCharacterFactionValues(uint32 character_id, faction_map &
 	return true;
 }
 
-bool ZoneDatabase::LoadCharacterMemmedSpells(uint32 character_id, PlayerProfile_Struct* pp){
-
-	auto class_id = GetClassIDbyChar(character_id);
-
+bool ZoneDatabase::LoadCharacterMemmedSpells(uint32 character_id, PlayerProfile_Struct* pp) {
 	std::string query = StringFormat(
 		"SELECT							"
 		"slot_id,						"
 		"`spell_id`						"
 		"FROM							"
 		"`character_memmed_spells`		"
-		"WHERE `id` = %u AND `class_id` = %u ORDER BY `slot_id`", character_id, class_id);
+		"WHERE `id` = %u AND `class_id` = %u ORDER BY `slot_id`", character_id, pp->class_);
 	auto results = database.QueryDatabase(query);
 	int i = 0;
 	/* Initialize Spells */
@@ -771,7 +768,10 @@ bool ZoneDatabase::LoadCharacterMemmedSpells(uint32 character_id, PlayerProfile_
 	for (auto& row = results.begin(); row != results.end(); ++row) {
 		i = atoi(row[0]);
 		if (i < EQ::spells::SPELL_GEM_COUNT && atoi(row[1]) <= SPDAT_RECORDS){
-			pp->mem_spells[i] = atoi(row[1]);
+			//Don't init spells that we aren't high enough level to use.
+			if (pp->level >= spells[atoi(row[1]].classes[pp->class_]) {
+				pp->mem_spells[i] = atoi(row[1]);
+			}
 		}
 	}
 	return true;
