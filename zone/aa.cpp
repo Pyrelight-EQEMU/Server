@@ -974,9 +974,15 @@ void Client::SendAlternateAdvancementRank(int aa_id, int level) {
 	aai->expansion = rank->expansion;
 	aai->category = ability->category;
 	aai->charges = ability->charges;
-	aai->grant_only = ability->grant_only;
+
+	if(!(ability->classes & (1 << GetClass()))) {
+		aai->grant_only = 1;
+	} else {
+		aai->grant_only = ability->grant_only;
+	}
+
 	aai->total_effects = rank->effects.size();
-	aai->total_prereqs = rank->prereqs.size() + 1;
+	aai->total_prereqs = rank->prereqs.size();
 
 	outapp->SetWritePosition(sizeof(AARankInfo_Struct));
 	for(auto &effect : rank->effects) {
