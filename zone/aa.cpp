@@ -930,10 +930,6 @@ void Client::SendAlternateAdvancementRank(int aa_id, int level) {
 
 	if(!(ability->classes & (1 << GetClass()))) {
 		//return;
-		if (!(aa_ranks.find(ability->id) == aa_ranks.end())) {
-			LogAA("Attempting to Send cross-class AA owned by this character: {}", ability->name);
-		}
-		
 	}
 
 	if(!CanUseAlternateAdvancementRank(rank)) {
@@ -955,7 +951,7 @@ void Client::SendAlternateAdvancementRank(int aa_id, int level) {
 	aai->spell = rank->spell;
 	aai->spell_type = rank->spell_type;
 	aai->spell_refresh = rank->recast_time;
-	aai->classes = ability->classes;
+	aai->classes = ability->classes | GetClassBit();
 	aai->level_req = rank->level_req;
 	aai->current_level = level;
 	aai->max_level = ability->GetMaxLevel(this);
@@ -1577,8 +1573,7 @@ bool Mob::CanUseAlternateAdvancementRank(AA::Rank *rank) {
 		return false;
 
 	if(!(ability->classes & (1 << GetClass()))) {
-	//	return false;
-		LogAA("Attempting to load cross-class AA: {}", ability->name);
+	//	return false;		
 	}
 
 	// Passive and Active Shroud AAs
