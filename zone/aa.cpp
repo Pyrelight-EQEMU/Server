@@ -958,11 +958,15 @@ void Client::SendAlternateAdvancementRank(int aa_id, int level) {
 		aai->classes = ability->classes;
 	}
 
+	if(!(ability->classes & (1 << GetClass()))) {
+		aai->grant_only = 1;
+	} else {
+		aai->grant_only = ability->grant_only;
+	}
+
 	aai->level_req = rank->level_req;
 	aai->current_level = level;
-
-	aai->max_level = ability->GetMaxLevel(this);
-	
+	aai->max_level = ability->GetMaxLevel(this);	
 	aai->prev_id = rank->prev_id;
 
 	if((rank->next && !CanUseAlternateAdvancementRank(rank->next)) || ability->charges > 0) {
@@ -970,17 +974,11 @@ void Client::SendAlternateAdvancementRank(int aa_id, int level) {
 	} else {
 		aai->next_id = rank->next_id;
 	}
+
 	aai->total_cost = rank->total_cost;
 	aai->expansion = rank->expansion;
 	aai->category = ability->category;
 	aai->charges = ability->charges;
-
-	if(!(ability->classes & (1 << GetClass()))) {
-		aai->grant_only = 1;
-	} else {
-		aai->grant_only = ability->grant_only;
-	}
-
 	aai->total_effects = rank->effects.size();
 	aai->total_prereqs = rank->prereqs.size();
 
@@ -1282,6 +1280,11 @@ void Client::ActivateAlternateAdvancementAbility(int rank_id, int target_id) {
 
 	AA::Ability *ability = rank->base_ability;
 	if (!ability) {
+		return;
+	}
+
+	if (rank->level_req > GetLevel()) {
+		Message(Chat::Red, "You must be at least level %u to use this ability.", rank->level_req);
 		return;
 	}
 
