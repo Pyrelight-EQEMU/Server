@@ -1647,6 +1647,10 @@ bool Mob::CanPurchaseAlternateAdvancementRank(AA::Rank *rank, bool check_price, 
 
 	if(!ability)
 		return false;
+	
+	if(!(ability->classes & (1 << GetClass()))) {
+		return false;		
+	}
 
 	if(!CanUseAlternateAdvancementRank(rank)) {
 		return false;
