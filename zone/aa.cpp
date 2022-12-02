@@ -960,7 +960,13 @@ void Client::SendAlternateAdvancementRank(int aa_id, int level) {
 
 	aai->level_req = rank->level_req;
 	aai->current_level = level;
-	aai->max_level = ability->GetMaxLevel(this);
+
+	if(!(ability->classes & (1 << GetClass()))) {
+		aai->max_level = ability->GetMaxLevel(this);
+	} else {
+		aai->max_level = level;
+	}	
+	
 	aai->prev_id = rank->prev_id;
 
 	if((rank->next && !CanUseAlternateAdvancementRank(rank->next)) || ability->charges > 0) {
