@@ -1572,9 +1572,10 @@ bool Mob::CanUseAlternateAdvancementRank(AA::Rank *rank) {
 	if(!ability)
 		return false;
 
-	//if(!(ability->classes & (1 << GetClass()))) {
+	if(!(ability->classes & (1 << GetClass()))) {
 	//	return false;
-	//}
+		LogAA("Attempting to load cross-class AA: {}", ability->name);
+	}
 
 	// Passive and Active Shroud AAs
 	// For now we skip them
