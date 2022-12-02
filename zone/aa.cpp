@@ -952,7 +952,7 @@ void Client::SendAlternateAdvancementRank(int aa_id, int level) {
 	aai->spell_type = rank->spell_type;
 	aai->spell_refresh = rank->recast_time;
 
-	if (aa_ranks.find(rank->id) == aa_ranks.end()) {
+	if (!(aa_ranks.find(rank->id) == aa_ranks.end())) {
 		aai->classes = 0xFFFF;
 	} else {
 		aai->classes = ability->classes;
