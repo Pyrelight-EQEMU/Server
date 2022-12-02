@@ -929,7 +929,7 @@ void Client::SendAlternateAdvancementRank(int aa_id, int level) {
 	}
 
 	if(!(ability->classes & (1 << GetClass())) && !IsClient()) {
-		return false;		
+		return;		
 	}
 
 	if(!CanUseAlternateAdvancementRank(rank)) {
