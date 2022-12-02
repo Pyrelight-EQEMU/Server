@@ -1572,9 +1572,9 @@ bool Mob::CanUseAlternateAdvancementRank(AA::Rank *rank) {
 	if(!ability)
 		return false;
 
-	if(!(ability->classes & (1 << GetClass()))) {
-		return false;
-	}
+	//if(!(ability->classes & (1 << GetClass()))) {
+	//	return false;
+	//}
 
 	// Passive and Active Shroud AAs
 	// For now we skip them
