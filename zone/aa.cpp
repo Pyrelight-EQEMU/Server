@@ -1649,6 +1649,7 @@ bool Mob::CanPurchaseAlternateAdvancementRank(AA::Rank *rank, bool check_price, 
 		return false;
 	
 	if(!(ability->classes & (1 << GetClass()))) {
+		Message(Chat::Red, "You cannot purchase cross-class AA without having that class active.");
 		return false;		
 	}
 
