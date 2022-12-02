@@ -951,7 +951,13 @@ void Client::SendAlternateAdvancementRank(int aa_id, int level) {
 	aai->spell = rank->spell;
 	aai->spell_type = rank->spell_type;
 	aai->spell_refresh = rank->recast_time;
-	aai->classes = 0xFFFF;
+
+	if (aa_ranks.find(rank->id)) {
+		aai->classes = 0xFFFF;
+	} else {
+		aai->classes = ability->classes;
+	}
+
 	aai->level_req = rank->level_req;
 	aai->current_level = level;
 	aai->max_level = ability->GetMaxLevel(this);
@@ -2076,4 +2082,3 @@ void Client::TogglePurchaseAlternativeAdvancementRank(int rank_id){
 	SendAlternateAdvancementStats();
 	CalcBonuses();
 }
-
