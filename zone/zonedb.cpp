@@ -4533,19 +4533,5 @@ void ZoneDatabase::UpdateGMStatus(uint32 accID, int newStatus)
 }
 
 uint32 ZoneDatabase::GetClassIDbyChar(uint32 char_id) {
-	const std::string classQuery =
-		StringFormat("SELECT class FROM character_data WHERE id = %i", char_id);
-
-	auto classResults = QueryDatabase(classQuery);
-	int16 class_id = 0;
-
-	if (!classResults.Success()) { return false; }
-
-	for (auto& row = classResults.begin(); row != classResults.end(); ++row) {
-		class_id = atoi(row[0]);
-	}
-
-	LogError("Found class_id [{}] for char_id [{}]", class_id, char_id);
-
-	return class_id;
+		return pp->class_;
 }
