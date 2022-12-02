@@ -129,10 +129,10 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 	}
 
 #ifdef SPELL_EFFECT_SPAM
-		Message(0, "You are affected by spell '%s' (id %d)", spell.name, spell_id);
+		Message(Chat::White, "You are affected by spell '%s' (id %d)", spell.name, spell_id);
 		if(buffslot >= 0)
 		{
-			Message(0, "Buff slot:  %d  Duration:  %d tics", buffslot, buffs[buffslot].ticsremaining);
+			Message(Chat::White, "Buff slot:  %d  Duration:  %d tics", buffslot, buffs[buffslot].ticsremaining);
 		}
 #endif
 
@@ -3108,6 +3108,7 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 			case SE_ResistCold:
 			case SE_ResistFire:
 			case SE_AllStats:
+			case SE_MakeDrunk:
 			case SE_CHA:
 			case SE_WIS:
 			case SE_INT:
@@ -3353,12 +3354,12 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 #ifdef SPELL_EFFECT_SPAM
 				snprintf(effect_desc, _EDLEN, "Unknown Effect ID %d", effect);
 #else
-				Message(0, "Unknown spell effect %d in spell %s (id %d)", effect, spell.name, spell_id);
+				Message(Chat::White, "Unknown spell effect %d in spell %s (id %d)", effect, spell.name, spell_id);
 #endif
 			}
 		}
 #ifdef SPELL_EFFECT_SPAM
-		Message(0, ". . . Effect #%i: %s", i + 1, (effect_desc && effect_desc[0]) ? effect_desc : "Unknown");
+		Message(Chat::White, ". . . Effect #%i: %s", i + 1, (effect_desc && effect_desc[0]) ? effect_desc : "Unknown");
 #endif
 	}
 
@@ -7008,7 +7009,7 @@ bool Mob::TryDeathSave() {
 					HealAmt = GetMaxHP() - GetHP();
 
 				SetHP((GetHP()+HealAmt));
-				Message(263, "The gods have healed you for %i points of damage.", HealAmt);
+				Message(Chat::Emote, "The gods have healed you for %i points of damage.", HealAmt);
 
 				if(spellbonuses.DeathSave[SBIndex::DEATH_SAVE_TYPE] == 2)
 					entity_list.MessageCloseString(
@@ -7047,7 +7048,7 @@ bool Mob::TryDeathSave() {
 						HealAmt = GetMaxHP() - GetHP();
 
 					SetHP((GetHP()+HealAmt));
-					Message(263, "The gods have healed you for %i points of damage.", HealAmt);
+					Message(Chat::Emote, "The gods have healed you for %i points of damage.", HealAmt);
 
 					if(spellbonuses.DeathSave[SBIndex::DEATH_SAVE_TYPE] == 2)
 						entity_list.MessageCloseString(

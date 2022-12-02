@@ -25,6 +25,7 @@
 #include "lua_parser.h"
 #include "../common/strings.h"
 #include "../common/say_link.h"
+#include "../common/repositories/bot_spell_settings_repository.h"
 
 extern volatile bool is_zone_loaded;
 
@@ -404,6 +405,11 @@ Bot::Bot(uint32 botID, uint32 botOwnerCharacterID, uint32 botSpellsID, double to
 	else {
 		bot_owner->Message(Chat::White, "&s for '%s'", BotDatabase::fail::LoadBuffs(), GetCleanName());
 	}
+
+	GetBotOwnerDataBuckets();
+	GetBotDataBuckets();
+	LoadBotSpellSettings();
+	AI_AddBotSpells(GetBotSpellID());
 
 	CalcBotStats(false);
 	hp_regen = CalcHPRegen();
@@ -4010,11 +4016,10 @@ bool Bot::Spawn(Client* botCharacterOwner) {
 		ping_timer.Start(8000);
 		// there is something askew with spawn struct appearance fields...
 		// I re-enabled this until I can sort it out
-		uint32 item_id = 0;
+		const auto& m = GetBotItemSlots();
 		uint8 material_from_slot = 0xFF;
 		for (int slot_id = EQ::invslot::EQUIPMENT_BEGIN; slot_id <= EQ::invslot::EQUIPMENT_END; ++slot_id) {
-			item_id = GetBotItemBySlot(slot_id);
-			if (item_id != 0) {
+			if (m.find(slot_id) != m.end()) {
 				material_from_slot = EQ::InventoryProfile::CalcMaterialFromSlot(slot_id);
 				if (material_from_slot != 0xFF) {
 					SendWearChange(material_from_slot);
@@ -4058,6 +4063,26 @@ void Bot::GetBotItems(EQ::InventoryProfile &inv, std::string* error_message)
 	UpdateEquipmentLight();
 }
 
+std::map<uint16, uint32> Bot::GetBotItemSlots()
+{
+	std::map<uint16, uint32> m;
+	if (!GetBotID()) {
+		return m;
+	}
+
+	if (!database.botdb.LoadItemSlots(GetBotID(), m)) {
+		GetBotOwner()->CastToClient()->Message(
+			Chat::White,
+			fmt::format(
+				"Failed to load inventory slots for {}.",
+				GetCleanName()
+			).c_str()
+		);
+	}
+
+	return m;
+}
+
 // Returns the inventory record for this bot from the database for the specified equipment slot.
 uint32 Bot::GetBotItemBySlot(uint16 slot_id)
 {
@@ -4071,8 +4096,9 @@ uint32 Bot::GetBotItemBySlot(uint16 slot_id)
 			GetBotOwner()->CastToClient()->Message(
 				Chat::White,
 				fmt::format(
-					"{}",
-					BotDatabase::fail::LoadItemBySlot()
+					"Failed to load slot ID {} for {}.",
+					slot_id,
+					GetCleanName()
 				).c_str()
 			);
 		}
@@ -4747,11 +4773,11 @@ void Bot::PerformTradeWithClient(int16 begin_slot_id, int16 end_slot_id, Client*
 				return;
 			}
 		}
-		
+
 		if (
 			!trade_instance->IsClassEquipable(GetClass()) ||
 			GetLevel() < trade_instance->GetItem()->ReqLevel ||
-			(!trade_instance->IsRaceEquipable(GetRace()) && !RuleB(Bot, AllowBotEquipAnyRaceGear))
+			(!trade_instance->IsRaceEquipable(GetRace()) && !RuleB(Bots, AllowBotEquipAnyRaceGear))
 		) {
 			if (trade_event_exists) {
 				event_trade.push_back(ClientTrade(trade_instance, trade_index));
@@ -7718,94 +7744,31 @@ bool Bot::CastSpell(
 }
 
 bool Bot::SpellOnTarget(uint16 spell_id, Mob* spelltar) {
-	bool Result = false;
-	if(!IsValidSpell(spell_id))
+	if (!IsValidSpell(spell_id)) {
 		return false;
-
-	if(spelltar) {
-		if(spelltar->IsBot() && (spells[spell_id].target_type == ST_GroupTeleport)) {
-			switch(spell_id) {
-				// Paladin
-			case 3577: // Wave of Life
-			case 4065: // Blessing of Austerity
-			case 1455: // Wave of Healing
-			case 2589: // Healing Wave of Prexus
-			case 3427: // Wave of Marr
-			case 3683: // Ethereal Cleansing
-			case 1283: // Celestial Cleansing
-			case 3485: // Supernal Cleansing
-			case 5293: // Pious Cleansing
-			case 4893: // Wave of Trushar
-			case 5295: // Jeron's Mark
-			case 5296: // Wave of Piety
-				// Bard
-			case 4085: // Forpar's Aria of Affliction
-			case 4083: // Rizlona's Embers
-			case 4086: // Forpar's Psalm of Pain
-			case 4084: // Rizlona's Fire
-			case 6734: // Song of the Storm
-			case 3651: // Wind of Marr
-			case 4087: // Forpar's Verse of Venom
-			case 3362: // Rizlona's Call of Flame
-			case 4112: // Call of the Muse
-			case 4872: // Echo of the Trusik
-			case 4873: // Dark Echo
-			case 5377: // Cantata of Life
-			case 5380: // Yelhun's Mystic Call
-			case 5382: // Eriki's Psalm of Power
-			case 6666: // Storm Blade
-			case 5388: // Ancient Call of Power
-				// Cleric
-			case 134: // Word of Health
-			case 136: // Word of Healing
-			case 1520: // Word of Vigor
-			case 1521: // Word of Restoration
-			case 1523: // Word of Redemption
-			case 3471: // Word of Replenishment
-			case 5270: // Word of Vivification
-			case 2502: // Celestial Remedy
-			case 2175: // Celestial Health
-			case 1444: // Celestial Healing
-			case 1522: // Celestial Elixir
-			case 2180: // Etherial Elixir
-			case 3047: // Kazad's Mark
-			case 3475: // Supernal Elixir
-			case 4053: // Blessing of Temperance
-			case 4108: // Aura of Reverence
-			case 4882: // Holy Elixir
-			case 5259: // Pious Elixir
-			case 5272: // Aura of Devotion
-			case 5277: // Balikor's Mark
-				// Enchanter
-			case 5517: // Circle of Alendar
-			case 6671: // Rune of Rikkukin
-			case 6739: // Rune of the Scale
-				// Shaman
-			case 2521: // Talisman of the Beast
-			case 4055: // Pack Shrew
-			case 3842: // Blood of Nadox
-			case 5417: // Champion
-				// Druid
-			case 4058: // Feral Pack
-			case 2520: // Natures Recovery
-				break;
-			default:
-				return false;
-			}
-		}
-
-		if(((IsDetrimentalSpell(spell_id) && spelltar->IsBot()) || (IsDetrimentalSpell(spell_id) && spelltar->IsClient())) && !IsResurrectionEffects(spell_id))
-			return false;
-
-		if(spelltar->IsPet()) {
-			for(int  i= 0; i < EFFECT_COUNT; ++i) {
-				if(spells[spell_id].effect_id[i] == SE_Illusion)
-					return false;
-			}
-		}
-		Result = Mob::SpellOnTarget(spell_id, spelltar);
 	}
-	return Result;
+
+	if (spelltar) {
+		if (
+			IsDetrimentalSpell(spell_id) &&
+			(spelltar->IsBot() || spelltar->IsClient()) &&
+			!IsResurrectionEffects(spell_id)
+		) {
+			return false;
+		}
+
+		if (spelltar->IsPet()) {
+			for (int i = 0; i < EFFECT_COUNT; ++i) {
+				if (spells[spell_id].effect_id[i] == SE_Illusion) {
+					return false;
+				}
+			}
+		}
+
+		return Mob::SpellOnTarget(spell_id, spelltar);
+	}
+
+	return false;
 }
 
 bool Bot::IsImmuneToSpell(uint16 spell_id, Mob *caster) {
@@ -9437,10 +9400,6 @@ void Bot::CalcBotStats(bool showtext) {
 
 	CalcBonuses();
 
-	GetBotOwnerDataBuckets();
-	GetBotDataBuckets();
-	AI_AddBotSpells(GetBotSpellID());
-
 	if(showtext) {
 		GetBotOwner()->Message(Chat::Yellow, "%s has been updated.", GetCleanName());
 		GetBotOwner()->Message(Chat::Yellow, "Level: %i HP: %i AC: %i Mana: %i STR: %i STA: %i DEX: %i AGI: %i INT: %i WIS: %i CHA: %i", GetLevel(), max_hp, GetAC(), max_mana, GetSTR(), GetSTA(), GetDEX(), GetAGI(), GetINT(), GetWIS(), GetCHA());
@@ -10557,18 +10516,24 @@ bool Bot::GetBotOwnerDataBuckets()
 		return false;
 	}
 
-	auto query = fmt::format(
+	const auto query = fmt::format(
 		"SELECT `key`, `value` FROM data_buckets WHERE `key` LIKE '{}-%'",
 		Strings::Escape(bot_owner->GetBucketKey())
 	);
-	auto results = database.QueryDatabase(query);
 
-	if (!results.Success() || !results.RowCount()) {
+	auto results = database.QueryDatabase(query);
+	if (!results.Success()) {
 		return false;
 	}
 
+	bot_owner_data_buckets.clear();
+
+	if (!results.RowCount()) {
+		return true;
+	}
+
 	for (auto row : results) {
-		bot_data_buckets.insert(std::pair<std::string,std::string>(row[0], row[1]));
+		bot_owner_data_buckets.insert(std::pair<std::string,std::string>(row[0], row[1]));
 	}
 
 	return true;
@@ -10576,14 +10541,20 @@ bool Bot::GetBotOwnerDataBuckets()
 
 bool Bot::GetBotDataBuckets()
 {
-	auto query = fmt::format(
+	const auto query = fmt::format(
 		"SELECT `key`, `value` FROM data_buckets WHERE `key` LIKE '{}-%'",
 		Strings::Escape(GetBucketKey())
 	);
-	auto results = database.QueryDatabase(query);
 
-	if (!results.Success() || !results.RowCount()) {
+	auto results = database.QueryDatabase(query);
+	if (!results.Success()) {
 		return false;
+	}
+
+	bot_data_buckets.clear();
+
+	if (!results.RowCount()) {
+		return true;
 	}
 
 	for (auto row : results) {
@@ -10610,7 +10581,7 @@ bool Bot::CheckDataBucket(std::string bucket_name, std::string bucket_value, uin
 				bucket_name
 			);
 
-			player_value = bot_data_buckets[full_name];
+			player_value = bot_owner_data_buckets[full_name];
 			if (player_value.empty()) {
 				return false;
 			}
@@ -10652,6 +10623,292 @@ void Bot::SetExpansionBitmask(int expansion_bitmask, bool save)
 	}
 
 	LoadAAs();
+}
+
+bool Bot::AddBotSpellSetting(uint16 spell_id, BotSpellSetting* bs)
+{
+	if (!IsValidSpell(spell_id) || !bs) {
+		return false;
+	}
+
+	auto obs = GetBotSpellSetting(spell_id);
+	if (obs) {
+		return false;
+	}
+
+	auto s = BotSpellSettingsRepository::NewEntity();
+
+	s.spell_id = spell_id;
+	s.bot_id = GetBotID();
+
+	s.priority = bs->priority;
+	s.min_level = bs->min_level;
+	s.max_level = bs->max_level;
+	s.min_hp = bs->min_hp;
+	s.max_hp = bs->max_hp;
+	s.is_enabled = bs->is_enabled;
+
+	const auto& nbs = BotSpellSettingsRepository::InsertOne(content_db, s);
+	if (!nbs.id) {
+		return false;
+	}
+
+	LoadBotSpellSettings();
+	return true;
+}
+
+bool Bot::DeleteBotSpellSetting(uint16 spell_id)
+{
+	if (!IsValidSpell(spell_id)) {
+		return false;
+	}
+
+	auto bs = GetBotSpellSetting(spell_id);
+	if (!bs) {
+		return false;
+	}
+
+	BotSpellSettingsRepository::DeleteWhere(
+		content_db,
+		fmt::format(
+			"bot_id = {} AND spell_id = {}",
+			GetBotID(),
+			spell_id
+		)
+	);
+	LoadBotSpellSettings();
+	return true;
+}
+
+BotSpellSetting* Bot::GetBotSpellSetting(uint16 spell_id)
+{
+	if (!IsValidSpell(spell_id) || !bot_spell_settings.count(spell_id)) {
+		return nullptr;
+	}
+
+	auto b = bot_spell_settings.find(spell_id);
+	if (b != bot_spell_settings.end()) {
+		return &b->second;
+	}
+
+	return nullptr;
+}
+
+void Bot::ListBotSpells()
+{
+	auto bot_owner = GetBotOwner();
+	if (!bot_owner) {
+		return;
+	}
+
+	if (AIBot_spells.empty()) {
+		bot_owner->Message(
+			Chat::White,
+			fmt::format(
+				"{} has no AI Spells.",
+				GetCleanName()
+			).c_str()
+		);
+		return;
+	}
+
+	auto spell_count = 0;
+	auto spell_number = 1;
+
+	for (const auto& s : AIBot_spells) {
+		bot_owner->Message(
+			Chat::White,
+			fmt::format(
+				"Spell {} | Spell: {} ({})",
+				spell_number,
+				spells[s.spellid].name,
+				s.spellid
+			).c_str()
+		);
+
+		bot_owner->Message(
+			Chat::White,
+			fmt::format(
+				"Spell {} | Priority: {} Health: {}",
+				spell_number,
+				s.priority,
+				GetHPString(s.min_hp, s.max_hp)
+			).c_str()
+		);
+
+		spell_count++;
+		spell_number++;
+	}
+
+	bot_owner->Message(
+		Chat::White,
+		fmt::format(
+			"{} has {} AI Spell{}.",
+			GetCleanName(),
+			spell_count,
+			spell_count != 1 ? "s" :""
+		).c_str()
+	);
+}
+
+void Bot::ListBotSpellSettings()
+{
+	auto bot_owner = GetBotOwner();
+	if (!bot_owner) {
+		return;
+	}
+
+	if (!bot_spell_settings.size()) {
+		bot_owner->Message(
+			Chat::White,
+			fmt::format(
+				"{} does not have any spell settings.",
+				GetCleanName()
+			).c_str()
+		);
+		return;
+	}
+
+	auto setting_count = 0;
+	auto setting_number = 1;
+
+	for (const auto& bs : bot_spell_settings) {
+		bot_owner->Message(
+			Chat::White,
+			fmt::format(
+				"Setting {} | Spell: {} ({}) Enabled: {}",
+				setting_number,
+				spells[bs.first].name,
+				bs.first,
+				bs.second.is_enabled ? "Yes" : "No"
+			).c_str()
+		);
+
+		bot_owner->Message(
+			Chat::White,
+			fmt::format(
+				"Setting {} | Priority: {} Levels: {} Health: {}",
+				setting_number,
+				bs.second.priority,
+				GetLevelString(bs.second.min_level, bs.second.max_level),
+				GetHPString(bs.second.min_hp, bs.second.max_hp)
+			).c_str()
+		);
+
+		setting_count++;
+		setting_number++;
+	}
+
+	bot_owner->Message(
+		Chat::White,
+		fmt::format(
+			"{} has {} spell setting{}.",
+			GetCleanName(),
+			setting_count,
+			setting_count != 1 ? "s" : ""
+		).c_str()
+	);
+}
+
+void Bot::LoadBotSpellSettings()
+{
+	bot_spell_settings.clear();
+
+	auto s = BotSpellSettingsRepository::GetWhere(content_db, fmt::format("bot_id = {}", GetBotID()));
+	if (s.empty()) {
+		return;
+	}
+
+	for (const auto& e : s) {
+		BotSpellSetting b;
+
+		b.priority = e.priority;
+		b.min_level = e.min_level;
+		b.max_level = e.max_level;
+		b.min_hp = e.min_hp;
+		b.max_hp = e.max_hp;
+		b.is_enabled = e.is_enabled;
+
+		bot_spell_settings[e.spell_id] = b;
+	}
+}
+
+bool Bot::UpdateBotSpellSetting(uint16 spell_id, BotSpellSetting* bs)
+{
+	if (!IsValidSpell(spell_id) || !bs) {
+		return false;
+	}
+
+	auto s = BotSpellSettingsRepository::NewEntity();
+
+	s.spell_id = spell_id;
+	s.bot_id = GetBotID();
+	s.priority = bs->priority;
+	s.min_level = bs->min_level;
+	s.max_level = bs->max_level;
+	s.min_hp = bs->min_hp;
+	s.max_hp = bs->max_hp;
+	s.is_enabled = bs->is_enabled;
+
+	auto obs = GetBotSpellSetting(spell_id);
+	if (!obs) {
+		return false;
+	}
+
+	if (!BotSpellSettingsRepository::UpdateSpellSetting(content_db, s)) {
+		return false;
+	}
+
+	LoadBotSpellSettings();
+	return true;
+}
+
+std::string Bot::GetLevelString(uint8 min_level, uint8 max_level)
+{
+	std::string level_string = "Any";
+	if (min_level && max_level) {
+		level_string = fmt::format(
+			"{} to {}",
+			min_level,
+			max_level
+		);
+	} else if (min_level && !max_level) {
+		level_string = fmt::format(
+			"{}+",
+			min_level
+		);
+	} else if (!min_level && max_level) {
+		level_string = fmt::format(
+			"1 to {}",
+			max_level
+		);
+	}
+
+	return level_string;
+}
+
+std::string Bot::GetHPString(int8 min_hp, int8 max_hp)
+{
+	std::string hp_string = "Any";
+	if (min_hp && max_hp) {
+		hp_string = fmt::format(
+			"{}%% to {}%%",
+			min_hp,
+			max_hp
+		);
+	} else if (min_hp && !max_hp) {
+		hp_string = fmt::format(
+			"{}%% to 100%%",
+			min_hp
+		);
+	} else if (!min_hp && max_hp) {
+		hp_string = fmt::format(
+			"1%% to {}%%",
+			max_hp
+		);
+	}
+
+	return hp_string;
 }
 
 uint8 Bot::spell_casting_chances[SPELL_TYPE_COUNT][PLAYER_CLASS_COUNT][EQ::constants::STANCE_TYPE_COUNT][cntHSND] = { 0 };
