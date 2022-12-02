@@ -769,7 +769,7 @@ bool ZoneDatabase::LoadCharacterMemmedSpells(uint32 character_id, PlayerProfile_
 		i = atoi(row[0]);
 		if (i < EQ::spells::SPELL_GEM_COUNT && atoi(row[1]) <= SPDAT_RECORDS){
 			//Don't init spells that we aren't high enough level to use.
-			if (pp->level >= spells[atoi(row[1]].classes[pp->class_]) {
+			if (pp->level >= spells[atoi(row[1])].classes[pp->class_]) {
 				pp->mem_spells[i] = atoi(row[1]);
 			}
 		}
@@ -778,7 +778,6 @@ bool ZoneDatabase::LoadCharacterMemmedSpells(uint32 character_id, PlayerProfile_
 }
 
 bool ZoneDatabase::LoadCharacterSpellBook(uint32 character_id, PlayerProfile_Struct* pp){
-	auto class_id = GetClassIDbyChar(character_id);
 	std::string query = StringFormat(
 		"SELECT					"
 		"slot_id,				"
@@ -787,7 +786,7 @@ bool ZoneDatabase::LoadCharacterSpellBook(uint32 character_id, PlayerProfile_Str
 		"`character_spells`		"
 		"WHERE `id` = %u 		"
 		"AND `class_id` = %u	"
-		"ORDER BY `slot_id`", character_id, class_id);
+		"ORDER BY `slot_id`", character_id, pp->class_);
 	auto results = database.QueryDatabase(query);
 
 	/* Initialize Spells */
@@ -848,13 +847,12 @@ bool ZoneDatabase::LoadCharacterLeadershipAA(uint32 character_id, PlayerProfile_
 }
 
 bool ZoneDatabase::LoadCharacterDisciplines(uint32 character_id, PlayerProfile_Struct* pp){
-	auto class_id = GetClassIDbyChar(character_id);
 	std::string query = StringFormat(
 		"SELECT				  "
 		"disc_id			  "
 		"FROM				  "
 		"`character_disciplines`"
-		"WHERE `id` = %u AND `class_id` = %u ORDER BY `slot_id`", character_id, class_id);
+		"WHERE `id` = %u AND `class_id` = %u ORDER BY `slot_id`", character_id, pp->class_);
 	auto results = database.QueryDatabase(query);
 	int i = 0;
 
@@ -4533,5 +4531,19 @@ void ZoneDatabase::UpdateGMStatus(uint32 accID, int newStatus)
 }
 
 uint32 ZoneDatabase::GetClassIDbyChar(uint32 char_id) {
-		return pp->class_;
+	const std::string classQuery =
+		StringFormat("SELECT class FROM character_data WHERE id = %i", char_id);
+
+	auto classResults = QueryDatabase(classQuery);
+	int16 class_id = 0;
+
+	if (!classResults.Success()) { return false; }
+
+	for (auto& row = classResults.begin(); row != classResults.end(); ++row) {
+		class_id = atoi(row[0]);
+	}
+
+	LogError("Found class_id [{}] for char_id [{}]", class_id, char_id);
+
+	return class_id;
 }
