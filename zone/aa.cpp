@@ -929,7 +929,8 @@ void Client::SendAlternateAdvancementRank(int aa_id, int level) {
 	}
 
 	if(!(ability->classes & (1 << GetClass()))) {
-		return;
+		//return;
+		LogAA("Attempting to Send cross-class AA: {}", ability->name);
 	}
 
 	if(!CanUseAlternateAdvancementRank(rank)) {
