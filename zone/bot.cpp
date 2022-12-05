@@ -72,7 +72,6 @@ Bot::Bot(NPCType *npcTypeData, Client* botOwner) : NPC(npcTypeData, nullptr, glm
 	SetBotID(0);
 	SetBotSpellID(0);
 	SetSpawnStatus(false);
-	SetBotArcher(false);
 	SetBotCharmer(false);
 	SetPetChooser(false);
 	SetRangerAutoWeaponSelect(false);
@@ -167,7 +166,6 @@ Bot::Bot(uint32 botID, uint32 botOwnerCharacterID, uint32 botSpellsID, double to
 	SetBotID(botID);
 	SetBotSpellID(botSpellsID);
 	SetSpawnStatus(false);
-	SetBotArcher(false);
 	SetBotCharmer(false);
 	SetPetChooser(false);
 	SetRangerAutoWeaponSelect(false);
@@ -405,11 +403,6 @@ Bot::Bot(uint32 botID, uint32 botOwnerCharacterID, uint32 botSpellsID, double to
 	else {
 		bot_owner->Message(Chat::White, "&s for '%s'", BotDatabase::fail::LoadBuffs(), GetCleanName());
 	}
-
-	GetBotOwnerDataBuckets();
-	GetBotDataBuckets();
-	LoadBotSpellSettings();
-	AI_AddBotSpells(GetBotSpellID());
 
 	CalcBotStats(false);
 	hp_regen = CalcHPRegen();
@@ -2142,7 +2135,7 @@ bool Bot::Process()
 	}
 
 	if (mob_close_scan_timer.Check()) {
-		LogAIScanClose(
+		LogAIScanCloseDetail(
 			"is_moving [{}] bot [{}] timer [{}]",
 			moving ? "true" : "false",
 			GetCleanName(),
@@ -3169,12 +3162,12 @@ void Bot::AI_Process()
 
 			if (atArcheryRange && !IsBotArcher()) {
 
-				SetBotArcher(true);
+				SetBotArcherySetting(true);
 				changeWeapons = true;
 			}
 			else if (!atArcheryRange && IsBotArcher()) {
 
-				SetBotArcher(false);
+				SetBotArcherySetting(false);
 				changeWeapons = true;
 			}
 
@@ -4010,6 +4003,21 @@ bool Bot::Spawn(Client* botCharacterOwner) {
 
 		m_targetable = true;
 		entity_list.AddBot(this, true, true);
+
+		GetBotOwnerDataBuckets();
+		GetBotDataBuckets();
+		LoadBotSpellSettings();
+		if (!AI_AddBotSpells(GetBotSpellID())) {
+			GetBotOwner()->CastToClient()->Message(
+				Chat::White,
+				fmt::format(
+					"Failed to load spells for '{}' (ID {}).",
+					GetCleanName(),
+					GetBotID()
+				).c_str()
+			);
+		}
+
 		// Load pet
 		LoadPet();
 		SentPositionPacket(0.0f, 0.0f, 0.0f, 0.0f, 0);
@@ -9864,7 +9872,7 @@ void EntityList::ScanCloseClientMobs(std::unordered_map<uint16, Mob*>& close_mob
 		}
 	}
 
-	LogAIScanClose("Close Client Mob List Size [{}] for mob [{}]", close_mobs.size(), scanning_mob->GetCleanName());
+	LogAIScanCloseModerate("Close Client Mob List Size [{}] for mob [{}]", close_mobs.size(), scanning_mob->GetCleanName());
 }
 
 uint8 Bot::GetNumberNeedingHealedInGroup(uint8 hpr, bool includePets) {
@@ -10487,10 +10495,16 @@ void Bot::SpawnBotGroupByName(Client* c, std::string botgroup_name, uint32 leade
 	);
 }
 
-void Bot::SignalBot(int signal_id)
+void Bot::Signal(int signal_id)
 {
 	const auto export_string = fmt::format("{}", signal_id);
 	parse->EventBot(EVENT_SIGNAL, this, nullptr, export_string, 0);
+}
+
+void Bot::SendPayload(int payload_id, std::string payload_value)
+{
+	const auto export_string = fmt::format("{} {}", payload_id, payload_value);
+	parse->EventBot(EVENT_PAYLOAD, this, nullptr, export_string, 0);
 }
 
 void Bot::OwnerMessage(std::string message)
@@ -10625,6 +10639,27 @@ void Bot::SetExpansionBitmask(int expansion_bitmask, bool save)
 	LoadAAs();
 }
 
+void Bot::SetBotEnforceSpellSetting(bool enforce_spell_settings, bool save)
+{
+	m_enforce_spell_settings = enforce_spell_settings;
+
+	if (save) {
+		if (!database.botdb.SaveEnforceSpellSetting(GetBotID(), enforce_spell_settings)) {
+			if (GetBotOwner() && GetBotOwner()->IsClient()) {
+				GetBotOwner()->CastToClient()->Message(
+					Chat::White,
+					fmt::format(
+						"Failed to save enforce spell settings for {}.",
+						GetCleanName()
+					).c_str()
+				);
+			}
+		}
+	}
+	LoadBotSpellSettings();
+	AI_AddBotSpells(GetBotSpellID());
+}
+
 bool Bot::AddBotSpellSetting(uint16 spell_id, BotSpellSetting* bs)
 {
 	if (!IsValidSpell(spell_id) || !bs) {
@@ -10642,8 +10677,6 @@ bool Bot::AddBotSpellSetting(uint16 spell_id, BotSpellSetting* bs)
 	s.bot_id = GetBotID();
 
 	s.priority = bs->priority;
-	s.min_level = bs->min_level;
-	s.max_level = bs->max_level;
 	s.min_hp = bs->min_hp;
 	s.max_hp = bs->max_hp;
 	s.is_enabled = bs->is_enabled;
@@ -10694,14 +10727,14 @@ BotSpellSetting* Bot::GetBotSpellSetting(uint16 spell_id)
 	return nullptr;
 }
 
-void Bot::ListBotSpells()
+void Bot::ListBotSpells(uint8 min_level)
 {
 	auto bot_owner = GetBotOwner();
 	if (!bot_owner) {
 		return;
 	}
 
-	if (AIBot_spells.empty()) {
+	if (AIBot_spells.empty() && AIBot_spells_enforced.empty()) {
 		bot_owner->Message(
 			Chat::White,
 			fmt::format(
@@ -10715,29 +10748,26 @@ void Bot::ListBotSpells()
 	auto spell_count = 0;
 	auto spell_number = 1;
 
-	for (const auto& s : AIBot_spells) {
-		bot_owner->Message(
-			Chat::White,
-			fmt::format(
-				"Spell {} | Spell: {} ({})",
-				spell_number,
-				spells[s.spellid].name,
-				s.spellid
-			).c_str()
-		);
+	for (const auto& s : (AIBot_spells.size() > AIBot_spells_enforced.size()) ? AIBot_spells : AIBot_spells_enforced) {
+		auto b = bot_spell_settings.find(s.spellid);
+		if (b == bot_spell_settings.end() && s.minlevel >= min_level) {
+			bot_owner->Message(
+				Chat::White,
+				fmt::format(
+					"Spell {} | Spell: {} | Add Spell: {}",
+					spell_number,
+					Saylink::Silent(
+						fmt::format("^spellinfo {}", s.spellid),
+						spells[s.spellid].name
+					),
+					Saylink::Silent(
+						fmt::format("^spellsettingsadd {} {} {} {}", s.spellid, s.priority, s.min_hp, s.max_hp), "Add")
+				).c_str()
+			);
 
-		bot_owner->Message(
-			Chat::White,
-			fmt::format(
-				"Spell {} | Priority: {} Health: {}",
-				spell_number,
-				s.priority,
-				GetHPString(s.min_hp, s.max_hp)
-			).c_str()
-		);
-
-		spell_count++;
-		spell_number++;
+			spell_count++;
+			spell_number++;
+		}
 	}
 
 	bot_owner->Message(
@@ -10776,22 +10806,15 @@ void Bot::ListBotSpellSettings()
 		bot_owner->Message(
 			Chat::White,
 			fmt::format(
-				"Setting {} | Spell: {} ({}) Enabled: {}",
+				"Setting {} | Spell: {} | State: {} | {}",
 				setting_number,
-				spells[bs.first].name,
-				bs.first,
-				bs.second.is_enabled ? "Yes" : "No"
-			).c_str()
-		);
-
-		bot_owner->Message(
-			Chat::White,
-			fmt::format(
-				"Setting {} | Priority: {} Levels: {} Health: {}",
-				setting_number,
-				bs.second.priority,
-				GetLevelString(bs.second.min_level, bs.second.max_level),
-				GetHPString(bs.second.min_hp, bs.second.max_hp)
+				Saylink::Silent(fmt::format("^spellinfo {}", bs.first), spells[bs.first].name),
+				Saylink::Silent(
+					fmt::format("^spellsettingstoggle {} {}",
+					bs.first, bs.second.is_enabled ? "False" : "True"),
+					bs.second.is_enabled ? "Enabled" : "Disabled"
+				),
+				Saylink::Silent(fmt::format("^spellsettingsdelete {}", bs.first), "Remove")
 			).c_str()
 		);
 
@@ -10823,12 +10846,9 @@ void Bot::LoadBotSpellSettings()
 		BotSpellSetting b;
 
 		b.priority = e.priority;
-		b.min_level = e.min_level;
-		b.max_level = e.max_level;
 		b.min_hp = e.min_hp;
 		b.max_hp = e.max_hp;
 		b.is_enabled = e.is_enabled;
-
 		bot_spell_settings[e.spell_id] = b;
 	}
 }
@@ -10844,8 +10864,6 @@ bool Bot::UpdateBotSpellSetting(uint16 spell_id, BotSpellSetting* bs)
 	s.spell_id = spell_id;
 	s.bot_id = GetBotID();
 	s.priority = bs->priority;
-	s.min_level = bs->min_level;
-	s.max_level = bs->max_level;
 	s.min_hp = bs->min_hp;
 	s.max_hp = bs->max_hp;
 	s.is_enabled = bs->is_enabled;
@@ -10861,30 +10879,6 @@ bool Bot::UpdateBotSpellSetting(uint16 spell_id, BotSpellSetting* bs)
 
 	LoadBotSpellSettings();
 	return true;
-}
-
-std::string Bot::GetLevelString(uint8 min_level, uint8 max_level)
-{
-	std::string level_string = "Any";
-	if (min_level && max_level) {
-		level_string = fmt::format(
-			"{} to {}",
-			min_level,
-			max_level
-		);
-	} else if (min_level && !max_level) {
-		level_string = fmt::format(
-			"{}+",
-			min_level
-		);
-	} else if (!min_level && max_level) {
-		level_string = fmt::format(
-			"1 to {}",
-			max_level
-		);
-	}
-
-	return level_string;
 }
 
 std::string Bot::GetHPString(int8 min_hp, int8 max_hp)
@@ -10909,6 +10903,24 @@ std::string Bot::GetHPString(int8 min_hp, int8 max_hp)
 	}
 
 	return hp_string;
+}
+
+void Bot::SetBotArcherySetting(bool bot_archer_setting, bool save) 
+{ 
+	m_bot_archery_setting = bot_archer_setting;
+	if (save) {
+		if (!database.botdb.SaveBotArcherSetting(GetBotID(), bot_archer_setting)) {
+			if (GetBotOwner() && GetBotOwner()->IsClient()) {
+				GetBotOwner()->CastToClient()->Message(
+					Chat::White,
+					fmt::format(
+						"Failed to save archery settings for {}.",
+						GetCleanName()
+					).c_str()
+				);
+			}
+		}
+	}
 }
 
 uint8 Bot::spell_casting_chances[SPELL_TYPE_COUNT][PLAYER_CLASS_COUNT][EQ::constants::STANCE_TYPE_COUNT][cntHSND] = { 0 };

@@ -5496,6 +5496,12 @@ void Client::Signal(int signal_id)
 	parse->EventPlayer(EVENT_SIGNAL, this, export_string, 0);
 }
 
+void Client::SendPayload(int payload_id, std::string payload_value)
+{
+	const auto export_string = fmt::format("{} {}", payload_id, payload_value);
+	parse->EventPlayer(EVENT_PAYLOAD, this, export_string, 0);
+}
+
 void Client::SendRewards()
 {
 	std::vector<ClientReward> rewards;
@@ -12006,4 +12012,18 @@ void Client::SetBaseClass(uint32 class_id) {
 		m_pp.exp = 1;
 		Save();		
 	}
+}
+
+std::string Client::GetGuildPublicNote()
+{
+	if (!IsInAGuild()) {
+		return std::string();
+	}
+
+	CharGuildInfo gci;
+	if (!guild_mgr.GetCharInfo(character_id, gci)) {
+		return std::string();
+	}
+
+	return gci.public_note;
 }

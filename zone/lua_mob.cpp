@@ -1366,7 +1366,7 @@ void Lua_Mob::Signal(int signal_id) {
 		self->CastToNPC()->SignalNPC(signal_id);
 #ifdef BOTS
 	} else if (self->IsBot()) {
-		self->CastToBot()->SignalBot(signal_id);
+		self->CastToBot()->Signal(signal_id);
 #endif
 	}
 }
@@ -2699,6 +2699,16 @@ luabind::object Lua_Mob::GetEntityVariables(lua_State* L) {
 	return t;
 }
 
+bool Lua_Mob::ClearEntityVariables() {
+	Lua_Safe_Call_Bool();
+	return self->ClearEntityVariables();
+}
+
+bool Lua_Mob::DeleteEntityVariable(std::string variable_name) {
+	Lua_Safe_Call_Bool();
+	return self->DeleteEntityVariable(variable_name);
+}
+
 void Lua_Mob::SetEntityVariable(std::string variable_name, std::string variable_value) {
 	Lua_Safe_Call_Void();
 	self->SetEntityVariable(variable_name, variable_value);
@@ -2707,6 +2717,34 @@ void Lua_Mob::SetEntityVariable(std::string variable_name, std::string variable_
 bool Lua_Mob::EntityVariableExists(std::string variable_name) {
 	Lua_Safe_Call_Bool();
 	return self->EntityVariableExists(variable_name);
+}
+
+void Lua_Mob::SendPayload(int payload_id) {
+	Lua_Safe_Call_Void();
+
+	if (self->IsClient()) {
+		self->CastToClient()->SendPayload(payload_id);
+	} else if (self->IsNPC()) {
+		self->CastToNPC()->SendPayload(payload_id);
+#ifdef BOTS
+	} else if (self->IsBot()) {
+		self->CastToBot()->SendPayload(payload_id);
+#endif
+	}
+}
+
+void Lua_Mob::SendPayload(int payload_id, std::string payload_value) {
+	Lua_Safe_Call_Void();
+
+	if (self->IsClient()) {
+		self->CastToClient()->SendPayload(payload_id, payload_value);
+	} else if (self->IsNPC()) {
+		self->CastToNPC()->SendPayload(payload_id, payload_value);
+#ifdef BOTS
+	} else if (self->IsBot()) {
+		self->CastToBot()->SendPayload(payload_id, payload_value);
+#endif
+	}
 }
 
 #ifdef BOTS
@@ -2855,6 +2893,7 @@ luabind::scope lua_register_mob() {
 	.def("CheckLoSToLoc", (bool(Lua_Mob::*)(double,double,double))&Lua_Mob::CheckLoSToLoc)
 	.def("CheckLoSToLoc", (bool(Lua_Mob::*)(double,double,double,double))&Lua_Mob::CheckLoSToLoc)
 	.def("CheckNumHitsRemaining", &Lua_Mob::CheckNumHitsRemaining)
+	.def("ClearEntityVariables", (bool(Lua_Mob::*)(void))&Lua_Mob::ClearEntityVariables)
 	.def("ClearSpecialAbilities", (void(Lua_Mob::*)(void))&Lua_Mob::ClearSpecialAbilities)
 	.def("CloneAppearance", (void(Lua_Mob::*)(Lua_Mob))&Lua_Mob::CloneAppearance)
 	.def("CloneAppearance", (void(Lua_Mob::*)(Lua_Mob,bool))&Lua_Mob::CloneAppearance)
@@ -2901,6 +2940,7 @@ luabind::scope lua_register_mob() {
 	.def("DamageHateListPercentage", (void(Lua_Mob::*)(int64,uint32))&Lua_Mob::DamageHateListPercentage)
 	.def("DelGlobal", (void(Lua_Mob::*)(const char*))&Lua_Mob::DelGlobal)
 	.def("DeleteBucket", (void(Lua_Mob::*)(std::string))&Lua_Mob::DeleteBucket)
+	.def("DeleteEntityVariable", (bool(Lua_Mob::*)(std::string))&Lua_Mob::DeleteEntityVariable)
 	.def("Depop", (void(Lua_Mob::*)(bool))&Lua_Mob::Depop)
 	.def("Depop", (void(Lua_Mob::*)(void))&Lua_Mob::Depop)
 	.def("DivineAura", (bool(Lua_Mob::*)(void))&Lua_Mob::DivineAura)
@@ -3181,6 +3221,8 @@ luabind::scope lua_register_mob() {
 	.def("SendWearChange", (void(Lua_Mob::*)(uint8))&Lua_Mob::SendWearChange)
 	.def("SendBeginCast", &Lua_Mob::SendBeginCast)
 	.def("SendIllusionPacket", (void(Lua_Mob::*)(luabind::adl::object))&Lua_Mob::SendIllusionPacket)
+	.def("SendPayload", (void(Lua_Mob::*)(int))&Lua_Mob::SendPayload)
+	.def("SendPayload", (void(Lua_Mob::*)(int,std::string))&Lua_Mob::SendPayload)
 	.def("SendSpellEffect", (void(Lua_Mob::*)(uint32,uint32,uint32,bool,uint32))&Lua_Mob::SendSpellEffect)
 	.def("SendSpellEffect", (void(Lua_Mob::*)(uint32,uint32,uint32,bool,uint32,bool))&Lua_Mob::SendSpellEffect)
 	.def("SendSpellEffect", (void(Lua_Mob::*)(uint32,uint32,uint32,bool,uint32,bool,Lua_Client))&Lua_Mob::SendSpellEffect)
