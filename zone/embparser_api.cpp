@@ -640,6 +640,21 @@ void Perl__doanim(int animation_id)
 	quest_manager.doanim(animation_id);
 }
 
+void Perl__doanim(int animation_id, int animation_speed)
+{
+	quest_manager.doanim(animation_id, animation_speed);
+}
+
+void Perl__doanim(int animation_id, int animation_speed, bool ackreq)
+{
+	quest_manager.doanim(animation_id, animation_speed, ackreq);
+}
+
+void Perl__doanim(int animation_id, int animation_speed, bool ackreq, int filter)
+{
+	quest_manager.doanim(animation_id, animation_speed, ackreq, static_cast<eqFilterType>(filter));
+}
+
 void Perl__addskill(int skill_id, int value)
 {
 	quest_manager.addskill(skill_id, value);
@@ -1333,42 +1348,42 @@ int Perl__getlevel(uint8 type)
 	return quest_manager.getlevel(type);
 }
 
-int Perl__CreateGroundObject(uint32_t item_id, float x, float y, float z, float heading)
+uint16 Perl__CreateGroundObject(uint32_t item_id, float x, float y, float z, float heading)
 {
 	return quest_manager.CreateGroundObject(item_id, glm::vec4(x, y, z, heading));
 }
 
-int Perl__CreateGroundObject(uint32_t item_id, float x, float y, float z, float heading, uint32_t decay_time_ms)
+uint16 Perl__CreateGroundObject(uint32_t item_id, float x, float y, float z, float heading, uint32_t decay_time_ms)
 {
 	return quest_manager.CreateGroundObject(item_id, glm::vec4(x, y, z, heading), decay_time_ms);
 }
 
-int Perl__CreateGroundObjectFromModel(const char* modelname, float x, float y, float z, float heading)
+uint16 Perl__CreateGroundObjectFromModel(const char* modelname, float x, float y, float z, float heading)
 {
 	return quest_manager.CreateGroundObjectFromModel(modelname, glm::vec4(x, y, z, heading));
 }
 
-int Perl__CreateGroundObjectFromModel(const char* modelname, float x, float y, float z, float heading, uint8_t object_type)
+uint16 Perl__CreateGroundObjectFromModel(const char* modelname, float x, float y, float z, float heading, uint8_t object_type)
 {
 	return quest_manager.CreateGroundObjectFromModel(modelname, glm::vec4(x, y, z, heading), object_type);
 }
 
-int Perl__CreateGroundObjectFromModel(const char* modelname, float x, float y, float z, float heading, uint8_t object_type, uint32_t decay_time_ms)
+uint16 Perl__CreateGroundObjectFromModel(const char* modelname, float x, float y, float z, float heading, uint8_t object_type, uint32_t decay_time_ms)
 {
 	return quest_manager.CreateGroundObjectFromModel(modelname, glm::vec4(x, y, z, heading), object_type, decay_time_ms);
 }
 
-int Perl__CreateDoor(const char* modelname, float x, float y, float z, float heading)
+uint16 Perl__CreateDoor(const char* modelname, float x, float y, float z, float heading)
 {
 	return quest_manager.CreateDoor(modelname, x, y, z, heading, 58, 100);
 }
 
-int Perl__CreateDoor(const char* modelname, float x, float y, float z, float heading, uint8_t object_type)
+uint16 Perl__CreateDoor(const char* modelname, float x, float y, float z, float heading, uint8_t object_type)
 {
 	return quest_manager.CreateDoor(modelname, x, y, z, heading, object_type, 100);
 }
 
-int Perl__CreateDoor(const char* modelname, float x, float y, float z, float heading, uint8_t object_type, uint16_t size)
+uint16 Perl__CreateDoor(const char* modelname, float x, float y, float z, float heading, uint8_t object_type, uint16_t size)
 {
 	return quest_manager.CreateDoor(modelname, x, y, z, heading, object_type, size);
 }
@@ -1426,12 +1441,6 @@ void Perl__MerchantSetItem(uint32 npc_id, uint32 item_id, uint32 quantity)
 uint32_t Perl__MerchantCountItem(uint32 npc_id, uint32 item_id)
 {
 	return quest_manager.MerchantCountItem(npc_id, item_id);
-}
-
-std::string Perl__varlink(int item_id)
-{
-	char text[250] = { 0 };
-	return quest_manager.varlink(text, item_id);
 }
 
 int Perl__CreateInstance(const char* zone_name, int16 version, int32 duration)
@@ -2403,9 +2412,9 @@ std::string Perl__get_data_remaining(std::string bucket_name)
 	return DataBucket::GetDataRemaining(bucket_name);
 }
 
-int Perl__getitemstat(uint32 item_id, std::string stat_identifier)
+const int Perl__getitemstat(uint32 item_id, std::string identifier)
 {
-	return quest_manager.getitemstat(item_id, stat_identifier);
+	return quest_manager.getitemstat(item_id, identifier);
 }
 
 int Perl__getspellstat(uint32 spell_id, std::string stat_identifier)
@@ -3921,6 +3930,61 @@ void Perl__set_proximity_range(float x_range, float y_range, float z_range, bool
 	quest_manager.set_proximity_range(x_range, y_range, z_range, enable_say);
 }
 
+std::string Perl__varlink(uint32 item_id)
+{
+	return quest_manager.varlink(item_id);
+}
+
+std::string Perl__varlink(uint32 item_id, int16 charges)
+{
+	return quest_manager.varlink(item_id, charges);
+}
+
+std::string Perl__varlink(uint32 item_id, int16 charges, uint32 aug1)
+{
+	return quest_manager.varlink(item_id, charges, aug1);
+}
+
+std::string Perl__varlink(uint32 item_id, int16 charges, uint32 aug1, uint32 aug2)
+{
+	return quest_manager.varlink(item_id, charges, aug1, aug2);
+}
+
+std::string Perl__varlink(uint32 item_id, int16 charges, uint32 aug1, uint32 aug2, uint32 aug3)
+{
+	return quest_manager.varlink(item_id, charges, aug1, aug2, aug3);
+}
+
+std::string Perl__varlink(uint32 item_id, int16 charges, uint32 aug1, uint32 aug2, uint32 aug3, uint32 aug4)
+{
+	return quest_manager.varlink(item_id, charges, aug1, aug2, aug3, aug4);
+}
+
+std::string Perl__varlink(uint32 item_id, int16 charges, uint32 aug1, uint32 aug2, uint32 aug3, uint32 aug4, uint32 aug5)
+{
+	return quest_manager.varlink(item_id, charges, aug1, aug2, aug3, aug4, aug5);
+}
+
+std::string Perl__varlink(uint32 item_id, int16 charges, uint32 aug1, uint32 aug2, uint32 aug3, uint32 aug4, uint32 aug5, uint32 aug6)
+{
+	return quest_manager.varlink(item_id, charges, aug1, aug2, aug3, aug4, aug5, aug6);
+}
+
+std::string Perl__varlink(uint32 item_id, int16 charges, uint32 aug1, uint32 aug2, uint32 aug3, uint32 aug4, uint32 aug5, uint32 aug6, bool attuned)
+{
+	return quest_manager.varlink(item_id, charges, aug1, aug2, aug3, aug4, aug5, aug6, attuned);
+}
+
+bool Perl__do_augment_slots_match(uint32 item_one, uint32 item_two)
+{
+	return quest_manager.DoAugmentSlotsMatch(item_one, item_two);
+}
+
+int8 Perl__does_augment_fit(EQ::ItemInstance* inst, uint32 augment_id)
+{
+	return quest_manager.DoesAugmentFit(inst, augment_id);
+}
+
 void perl_register_quest()
 {
 	perl::interpreter perl(PERL_GET_THX);
@@ -4021,14 +4085,14 @@ void perl_register_quest()
 	package.add("completedtasksinset", &Perl__completedtasksinset);
 	package.add("countitem", &Perl__countitem);
 	package.add("countspawnednpcs", &Perl__countspawnednpcs);
-	package.add("createdoor", (int(*)(const char*, float, float, float, float))&Perl__CreateDoor);
-	package.add("createdoor", (int(*)(const char*, float, float, float, float, uint8_t))&Perl__CreateDoor);
-	package.add("createdoor", (int(*)(const char*, float, float, float, float, uint8_t, uint16_t))&Perl__CreateDoor);
-	package.add("creategroundobject", (int(*)(uint32_t, float, float, float, float))&Perl__CreateGroundObject);
-	package.add("creategroundobject", (int(*)(uint32_t, float, float, float, float, uint32_t))&Perl__CreateGroundObject);
-	package.add("creategroundobjectfrommodel", (int(*)(const char*, float, float, float, float))&Perl__CreateGroundObjectFromModel);
-	package.add("creategroundobjectfrommodel", (int(*)(const char*, float, float, float, float, uint8_t))&Perl__CreateGroundObjectFromModel);
-	package.add("creategroundobjectfrommodel", (int(*)(const char*, float, float, float, float, uint8_t, uint32_t))&Perl__CreateGroundObjectFromModel);
+	package.add("createdoor", (uint16(*)(const char*, float, float, float, float))&Perl__CreateDoor);
+	package.add("createdoor", (uint16(*)(const char*, float, float, float, float, uint8_t))&Perl__CreateDoor);
+	package.add("createdoor", (uint16(*)(const char*, float, float, float, float, uint8_t, uint16_t))&Perl__CreateDoor);
+	package.add("creategroundobject", (uint16(*)(uint32_t, float, float, float, float))&Perl__CreateGroundObject);
+	package.add("creategroundobject", (uint16(*)(uint32_t, float, float, float, float, uint32_t))&Perl__CreateGroundObject);
+	package.add("creategroundobjectfrommodel", (uint16(*)(const char*, float, float, float, float))&Perl__CreateGroundObjectFromModel);
+	package.add("creategroundobjectfrommodel", (uint16(*)(const char*, float, float, float, float, uint8_t))&Perl__CreateGroundObjectFromModel);
+	package.add("creategroundobjectfrommodel", (uint16(*)(const char*, float, float, float, float, uint8_t, uint32_t))&Perl__CreateGroundObjectFromModel);
 	package.add("createguild", &Perl__createguild);
 	package.add("createitem", (EQ::ItemInstance*(*)(uint32))&Perl__createitem);
 	package.add("createitem", (EQ::ItemInstance*(*)(uint32, int16))&Perl__createitem);
@@ -4263,7 +4327,12 @@ void perl_register_quest()
 	package.add("disablerecipe", &Perl__disablerecipe);
 	package.add("disabletask", &Perl__disabletask);
 	package.add("discordsend", &Perl__discordsend);
-	package.add("doanim", &Perl__doanim);
+	package.add("doanim", (void(*)(int))&Perl__doanim);
+	package.add("doanim", (void(*)(int, int))&Perl__doanim);
+	package.add("doanim", (void(*)(int, int, bool))&Perl__doanim);
+	package.add("doanim", (void(*)(int, int, bool, int))&Perl__doanim);
+	package.add("do_augment_slots_match", &Perl__do_augment_slots_match);
+	package.add("does_augment_fit", &Perl__does_augment_fit);
 	package.add("echo", &Perl__echo);
 	package.add("emote", &Perl__emote);
 	package.add("enable_proximity_say", &Perl__enable_proximity_say);
@@ -4522,7 +4591,15 @@ void perl_register_quest()
 	package.add("updatetaskactivity", (void(*)(int, int, int))&Perl__updatetaskactivity);
 	package.add("updatetaskactivity", (void(*)(int, int, int, bool))&Perl__updatetaskactivity);
 	package.add("UpdateZoneHeader", &Perl__UpdateZoneHeader);
-	package.add("varlink", &Perl__varlink);
+	package.add("varlink", (std::string(*)(uint32))&Perl__varlink);
+	package.add("varlink", (std::string(*)(uint32, int16))&Perl__varlink);
+	package.add("varlink", (std::string(*)(uint32, int16, uint32))&Perl__varlink);
+	package.add("varlink", (std::string(*)(uint32, int16, uint32, uint32))&Perl__varlink);
+	package.add("varlink", (std::string(*)(uint32, int16, uint32, uint32, uint32))&Perl__varlink);
+	package.add("varlink", (std::string(*)(uint32, int16, uint32, uint32, uint32, uint32))&Perl__varlink);
+	package.add("varlink", (std::string(*)(uint32, int16, uint32, uint32, uint32, uint32, uint32))&Perl__varlink);
+	package.add("varlink", (std::string(*)(uint32, int16, uint32, uint32, uint32, uint32, uint32, uint32))&Perl__varlink);
+	package.add("varlink", (std::string(*)(uint32, int16, uint32, uint32, uint32, uint32, uint32, uint32, bool))&Perl__varlink);
 	package.add("voicetell", &Perl__voicetell);
 	package.add("we", &Perl__we);
 	package.add("wearchange", (void(*)(uint8, uint16))&Perl__wearchange);

@@ -1,4 +1,4 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 3.2)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.12)
 
 SET(common_sources
     base_packet.cpp
@@ -64,6 +64,7 @@ SET(common_sources
     path_manager.cpp
     perl_eqdb.cpp
     perl_eqdb_res.cpp
+    process/process.cpp
     proc_launcher.cpp
     profanity_manager.cpp
     ptimer.cpp
@@ -568,6 +569,7 @@ SET(common_headers
     packet_functions.h
     path_manager.cpp
     platform.h
+    process/process.h
     proc_launcher.h
     profanity_manager.h
     profiler.h
@@ -650,6 +652,7 @@ SET(common_headers
     patches/uf_limits.h
     patches/uf_ops.h
     patches/uf_structs.h
+    termcolor/rang.hpp
     stacktrace/backward.hpp
     StackWalker/StackWalker.h
     util/memory_stream.h

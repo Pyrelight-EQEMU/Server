@@ -140,7 +140,7 @@ public:
 	void movepc(int zone_id, float x, float y, float z, float heading);
 	void gmmove(float x, float y, float z);
 	void movegrp(int zoneid, float x, float y, float z);
-	void doanim(int anim_id);
+	void doanim(int animation_id, int animation_speed = 1, bool ackreq = true, eqFilterType filter = FilterNone);
 	void addskill(int skill_id, int value);
 	void setlanguage(int skill_id, int value);
 	void setskill(int skill_id, int value);
@@ -281,7 +281,7 @@ public:
 	void MovePCInstance(int zone_id, int instance_id, const glm::vec4& position);
 	void FlagInstanceByGroupLeader(uint32 zone, int16 version);
 	void FlagInstanceByRaidLeader(uint32 zone, int16 version);
-	const char* varlink(char* perltext, int item_id);
+	std::string varlink(uint32 item_id, int16 charges = 0, uint32 aug1 = 0, uint32 aug2 = 0, uint32 aug3 = 0, uint32 aug4 = 0, uint32 aug5 = 0, uint32 aug6 = 0, bool attuned = false);
 	std::string saylink(char *saylink_text, bool silent, const char *link_name);
 	std::string getcharnamebyid(uint32 char_id);
 	uint32 getcharidbyname(const char* name);
@@ -337,7 +337,7 @@ public:
 	std::string getgendername(uint32 gender_id);
 	std::string getdeityname(uint32 deity_id);
 	std::string getinventoryslotname(int16 slot_id);
-	int getitemstat(uint32 item_id, std::string stat_identifier);
+	const int getitemstat(uint32 item_id, std::string stat_identifier);
 	int getspellstat(uint32 spell_id, std::string stat_identifier, uint8 slot = 0);
 	const SPDat_Spell_Struct *getspell(uint32 spell_id);
 	std::string getenvironmentaldamagename(uint8 damage_type);
@@ -345,6 +345,8 @@ public:
 	int GetRecipeMadeCount(uint32 recipe_id);
 	std::string GetRecipeName(uint32 recipe_id);
 	bool HasRecipeLearned(uint32 recipe_id);
+	bool DoAugmentSlotsMatch(uint32 item_one, uint32 item_two);
+	int8 DoesAugmentFit(EQ::ItemInstance* inst, uint32 augment_id);
 
 #ifdef BOTS
 	Bot *GetBot() const;
@@ -360,8 +362,8 @@ public:
 	inline bool ProximitySayInUse() { return HaveProximitySays; }
 
 #ifdef BOTS
-	int createbotcount(uint8 class_id = 0);
-	int spawnbotcount(uint8 class_id = 0);
+	int createbotcount(uint8 class_id = NO_CLASS);
+	int spawnbotcount(uint8 class_id = NO_CLASS);
 	bool botquest();
 	bool createBot(const char *name, const char *lastname, uint8 level, uint16 race, uint8 botclass, uint8 gender);
 #endif

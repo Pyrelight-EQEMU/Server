@@ -133,6 +133,8 @@ public:
 #ifdef BOTS
 	Lua_Bot GetBotByID(uint32 bot_id);
 	Lua_Bot GetBotByName(std::string bot_name);
+	Lua_Client GetBotOwnerByBotEntityID(uint32 entity_id);
+	Lua_Client GetBotOwnerByBotID(uint32 bot_id);
 	Lua_Bot_List GetBotList();
 	Lua_Bot_List GetBotListByCharacterID(uint32 character_id);
 	Lua_Bot_List GetBotListByCharacterID(uint32 character_id, uint8 class_id);
@@ -142,6 +144,7 @@ public:
 	Lua_Bot GetRandomBot(float x, float y, float z, float distance);
 	Lua_Bot GetRandomBot(float x, float y, float z, float distance, Lua_Bot exclude_bot);
 	void SignalAllBotsByOwnerCharacterID(uint32 character_id, int signal_id);
+	void SignalAllBotsByOwnerName(std::string owner_name, int signal_id);
 	void SignalBotByBotID(uint32 bot_id, int signal_id);
 	void SignalBotByBotName(std::string bot_name, int signal_id);
 #endif

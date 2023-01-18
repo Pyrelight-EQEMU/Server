@@ -163,12 +163,17 @@ const char *QuestEventSubroutines[_LargestEventID] = {
 	"EVENT_TASK_BEFORE_UPDATE",
 	"EVENT_AA_BUY",
 	"EVENT_AA_GAIN",
-	"EVENT_PAYLOAD"
-  #ifdef BOTS
-	,
+	"EVENT_PAYLOAD",
+	"EVENT_LEVEL_DOWN",
+	"EVENT_GM_COMMAND",
+	"EVENT_DESPAWN",
+	"EVENT_DESPAWN_ZONE",
+	"EVENT_BOT_CREATE",
+	"EVENT_AUGMENT_INSERT_CLIENT",
+	"EVENT_AUGMENT_REMOVE_CLIENT",
+	// Add new events before these or Lua crashes
 	"EVENT_SPELL_EFFECT_BOT",
 	"EVENT_SPELL_EFFECT_BUFF_TIC_BOT"
-#endif
 };
 
 PerlembParser::PerlembParser() : perl(nullptr)
@@ -1117,14 +1122,10 @@ void PerlembParser::GetQuestTypes(
 	if (
 		event == EVENT_SPELL_EFFECT_CLIENT ||
 		event == EVENT_SPELL_EFFECT_NPC ||
-#ifdef BOTS
 		event == EVENT_SPELL_EFFECT_BOT ||
-#endif
 		event == EVENT_SPELL_EFFECT_BUFF_TIC_CLIENT ||
 		event == EVENT_SPELL_EFFECT_BUFF_TIC_NPC ||
-#ifdef BOTS
 		event == EVENT_SPELL_EFFECT_BUFF_TIC_BOT ||
-#endif
 		event == EVENT_SPELL_FADE ||
 		event == EVENT_SPELL_EFFECT_TRANSLOCATE_COMPLETE
 	) {
@@ -1570,14 +1571,12 @@ void PerlembParser::ExportEventVariables(
 			perl->eval(fmt::format("++${}{{${}::item3}};", hash_name, package_name).c_str());
 			perl->eval(fmt::format("++${}{{${}::item4}};", hash_name, package_name).c_str());
 
-#ifdef BOTS
 			if (npcmob->IsBot()) {
 				perl->eval(fmt::format("++${}{{${}::item5}};", hash_name, package_name).c_str());
 				perl->eval(fmt::format("++${}{{${}::item6}};", hash_name, package_name).c_str());
 				perl->eval(fmt::format("++${}{{${}::item7}};", hash_name, package_name).c_str());
 				perl->eval(fmt::format("++${}{{${}::item8}};", hash_name, package_name).c_str());
 			}
-#endif
 
 			break;
 		}
@@ -1703,6 +1702,7 @@ void PerlembParser::ExportEventVariables(
 			ExportVar(package_name.c_str(), "popupid", data);
 			break;
 		}
+
 		case EVENT_ENVIRONMENTAL_DAMAGE: {
 			Seperator sep(data);
 			ExportVar(package_name.c_str(), "env_damage", sep.arg[0]);
@@ -1750,14 +1750,10 @@ void PerlembParser::ExportEventVariables(
 		}
 
 
-#ifdef BOTS
 		case EVENT_SPELL_EFFECT_BUFF_TIC_BOT:
-#endif
 		case EVENT_SPELL_EFFECT_BUFF_TIC_CLIENT:
 		case EVENT_SPELL_EFFECT_BUFF_TIC_NPC:
-#ifdef BOTS
 		case EVENT_SPELL_EFFECT_BOT:
-#endif
 		case EVENT_SPELL_EFFECT_CLIENT:
 		case EVENT_SPELL_EFFECT_NPC:
 		case EVENT_SPELL_FADE: {
@@ -1836,7 +1832,18 @@ void PerlembParser::ExportEventVariables(
 				NPC* killed = std::any_cast<NPC*>(extra_pointers->at(1));
 				if (killed)
 				{
-					ExportVar(package_name.c_str(), "killed_npc_id", killed->GetNPCTypeID());
+					ExportVar(package_name.c_str(), "killed_entity_id", killed->GetID());
+
+					if (killed->IsNPC()) {
+						ExportVar(package_name.c_str(), "killed_bot_id", 0);
+						ExportVar(package_name.c_str(), "killed_npc_id", killed->GetNPCTypeID());
+#ifdef BOTS
+					} else if (killed->IsBot()) {
+						ExportVar(package_name.c_str(), "killed_bot_id", killed->CastToBot()->GetBotID());
+						ExportVar(package_name.c_str(), "killed_npc_id", 0);
+#endif
+					}
+
 					ExportVar(package_name.c_str(), "killed_x", killed->GetX());
 					ExportVar(package_name.c_str(), "killed_y", killed->GetY());
 					ExportVar(package_name.c_str(), "killed_z", killed->GetZ());
@@ -1845,6 +1852,7 @@ void PerlembParser::ExportEventVariables(
 			}
 			break;
 		}
+
 		case EVENT_DROP_ITEM: {
 			ExportVar(package_name.c_str(), "quantity", item_inst->IsStackable() ? item_inst->GetCharges() : 1);
 			ExportVar(package_name.c_str(), "itemname", item_inst->GetItem()->Name);
@@ -1853,17 +1861,30 @@ void PerlembParser::ExportEventVariables(
 			ExportVar(package_name.c_str(), "slotid", extradata);
 			break;
 		}
+
 		case EVENT_SPAWN_ZONE: {
 			ExportVar(package_name.c_str(), "spawned_entity_id", mob->GetID());
-			ExportVar(package_name.c_str(), "spawned_npc_id", mob->GetNPCTypeID());
+
+			if (mob->IsNPC()) {
+				ExportVar(package_name.c_str(), "spawned_bot_id", 0);
+				ExportVar(package_name.c_str(), "spawned_npc_id", mob->GetNPCTypeID());
+#ifdef BOTS
+			} else if (mob->IsBot()) {
+				ExportVar(package_name.c_str(), "spawned_bot_id", mob->CastToBot()->GetBotID());
+				ExportVar(package_name.c_str(), "spawned_npc_id", 0);
+#endif
+			}
+
 			break;
 		}
+
 		case EVENT_USE_SKILL: {
 			Seperator sep(data);
 			ExportVar(package_name.c_str(), "skill_id", sep.arg[0]);
 			ExportVar(package_name.c_str(), "skill_level", sep.arg[1]);
 			break;
 		}
+
 		case EVENT_COMBINE_VALIDATE: {
 			Seperator sep(data);
 			ExportVar(package_name.c_str(), "recipe_id", extradata);
@@ -1882,6 +1903,7 @@ void PerlembParser::ExportEventVariables(
 			ExportVar(package_name.c_str(), "tradeskill_id", tradeskill_id.c_str());
 			break;
 		}
+
 		case EVENT_BOT_COMMAND: {
 			Seperator sep(data);
 			ExportVar(package_name.c_str(), "bot_command", (sep.arg[0] + 1));
@@ -1891,6 +1913,7 @@ void PerlembParser::ExportEventVariables(
 			ExportVar(package_name.c_str(), "langid", extradata);
 			break;
 		}
+
 		case EVENT_WARP: {
 			Seperator sep(data);
 			ExportVar(package_name.c_str(), "from_x", sep.arg[0]);
@@ -1920,6 +1943,19 @@ void PerlembParser::ExportEventVariables(
 			ExportVar(package_name.c_str(), "item_id", extradata);
 			ExportVar(package_name.c_str(), "item_quantity", sep.arg[0]);
 			ExportVar(package_name.c_str(), "slot_id", sep.arg[1]);
+			break;
+		}
+
+		case EVENT_AUGMENT_INSERT_CLIENT:
+		case EVENT_AUGMENT_REMOVE_CLIENT: {
+			Seperator sep(data);
+			ExportVar(package_name.c_str(), "item_id", sep.arg[0]);
+			ExportVar(package_name.c_str(), "item_slot", sep.arg[1]);
+			ExportVar(package_name.c_str(), "augment_id", sep.arg[2]);
+			ExportVar(package_name.c_str(), "augment_slot", sep.arg[3]);
+			if (sep.argnum >= 4) {
+				ExportVar(package_name.c_str(), "destroyed", sep.arg[4]);
+			}
 			break;
 		}
 
@@ -1978,6 +2014,71 @@ void PerlembParser::ExportEventVariables(
 
 		case EVENT_INSPECT: {
 			ExportVar(package_name.c_str(), "target_id", extradata);
+			break;
+		}
+
+		case EVENT_LEVEL_UP: {
+			ExportVar(package_name.c_str(), "levels_gained", data);
+			break;
+		}
+
+		case EVENT_LEVEL_DOWN: {
+			ExportVar(package_name.c_str(), "levels_lost", data);
+			break;
+		}
+
+		case EVENT_GM_COMMAND: {
+			ExportVar(package_name.c_str(), "message", data);
+			break;
+		}
+
+		case EVENT_ENTER_AREA:
+		case EVENT_LEAVE_AREA: {
+			if (extra_pointers && extra_pointers->size() >= 2) {
+				ExportVar(package_name.c_str(), "area_id", *std::any_cast<int*>(extra_pointers->at(0)));
+				ExportVar(package_name.c_str(), "area_type", *std::any_cast<int*>(extra_pointers->at(1)));
+			}
+			break;
+		}
+
+		case EVENT_DESPAWN: {
+			ExportVar(package_name.c_str(), "despawned_entity_id", npcmob->GetID());
+
+			if (npcmob->IsNPC()) {
+				ExportVar(package_name.c_str(), "despawned_bot_id", 0);
+				ExportVar(package_name.c_str(), "despawned_npc_id", npcmob->GetNPCTypeID());
+#ifdef BOTS
+			} else if (npcmob->IsBot()) {
+				ExportVar(package_name.c_str(), "despawned_bot_id", npcmob->CastToBot()->GetBotID());
+				ExportVar(package_name.c_str(), "despawned_npc_id", 0);
+#endif
+			}
+
+			break;
+		}
+		case EVENT_DESPAWN_ZONE: {
+			ExportVar(package_name.c_str(), "despawned_entity_id", mob->GetID());
+
+			if (mob->IsNPC()) {
+				ExportVar(package_name.c_str(), "despawned_bot_id", 0);
+				ExportVar(package_name.c_str(), "despawned_npc_id", mob->GetNPCTypeID());
+#ifdef BOTS
+			} else if (mob->IsBot()) {
+				ExportVar(package_name.c_str(), "despawned_bot_id", mob->CastToBot()->GetBotID());
+				ExportVar(package_name.c_str(), "despawned_npc_id", 0);
+#endif
+			}
+
+			break;
+		}
+
+		case EVENT_BOT_CREATE: {
+			Seperator sep(data);
+			ExportVar(package_name.c_str(), "bot_name", sep.arg[0]);
+			ExportVar(package_name.c_str(), "bot_id", sep.arg[1]);
+			ExportVar(package_name.c_str(), "bot_race", sep.arg[2]);
+			ExportVar(package_name.c_str(), "bot_class", sep.arg[3]);
+			ExportVar(package_name.c_str(), "bot_gender", sep.arg[4]);
 			break;
 		}
 

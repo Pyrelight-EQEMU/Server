@@ -150,7 +150,14 @@ const char *LuaEvents[_LargestEventID] = {
 	"event_task_before_update",
 	"event_aa_buy",
 	"event_aa_gain",
-	"event_payload"
+	"event_payload",
+	"event_level_down",
+	"event_gm_command",
+	"event_despawn",
+	"event_despawn_zone",
+	"event_bot_create",
+	"event_augment_insert_client",
+	"event_augment_remove_client",
 };
 
 extern Zone *zone;
@@ -208,6 +215,7 @@ LuaParser::LuaParser() {
 	NPCArgumentDispatch[EVENT_LOOT_ZONE] = handle_npc_loot_zone;
 	NPCArgumentDispatch[EVENT_SPAWN_ZONE] = handle_npc_spawn_zone;
 	NPCArgumentDispatch[EVENT_PAYLOAD] = handle_npc_payload;
+	NPCArgumentDispatch[EVENT_DESPAWN_ZONE] = handle_npc_despawn_zone;
 
 	PlayerArgumentDispatch[EVENT_SAY] = handle_player_say;
 	PlayerArgumentDispatch[EVENT_ENVIRONMENTAL_DAMAGE] = handle_player_environmental_damage;
@@ -262,6 +270,12 @@ LuaParser::LuaParser() {
 	PlayerArgumentDispatch[EVENT_AA_BUY] = handle_player_aa_buy;
 	PlayerArgumentDispatch[EVENT_AA_GAIN] = handle_player_aa_gain;
 	PlayerArgumentDispatch[EVENT_PAYLOAD] = handle_player_payload;
+	PlayerArgumentDispatch[EVENT_LEVEL_UP] = handle_player_level_up;
+	PlayerArgumentDispatch[EVENT_LEVEL_DOWN] = handle_player_level_down;
+	PlayerArgumentDispatch[EVENT_GM_COMMAND] = handle_player_gm_command;
+	PlayerArgumentDispatch[EVENT_BOT_CREATE] = handle_player_bot_create;
+	PlayerArgumentDispatch[EVENT_AUGMENT_INSERT_CLIENT] = handle_player_augment_insert;
+	PlayerArgumentDispatch[EVENT_AUGMENT_REMOVE_CLIENT] = handle_player_augment_remove;
 
 	ItemArgumentDispatch[EVENT_ITEM_CLICK] = handle_item_click;
 	ItemArgumentDispatch[EVENT_ITEM_CLICK_CAST] = handle_item_click;
@@ -1154,7 +1168,7 @@ void LuaParser::MapFunctions(lua_State *L) {
 		luabind::open(L);
 
 		luabind::module(L)
-		[
+		[(
 			lua_register_general(),
 			lua_register_random(),
 			lua_register_events(),
@@ -1214,7 +1228,7 @@ void LuaParser::MapFunctions(lua_State *L) {
 			lua_register_journal_mode(),
 			lua_register_expedition(),
 			lua_register_expedition_lock_messages()
-		];
+		)];
 
 	} catch(std::exception &ex) {
 		std::string error = ex.what();
@@ -1392,16 +1406,12 @@ QuestEventID LuaParser::ConvertLuaEvent(QuestEventID evt) {
 	case EVENT_NPC_SLAY:
 		return EVENT_SLAY;
 		break;
-#ifdef BOTS
 	case EVENT_SPELL_EFFECT_BOT:
-#endif
 	case EVENT_SPELL_EFFECT_CLIENT:
 	case EVENT_SPELL_EFFECT_NPC:
 		return EVENT_SPELL_EFFECT_CLIENT;
 		break;
-#ifdef BOTS
 	case EVENT_SPELL_EFFECT_BUFF_TIC_BOT:
-#endif
 	case EVENT_SPELL_EFFECT_BUFF_TIC_CLIENT:
 	case EVENT_SPELL_EFFECT_BUFF_TIC_NPC:
 		return EVENT_SPELL_EFFECT_BUFF_TIC_CLIENT;
@@ -1479,11 +1489,20 @@ uint32 LuaParser::GetEXPForLevel(Client *self, uint16 level, bool &ignoreDefault
 	return retval;
 }
 
-uint32 LuaParser::GetExperienceForKill(Client *self, Mob *against, bool &ignoreDefault)
+uint64 LuaParser::GetExperienceForKill(Client *self, Mob *against, bool &ignoreDefault)
 {
-	uint32 retval = 0;
+	uint64 retval = 0;
 	for (auto &mod : mods_) {
 		mod.GetExperienceForKill(self, against, retval, ignoreDefault);
+	}
+	return retval;
+}
+
+int64 LuaParser::CalcSpellEffectValue_formula(Mob *self, uint32 formula, int64 base_value, int64 max_value, int caster_level, uint16 spell_id, int ticsremaining, bool &ignoreDefault)
+{
+	int64 retval = 0;
+	for (auto &mod : mods_) {
+		mod.CalcSpellEffectValue_formula(self, formula, base_value, max_value, caster_level, spell_id, ticsremaining, retval, ignoreDefault);
 	}
 	return retval;
 }

@@ -27,7 +27,6 @@
 #include "zonedump.h"
 #include "../common/loottable.h"
 
-#include <any>
 #include <deque>
 #include <list>
 
@@ -251,7 +250,7 @@ public:
 	inline void	MerchantOpenShop() { merchant_open = true; }
 	inline void	MerchantCloseShop() { merchant_open = false; }
 	inline bool	IsMerchantOpen() { return merchant_open; }
-	void	Depop(bool StartSpawnTimer = false);
+	void	Depop(bool start_spawn_timer = false);
 	void	Stun(int duration);
 	void	UnStun();
 	uint32	GetSwarmOwner();
@@ -284,8 +283,6 @@ public:
 		npc_faction_id = in;
 		content_db.GetFactionIdsForNPC(npc_faction_id, &faction_list, &primary_faction);
 	}
-
-	int64 GetFocusEffect(focusType type, uint16 spell_id, Mob* caster = nullptr);
 
     glm::vec4 m_SpawnPoint;
 
@@ -541,8 +538,6 @@ public:
 
 	static LootDropEntries_Struct NewLootDropEntry();
 
-	int DispatchZoneControllerEvent(QuestEventID evt, Mob* init, const std::string& data, uint32 extra, std::vector<std::any>* pointers);
-
 protected:
 
 	const NPCType*	NPCTypedata;
@@ -585,7 +580,7 @@ protected:
 	virtual bool AICastSpell(Mob* tar, uint8 iChance, uint32 iSpellTypes, bool bInnates = false);
 	virtual bool AIDoSpellCast(uint8 i, Mob* tar, int32 mana_cost, uint32* oDontDoAgainBefore = 0);
 	AISpellsVar_Struct AISpellVar;
-	int64 GetFocusEffect(focusType type, uint16 spell_id, Mob* caster, bool from_buff_tic = false);
+	int64 GetFocusEffect(focusType type, uint16 spell_id, Mob *caster = nullptr, bool from_buff_tic = false) override;
 	uint16 innate_proc_spell_id;
 
 	uint32	npc_spells_effects_id;

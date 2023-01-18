@@ -18,7 +18,7 @@ void command_zone(Client *c, const Seperator *sep)
 		zone_id = std::stoi(zone_input);
 
 		// validate
-		if (!GetZone(zone_id)) {
+		if (zone_id != 0 && !GetZone(zone_id)) {
 			c->Message(Chat::White, fmt::format("Could not find zone by id [{}]", zone_id).c_str());
 			return;
 		}
@@ -50,13 +50,6 @@ void command_zone(Client *c, const Seperator *sep)
 			0,
 			ZoneToSafeCoords
 		);
-		return;
-	}
-
-	// status checking
-	auto min_status = content_db.GetMinStatus(zone_id, 0);
-	if (c->Admin() < min_status) {
-		c->Message(Chat::White, "Your status is not high enough to go to this zone.");
 		return;
 	}
 

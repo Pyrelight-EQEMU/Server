@@ -34,7 +34,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #include <cstdlib>
 #include <algorithm>
 
-extern Database database;
+extern UCSDatabase database;
 extern std::string WorldShortName;
 extern std::string GetMailPrefix();
 extern ChatChannelList *ChannelList;
@@ -487,7 +487,7 @@ Clientlist::Clientlist(int ChatPort) {
 		exit(1);
 
 	chatsf->OnNewConnection([this](std::shared_ptr<EQ::Net::EQStream> stream) {
-		LogF(Logs::General, Logs::Loginserver, "New Client UDP connection from {0}:{1}", stream->GetRemoteIP(), stream->GetRemotePort());
+		LogInfo("New Client UDP connection from [{0}] [{1}]", stream->GetRemoteIP(), stream->GetRemotePort());
 		stream->SetOpcodeManager(&ChatOpMgr);
 
 		auto c = new Client(stream);

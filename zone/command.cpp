@@ -140,11 +140,14 @@ int command_init(void)
 		command_add("enablerecipe", "[Recipe ID] - Enables a Recipe", AccountStatus::QuestTroupe, command_enablerecipe) ||
 		command_add("endurance", "Restores your or your target's endurance.", AccountStatus::Guide, command_endurance) ||
 		command_add("equipitem", "[slotid(0-21)] - Equip the item on your cursor into the specified slot", AccountStatus::Guide, command_equipitem) ||
+		command_add("exptoggle", "[Toggle] - Toggle your or your target's experience gain.", AccountStatus::QuestTroupe, command_exptoggle) ||
 		command_add("faction", "[Find (criteria | all ) | Review (criteria | all) | Reset (id)] - Resets Player's Faction", AccountStatus::QuestTroupe, command_faction) ||
 		command_add("factionassociation", "[factionid] [amount] - triggers a faction hits via association", AccountStatus::GMLeadAdmin, command_faction_association) ||
 		command_add("feature", "Change your or your target's feature's temporarily", AccountStatus::QuestTroupe, command_feature) ||
+		command_add("size", "Change your targets size (alias of #feature size)", AccountStatus::QuestTroupe, command_feature) ||
 		command_add("findaa", "[Search Criteria] - Search for an AA", AccountStatus::Guide, command_findaa) ||
 		command_add("findaliases", "[Search Criteria]- Searches for available command aliases, by alias or command", AccountStatus::Player, command_findaliases) ||
+		command_add("findcharacter", "[Search Criteria] - Search for a character", AccountStatus::Guide, command_findcharacter) ||
 		command_add("findclass", "[Search Criteria] - Search for a class", AccountStatus::Guide, command_findclass) ||
 		command_add("findfaction", "[Search Criteria] - Search for a faction", AccountStatus::Guide, command_findfaction) ||
 		command_add("findnpctype", "[Search Criteria] - Search database NPC types", AccountStatus::GMAdmin, command_findnpctype) ||
@@ -210,7 +213,7 @@ int command_init(void)
 		command_add("logs", "Manage anything to do with logs", AccountStatus::GMImpossible, command_logs) ||
 		command_add("makepet", "[Pet Name] - Make a pet", AccountStatus::Guide, command_makepet) ||
 		command_add("mana", "Fill your or your target's mana", AccountStatus::Guide, command_mana) ||
-		command_add("maxskills", "Maxes skills for you.", AccountStatus::GMMgmt, command_max_all_skills) ||
+		command_add("maxskills", "Maxes skills for you or your player target.", AccountStatus::GMMgmt, command_max_all_skills) ||
 		command_add("memspell", "[Spell ID] [Spell Gem] - Memorize a Spell by ID to the specified Spell Gem for you or your target", AccountStatus::Guide, command_memspell) ||
 		command_add("merchant_close_shop", "Closes a merchant shop", AccountStatus::GMAdmin, command_merchantcloseshop) ||
 		command_add("merchant_open_shop", "Opens a merchants shop", AccountStatus::GMAdmin, command_merchantopenshop) ||
@@ -261,6 +264,8 @@ int command_init(void)
 		command_add("randomfeatures", "Temporarily randomizes the Facial Features of your target", AccountStatus::QuestTroupe, command_randomfeatures) ||
 		command_add("refreshgroup", "Refreshes Group for you or your player target.", AccountStatus::Player, command_refreshgroup) ||
 		command_add("reload", "Reloads different types of server data globally, use no argument for help menu.", AccountStatus::GMMgmt, command_reload) ||
+		command_add("rq", "Reloads quests (alias of #reload quests).", AccountStatus::GMMgmt, command_reload) ||
+		command_add("rl", "Reloads logs (alias of #reload logs).", AccountStatus::GMMgmt, command_reload) ||
 		command_add("removeitem", "[Item ID] [Amount] - Removes the specified Item ID by Amount from you or your player target's inventory (Amount defaults to 1 if not used)", AccountStatus::GMAdmin, command_removeitem) ||
 		command_add("repop", "[Force] - Repop the zone with optional force repop", AccountStatus::GMAdmin, command_repop) ||
 		command_add("resetaa", "Resets a Player's AA in their profile and refunds spent AA's to unspent, may disconnect player.", AccountStatus::GMMgmt, command_resetaa) ||
@@ -283,6 +288,7 @@ int command_init(void)
 		command_add("setadventurepoints", "[Theme] [Points] - Set your or your player target's available Adventure Points by Theme", AccountStatus::GMLeadAdmin, command_set_adventure_points) ||
 		command_add("setaltcurrency", "[Currency ID] [Amount] - Set your or your target's available Alternate Currency by Currency ID", AccountStatus::GMAdmin, command_setaltcurrency) ||
 		command_add("setanim", "[Animation ID (IDs are 0 to 4)] - Set target's appearance to Animation ID", AccountStatus::GMMgmt, command_setanim) ||
+		command_add("setanon", "[Anonymous Flag] - Set you or your target's Anonymous Flag (0 = Not Anonymous, 1 = Anonymous, 2 = Roleplaying)", AccountStatus::QuestTroupe, command_setanon) ||
 		command_add("setcrystals", "[value] - Set your or your player target's available radiant or ebon crystals", AccountStatus::GMAdmin, command_setcrystals) ||
 		command_add("setendurance", "[Endurance] - Set your or your target's Endurance", AccountStatus::GMAdmin, command_setendurance) ||
 		command_add("setfaction", "[Faction ID] - Sets targeted NPC's faction in the database", AccountStatus::GMAreas, command_setfaction) ||
@@ -317,6 +323,7 @@ int command_init(void)
 		command_add("summonburiedplayercorpse", "Summons the target's oldest buried corpse, if any exist.", AccountStatus::GMAdmin, command_summonburiedplayercorpse) ||
 		command_add("summonitem", "[itemid] [charges] - Summon an item onto your cursor. Charges are optional.", AccountStatus::GMMgmt, command_summonitem) ||
 		command_add("suspend", "[name] [days] [reason] - Suspend by character name and for specificed number of days", AccountStatus::GMLeadAdmin, command_suspend) ||
+		command_add("suspendmulti", "[Character Name One|Character Name Two|etc] [Days] [Reason] - Suspend multiple characters by name for specified number of days", AccountStatus::GMLeadAdmin, command_suspendmulti) ||
 		command_add("task", "(subcommand) - Task system commands", AccountStatus::GMLeadAdmin, command_task) ||
 		command_add("tempname", "[newname] - Temporarily renames your target. Leave name blank to restore the original name.", AccountStatus::GMAdmin, command_tempname) ||
 		command_add("petname", "[newname] - Temporarily renames your pet. Leave name blank to restore the original name.", AccountStatus::GMAdmin, command_petname) ||
@@ -516,15 +523,6 @@ int command_add(std::string command_name, std::string description, uint8 admin, 
 		return -1;
 	}
 
-	for (const auto& c : commandlist) {
-		if (c.second->function != function) {
-			continue;
-		}
-
-		LogError("command_add() - Command [{}] equates to an alias of [{}] - check command.cpp", command_name, c.first);
-		return -1;
-	}
-
 	auto c = new CommandRecord;
 	c->admin = admin;
 	c->description = description;
@@ -601,6 +599,8 @@ int command_realdispatch(Client *c, std::string message, bool ignore_status)
 		return -1;
 	}
 
+	parse->EventPlayer(EVENT_GM_COMMAND, c, message, 0);
+
 	cur->function(c, &sep);	// Dispatch C++ Command
 
 	return 0;
@@ -614,7 +614,7 @@ void command_help(Client *c, const Seperator *sep)
 
 	for (const auto& cur : commandlist) {
 		if (!search_criteria.empty()) {
-			if (cur.first.find(search_criteria) == std::string::npos) {
+			if (!Strings::Contains(cur.first, search_criteria) && !Strings::Contains(cur.second->description, search_criteria)) {
 				continue;
 			}
 		}
@@ -980,9 +980,11 @@ void command_bot(Client *c, const Seperator *sep)
 #include "gm_commands/enablerecipe.cpp"
 #include "gm_commands/endurance.cpp"
 #include "gm_commands/equipitem.cpp"
+#include "gm_commands/exptoggle.cpp"
 #include "gm_commands/faction.cpp"
 #include "gm_commands/feature.cpp"
 #include "gm_commands/findaa.cpp"
+#include "gm_commands/findcharacter.cpp"
 #include "gm_commands/findclass.cpp"
 #include "gm_commands/findfaction.cpp"
 #include "gm_commands/findnpctype.cpp"
@@ -1120,6 +1122,7 @@ void command_bot(Client *c, const Seperator *sep)
 #include "gm_commands/setaaxp.cpp"
 #include "gm_commands/setaltcurrency.cpp"
 #include "gm_commands/setanim.cpp"
+#include "gm_commands/setanon.cpp"
 #include "gm_commands/setcrystals.cpp"
 #include "gm_commands/setendurance.cpp"
 #include "gm_commands/setfaction.cpp"
@@ -1155,6 +1158,7 @@ void command_bot(Client *c, const Seperator *sep)
 #include "gm_commands/summonburiedplayercorpse.cpp"
 #include "gm_commands/summonitem.cpp"
 #include "gm_commands/suspend.cpp"
+#include "gm_commands/suspendmulti.cpp"
 #include "gm_commands/task.cpp"
 #include "gm_commands/tempname.cpp"
 #include "gm_commands/texture.cpp"

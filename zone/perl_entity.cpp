@@ -406,6 +406,16 @@ Bot* Perl_EntityList_GetBotByName(EntityList* self, std::string bot_name) // @ca
 	return self->GetBotByBotName(bot_name);
 }
 
+Client* Perl_EntityList_GetBotOwnerByBotEntityID(EntityList* self, uint32_t entity_id) // @categories Script Utility, Bot
+{
+	return self->GetBotOwnerByBotEntityID(entity_id);
+}
+
+Client* Perl_EntityList_GetBotOwnerByBotID(EntityList* self, uint32_t bot_id) // @categories Script Utility, Bot
+{
+	return self->GetBotOwnerByBotID(bot_id);
+}
+
 perl::array Perl_EntityList_GetBotList(EntityList* self) // @categories Script Utility, Bot
 {
 	perl::array result;
@@ -464,6 +474,11 @@ perl::array Perl_EntityList_GetBotListByClientName(EntityList* self, std::string
 void Perl_EntityList_SignalAllBotsByOwnerCharacterID(EntityList* self, uint32_t character_id, int signal_id) // @categories Script Utility
 {
 	entity_list.SignalAllBotsByOwnerCharacterID(character_id, signal_id);
+}
+
+void Perl_EntityList_SignalAllBotsByOwnerName(EntityList* self, std::string owner_name, int signal_id) // @categories Script Utility
+{
+	entity_list.SignalAllBotsByOwnerName(owner_name, signal_id);
 }
 
 void Perl_EntityList_SignalBotByBotID(EntityList* self, uint32_t bot_id, int signal_id) // @categories Script Utility
@@ -618,6 +633,8 @@ void perl_register_entitylist()
 	package.add("GetBotByID", &Perl_EntityList_GetBotByID);
 	package.add("GetBotByName", &Perl_EntityList_GetBotByName);
 	package.add("GetBotList", &Perl_EntityList_GetBotList);
+	package.add("GetBotOwnerByBotEntityID", (Client*(*)(EntityList*, uint32))&Perl_EntityList_GetBotOwnerByBotEntityID);
+	package.add("GetBotOwnerByBotID", (Client*(*)(EntityList*, uint32))&Perl_EntityList_GetBotOwnerByBotID);
 	package.add("GetBotListByCharacterID", (perl::array(*)(EntityList*, uint32))&Perl_EntityList_GetBotListByCharacterID);
 	package.add("GetBotListByCharacterID", (perl::array(*)(EntityList*, uint32, uint8))&Perl_EntityList_GetBotListByCharacterID);
 	package.add("GetBotListByClientName", (perl::array(*)(EntityList*, std::string))&Perl_EntityList_GetBotListByClientName);
@@ -704,6 +721,7 @@ void perl_register_entitylist()
 	package.add("ReplaceWithTarget", &Perl_EntityList_ReplaceWithTarget);
 #ifdef BOTS
 	package.add("SignalAllBotsByOwnerCharacterID", &Perl_EntityList_SignalAllBotsByOwnerCharacterID);
+	package.add("SignalAllBotsByOwnerName", &Perl_EntityList_SignalAllBotsByOwnerName);
 #endif
 	package.add("SignalAllClients", &Perl_EntityList_SignalAllClients);
 #ifdef BOTS

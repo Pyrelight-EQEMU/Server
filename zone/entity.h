@@ -278,7 +278,7 @@ public:
 	bool	MakeTrackPacket(Client* client);
 	void	SendTraders(Client* client);
 	void	AddClient(Client*);
-	void	AddNPC(NPC*, bool SendSpawnPacket = true, bool dontqueue = false);
+	void	AddNPC(NPC*, bool send_spawn_packet = true, bool dont_queue = false);
 	void	AddMerc(Merc*, bool SendSpawnPacket = true, bool dontqueue = false);
 	void	AddCorpse(Corpse* pc, uint32 in_id = 0xFFFFFFFF);
 	void	AddObject(Object*, bool SendSpawnPacket = true);
@@ -550,9 +550,10 @@ public:
 	inline const std::unordered_map<uint16, Client *> &GetClientList() { return client_list; }
 #ifdef BOTS
 	inline const std::list<Bot *> &GetBotList() { return bot_list; }
-	std::vector<Bot *> GetBotListByCharacterID(uint32 character_id, uint8 class_id = 0);
-	std::vector<Bot *> GetBotListByClientName(std::string client_name, uint8 class_id = 0);
+	std::vector<Bot *> GetBotListByCharacterID(uint32 character_id, uint8 class_id = NO_CLASS);
+	std::vector<Bot *> GetBotListByClientName(std::string client_name, uint8 class_id = NO_CLASS);
 	void SignalAllBotsByOwnerCharacterID(uint32 character_id, int signal_id);
+	void SignalAllBotsByOwnerName(std::string owner_name, int signal_id);
 	void SignalBotByBotID(uint32 bot_id, int signal_id);
 	void SignalBotByBotName(std::string bot_name, int signal_id);
 #endif
@@ -628,7 +629,8 @@ private:
 		Mob* GetMobByBotID(uint32 botID);
 		Bot* GetBotByBotID(uint32 botID);
 		Bot* GetBotByBotName(std::string botName);
-		Client* GetBotOwnerByBotEntityID(uint16 entityID);
+		Client* GetBotOwnerByBotEntityID(uint32 entity_id);
+		Client* GetBotOwnerByBotID(const uint32 bot_id);
 		std::list<Bot*> GetBotsByBotOwnerCharacterID(uint32 botOwnerCharacterID);
 
 		bool Bot_AICheckCloseBeneficialSpells(Bot* caster, uint8 iChance, float iRange, uint32 iSpellTypes); // TODO: Evaluate this closesly in hopes to eliminate

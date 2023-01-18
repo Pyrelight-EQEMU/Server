@@ -399,6 +399,16 @@ Lua_Bot_List Lua_EntityList::GetBotList() {
 	return ret;
 }
 
+Lua_Client Lua_EntityList::GetBotOwnerByBotEntityID(uint32 entity_id) {
+	Lua_Safe_Call_Class(Lua_Client);
+	return Lua_Client(self->GetBotOwnerByBotEntityID(entity_id));
+}
+
+Lua_Client Lua_EntityList::GetBotOwnerByBotID(uint32 bot_id) {
+	Lua_Safe_Call_Class(Lua_Client);
+	return Lua_Client(self->GetBotOwnerByBotID(bot_id));
+}
+
 Lua_Bot_List Lua_EntityList::GetBotListByCharacterID(uint32 character_id) {
 	Lua_Safe_Call_Class(Lua_Bot_List);
 	Lua_Bot_List ret;
@@ -458,6 +468,11 @@ Lua_Bot_List Lua_EntityList::GetBotListByClientName(std::string client_name, uin
 void Lua_EntityList::SignalAllBotsByOwnerCharacterID(uint32 character_id, int signal_id) {
 	Lua_Safe_Call_Void();
 	self->SignalAllBotsByOwnerCharacterID(character_id, signal_id);
+}
+
+void Lua_EntityList::SignalAllBotsByOwnerName(std::string owner_name, int signal_id) {
+	Lua_Safe_Call_Void();
+	self->SignalAllBotsByOwnerName(owner_name, signal_id);
 }
 
 void Lua_EntityList::SignalBotByBotID(uint32 bot_id, int signal_id) {
@@ -649,6 +664,8 @@ luabind::scope lua_register_entity_list() {
 	.def("GetBotByID", (Lua_Bot(Lua_EntityList::*)(uint32))&Lua_EntityList::GetBotByID)
 	.def("GetBotByName", (Lua_Bot(Lua_EntityList::*)(std::string))&Lua_EntityList::GetBotByName)
 	.def("GetBotList", (Lua_Bot_List(Lua_EntityList::*)(void))&Lua_EntityList::GetBotList)
+	.def("GetBotOwnerByBotEntityID", (Lua_Client(Lua_EntityList::*)(uint32))&Lua_EntityList::GetBotOwnerByBotEntityID)
+	.def("GetBotOwnerByBotID", (Lua_Client(Lua_EntityList::*)(uint32))&Lua_EntityList::GetBotOwnerByBotID)
 	.def("GetBotListByCharacterID", (Lua_Bot_List(Lua_EntityList::*)(uint32))&Lua_EntityList::GetBotListByCharacterID)
 	.def("GetBotListByCharacterID", (Lua_Bot_List(Lua_EntityList::*)(uint32,uint8))&Lua_EntityList::GetBotListByCharacterID)
 	.def("GetBotListByClientName", (Lua_Bot_List(Lua_EntityList::*)(std::string))&Lua_EntityList::GetBotListByClientName)
@@ -722,6 +739,7 @@ luabind::scope lua_register_entity_list() {
 	.def("ReplaceWithTarget", (void(Lua_EntityList::*)(Lua_Mob, Lua_Mob))&Lua_EntityList::ReplaceWithTarget)
 #ifdef BOTS
 	.def("SignalAllBotsByOwnerCharacterID", (void(Lua_EntityList::*)(uint32, int))&Lua_EntityList::SignalAllBotsByOwnerCharacterID)
+	.def("SignalAllBotsByOwnerName", (void(Lua_EntityList::*)(std::string, int))&Lua_EntityList::SignalAllBotsByOwnerName)
 #endif
 	.def("SignalAllClients", (void(Lua_EntityList::*)(int))&Lua_EntityList::SignalAllClients)
 #ifdef BOTS

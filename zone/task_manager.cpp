@@ -232,7 +232,9 @@ bool TaskManager::LoadTasks(int single_task)
 		);
 
 		for (auto &&e : zones) {
-			ad->zone_ids.push_back(std::stoi(e));
+			if (Strings::IsNumber(e)) {
+				ad->zone_ids.push_back(std::stoi(e));
+			}
 		}
 
 		ad->optional = a.optional;
@@ -272,7 +274,7 @@ bool TaskManager::SaveClientState(Client *client, ClientTaskState *cts)
 		return false;
 	}
 
-	const char *ERR_MYSQLERROR = "[TASKS]Error in TaskManager::SaveClientState {}";
+	constexpr const char *ERR_MYSQLERROR = "[TASKS]Error in TaskManager::SaveClientState {}";
 
 	int character_id = client->CharacterID();
 
