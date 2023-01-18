@@ -76,9 +76,8 @@ bool BotDatabase::UpdateInjectedBotCommandSettings(const std::vector<std::pair<s
 			return false;
 		}
 
-		Log(Logs::General,
-			Logs::Status,
-			"%u New Bot Command%s Added",
+		LogInfo(
+			"[{}] New Bot Command{} Added",
 			injected.size(),
 			(injected.size() == 1 ? "" : "s")
 		);
@@ -100,9 +99,8 @@ bool BotDatabase::UpdateOrphanedBotCommandSettings(const std::vector<std::string
 			return false;
 		}
 
-		Log(Logs::General,
-			Logs::Status,
-			"%u Orphaned Bot Command%s Deleted",
+		LogInfo(
+			"[{}] Orphaned Bot Command{} Deleted",
 			orphaned.size(),
 			(orphaned.size() == 1 ? "" : "s")
 		);
@@ -317,6 +315,20 @@ bool BotDatabase::LoadOwnerID(const uint32 bot_id, uint32& owner_id)
 	owner_id = atoi(row[0]);
 
 	return true;
+}
+
+uint32 BotDatabase::GetOwnerID(const uint32 bot_id)
+{
+	if (!bot_id) {
+		return 0;
+	}
+
+	const auto& l = BotDataRepository::FindOne(database, bot_id);
+	if (!l.bot_id) {
+		return 0;
+	}
+
+	return l.owner_id;
 }
 
 bool BotDatabase::LoadBotID(const uint32 owner_id, const std::string& bot_name, uint32& bot_id)
@@ -549,7 +561,7 @@ bool BotDatabase::SaveBot(Bot* bot_inst)
 	l.title                  = bot_inst->GetTitle();
 	l.suffix                 = bot_inst->GetSuffix();
 	l.zone_id                = bot_inst->GetLastZoneID();
-	l.gender                 = bot_inst->GetGender();
+	l.gender                 = bot_inst->GetBaseGender();
 	l.race                   = bot_inst->GetBaseRace();
 	l.class_                 = bot_inst->GetClass();
 	l.level                  = bot_inst->GetLevel();
@@ -1211,12 +1223,11 @@ bool BotDatabase::LoadItemSlots(const uint32 bot_id, std::map<uint16, uint32>& m
 			bot_id
 		)
 	);
-	if (l.empty()) {
-		return false;
-	}
 
-	for (const auto& e : l) {
-		m.insert(std::pair<uint16, uint32>(e.slot_id, e.item_id));
+	if (!l.empty()) {
+		for (const auto& e : l) {
+			m.insert(std::pair<uint16, uint32>(e.slot_id, e.item_id));
+		}
 	}
 
 	return true;

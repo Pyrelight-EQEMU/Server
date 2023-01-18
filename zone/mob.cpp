@@ -98,6 +98,7 @@ Mob::Mob(
 	uint16 in_usemodel,
 	bool in_always_aggro,
 	int32 in_heroic_strikethrough,
+	bool in_keeps_sold_items,
 	int64 in_hp_regen_per_second
 ) :
 	attack_timer(2000),
@@ -252,39 +253,40 @@ Mob::Mob(
 		aa_title = 0xFF;
 	}
 
-	AC                  = in_ac;
-	ATK                 = in_atk;
-	STR                 = in_str;
-	STA                 = in_sta;
-	DEX                 = in_dex;
-	AGI                 = in_agi;
-	INT                 = in_int;
-	WIS                 = in_wis;
-	CHA                 = in_cha;
-	MR                  = CR = FR = DR = PR = Corrup = PhR = 0;
-	ExtraHaste          = 0;
-	bEnraged            = false;
-	current_mana        = 0;
-	max_mana            = 0;
-	hp_regen            = in_hp_regen;
-	hp_regen_per_second = in_hp_regen_per_second;
-	mana_regen          = in_mana_regen;
-	ooc_regen           = RuleI(NPC, OOCRegen); //default Out of Combat Regen
-	maxlevel            = in_maxlevel;
-	scalerate           = in_scalerate;
-	invisible           = 0;
-	invisible_undead    = 0;
-	invisible_animals   = 0;
-	sneaking            = false;
-	hidden              = false;
-	improved_hidden     = false;
-	invulnerable        = false;
-	IsFullHP            = (current_hp == max_hp);
-	qglobal             = 0;
-	spawned             = false;
-	rare_spawn          = false;
-	always_aggro        = in_always_aggro;
+	AC                   = in_ac;
+	ATK                  = in_atk;
+	STR                  = in_str;
+	STA                  = in_sta;
+	DEX                  = in_dex;
+	AGI                  = in_agi;
+	INT                  = in_int;
+	WIS                  = in_wis;
+	CHA                  = in_cha;
+	MR                   = CR = FR = DR = PR = Corrup = PhR = 0;
+	ExtraHaste           = 0;
+	bEnraged             = false;
+	current_mana         = 0;
+	max_mana             = 0;
+	hp_regen             = in_hp_regen;
+	hp_regen_per_second  = in_hp_regen_per_second;
+	mana_regen           = in_mana_regen;
+	ooc_regen            = RuleI(NPC, OOCRegen); //default Out of Combat Regen
+	maxlevel             = in_maxlevel;
+	scalerate            = in_scalerate;
+	invisible            = 0;
+	invisible_undead     = 0;
+	invisible_animals    = 0;
+	sneaking             = false;
+	hidden               = false;
+	improved_hidden      = false;
+	invulnerable         = false;
+	IsFullHP             = (current_hp == max_hp);
+	qglobal              = 0;
+	spawned              = false;
+	rare_spawn           = false;
+	always_aggro         = in_always_aggro;
 	heroic_strikethrough = in_heroic_strikethrough;
+	keeps_sold_items     = in_keeps_sold_items;
 
 	InitializeBuffSlots();
 
@@ -1691,7 +1693,7 @@ void Mob::ShowStats(Client* client)
 
 		// Faction
 		if (target->GetNPCFactionID()) {
-			auto faction_id = target->GetNPCFactionID();
+			auto faction_id = target->GetPrimaryFaction();
 			auto faction_name = content_db.GetFactionName(faction_id);
 			client->Message(
 				Chat::White,
@@ -2551,7 +2553,7 @@ void Mob::SendIllusionPacket(
 	}
 
 	LogSpells(
-		"Illusion: Race [{}] Gender [{}] Texture [{}] HelmTexture [{}] HairColor [{}] BeardColor [{}] EyeColor1 [{}] EyeColor2 [{}] HairStyle [{}] Face [{}] DrakkinHeritage [{}] DrakkinTattoo [{}] DrakkinDetails [{}] Size [{}]",
+		"[Mob::SendIllusionPacket] Illusion: Race [{}] Gender [{}] Texture [{}] HelmTexture [{}] HairColor [{}] BeardColor [{}] EyeColor1 [{}] EyeColor2 [{}] HairStyle [{}] Face [{}] DrakkinHeritage [{}] DrakkinTattoo [{}] DrakkinDetails [{}] Size [{}]",
 		race,
 		gender,
 		new_texture,
@@ -4057,37 +4059,6 @@ void Mob::SetNextIncHPEvent( int inchpevent )
 	nextinchpevent = inchpevent;
 }
 
-int16 Mob::GetResist(uint8 type) const
-{
-	if (IsNPC())
-	{
-		if (type == 1)
-			return MR + spellbonuses.MR + itembonuses.MR;
-		else if (type == 2)
-			return FR + spellbonuses.FR + itembonuses.FR;
-		else if (type == 3)
-			return CR + spellbonuses.CR + itembonuses.CR;
-		else if (type == 4)
-			return PR + spellbonuses.PR + itembonuses.PR;
-		else if (type == 5)
-			return DR + spellbonuses.DR + itembonuses.DR;
-	}
-	else if (IsClient())
-	{
-		if (type == 1)
-			return CastToClient()->GetMR();
-		else if (type == 2)
-			return CastToClient()->GetFR();
-		else if (type == 3)
-			return CastToClient()->GetCR();
-		else if (type == 4)
-			return CastToClient()->GetPR();
-		else if (type == 5)
-			return CastToClient()->GetDR();
-	}
-	return 25;
-}
-
 uint32 Mob::GetLevelHP(uint8 tlevel)
 {
 	int multiplier = 0;
@@ -4163,7 +4134,7 @@ void Mob::ExecWeaponProc(const EQ::ItemInstance *inst, uint16 spell_id, Mob *on,
 	if(!IsValidSpell(spell_id)) { // Check for a valid spell otherwise it will crash through the function
 		if(IsClient()){
 			Message(0, "Invalid spell proc %u", spell_id);
-			LogSpells("Player [{}], Weapon Procced invalid spell [{}]", GetName(), spell_id);
+			LogSpells("[Mob::ExecWeaponProc] Player [{}] Weapon Procced invalid spell [{}]", GetName(), spell_id);
 		}
 		return;
 	}
@@ -5000,9 +4971,9 @@ void Mob::TrySympatheticProc(Mob *target, uint32 spell_id)
 	CheckNumHitsRemaining(NumHit::MatchingSpells, -1, focus_spell);
 }
 
-int32 Mob::GetItemStat(uint32 itemid, const char *identifier)
+const int Mob::GetItemStat(uint32 item_id, std::string identifier)
 {
-	return EQ::InventoryProfile::GetItemStatValue(itemid, identifier);
+	return EQ::InventoryProfile::GetItemStatValue(item_id, identifier);
 }
 
 std::string Mob::GetGlobal(const char *varname) {
@@ -6283,37 +6254,44 @@ void Mob::ClearSpecialAbilities() {
 void Mob::ProcessSpecialAbilities(const std::string &str) {
 	ClearSpecialAbilities();
 
-	std::vector<std::string> sp = Strings::Split(str, '^');
-	for(auto iter = sp.begin(); iter != sp.end(); ++iter) {
-		std::vector<std::string> sub_sp = Strings::Split((*iter), ',');
-		if(sub_sp.size() >= 2) {
-			int ability = std::stoi(sub_sp[0]);
+	const auto& sp = Strings::Split(str, '^');
+	for (const auto& s : sp) {
+		const auto& sub_sp = Strings::Split(s, ',');
+		if (
+			sub_sp.size() >= 2 &&
+			Strings::IsNumber(sub_sp[0]) &&
+			Strings::IsNumber(sub_sp[1])
+		) {
+			int ability_id = std::stoi(sub_sp[0]);
 			int value = std::stoi(sub_sp[1]);
 
-			SetSpecialAbility(ability, value);
-			switch(ability) {
-			case SPECATK_QUAD:
-				if(value > 0) {
-					SetSpecialAbility(SPECATK_TRIPLE, 1);
-				}
-				break;
-			case DESTRUCTIBLE_OBJECT:
-				if(value == 0) {
-					SetDestructibleObject(false);
-				} else {
-					SetDestructibleObject(true);
-				}
-				break;
-			default:
-				break;
+			SetSpecialAbility(ability_id, value);
+
+			switch (ability_id) {
+				case SPECATK_QUAD:
+					if (value > 0) {
+						SetSpecialAbility(SPECATK_TRIPLE, 1);
+					}
+					break;
+				case DESTRUCTIBLE_OBJECT:
+					if (value == 0) {
+						SetDestructibleObject(false);
+					} else {
+						SetDestructibleObject(true);
+					}
+					break;
+				default:
+					break;
 			}
 
-			for(size_t i = 2, p = 0; i < sub_sp.size(); ++i, ++p) {
-				if(p >= MAX_SPECIAL_ATTACK_PARAMS) {
+			for (size_t i = 2, param_id = 0; i < sub_sp.size(); ++i, ++param_id) {
+				if (param_id >= MAX_SPECIAL_ATTACK_PARAMS) {
 					break;
 				}
 
-				SetSpecialAbilityParam(ability, p, std::stoi(sub_sp[i]));
+				if (Strings::IsNumber(sub_sp[i])) {
+					SetSpecialAbilityParam(ability_id, param_id, std::stoi(sub_sp[i]));
+				}
 			}
 		}
 	}
@@ -7050,4 +7028,41 @@ void Mob::CloneAppearance(Mob* other, bool clone_name)
 	if (clone_name) {
 		TempName(other->GetCleanName());
 	}
+}
+
+void Mob::CopyHateList(Mob* to) {
+	if (hate_list.IsHateListEmpty() || !to || to->IsClient()) {
+		return;
+	}
+
+	for (const auto& h : hate_list.GetHateList()) {
+		if (h->entity_on_hatelist) {
+			to->AddToHateList(h->entity_on_hatelist, h->stored_hate_amount, h->hatelist_damage);
+		}
+	}
+}
+
+int Mob::DispatchZoneControllerEvent(
+	QuestEventID evt,
+	Mob* init,
+	const std::string& data,
+	uint32 extra,
+	std::vector<std::any>* pointers
+) {
+	auto ret = 0;
+
+	if (
+		RuleB(Zone, UseZoneController) &&
+		(
+			!IsNPC() ||
+			(IsNPC() && GetNPCTypeID() != ZONE_CONTROLLER_NPC_ID)
+		)
+	) {
+		auto controller = entity_list.GetNPCByNPCTypeID(ZONE_CONTROLLER_NPC_ID);
+		if (controller) {
+			ret = parse->EventNPC(evt, controller, init, data, extra, pointers);
+		}
+	}
+
+	return ret;
 }

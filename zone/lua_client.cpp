@@ -266,12 +266,12 @@ void Lua_Client::AddEXP(uint32 add_exp, int conlevel, bool resexp) {
 	self->AddEXP(add_exp, conlevel, resexp);
 }
 
-void Lua_Client::SetEXP(uint32 set_exp, uint32 set_aaxp) {
+void Lua_Client::SetEXP(uint64 set_exp, uint64 set_aaxp) {
 	Lua_Safe_Call_Void();
 	self->SetEXP(set_exp, set_aaxp);
 }
 
-void Lua_Client::SetEXP(uint32 set_exp, uint32 set_aaxp, bool resexp) {
+void Lua_Client::SetEXP(uint64 set_exp, uint64 set_aaxp, bool resexp) {
 	Lua_Safe_Call_Void();
 	self->SetEXP(set_exp, set_aaxp, resexp);
 }
@@ -650,7 +650,7 @@ luabind::object Lua_Client::GetLearnableDisciplines(lua_State* L) {
 	if (d_) {
 		auto self = reinterpret_cast<NativeType*>(d_);
 		auto learnable_disciplines = self->GetLearnableDisciplines();
-		int index = 0;
+		int index = 1;
 		for (auto spell_id : learnable_disciplines) {
 			lua_table[index] = spell_id;
 			index++;
@@ -664,7 +664,7 @@ luabind::object Lua_Client::GetLearnableDisciplines(lua_State* L, uint8 min_leve
 	if (d_) {
 		auto self = reinterpret_cast<NativeType*>(d_);
 		auto learnable_disciplines = self->GetLearnableDisciplines(min_level);
-		int index = 0;
+		int index = 1;
 		for (auto spell_id : learnable_disciplines) {
 			lua_table[index] = spell_id;
 			index++;
@@ -678,7 +678,7 @@ luabind::object Lua_Client::GetLearnableDisciplines(lua_State* L, uint8 min_leve
 	if (d_) {
 		auto self = reinterpret_cast<NativeType*>(d_);
 		auto learnable_disciplines = self->GetLearnableDisciplines(min_level, max_level);
-		int index = 0;
+		int index = 1;
 		for (auto spell_id : learnable_disciplines) {
 			lua_table[index] = spell_id;
 			index++;
@@ -692,7 +692,7 @@ luabind::object Lua_Client::GetLearnedDisciplines(lua_State* L) {
 	if (d_) {
 		auto self = reinterpret_cast<NativeType*>(d_);
 		auto learned_disciplines = self->GetLearnedDisciplines();
-		int index = 0;
+		int index = 1;
 		for (auto spell_id : learned_disciplines) {
 			lua_table[index] = spell_id;
 			index++;
@@ -706,7 +706,7 @@ luabind::object Lua_Client::GetMemmedSpells(lua_State* L) {
 	if (d_) {
 		auto self = reinterpret_cast<NativeType*>(d_);
 		auto memmed_spells = self->GetMemmedSpells();
-		int index = 0;
+		int index = 1;
 		for (auto spell_id : memmed_spells) {
 			lua_table[index] = spell_id;
 			index++;
@@ -720,7 +720,7 @@ luabind::object Lua_Client::GetScribeableSpells(lua_State* L) {
 	if (d_) {
 		auto self = reinterpret_cast<NativeType*>(d_);
 		auto scribeable_spells = self->GetScribeableSpells();
-		int index = 0;
+		int index = 1;
 		for (auto spell_id : scribeable_spells) {
 			lua_table[index] = spell_id;
 			index++;
@@ -734,7 +734,7 @@ luabind::object Lua_Client::GetScribeableSpells(lua_State* L, uint8 min_level) {
 	if (d_) {
 		auto self = reinterpret_cast<NativeType*>(d_);
 		auto scribeable_spells = self->GetScribeableSpells(min_level);
-		int index = 0;
+		int index = 1;
 		for (auto spell_id : scribeable_spells) {
 			lua_table[index] = spell_id;
 			index++;
@@ -748,7 +748,7 @@ luabind::object Lua_Client::GetScribeableSpells(lua_State* L, uint8 min_level, u
 	if (d_) {
 		auto self = reinterpret_cast<NativeType*>(d_);
 		auto scribeable_spells = self->GetScribeableSpells(min_level, max_level);
-		int index = 0;
+		int index = 1;
 		for (auto spell_id : scribeable_spells) {
 			lua_table[index] = spell_id;
 			index++;
@@ -762,7 +762,7 @@ luabind::object Lua_Client::GetScribedSpells(lua_State* L) {
 	if (d_) {
 		auto self = reinterpret_cast<NativeType*>(d_);
 		auto scribed_spells = self->GetScribedSpells();
-		int index = 0;
+		int index = 1;
 		for (auto spell_id : scribed_spells) {
 			lua_table[index] = spell_id;
 			index++;
@@ -2103,6 +2103,21 @@ void Lua_Client::CreateTaskDynamicZone(int task_id, luabind::object dz_table) {
 	self->CreateTaskDynamicZone(task_id, dz);
 }
 
+void Lua_Client::Fling(float target_x, float target_y, float target_z) {
+	Lua_Safe_Call_Void();
+	self->Fling(0, target_x, target_y, target_z, false, false, true);
+}
+
+void Lua_Client::Fling(float target_x, float target_y, float target_z, bool ignore_los) {
+	Lua_Safe_Call_Void();
+	self->Fling(0, target_x, target_y, target_z, ignore_los, false, true);
+}
+
+void Lua_Client::Fling(float target_x, float target_y, float target_z, bool ignore_los, bool clip_through_walls) {
+	Lua_Safe_Call_Void();
+	self->Fling(0, target_x, target_y, target_z, ignore_los, clip_through_walls, true);
+}
+
 void Lua_Client::Fling(float value, float target_x, float target_y, float target_z) {
 	Lua_Safe_Call_Void();
 	self->Fling(value, target_x, target_y, target_z);
@@ -2113,9 +2128,9 @@ void Lua_Client::Fling(float value, float target_x, float target_y, float target
 	self->Fling(value, target_x, target_y, target_z, ignore_los);
 }
 
-void Lua_Client::Fling(float value, float target_x, float target_y, float target_z, bool ignore_los, bool clipping) {
+void Lua_Client::Fling(float value, float target_x, float target_y, float target_z, bool ignore_los, bool clip_through_walls) {
 	Lua_Safe_Call_Void();
-	self->Fling(value, target_x, target_y, target_z, ignore_los, clipping);
+	self->Fling(value, target_x, target_y, target_z, ignore_los, clip_through_walls);
 }
 
 double Lua_Client::GetAAEXPModifier(uint32 zone_id) {
@@ -2871,6 +2886,62 @@ std::string Lua_Client::GetGuildPublicNote()
 	return self->GetGuildPublicNote();
 }
 
+void Lua_Client::MaxSkills()
+{
+	Lua_Safe_Call_Void();
+	self->MaxSkills();
+}
+
+luabind::object Lua_Client::GetAugmentIDsBySlotID(lua_State* L, int16 slot_id) {
+	auto lua_table = luabind::newtable(L);
+	if (d_) {
+		auto self = reinterpret_cast<NativeType*>(d_);
+		auto augments = self->GetInv().GetAugmentIDsBySlotID(slot_id);
+		int index = 1;
+		for (auto item_id : augments) {
+			lua_table[index] = item_id;
+			index++;
+		}
+	}
+	return lua_table;
+}
+
+bool Lua_Client::IsEXPEnabled() {
+	Lua_Safe_Call_Bool();
+	return self->IsEXPEnabled();
+}
+
+void Lua_Client::SetEXPEnabled(bool is_exp_enabled) {
+	Lua_Safe_Call_Void();
+	self->SetEXPEnabled(is_exp_enabled);
+}
+
+uint64 Lua_Client::CalcEXP(uint8 consider_level) {
+	Lua_Safe_Call_Int();
+	return self->CalcEXP(consider_level);
+}
+
+uint64 Lua_Client::CalcEXP(uint8 consider_level, bool ignore_modifiers) {
+	Lua_Safe_Call_Int();
+	return self->CalcEXP(consider_level, ignore_modifiers);
+}
+
+bool Lua_Client::CanEnterZone(std::string zone_short_name) {
+	Lua_Safe_Call_Bool();
+	return self->CanEnterZone(zone_short_name);
+}
+
+bool Lua_Client::CanEnterZone(std::string zone_short_name, int16 instance_version) {
+	Lua_Safe_Call_Bool();
+	return self->CanEnterZone(zone_short_name, instance_version);
+}
+
+void Lua_Client::SendPath(Lua_Mob target)
+{
+	Lua_Safe_Call_Void();
+	self->SendPath(target);
+}
+
 #ifdef BOTS
 
 int Lua_Client::GetBotRequiredLevel()
@@ -2945,6 +3016,18 @@ void Lua_Client::SetBotSpawnLimit(int new_spawn_limit, uint8 class_id)
 	self->SetBotSpawnLimit(new_spawn_limit, class_id);
 }
 
+void Lua_Client::CampAllBots()
+{
+	Lua_Safe_Call_Void();
+	self->CampAllBots();
+}
+
+void Lua_Client::CampAllBots(uint8 class_id)
+{
+	Lua_Safe_Call_Void();
+	self->CampAllBots(class_id);
+}
+
 #endif
 
 luabind::scope lua_register_client() {
@@ -3002,7 +3085,15 @@ luabind::scope lua_register_client() {
 	.def("BreakInvis", (void(Lua_Client::*)(void))&Lua_Client::BreakInvis)
 	.def("CalcATK", &Lua_Client::CalcATK)
 	.def("CalcCurrentWeight", &Lua_Client::CalcCurrentWeight)
+	.def("CalcEXP", (uint64(Lua_Client::*)(uint8))&Lua_Client::CalcEXP)
+	.def("CalcEXP", (uint64(Lua_Client::*)(uint8,bool))&Lua_Client::CalcEXP)
 	.def("CalcPriceMod", (float(Lua_Client::*)(Lua_Mob,bool))&Lua_Client::CalcPriceMod)
+#ifdef BOTS
+	.def("CampAllBots", (void(Lua_Client::*)(void))&Lua_Client::CampAllBots)
+	.def("CampAllBots", (void(Lua_Client::*)(uint8))&Lua_Client::CampAllBots)
+#endif
+	.def("CanEnterZone", (bool(Lua_Client::*)(std::string))&Lua_Client::CanEnterZone)
+	.def("CanEnterZone", (bool(Lua_Client::*)(std::string,int16))&Lua_Client::CanEnterZone)
 	.def("CanHaveSkill", (bool(Lua_Client::*)(int))&Lua_Client::CanHaveSkill)
 	.def("CashReward", &Lua_Client::CashReward)
 	.def("ChangeLastName", (void(Lua_Client::*)(std::string))&Lua_Client::ChangeLastName)
@@ -3049,6 +3140,9 @@ luabind::scope lua_register_client() {
 	.def("FindMemmedSpellBySlot", (uint16(Lua_Client::*)(int))&Lua_Client::FindMemmedSpellBySlot)
 	.def("FindMemmedSpellBySpellID", (int(Lua_Client::*)(uint16))&Lua_Client::FindMemmedSpellBySpellID)
 	.def("FindSpellBookSlotBySpellID", (int(Lua_Client::*)(int))&Lua_Client::FindSpellBookSlotBySpellID)
+	.def("Fling", (void(Lua_Client::*)(float,float,float))&Lua_Client::Fling)
+	.def("Fling", (void(Lua_Client::*)(float,float,float,bool))&Lua_Client::Fling)
+	.def("Fling", (void(Lua_Client::*)(float,float,float,bool,bool))&Lua_Client::Fling)
 	.def("Fling", (void(Lua_Client::*)(float,float,float,float))&Lua_Client::Fling)
 	.def("Fling", (void(Lua_Client::*)(float,float,float,float,bool))&Lua_Client::Fling)
 	.def("Fling", (void(Lua_Client::*)(float,float,float,float,bool,bool))&Lua_Client::Fling)
@@ -3068,6 +3162,7 @@ luabind::scope lua_register_client() {
 	.def("GetAlternateCurrencyValue", (int(Lua_Client::*)(uint32))&Lua_Client::GetAlternateCurrencyValue)
 	.def("GetAnon", (int(Lua_Client::*)(void))&Lua_Client::GetAnon)
 	.def("GetAugmentIDAt", (int(Lua_Client::*)(int,int))&Lua_Client::GetAugmentIDAt)
+	.def("GetAugmentIDsBySlotID", (luabind::object(Lua_Client::*)(lua_State* L,int16))&Lua_Client::GetAugmentIDsBySlotID)
 	.def("GetBaseAGI", (int(Lua_Client::*)(void))&Lua_Client::GetBaseAGI)
 	.def("GetBaseCHA", (int(Lua_Client::*)(void))&Lua_Client::GetBaseCHA)
 	.def("GetBaseDEX", (int(Lua_Client::*)(void))&Lua_Client::GetBaseDEX)
@@ -3209,6 +3304,7 @@ luabind::scope lua_register_client() {
 	.def("IsCrouching", (bool(Lua_Client::*)(void))&Lua_Client::IsCrouching)
 	.def("IsDead", &Lua_Client::IsDead)
 	.def("IsDueling", (bool(Lua_Client::*)(void))&Lua_Client::IsDueling)
+	.def("IsEXPEnabled", (bool(Lua_Client::*)(void))&Lua_Client::IsEXPEnabled)
 	.def("IsGrouped", (bool(Lua_Client::*)(void))&Lua_Client::IsGrouped)
 	.def("IsLD", (bool(Lua_Client::*)(void))&Lua_Client::IsLD)
 	.def("IsMedding", (bool(Lua_Client::*)(void))&Lua_Client::IsMedding)
@@ -3233,6 +3329,7 @@ luabind::scope lua_register_client() {
 	.def("Marquee", (void(Lua_Client::*)(uint32, std::string, uint32))&Lua_Client::SendMarqueeMessage)
 	.def("Marquee", (void(Lua_Client::*)(uint32, uint32, uint32, uint32, uint32, std::string))&Lua_Client::SendMarqueeMessage)
 	.def("MaxSkill", (int(Lua_Client::*)(int))&Lua_Client::MaxSkill)
+	.def("MaxSkills", (void(Lua_Client::*)(void))&Lua_Client::MaxSkills)
 	.def("MemSpell", (void(Lua_Client::*)(int,int))&Lua_Client::MemSpell)
 	.def("MemSpell", (void(Lua_Client::*)(int,int,bool))&Lua_Client::MemSpell)
 	.def("MemmedCount", (int(Lua_Client::*)(void))&Lua_Client::MemmedCount)
@@ -3322,6 +3419,7 @@ luabind::scope lua_register_client() {
 	.def("SendMarqueeMessage", (void(Lua_Client::*)(uint32, std::string, uint32))&Lua_Client::SendMarqueeMessage)
 	.def("SendMarqueeMessage", (void(Lua_Client::*)(uint32, uint32, uint32, uint32, uint32, std::string))&Lua_Client::SendMarqueeMessage)
 	.def("SendOPTranslocateConfirm", (void(Lua_Client::*)(Lua_Mob,int))&Lua_Client::SendOPTranslocateConfirm)
+	.def("SendPath", (void(Lua_Client::*)(Lua_Mob))&Lua_Client::SendPath)
 	.def("SendPEQZoneFlagInfo", (void(Lua_Client::*)(Lua_Client))&Lua_Client::SendPEQZoneFlagInfo)
 	.def("SendSound", (void(Lua_Client::*)(void))&Lua_Client::SendSound)
 	.def("SendToGuildHall", (void(Lua_Client::*)(void))&Lua_Client::SendToGuildHall)
@@ -3367,8 +3465,9 @@ luabind::scope lua_register_client() {
 	.def("SetDeity", (void(Lua_Client::*)(int))&Lua_Client::SetDeity)
 	.def("SetDuelTarget", (void(Lua_Client::*)(int))&Lua_Client::SetDuelTarget)
 	.def("SetDueling", (void(Lua_Client::*)(bool))&Lua_Client::SetDueling)
-	.def("SetEXP", (void(Lua_Client::*)(uint32,uint32))&Lua_Client::SetEXP)
-	.def("SetEXP", (void(Lua_Client::*)(uint32,uint32,bool))&Lua_Client::SetEXP)
+	.def("SetEXP", (void(Lua_Client::*)(uint64,uint64))&Lua_Client::SetEXP)
+	.def("SetEXP", (void(Lua_Client::*)(uint64,uint64,bool))&Lua_Client::SetEXP)
+	.def("SetEXPEnabled", (void(Lua_Client::*)(bool))&Lua_Client::SetEXPEnabled)
 	.def("SetEXPModifier", (void(Lua_Client::*)(uint32,double))&Lua_Client::SetEXPModifier)
 	.def("SetEXPModifier", (void(Lua_Client::*)(uint32,double,int16))&Lua_Client::SetEXPModifier)
 	.def("SetEbonCrystals", (void(Lua_Client::*)(uint32))&Lua_Client::SetEbonCrystals)
@@ -3481,13 +3580,13 @@ luabind::scope lua_register_client() {
 luabind::scope lua_register_inventory_where() {
 	return luabind::class_<InventoryWhere>("InventoryWhere")
 		.enum_("constants")
-		[
+		[(
 			luabind::value("Personal", static_cast<int>(invWherePersonal)),
 			luabind::value("Bank", static_cast<int>(invWhereBank)),
 			luabind::value("SharedBank", static_cast<int>(invWhereSharedBank)),
 			luabind::value("Trading", static_cast<int>(invWhereTrading)),
 			luabind::value("Cursor", static_cast<int>(invWhereCursor))
-		];
+		)];
 }
 
 

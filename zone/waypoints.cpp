@@ -239,7 +239,7 @@ void NPC::MoveTo(const glm::vec4 &position, bool saveguardspot)
 		if (m_GuardPoint.w == -1)
 			m_GuardPoint.w = CalculateHeadingToTarget(position.x, position.y);
 
-		LogAIModerate("Setting guard position to [{}]", to_string(static_cast<glm::vec3>(m_GuardPoint)).c_str());
+		LogAIDetail("Setting guard position to [{}]", to_string(static_cast<glm::vec3>(m_GuardPoint)).c_str());
 	}
 
 	cur_wp_pause        = 0;
@@ -252,7 +252,7 @@ void NPC::MoveTo(const glm::vec4 &position, bool saveguardspot)
 void NPC::UpdateWaypoint(int wp_index)
 {
 	if (wp_index >= static_cast<int>(Waypoints.size())) {
-		LogAI("Update to waypoint [{}] failed. Not found", wp_index);
+		LogAIDetail("Update to waypoint [{}] failed. Not found", wp_index);
 		return;
 	}
 	std::vector<wplist>::iterator cur;
@@ -261,7 +261,7 @@ void NPC::UpdateWaypoint(int wp_index)
 
 	m_CurrentWayPoint = glm::vec4(cur->x, cur->y, cur->z, cur->heading);
 	cur_wp_pause = cur->pause;
-	LogAIModerate("Next waypoint [{}]: ({}, {}, {}, {})", wp_index, m_CurrentWayPoint.x, m_CurrentWayPoint.y, m_CurrentWayPoint.z, m_CurrentWayPoint.w);
+	LogAIDetail("Next waypoint [{}]: ({}, {}, {}, {})", wp_index, m_CurrentWayPoint.x, m_CurrentWayPoint.y, m_CurrentWayPoint.z, m_CurrentWayPoint.w);
 
 }
 
@@ -559,7 +559,7 @@ void NPC::SetWaypointPause()
 
 void NPC::SaveGuardSpot(bool ClearGuardSpot) {
 	if (ClearGuardSpot) {
-		LogAIModerate("Clearing guard order.");
+		LogAIDetail("Clearing guard order.");
 		m_GuardPoint = glm::vec4();
 	} else {
 		m_GuardPoint = m_Position;
@@ -567,7 +567,7 @@ void NPC::SaveGuardSpot(bool ClearGuardSpot) {
 		if (m_GuardPoint.w == 0) {
 			m_GuardPoint.w = 0.0001; //hack to make IsGuarding simpler
 		}
-		LogAI("Setting guard position to {0}", to_string(static_cast<glm::vec3>(m_GuardPoint)));
+		LogAIDetail("Setting guard position to [{}]", to_string(static_cast<glm::vec3>(m_GuardPoint)));
 	}
 }
 
@@ -577,7 +577,7 @@ void NPC::SaveGuardSpot(const glm::vec4 &pos)
 
 	if (m_GuardPoint.w == 0)
 		m_GuardPoint.w = 0.0001;		//hack to make IsGuarding simpler
-	LogAI("Setting guard position to {0}", to_string(static_cast<glm::vec3>(m_GuardPoint)));
+	LogAIDetail("Setting guard position to [{}]", to_string(static_cast<glm::vec3>(m_GuardPoint)));
 }
 
 void NPC::NextGuardPosition() {
@@ -728,7 +728,7 @@ void Mob::SendTo(float new_x, float new_y, float new_z) {
 
 			float newz = zone->zonemap->FindBestZ(dest, nullptr);
 
-			LogAIModerate("BestZ returned {} at {}, {}, {}", newz, m_Position.x, m_Position.y, m_Position.z);
+			LogAIDetail("BestZ returned {} at {}, {}, {}", newz, m_Position.x, m_Position.y, m_Position.z);
 
 			if ((newz > -2000) && std::abs(newz - dest.z) < RuleR(Map, FixPathingZMaxDeltaSendTo)) // Sanity check.
 				m_Position.z = newz + 1;
