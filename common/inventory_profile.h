@@ -149,6 +149,9 @@ namespace EQ
 		// Check how many of a specific item the player has equipped by Item ID
 		int CountItemEquippedByID(uint32 item_id);
 
+		// Returns the slotid for the item containing the specified augment ID
+		int EQ::InventoryProfile::GetEquipByAugmentID(uint32 item_id);
+
 		// Check if player has a specific augment equipped by Item ID
 		bool HasAugmentEquippedByID(uint32 item_id);
 
