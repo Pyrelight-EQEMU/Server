@@ -1464,7 +1464,7 @@ bool ZoneDatabase::SaveCharacterData(
 	auto results = database.QueryDatabase(query);
 	
 	//Save our current state into multiclass_data table
-	query = StringFormat("REPLACE INTO `multiclass_data` (id,class,level,exp) VALUES (%u,%u,%u,%u)", character_id, pp->class_, pp->level, pp->exp);
+	query = StringFormat("REPLACE INTO `multiclass_data` (id,class,level,exp) VALUES (%u,%u,%u,%u)", c->CharacterID(), pp->class_, pp->level, pp->exp);
 	results = database.QueryDatabase(query);
 	
 	LogDebug(
