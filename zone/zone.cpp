@@ -59,6 +59,7 @@
 #include "zone_reload.h"
 #include "../common/repositories/criteria/content_filter_criteria.h"
 #include "../common/repositories/content_flags_repository.h"
+#include "../common/repositories/merchantlist_repository.h"
 #include "../common/repositories/rule_sets_repository.h"
 #include "../common/repositories/zone_points_repository.h"
 #include "../common/serverinfo.h"
@@ -595,7 +596,7 @@ void Zone::LoadTempMerchantData()
 		temp_merchant_list.origslot = temp_merchant_list.slot;
 
 		LogMerchants(
-			"[LoadTempMerchantData] Loading merchant temp items npc_id [{}] slot [{}] charges [{}] item [{}] origslot [{}]",
+			"Loading merchant temp items npc_id [{}] slot [{}] charges [{}] item [{}] origslot [{}]",
 			npc_id,
 			temp_merchant_list.slot,
 			temp_merchant_list.charges,
@@ -611,45 +612,34 @@ void Zone::LoadNewMerchantData(uint32 merchantid) {
 
 	std::list<MerchantList> merchant_list;
 
-	auto query = fmt::format(
-		SQL(
-			SELECT
-				item,
-				slot,
-				faction_required,
-				level_required,
-				alt_currency_cost,
-				classes_required,
-				probability,
-				bucket_name,
-				bucket_value,
-				bucket_comparison
-			FROM merchantlist
-			WHERE  merchantid = {} {}
-			ORDER BY slot
-		),
-		merchantid,
-		ContentFilterCriteria::apply()
+	const auto& l = MerchantlistRepository::GetWhere(
+		content_db,
+		fmt::format(
+			"merchantid = {} {} ORDER BY slot",
+			merchantid,
+			ContentFilterCriteria::apply()
+		)
 	);
 
-    auto results = content_db.QueryDatabase(query);
-    if (!results.Success()) {
-        return;
+	if (l.empty()) {
+		return;
 	}
 
-	for (auto row : results) {
+	for (const auto& e : l) {
 		MerchantList ml;
-		ml.id = merchantid;
-		ml.item = std::stoul(row[0]);
-		ml.slot = std::stoul(row[1]);
-		ml.faction_required = static_cast<int16>(std::stoi(row[2]));
-		ml.level_required = static_cast<uint8>(std::stoul(row[3]));
-		ml.alt_currency_cost = static_cast<uint16>(std::stoul(row[4]));
-		ml.classes_required = std::stoul(row[5]);
-		ml.probability = static_cast<uint8>(std::stoul(row[6]));
-		ml.bucket_name = row[7];
-		ml.bucket_value = row[8];
-		ml.bucket_comparison = static_cast<uint8>(std::stoul(row[9]));
+		ml.id                = merchantid;
+		ml.item              = e.item;
+		ml.slot              = e.slot;
+		ml.faction_required  = e.faction_required;
+		ml.level_required    = e.level_required;
+		ml.min_status        = e.min_status;
+		ml.max_status        = e.max_status;
+		ml.alt_currency_cost = e.alt_currency_cost;
+		ml.classes_required  = e.classes_required;
+		ml.probability       = e.probability;
+		ml.bucket_name       = e.bucket_name;
+		ml.bucket_value      = e.bucket_value;
+		ml.bucket_comparison = e.bucket_comparison;
 		merchant_list.push_back(ml);
 	}
 
@@ -665,6 +655,8 @@ void Zone::GetMerchantDataForZoneLoad() {
 			item,
 			faction_required,
 			level_required,
+			min_status,
+			max_status,
 			alt_currency_cost,
 			classes_required,
 			probability,
@@ -725,16 +717,18 @@ void Zone::GetMerchantDataForZoneLoad() {
 			continue;
 		}
 
-		mle.slot = std::stoul(row[1]);
-		mle.item = std::stoul(row[2]);
-		mle.faction_required = static_cast<int16>(std::stoi(row[3]));
-		mle.level_required = static_cast<uint8>(std::stoul(row[4]));
-		mle.alt_currency_cost = static_cast<uint16>(std::stoul(row[5]));
-		mle.classes_required = std::stoul(row[6]);
-		mle.probability = static_cast<uint8>(std::stoul(row[7]));
-		mle.bucket_name = row[8];
-		mle.bucket_value = row[9];
-		mle.bucket_comparison = static_cast<uint8>(std::stoul(row[10]));
+		mle.slot              = std::stoul(row[1]);
+		mle.item              = std::stoul(row[2]);
+		mle.faction_required  = static_cast<int16>(std::stoi(row[3]));
+		mle.level_required    = static_cast<uint8>(std::stoul(row[4]));
+		mle.min_status        = static_cast<uint8>(std::stoul(row[5]));
+		mle.max_status        = static_cast<uint8>(std::stoul(row[6]));
+		mle.alt_currency_cost = static_cast<uint16>(std::stoul(row[7]));
+		mle.classes_required  = std::stoul(row[8]);
+		mle.probability       = static_cast<uint8>(std::stoul(row[9]));
+		mle.bucket_name       = row[10];
+		mle.bucket_value      = row[11];
+		mle.bucket_comparison = static_cast<uint8>(std::stoul(row[12]));
 
 		merchant_list->second.push_back(mle);
 	}
@@ -904,7 +898,7 @@ void Zone::Shutdown(bool quiet)
 	zone->ldon_trap_entry_list.clear();
 
 	LogInfo(
-		"[Zone Shutdown] Zone [{}] zone_id [{}] version [{}] instance_id [{}]",
+		"Zone [{}] zone_id [{}] version [{}] instance_id [{}]",
 		zone->GetShortName(),
 		zone->GetZoneID(),
 		zone->GetInstanceVersion(),
@@ -914,7 +908,7 @@ void Zone::Shutdown(bool quiet)
 	zone->SetZoneHasCurrentTime(false);
 	if (!quiet) {
 		LogInfo(
-			"[Zone Shutdown] Zone [{}] zone_id [{}] version [{}] instance_id [{}] Going to sleep",
+			"Zone [{}] zone_id [{}] version [{}] instance_id [{}] Going to sleep",
 			zone->GetShortName(),
 			zone->GetZoneID(),
 			zone->GetInstanceVersion(),
@@ -933,7 +927,7 @@ void Zone::Shutdown(bool quiet)
 	LogSys.CloseFileLogs();
 
 	if (RuleB(Zone, KillProcessOnDynamicShutdown)) {
-		LogInfo("[Zone Shutdown] Shutting down");
+		LogInfo("Shutting down");
 		EQ::EventLoop::Get().Shutdown();
 	}
 }
@@ -1237,6 +1231,8 @@ bool Zone::Init(bool is_static) {
 
 void Zone::ReloadStaticData() {
 	LogInfo("Reloading Zone Static Data");
+	entity_list.RemoveAllObjects(); //Ground spawns are also objects we clear list then fill it
+	entity_list.RemoveAllDoors(); //Some objects are also doors so clear list before filling
 
 	if (!content_db.LoadStaticZonePoints(&zone_point_list, GetShortName(), GetInstanceVersion())) {
 		LogError("Loading static zone points failed");
@@ -1255,14 +1251,12 @@ void Zone::ReloadStaticData() {
 		LogError("Reloading ground spawns failed. continuing");
 	}
 
-	entity_list.RemoveAllObjects();
 	LogInfo("Reloading World Objects from DB");
 	if (!LoadZoneObjects())
 	{
 		LogError("Reloading World Objects failed. continuing");
 	}
 
-	entity_list.RemoveAllDoors();
 	LoadZoneDoors();
 	entity_list.RespawnAllDoors();
 
@@ -1290,7 +1284,7 @@ bool Zone::LoadZoneCFG(const char* filename, uint16 instance_version)
 	auto z = zone_store.GetZoneWithFallback(ZoneID(filename), instance_version);
 
 	if (!z) {
-		LogError("[LoadZoneCFG] Failed to load zone data for [{}] instance_version [{}]", filename, instance_version);
+		LogError("Failed to load zone data for [{}] instance_version [{}]", filename, instance_version);
 		return false;
 	}
 
@@ -1840,7 +1834,7 @@ void Zone::StartShutdownTimer(uint32 set_time)
 
 void Zone::ResetShutdownTimer() {
 	LogInfo(
-		"[ResetShutdownTimer] Reset to [{}] from original remaining time [{}] duration [{}] zone [{}]",
+		"Reset to [{}] from original remaining time [{}] duration [{}] zone [{}]",
 		Strings::SecondsToTime(autoshutdown_timer.GetDuration(), true),
 		Strings::SecondsToTime(autoshutdown_timer.GetRemainingTime(), true),
 		Strings::SecondsToTime(autoshutdown_timer.GetDuration(), true),
@@ -2950,7 +2944,7 @@ void Zone::SendDiscordMessage(const std::string& webhook_name, const std::string
 	}
 
 	if (not_found) {
-		LogDiscord("[SendDiscordMessage] Did not find valid webhook by webhook name [{}]", webhook_name);
+		LogDiscord("Did not find valid webhook by webhook name [{}]", webhook_name);
 	}
 }
 
@@ -2984,6 +2978,12 @@ std::string Zone::GetAAName(int aa_id)
 		const auto& a = aa_abilities.find(current_aa_id);
 		if (a != aa_abilities.end()) {
 			return a->second.get()->name;
+		} else {
+			for (const auto& b : aa_abilities) {
+				if (b.second.get()->first->id == aa_id) {
+					return b.second.get()->name;
+				}
+			}
 		}
 	}
 

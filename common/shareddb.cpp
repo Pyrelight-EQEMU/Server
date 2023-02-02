@@ -761,10 +761,14 @@ bool SharedDatabase::GetInventory(uint32 char_id, EQ::InventoryProfile *inv)
 			inst->SetCharges(charges);
 
 		if (item->RecastDelay) {
-			if (timestamps.count(item->RecastType))
+			if (item->RecastType != RECAST_TYPE_UNLINKED_ITEM && timestamps.count(item->RecastType)) {
 				inst->SetRecastTimestamp(timestamps.at(item->RecastType));
-			else
+			} else if (item->RecastType == RECAST_TYPE_UNLINKED_ITEM && timestamps.count(item->ID)) {
+				inst->SetRecastTimestamp(timestamps.at(item->ID));
+			}
+			else {
 				inst->SetRecastTimestamp(0);
+			}
 		}
 
 		if (item->IsClassCommon()) {
@@ -1850,7 +1854,7 @@ void SharedDatabase::LoadSpells(void *data, int max_spells) {
     }
 
     if(results.ColumnCount() <= SPELL_LOAD_FIELD_COUNT) {
-		LogSpells("[SharedDatabase::LoadSpells] Fatal error loading spells: Spell field count < SPELL_LOAD_FIELD_COUNT([{}])", SPELL_LOAD_FIELD_COUNT);
+		LogSpells("Fatal error loading spells: Spell field count < SPELL_LOAD_FIELD_COUNT([{}])", SPELL_LOAD_FIELD_COUNT);
 		return;
     }
 
@@ -1859,9 +1863,9 @@ void SharedDatabase::LoadSpells(void *data, int max_spells) {
     for (auto& row = results.begin(); row != results.end(); ++row) {
 	    const int tempid = atoi(row[0]);
         if(tempid >= max_spells) {
-      LogSpells("[SharedDatabase::LoadSpells] Non fatal error: spell.id >= max_spells, ignoring");
-            continue;
-        }
+			LogSpells("Non fatal error: spell.id >= max_spells, ignoring");
+			continue;
+		}
 
         ++counter;
         sp[tempid].id = tempid;
