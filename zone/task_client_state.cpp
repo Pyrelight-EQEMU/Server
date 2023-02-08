@@ -1072,6 +1072,16 @@ void ClientTaskState::RewardTask(Client *c, const TaskInformation *ti, ClientTas
 			c->AddCrystals(ti->reward_points, 0);
 		} else if (ti->reward_point_type == static_cast<int32_t>(zone->GetCurrencyID(EBON_CRYSTAL))) {
 			c->AddCrystals(0, ti->reward_points);
+		} else {
+			for (const auto& ac : zone->AlternateCurrencies) {
+				if (ti->reward_point_type == ac.id) {
+					const EQ::ItemData *item = database.GetItem(ac.item_id);
+					if (item) {
+						c->AddAlternateCurrencyValue(ti->reward_point_type, ti->reward_points);
+						c->Message(Chat::Yellow, fmt::format("You have received ({}) {}!", ti->reward_points, item->Name).c_str());
+					}
+				}
+			}
 		}
 	}
 }
@@ -2125,6 +2135,7 @@ void ClientTaskState::AcceptNewTask(
 	if (npc) {
 		parse->EventNPC(EVENT_TASK_ACCEPTED, npc, client, export_string, 0);
 	}
+	parse->EventPlayer(EVENT_TASK_ACCEPTED, client, export_string, 0);
 }
 
 void ClientTaskState::ProcessTaskProximities(Client *client, float x, float y, float z)
