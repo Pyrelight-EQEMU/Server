@@ -171,6 +171,7 @@ uint32 Client::NukeItem(uint32 itemnum, uint8 where_to_check) {
 bool Client::CheckLoreConflict(const EQ::ItemData* item)
 {
 	if (!item) { return false; }
+	if (!item->IsClassBag()) { return false; }
 	if (!item->LoreFlag) { return false; }
 	if (item->LoreGroup == 0) { return false; }
 
