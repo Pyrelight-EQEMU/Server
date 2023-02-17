@@ -740,11 +740,8 @@ bool ZoneDatabase::LoadCharacterMemmedSpells(uint32 character_id, PlayerProfile_
 	}
 	for (auto& row = results.begin(); row != results.end(); ++row) {
 		i = atoi(row[0]);
-		if (i < EQ::spells::SPELL_GEM_COUNT && atoi(row[1]) <= SPDAT_RECORDS){
-			//Don't init spells that we aren't high enough level to use.
-			if (pp->level >= spells[atoi(row[1])].classes[pp->class_]) {
-				pp->mem_spells[i] = atoi(row[1]);
-			}
+		if (i < EQ::spells::SPELL_GEM_COUNT && atoi(row[1]) <= SPDAT_RECORDS){			
+			pp->mem_spells[i] = atoi(row[1]);
 		}
 	}
 	return true;
