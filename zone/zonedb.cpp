@@ -1557,7 +1557,7 @@ bool ZoneDatabase::DeleteCharacterMemorizedSpell(uint32 character_id, uint32 spe
 	auto class_id = GetClassIDbyChar(character_id);
 
 	std::string query = StringFormat("DELETE FROM `character_memmed_spells` WHERE `slot_id` = %u AND `id` = %u AND `class_id` = %u", slot_id, character_id, class_id);
-	QueryDatabase(query);
+	//QueryDatabase(query);
 	return true;
 }
 
