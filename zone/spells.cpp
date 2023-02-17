@@ -5468,9 +5468,8 @@ void Client::MemSpell(uint16 spell_id, int slot, bool update_client)
 }
 
 void Client::UnmemSpell(int slot, bool update_client)
-{
-	// third parameter here is to deal with unexplained integer overflow error. I'm lazy and bad at code.
-	if (slot >= EQ::spells::SPELL_GEM_COUNT || slot < 0 || m_pp.mem_spells[slot] == 4294967295) {
+{	
+	if (slot >= EQ::spells::SPELL_GEM_COUNT || slot < 0) {
 		return;
 	}
 
