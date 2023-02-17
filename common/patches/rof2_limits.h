@@ -267,7 +267,7 @@ namespace RoF2
 		const uint32 EXPANSION_BIT = EQ::expansions::bitRoF;
 		const uint32 EXPANSIONS_MASK = EQ::expansions::maskRoF;
 
-		const size_t CHARACTER_CREATION_LIMIT = 12;
+		const size_t CHARACTER_CREATION_LIMIT = 1;
 
 		const size_t SAY_LINK_BODY_SIZE = 56;
 
