@@ -1449,7 +1449,7 @@ void Client::Handle_Connect_OP_ZoneEntry(const EQApplicationPacket *app)
 
 	if (SPDAT_RECORDS > 0) {
 		for (uint32 z = 0; z < EQ::spells::SPELL_GEM_COUNT; z++) {
-			if (m_pp.mem_spells[z] >= (uint32)SPDAT_RECORDS)
+			if (m_pp.mem_spells[z] >= (uint32)SPDAT_RECORDS) { }
 				//UnmemSpell(z, false);
 		}
 
