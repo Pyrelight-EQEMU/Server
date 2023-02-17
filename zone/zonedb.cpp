@@ -731,6 +731,7 @@ bool ZoneDatabase::LoadCharacterMemmedSpells(uint32 character_id, PlayerProfile_
 		"FROM							"
 		"`character_memmed_spells`		"
 		"WHERE `id` = %u AND `class_id` = %u ORDER BY `slot_id`", character_id, pp->class_);
+	LogDebug("ZoneDatabase::LoadCharacterMemmedSpells for character ID: [{}], class ID:[{}]", character_id, pp->class_);
 	auto results = database.QueryDatabase(query);
 	int i = 0;
 	/* Initialize Spells */
