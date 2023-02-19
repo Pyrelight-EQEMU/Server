@@ -811,7 +811,7 @@ ServerLootItem_Struct* Corpse::GetItem(uint16 lootslot, ServerLootItem_Struct** 
 		end = itemlist.end();
 		for (; cur != end; ++cur) {
 			sitem2 = *cur;
-			if (sitem2->equip_slot >= bagstart && sitem2->equip_slot < bagstart + 10) {
+			if (sitem2->equip_slot >= bagstart && sitem2->equip_slot < bagstart + RoF2::invbag::SLOT_COUNT) {
 				bag_item_data[sitem2->equip_slot - bagstart] = sitem2;
 			}
 		}

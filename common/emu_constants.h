@@ -66,7 +66,7 @@ namespace EQ
 		using RoF2::invtype::KRONO_SIZE;
 		using RoF2::invtype::OTHER_SIZE;
 
-		using Titanium::invtype::TRADE_NPC_SIZE;
+		using RoF2::invtype::TRADE_NPC_SIZE;
 
 		using RoF2::invtype::TYPE_INVALID;
 		using RoF2::invtype::TYPE_BEGIN;
@@ -93,7 +93,7 @@ namespace EQ
 		using RoF2::invslot::SLOT_INVALID;
 		using RoF2::invslot::SLOT_BEGIN;
 
-		using Titanium::invslot::SLOT_TRADESKILL_EXPERIMENT_COMBINE;
+		using RoF2::invslot::SLOT_TRADESKILL_EXPERIMENT_COMBINE;
 
 		const int16 SLOT_AUGMENT_GENERIC_RETURN = 1001; // clients don't appear to use this method... (internal inventory return value)
 
@@ -113,25 +113,25 @@ namespace EQ
 		using RoF2::invslot::BONUS_STAT_END;
 		using RoF2::invslot::BONUS_SKILL_END;
 
-		using Titanium::invslot::BANK_BEGIN;
-		using SoF::invslot::BANK_END;
+		using RoF2::invslot::BANK_BEGIN;
+		using RoF2::invslot::BANK_END;
 
-		using Titanium::invslot::SHARED_BANK_BEGIN;
-		using Titanium::invslot::SHARED_BANK_END;
+		using RoF2::invslot::SHARED_BANK_BEGIN;
+		using RoF2::invslot::SHARED_BANK_END;
 
-		using Titanium::invslot::TRADE_BEGIN;
-		using Titanium::invslot::TRADE_END;
+		using RoF2::invslot::TRADE_BEGIN;
+		using RoF2::invslot::TRADE_END;
 
-		using Titanium::invslot::TRADE_NPC_END;
+		using RoF2::invslot::TRADE_NPC_END;
 
-		using Titanium::invslot::WORLD_BEGIN;
-		using Titanium::invslot::WORLD_END;
+		using RoF2::invslot::WORLD_BEGIN;
+		using RoF2::invslot::WORLD_END;
 
-		using Titanium::invslot::TRIBUTE_BEGIN;
-		using Titanium::invslot::TRIBUTE_END;
+		using RoF2::invslot::TRIBUTE_BEGIN;
+		using RoF2::invslot::TRIBUTE_END;
 
-		using Titanium::invslot::GUILD_TRIBUTE_BEGIN;
-		using Titanium::invslot::GUILD_TRIBUTE_END;
+		using RoF2::invslot::GUILD_TRIBUTE_BEGIN;
+		using RoF2::invslot::GUILD_TRIBUTE_END;
 
 		const int16 CORPSE_BEGIN = invslot::slotGeneral1;
 		const int16 CORPSE_END = CORPSE_BEGIN + invslot::slotCursor;
@@ -153,7 +153,10 @@ namespace EQ
 		using RoF2::invbag::SLOT_END;
 		using RoF2::invbag::SLOT_COUNT;
 
-		const int16 GENERAL_BAGS_BEGIN = 2510;
+		using RoF2::invslot::WORLD_END;
+
+		const int16 GENERAL_BAGS_BEGIN = WORLD_END + 1;
+
 		const int16 GENERAL_BAGS_COUNT = invslot::GENERAL_COUNT * SLOT_COUNT;
 		const int16 GENERAL_BAGS_END = (GENERAL_BAGS_BEGIN + GENERAL_BAGS_COUNT) - 1;
 
