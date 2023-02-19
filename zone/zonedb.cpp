@@ -1066,9 +1066,8 @@ bool ZoneDatabase::SaveCharacterSkill(uint32 character_id, uint32 skill_id, uint
 	return true;
 }
 
-bool ZoneDatabase::SaveCharacterDisc(uint32 character_id, uint32 slot_id, uint32 disc_id){
-	auto class_id = GetClassIDbyChar(character_id);
-	std::string query = StringFormat("REPLACE INTO `character_disciplines` (id, slot_id, disc_id, class_id) VALUES (%u, %u, %u, %u)", character_id, slot_id, disc_id, class_id);
+bool ZoneDatabase::SaveCharacterDisc(uint32 character_id, uint32 slot_id, uint32 disc_id, PlayerProfile_Struct* pp){	
+	std::string query = StringFormat("REPLACE INTO `character_disciplines` (id, slot_id, disc_id, class_id) VALUES (%u, %u, %u, %u)", character_id, slot_id, disc_id, pp->class_);
 	auto results = QueryDatabase(query);
 	LogDebug("ZoneDatabase::SaveCharacterDisc for character ID: [{}], slot:[{}] disc_id:[{}] done", character_id, slot_id, disc_id);
 	return true;
@@ -1495,32 +1494,28 @@ bool ZoneDatabase::SaveCharacterAA(uint32 character_id, uint32 aa_id, uint32 cur
 	return true;
 }
 
-bool ZoneDatabase::SaveCharacterMemorizedSpell(uint32 character_id, uint32 spell_id, uint32 slot_id){
-	auto class_id = GetClassIDbyChar(character_id);
+bool ZoneDatabase::SaveCharacterMemorizedSpell(uint32 character_id, uint32 spell_id, uint32 slot_id, PlayerProfile_Struct* pp){
 	if (spell_id > SPDAT_RECORDS){ return false; }
-	std::string query = StringFormat("REPLACE INTO `character_memmed_spells` (id, slot_id, spell_id, class_id) VALUES (%u, %u, %u, %u)", character_id, slot_id, spell_id, class_id);
+	std::string query = StringFormat("REPLACE INTO `character_memmed_spells` (id, slot_id, spell_id, class_id) VALUES (%u, %u, %u, %u)", character_id, slot_id, spell_id, pp->class_);
 	QueryDatabase(query);
 	return true;
 }
 
-bool ZoneDatabase::SaveCharacterSpell(uint32 character_id, uint32 spell_id, uint32 slot_id){
-	auto class_id = GetClassIDbyChar(character_id);
+bool ZoneDatabase::SaveCharacterSpell(uint32 character_id, uint32 spell_id, uint32 slot_id, PlayerProfile_Struct* pp){
 	if (spell_id > SPDAT_RECORDS){ return false; }
-	std::string query = StringFormat("REPLACE INTO `character_spells` (id, slot_id, spell_id, class_id) VALUES (%u, %u, %u, %u)", character_id, slot_id, spell_id, class_id);
+	std::string query = StringFormat("REPLACE INTO `character_spells` (id, slot_id, spell_id, class_id) VALUES (%u, %u, %u, %u)", character_id, slot_id, spell_id, pp->class_);
 	QueryDatabase(query);
 	return true;
 }
 
-bool ZoneDatabase::DeleteCharacterSpell(uint32 character_id, uint32 spell_id, uint32 slot_id){
-	auto class_id = GetClassIDbyChar(character_id);
-	std::string query = StringFormat("DELETE FROM `character_spells` WHERE `slot_id` = %u AND `id` = %u AND class_id = %u", slot_id, character_id, class_id);
+bool ZoneDatabase::DeleteCharacterSpell(uint32 character_id, uint32 spell_id, uint32 slot_id, PlayerProfile_Struct* pp){
+	std::string query = StringFormat("DELETE FROM `character_spells` WHERE `slot_id` = %u AND `id` = %u AND class_id = %u", slot_id, character_id, pp->class_);
 	QueryDatabase(query);
 	return true;
 }
 
-bool ZoneDatabase::DeleteCharacterDisc(uint32 character_id, uint32 slot_id){
-	auto class_id = GetClassIDbyChar(character_id);
-	std::string query = StringFormat("DELETE FROM `character_disciplines` WHERE `slot_id` = %u AND `id` = %u AND `class_id` = %u", slot_id, character_id, class_id);
+bool ZoneDatabase::DeleteCharacterDisc(uint32 character_id, uint32 slot_id, PlayerProfile_Struct* pp){
+	std::string query = StringFormat("DELETE FROM `character_disciplines` WHERE `slot_id` = %u AND `id` = %u AND `class_id` = %u", slot_id, character_id, pp->class_);
 	QueryDatabase(query);
 	return true;
 }
@@ -1549,11 +1544,8 @@ bool ZoneDatabase::DeleteCharacterDye(uint32 character_id){
 	return true;
 }
 
-bool ZoneDatabase::DeleteCharacterMemorizedSpell(uint32 character_id, uint32 spell_id, uint32 slot_id){
-
-	auto class_id = GetClassIDbyChar(character_id);
-
-	std::string query = StringFormat("DELETE FROM `character_memmed_spells` WHERE `slot_id` = %u AND `id` = %u AND `class_id` = %u", slot_id, character_id, class_id);
+bool ZoneDatabase::DeleteCharacterMemorizedSpell(uint32 character_id, uint32 spell_id, uint32 slot_id, PlayerProfile_Struct* pp){
+	std::string query = StringFormat("DELETE FROM `character_memmed_spells` WHERE `slot_id` = %u AND `id` = %u AND `class_id` = %u", slot_id, character_id, pp->class_);
 	QueryDatabase(query);
 	return true;
 }
@@ -4519,22 +4511,4 @@ void ZoneDatabase::UpdateGMStatus(uint32 accID, int newStatus)
 		);
 		database.QueryDatabase(query);
 	}
-}
-
-uint32 ZoneDatabase::GetClassIDbyChar(uint32 char_id) {
-	const std::string classQuery =
-		StringFormat("SELECT class FROM character_data WHERE id = %i", char_id);
-
-	auto classResults = QueryDatabase(classQuery);
-	int16 class_id = 0;
-
-	if (!classResults.Success()) { return false; }
-
-	for (auto& row = classResults.begin(); row != classResults.end(); ++row) {
-		class_id = atoi(row[0]);
-	}
-
-	LogError("Found class_id [{}] for char_id [{}]", class_id, char_id);
-
-	return class_id;
 }

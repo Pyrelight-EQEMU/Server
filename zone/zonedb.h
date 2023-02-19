@@ -374,11 +374,11 @@ public:
 
 	bool DeleteCharacterAAs(uint32 character_id);
 	bool DeleteCharacterBandolier(uint32 character_id, uint32 band_id);
-	bool DeleteCharacterDisc(uint32 character_id, uint32 slot_id);
+	bool DeleteCharacterDisc(uint32 character_id, uint32 slot_id, PlayerProfile_Struct* pp);
 	bool DeleteCharacterDye(uint32 character_id);
 	bool DeleteCharacterLeadershipAAs(uint32 character_id);
-	bool DeleteCharacterMemorizedSpell(uint32 character_id, uint32 spell_id, uint32 slot_id);
-	bool DeleteCharacterSpell(uint32 character_id, uint32 spell_id, uint32 slot_id);
+	bool DeleteCharacterMemorizedSpell(uint32 character_id, uint32 spell_id, uint32 slot_id, PlayerProfile_Struct* pp);
+	bool DeleteCharacterSpell(uint32 character_id, uint32 spell_id, uint32 slot_id, PlayerProfile_Struct* pp);
 
 	bool LoadCharacterBandolier(uint32 character_id, PlayerProfile_Struct* pp);
 	bool LoadCharacterBindPoint(uint32 character_id, PlayerProfile_Struct* pp);
@@ -400,14 +400,14 @@ public:
 	bool SaveCharacterBindPoint(uint32 character_id, const BindStruct &bind, uint32 bind_number);
 	bool SaveCharacterCurrency(uint32 character_id, PlayerProfile_Struct* pp);
 	bool SaveCharacterData(Client* c, PlayerProfile_Struct* pp, ExtendedProfile_Struct* m_epp);
-	bool SaveCharacterDisc(uint32 character_id, uint32 slot_id, uint32 disc_id);
+	bool SaveCharacterDisc(uint32 character_id, uint32 slot_id, uint32 disc_id, PlayerProfile_Struct* pp);
 	bool SaveCharacterLanguage(uint32 character_id, uint32 lang_id, uint32 value);
 	bool SaveCharacterLeadershipAA(uint32 character_id, PlayerProfile_Struct* pp);
 	bool SaveCharacterMaterialColor(uint32 character_id, uint32 slot_id, uint32 color);
-	bool SaveCharacterMemorizedSpell(uint32 character_id, uint32 spell_id, uint32 slot_id);
+	bool SaveCharacterMemorizedSpell(uint32 character_id, uint32 spell_id, uint32 slot_id, PlayerProfile_Struct* pp);
 	bool SaveCharacterPotionBelt(uint32 character_id, uint8 potion_id, uint32 item_id, uint32 icon);
 	bool SaveCharacterSkill(uint32 character_id, uint32 skill_id, uint32 value);
-	bool SaveCharacterSpell(uint32 character_id, uint32 spell_id, uint32 slot_id);
+	bool SaveCharacterSpell(uint32 character_id, uint32 spell_id, uint32 slot_id, PlayerProfile_Struct* pp);
 	bool SaveCharacterTribute(uint32 character_id, PlayerProfile_Struct* pp);
 
 	double GetAAEXPModifier(uint32 character_id, uint32 zone_id, int16 instance_version = -1) const;
