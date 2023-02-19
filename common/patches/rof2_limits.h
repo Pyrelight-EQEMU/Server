@@ -224,6 +224,7 @@ namespace RoF2
 		inline EQ::versions::ClientVersion GetInvBagRef() { return EQ::versions::ClientVersion::RoF2; }
 
 		const int16 SLOT_INVALID = IINVALID;
+
 		const int16 SLOT_BEGIN = INULL;		
 		const int16 SLOT_COUNT = 200; // there is where you change bag size
 		const int16 SLOT_END = SLOT_COUNT - 1; 
@@ -307,7 +308,7 @@ namespace RoF2
 		const uint32 EXPANSION_BIT = EQ::expansions::bitRoF;
 		const uint32 EXPANSIONS_MASK = EQ::expansions::maskRoF;
 
-		const size_t CHARACTER_CREATION_LIMIT = 12;
+		const size_t CHARACTER_CREATION_LIMIT = 1;
 
 		const size_t SAY_LINK_BODY_SIZE = 56;
 

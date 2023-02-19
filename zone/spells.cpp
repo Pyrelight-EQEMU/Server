@@ -5468,7 +5468,7 @@ void Client::MemSpell(uint16 spell_id, int slot, bool update_client)
 }
 
 void Client::UnmemSpell(int slot, bool update_client)
-{
+{	
 	if (slot >= EQ::spells::SPELL_GEM_COUNT || slot < 0) {
 		return;
 	}

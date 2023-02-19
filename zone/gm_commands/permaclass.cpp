@@ -22,6 +22,7 @@ void command_permaclass(Client *c, const Seperator *sep)
 		class_id
 	);
 
+	
 	target->SetBaseClass(class_id);
 	target->Save();
 	target->Kick("Class was changed.");

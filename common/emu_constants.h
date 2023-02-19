@@ -32,6 +32,10 @@ namespace EQ
 {
 	using RoF2::IINVALID;
 	using RoF2::INULL;
+	
+	namespace inventory {
+		
+	} /*inventory*/
 
 	namespace invtype {
 		using namespace RoF2::invtype::enum_;
@@ -152,6 +156,7 @@ namespace EQ
 		using RoF2::invslot::WORLD_END;
 
 		const int16 GENERAL_BAGS_BEGIN = WORLD_END + 1;
+
 		const int16 GENERAL_BAGS_COUNT = invslot::GENERAL_COUNT * SLOT_COUNT;
 		const int16 GENERAL_BAGS_END = (GENERAL_BAGS_BEGIN + GENERAL_BAGS_COUNT) - 1;
 
@@ -408,7 +413,7 @@ namespace EQ
 	namespace profile {
 		using RoF2::profile::BANDOLIERS_SIZE;
 		using RoF2::profile::BANDOLIER_ITEM_COUNT;
-
+		
 		using RoF2::profile::POTION_BELT_SIZE;
 
 		using RoF2::profile::SKILL_ARRAY_SIZE;

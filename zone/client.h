@@ -411,10 +411,12 @@ public:
 	inline bool GetPVP(bool inc_temp = true) const { return m_pp.pvp != 0 || (inc_temp && temp_pvp); }
 	inline bool GetGM() const { return m_pp.gm != 0; }
 
-	inline void SetBaseClass(uint32 i) { m_pp.class_=i; }
+	void SetBaseClass(uint32 class_id);
 	inline void SetBaseRace(uint32 i) { m_pp.race=i; }
 	inline void SetBaseGender(uint32 i) { m_pp.gender=i; }
 	inline void SetDeity(uint32 i) {m_pp.deity=i;deity=i;}
+
+	void SetActiveClass(uint8 class_id);
 
 	void SetTrackingID(uint32 entity_id);
 

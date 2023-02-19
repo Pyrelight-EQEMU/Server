@@ -77,7 +77,7 @@ Bot::Bot(NPCType *npcTypeData, Client* botOwner) : NPC(npcTypeData, nullptr, glm
 	SetBotCharmer(false);
 	SetPetChooser(false);
 	SetRangerAutoWeaponSelect(false);
-	SetTaunting(GetClass() == WARRIOR);
+	SetTaunting(GetClass() == WARRIOR || GetClass() == PALADIN || GetClass() == SHADOWKNIGHT);
 	SetDefaultBotStance();
 
 	SetAltOutOfCombatBehavior(GetClass() == BARD); // will need to be updated if more classes make use of this flag
@@ -4788,6 +4788,25 @@ void Bot::PerformTradeWithClient(int16 begin_slot_id, int16 end_slot_id, Client*
 			}
 		}
 
+		if (RuleB(Inventory,AllowOnlyOneInstanceEquipped)) {
+			if (m_inv.HasItemEquippedByID(trade_instance->GetID())) {
+				client->Message(Chat::Yellow, "This bot already has a version of this item equipped.");
+				client->ResetTrade();
+				return;
+			}
+
+			for (int i = EQ::invaug::SOCKET_BEGIN; i <= EQ::invaug::SOCKET_END; i++) {
+				if (trade_instance->GetAugment(i)) {
+					if (m_inv.HasAugmentEquippedByID(trade_instance->GetAugment(i)->GetID())) {
+						client->Message(Chat::Yellow, "This bot already has a version of this agument equipped.");
+						client->ResetTrade();
+						return;
+					}
+				}
+			}
+		}
+
+
 		if (!trade_instance->IsType(item::ItemClassCommon)) {
 			if (trade_event_exists) {
 				event_trade.push_back(ClientTrade(trade_instance, trade_index));
@@ -9490,7 +9509,7 @@ void Bot::ListBotSpells(uint8 min_level)
 	auto spell_count = 0;
 	auto spell_number = 1;
 
-	for (const auto& s : (AIBot_spells.size() > AIBot_spells_enforced.size()) ? AIBot_spells : AIBot_spells_enforced) {
+	for (const auto& s : (GetBotEnforceSpellSetting()) ? AIBot_spells_enforced : AIBot_spells) {
 		auto b = bot_spell_settings.find(s.spellid);
 		if (b == bot_spell_settings.end() && s.minlevel >= min_level) {
 			bot_owner->Message(

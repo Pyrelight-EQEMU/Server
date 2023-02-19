@@ -171,6 +171,7 @@ uint32 Client::NukeItem(uint32 itemnum, uint8 where_to_check) {
 bool Client::CheckLoreConflict(const EQ::ItemData* item)
 {
 	if (!item) { return false; }
+	if (!item->IsClassBag()) { return false; }
 	if (!item->LoreFlag) { return false; }
 	if (item->LoreGroup == 0) { return false; }
 
@@ -794,6 +795,23 @@ bool Client::SummonItem(uint32 item_id, int16 charges, uint32 aug1, uint32 aug2,
 		}
 	}
 
+	if (player_event_logs.IsEventEnabled(PlayerEvent::ITEM_CREATION)) {
+		auto e = PlayerEvent::ItemCreationEvent{};
+		e.item_id   = item->ID;
+		e.item_name = item->Name;
+		e.to_slot   = to_slot;
+		e.charges   = charges;
+		e.aug1      = aug1;
+		e.aug2      = aug2;
+		e.aug3      = aug3;
+		e.aug4      = aug4;
+		e.aug5      = aug5;
+		e.aug6      = aug6;
+		e.attuned   = attuned;
+
+		RecordPlayerEventLog(PlayerEvent::ITEM_CREATION, e);
+	}
+
 	// put item into inventory
 	if (to_slot == EQ::invslot::slotCursor) {
 		PushItemOnCursor(*inst);
@@ -848,13 +866,13 @@ void Client::DropItem(int16 slot_id, bool recurse)
 				}
 			}
 		}
-		
+
 		std::string message = fmt::format(
 			"Tried to drop an item on the ground that was no-drop! item_name [{}] item_id ({})",
 			invalid_drop->GetItem()->Name,
 			invalid_drop->GetItem()->ID
 		);
-		
+
 		invalid_drop = nullptr;
 		RecordPlayerEventLog(PlayerEvent::POSSIBLE_HACK, PlayerEvent::PossibleHackEvent{.message = message});
 		GetInv().DeleteItem(slot_id);
@@ -2045,10 +2063,12 @@ bool Client::SwapItem(MoveItem_Struct* move_in) {
 		return false;
 	}
 	//verify shared bank transactions in the database
+
 	if (src_inst &&
 		(src_slot_id >= EQ::invslot::SHARED_BANK_BEGIN) && (src_slot_id <= EQ::invslot::SHARED_BANK_END) ||
 		(src_slot_id >= EQ::invbag::SHARED_BANK_BAGS_BEGIN) && (src_slot_id <= EQ::invbag::SHARED_BANK_BAGS_END)) {
 		if (!database.VerifyInventory(account_id, src_slot_id, src_inst)) {
+
 			LogError("Player [{}] on account [{}] was found exploiting the shared bank.\n", GetName(), account_name);
 			DeleteItemInInventory(dst_slot_id,0,true);
 			return(false);
@@ -2070,6 +2090,7 @@ bool Client::SwapItem(MoveItem_Struct* move_in) {
 		(dst_slot_id >= EQ::invslot::SHARED_BANK_BEGIN) && (dst_slot_id <= EQ::invslot::SHARED_BANK_END) ||
 		(dst_slot_id >= EQ::invbag::SHARED_BANK_BAGS_BEGIN) && (dst_slot_id <= EQ::invbag::SHARED_BANK_BAGS_END)) {
 		if (!database.VerifyInventory(account_id, dst_slot_id, dst_inst)) {
+
 			LogError("Player [{}] on account [{}] was found exploting the shared bank.\n", GetName(), account_name);
 			DeleteItemInInventory(src_slot_id,0,true);
 			return(false);
@@ -2088,7 +2109,8 @@ bool Client::SwapItem(MoveItem_Struct* move_in) {
 	// Check for No Drop Hacks
 	Mob* with = trade->With();
 	if (((with && with->IsClient() && !with->CastToClient()->IsBecomeNPC() && dst_slot_id >= EQ::invslot::TRADE_BEGIN && dst_slot_id <= EQ::invslot::TRADE_END) ||
-		(dst_slot_id >= EQ::invslot::SHARED_BANK_BEGIN && dst_slot_id <= EQ::invslot::SHARED_BANK_END) || (dst_slot_id >= EQ::invbag::SHARED_BANK_BAGS_BEGIN) && (dst_slot_id <= EQ::invbag::SHARED_BANK_BAGS_END))
+ 		(dst_slot_id >= EQ::invslot::SHARED_BANK_BEGIN && dst_slot_id <= EQ::invslot::SHARED_BANK_END) || (dst_slot_id >= EQ::invbag::SHARED_BANK_BAGS_BEGIN) && (dst_slot_id <= EQ::invbag::SHARED_BANK_BAGS_END))
+
 	&& GetInv().CheckNoDrop(src_slot_id)
 	&& !CanTradeFVNoDropItem()) {
 		auto ndh_inst = m_inv[src_slot_id];
@@ -2320,7 +2342,10 @@ bool Client::SwapItem(MoveItem_Struct* move_in) {
 				fail_message = "Your class, deity and/or race may not equip that item.";
 			else if (fail_state == EQ::InventoryProfile::swapLevel)
 				fail_message = "You are not sufficient level to use this item.";
-
+			else if (fail_state == EQ::InventoryProfile::swapItemLore)
+				fail_message = "You already have a version of this item equipped.";
+			else if (fail_state == EQ::InventoryProfile::swapAugLore)
+                                fail_message = "You already have a version of one of the augmentations slotted in this item equipped.";
 			if (fail_message)
 				Message(Chat::Red, "%s", fail_message);
 
@@ -2448,7 +2473,7 @@ void Client::SwapItemResync(MoveItem_Struct* move_slots) {
 	// resync the 'from' and 'to' slots on an as-needed basis
 	// Not as effective as the full process, but less intrusive to gameplay
 	LogInventory("Inventory desyncronization. (charname: [{}], source: [{}], destination: [{}])", GetName(), move_slots->from_slot, move_slots->to_slot);
-	Message(Chat::Yellow, "Inventory Desyncronization detected: Resending slot data...");
+	//Message(Chat::Yellow, "Inventory Desyncronization detected: Resending slot data...");
 
 	if (move_slots->from_slot >= EQ::invslot::EQUIPMENT_BEGIN && move_slots->from_slot <= EQ::invbag::CURSOR_BAG_END) {
 		int16 resync_slot = (EQ::InventoryProfile::CalcSlotId(move_slots->from_slot) == INVALID_INDEX) ? move_slots->from_slot : EQ::InventoryProfile::CalcSlotId(move_slots->from_slot);
@@ -2471,7 +2496,7 @@ void Client::SwapItemResync(MoveItem_Struct* move_slots) {
 				safe_delete(outapp);
 			}
 			safe_delete(token_inst);
-			Message(Chat::Lime, "Source slot %i resyncronized.", move_slots->from_slot);
+			//Message(Chat::Lime, "Source slot %i resyncronized.", move_slots->from_slot);
 		}
 		else { Message(Chat::Red, "Could not resyncronize source slot %i.", move_slots->from_slot); }
 	}
@@ -2486,7 +2511,7 @@ void Client::SwapItemResync(MoveItem_Struct* move_slots) {
 				SendItemPacket(resync_slot, m_inv[resync_slot], ItemPacketTrade);
 
 				safe_delete(token_inst);
-				Message(Chat::Lime, "Source slot %i resyncronized.", move_slots->from_slot);
+				//Message(Chat::Lime, "Source slot %i resyncronized.", move_slots->from_slot);
 			}
 			else { Message(Chat::Red, "Could not resyncronize source slot %i.", move_slots->from_slot); }
 		}
@@ -2513,7 +2538,7 @@ void Client::SwapItemResync(MoveItem_Struct* move_slots) {
 				safe_delete(outapp);
 			}
 			safe_delete(token_inst);
-			Message(Chat::Lime, "Destination slot %i resyncronized.", move_slots->to_slot);
+			//Message(Chat::Lime, "Destination slot %i resyncronized.", move_slots->to_slot);
 		}
 		else { Message(Chat::Red, "Could not resyncronize destination slot %i.", move_slots->to_slot); }
 	}
@@ -2528,7 +2553,7 @@ void Client::SwapItemResync(MoveItem_Struct* move_slots) {
 				SendItemPacket(resync_slot, m_inv[resync_slot], ItemPacketTrade);
 
 				safe_delete(token_inst);
-				Message(Chat::Lime, "Destination slot %i resyncronized.", move_slots->to_slot);
+				//Message(Chat::Lime, "Destination slot %i resyncronized.", move_slots->to_slot);
 			}
 			else { Message(Chat::Red, "Could not resyncronize destination slot %i.", move_slots->to_slot); }
 		}
