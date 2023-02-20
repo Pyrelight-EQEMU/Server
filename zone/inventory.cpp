@@ -171,6 +171,7 @@ uint32 Client::NukeItem(uint32 itemnum, uint8 where_to_check) {
 bool Client::CheckLoreConflict(const EQ::ItemData* item)
 {
 	if (!item) { return false; }
+	if (!item->IsClassBag()) { return false; }
 	if (!item->LoreFlag) { return false; }
 	if (item->LoreGroup == 0) { return false; }
 
@@ -2028,12 +2029,12 @@ bool Client::SwapItem(MoveItem_Struct* move_in) {
 		uint32 dstbagid = 0;
 
 		if (src_slot_id >= EQ::invbag::GENERAL_BAGS_BEGIN && src_slot_id <= EQ::invbag::GENERAL_BAGS_END) {
-			srcbag = m_inv.GetItem(((int)(src_slot_id / 10)) - 3);
+			srcbag = m_inv.GetItem(((int)(src_slot_id / EQ::invbag::SLOT_COUNT)) - 3);
 			if (srcbag)
 				srcbagid = srcbag->GetItem()->ID;
 		}
 		if (dst_slot_id >= EQ::invbag::GENERAL_BAGS_BEGIN && dst_slot_id <= EQ::invbag::GENERAL_BAGS_END) {
-			dstbag = m_inv.GetItem(((int)(dst_slot_id / 10)) - 3);
+			dstbag = m_inv.GetItem(((int)(dst_slot_id / EQ::invbag::SLOT_COUNT)) - 3);
 			if (dstbag)
 				dstbagid = dstbag->GetItem()->ID;
 		}
@@ -2062,31 +2063,42 @@ bool Client::SwapItem(MoveItem_Struct* move_in) {
 		return false;
 	}
 	//verify shared bank transactions in the database
-	if (src_inst && ((src_slot_id >= EQ::invslot::SHARED_BANK_BEGIN && src_slot_id <= Titanium::invslot::SHARED_BANK_END) || ( src_slot_id >= EQ::invbag::SHARED_BANK_BAGS_BEGIN && src_slot_id <= EQ::invbag::SHARED_BANK_BAGS_END ))) {
-		if(!database.VerifyInventory(account_id, src_slot_id, src_inst)) {
+
+	if (src_inst &&
+		(src_slot_id >= EQ::invslot::SHARED_BANK_BEGIN) && (src_slot_id <= EQ::invslot::SHARED_BANK_END) ||
+		(src_slot_id >= EQ::invbag::SHARED_BANK_BAGS_BEGIN) && (src_slot_id <= EQ::invbag::SHARED_BANK_BAGS_END)) {
+		if (!database.VerifyInventory(account_id, src_slot_id, src_inst)) {
+
 			LogError("Player [{}] on account [{}] was found exploiting the shared bank.\n", GetName(), account_name);
 			DeleteItemInInventory(dst_slot_id,0,true);
 			return(false);
 		}
-		if (src_slot_id >= EQ::invslot::SHARED_BANK_BEGIN && src_slot_id <= EQ::invslot::SHARED_BANK_END && src_inst->IsClassBag()){
+		if ((src_slot_id >= EQ::invslot::SHARED_BANK_BEGIN) &&
+			(src_slot_id <= EQ::invslot::SHARED_BANK_END) &&
+			src_inst->IsClassBag())
+		{
 			for (uint8 idx = EQ::invbag::SLOT_BEGIN; idx <= EQ::invbag::SLOT_END; idx++) {
 				const EQ::ItemInstance* baginst = src_inst->GetItem(idx);
-				if (baginst && !database.VerifyInventory(account_id, EQ::InventoryProfile::CalcSlotId(src_slot_id, idx), baginst)){
+				if (baginst && !database.VerifyInventory(account_id, EQ::InventoryProfile::CalcSlotId(src_slot_id, idx), baginst)) {
 					DeleteItemInInventory(EQ::InventoryProfile::CalcSlotId(src_slot_id, idx), 0, false);
 				}
 			}
 		}
 	}
-	if (dst_inst && ((dst_slot_id >= EQ::invslot::SHARED_BANK_BEGIN && dst_slot_id <= Titanium::invslot::SHARED_BANK_END) || ( dst_slot_id >= EQ::invbag::SHARED_BANK_BAGS_BEGIN && dst_slot_id <= EQ::invbag::SHARED_BANK_BAGS_END ))) {
-		if(!database.VerifyInventory(account_id, dst_slot_id, dst_inst)) {
+	
+	if (dst_inst &&
+		(dst_slot_id >= EQ::invslot::SHARED_BANK_BEGIN) && (dst_slot_id <= EQ::invslot::SHARED_BANK_END) ||
+		(dst_slot_id >= EQ::invbag::SHARED_BANK_BAGS_BEGIN) && (dst_slot_id <= EQ::invbag::SHARED_BANK_BAGS_END)) {
+		if (!database.VerifyInventory(account_id, dst_slot_id, dst_inst)) {
+
 			LogError("Player [{}] on account [{}] was found exploting the shared bank.\n", GetName(), account_name);
 			DeleteItemInInventory(src_slot_id,0,true);
 			return(false);
 		}
-		if (dst_slot_id >= EQ::invslot::SHARED_BANK_BEGIN && dst_slot_id <= EQ::invslot::SHARED_BANK_END && dst_inst->IsClassBag()){
+		if (dst_slot_id >= EQ::invslot::SHARED_BANK_BEGIN && dst_slot_id <= EQ::invslot::SHARED_BANK_END && dst_inst->IsClassBag()) {
 			for (uint8 idx = EQ::invbag::SLOT_BEGIN; idx <= EQ::invbag::SLOT_END; idx++) {
 				const EQ::ItemInstance* baginst = dst_inst->GetItem(idx);
-				if (baginst && !database.VerifyInventory(account_id, EQ::InventoryProfile::CalcSlotId(dst_slot_id, idx), baginst)){
+				if (baginst && !database.VerifyInventory(account_id, EQ::InventoryProfile::CalcSlotId(dst_slot_id, idx), baginst)) {
 					DeleteItemInInventory(EQ::InventoryProfile::CalcSlotId(dst_slot_id, idx), 0, false);
 				}
 			}
@@ -2097,7 +2109,8 @@ bool Client::SwapItem(MoveItem_Struct* move_in) {
 	// Check for No Drop Hacks
 	Mob* with = trade->With();
 	if (((with && with->IsClient() && !with->CastToClient()->IsBecomeNPC() && dst_slot_id >= EQ::invslot::TRADE_BEGIN && dst_slot_id <= EQ::invslot::TRADE_END) ||
-		((dst_slot_id >= EQ::invslot::SHARED_BANK_BEGIN && dst_slot_id <= Titanium::invslot::SHARED_BANK_END) || ( dst_slot_id >= EQ::invbag::SHARED_BANK_BAGS_BEGIN && dst_slot_id <= EQ::invbag::SHARED_BANK_BAGS_END )))
+ 		(dst_slot_id >= EQ::invslot::SHARED_BANK_BEGIN && dst_slot_id <= EQ::invslot::SHARED_BANK_END) || (dst_slot_id >= EQ::invbag::SHARED_BANK_BAGS_BEGIN) && (dst_slot_id <= EQ::invbag::SHARED_BANK_BAGS_END))
+
 	&& GetInv().CheckNoDrop(src_slot_id)
 	&& !CanTradeFVNoDropItem()) {
 		auto ndh_inst = m_inv[src_slot_id];
