@@ -10766,7 +10766,7 @@ void Client::Handle_OP_PetCommands(const EQApplicationPacket *app)
 	}
 	case PET_TAUNT: {
 		if ((mypet->GetPetType() == petAnimation && aabonuses.PetCommands[PetCommand]) || mypet->GetPetType() != petAnimation) {
-			mypet->CastToNPC()->SetTaunting(!mypet->CastToNPC()->IsTaunting(););
+			mypet->CastToNPC()->SetTaunting(!mypet->CastToNPC()->IsTaunting());
 			if (RuleB(Pets, TauntTogglesPetTanking)) {
 				if (mypet->CastToNPC()->IsTaunting()) {
 					mypet->SetSpecialAbility(25, 0);
