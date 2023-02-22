@@ -10768,9 +10768,9 @@ void Client::Handle_OP_PetCommands(const EQApplicationPacket *app)
 	}
 	case PET_TAUNT: {
 		if ((mypet->GetPetType() == petAnimation && aabonuses.PetCommands[PetCommand]) || mypet->GetPetType() != petAnimation) {
-			mypet->CastToNPC()->SetTaunting(!mypet->CastToNPC()->IsTaunting());
+			bool taunt_status = mypet->CastToNPC()->IsTaunting();			
 			if (RuleB(Pets, TauntTogglesPetTanking)) {
-				if (mypet->CastToNPC()->IsTaunting()) {
+				if (!taunt_status) {
 					mypet->SetSpecialAbility(25, 0);
 					mypet->SetSpecialAbility(41, 1);
 				} else {					
@@ -10779,8 +10779,8 @@ void Client::Handle_OP_PetCommands(const EQApplicationPacket *app)
 					entity_list.RemoveFromTargets(mypet);
 				}
 			}
-			MessageString(Chat::PetResponse, mypet->CastToNPC()->IsTaunting() ? PET_NO_TAUNT : PET_DO_TAUNT);
-			
+			mypet->CastToNPC()->SetTaunting(!taunt_status);
+			MessageString(Chat::PetResponse, !taunt_status ? PET_NO_TAUNT : PET_DO_TAUNT);			
 		}
 		break;
 	}
