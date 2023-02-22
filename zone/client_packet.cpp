@@ -10780,6 +10780,7 @@ void Client::Handle_OP_PetCommands(const EQApplicationPacket *app)
 				}
 			}
 			MessageString(Chat::PetResponse, mypet->CastToNPC()->IsTaunting() ? PET_NO_TAUNT : PET_DO_TAUNT);
+			SetPetCommandState(PET_BUTTON_TAUNT, mypet->CastToNPC()->IsTaunting());
 		}
 		break;
 	}
