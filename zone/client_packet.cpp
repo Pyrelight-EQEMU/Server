@@ -10769,9 +10769,14 @@ void Client::Handle_OP_PetCommands(const EQApplicationPacket *app)
 			bool tauntStatus = mypet->CastToNPC()->IsTaunting();
 			mypet->CastToNPC()->SetTaunting(!tauntStatus);
 			if (RuleB(Pets, TauntTogglesPetTanking)) {
-				Message(Chat::PetResponse, tauntStatus ? "No longer taunting attackers or holding aggro, Master." : "Taunting attackers and holding aggro, Master.");
-				mypet->SetSpecialAbility(41, !tauntStatus);
-				mypet->SetSpecialAbility(25, tauntStatus);
+				Message(Chat::PetResponse, tauntStatus ? "No longer taunting attackers or holding aggro, Master." : "Taunting attackers and holding aggro, Master.");	
+				if (!mypet->CastToNPC()->IsTaunting()) {
+					mypet->SetSpecialAbility(25, tauntStatus);
+					entity_list.RemoveFromTargets(mypet);
+				} else {
+					mypet->SetSpecialAbility(41, !tauntStatus);
+				}
+
 				LogDebug("Toggle Pet Tanking: [{}] :: Allow Tank (41): [{}]", mypet->CastToNPC()->IsTaunting() ? "ON" : "OFF", mypet->GetSpecialAbility(41) ? "True" : "False");
 			} else {
 				MessageString(Chat::PetResponse, tauntStatus ? PET_NO_TAUNT : PET_DO_TAUNT);
@@ -10780,27 +10785,28 @@ void Client::Handle_OP_PetCommands(const EQApplicationPacket *app)
 		break;
 	}
 	case PET_TAUNT_ON: {
-		if ((mypet->GetPetType() == petAnimation && aabonuses.PetCommands[PetCommand]) || mypet->GetPetType() != petAnimation) {			
+		if ((mypet->GetPetType() == petAnimation && aabonuses.PetCommands[PetCommand]) || mypet->GetPetType() != petAnimation) {
+			mypet->CastToNPC()->SetTaunting(true);		
 			if (RuleB(Pets, TauntTogglesPetTanking)) {
 				Message(Chat::PetResponse, "Taunting attackers and holding aggro, Master.");
 				mypet->SetSpecialAbility(41, 1);
 				mypet->SetSpecialAbility(25, 0);
+				entity_list.RemoveFromTargets(mypet);
 			} else {
-				MessageString(Chat::PetResponse, PET_DO_TAUNT);
-				mypet->CastToNPC()->SetTaunting(true);
+				MessageString(Chat::PetResponse, PET_DO_TAUNT);				
 			}			
 		}
 		break;
 	}
 	case PET_TAUNT_OFF: {
 		if ((mypet->GetPetType() == petAnimation && aabonuses.PetCommands[PetCommand]) || mypet->GetPetType() != petAnimation) {
+			mypet->CastToNPC()->SetTaunting(false);
 			if (RuleB(Pets, TauntTogglesPetTanking)) {
 				Message(Chat::PetResponse, "No longer taunting attackers or holding aggro, Master.");
 				mypet->SetSpecialAbility(41, 0);
 				mypet->SetSpecialAbility(25, 1);
 			} else {
-				MessageString(Chat::PetResponse, PET_NO_TAUNT);
-				mypet->CastToNPC()->SetTaunting(false);
+				MessageString(Chat::PetResponse, PET_NO_TAUNT);				
 			}
 		}
 		break;
