@@ -826,7 +826,7 @@ void Client::BulkSendMerchantInventory(int merchant_id, int npcid) {
 
 	uint32 merchant_slots = EQ::invtype::MERCHANT_SIZE; //The max number of items passed in the transaction.
 	if (m_ClientVersionBit & EQ::versions::maskRoFAndLater) { // RoF+ can send 200 items
-		merchant_slots = 200;
+		merchant_slots = 1000;
 	}
 
 	const EQ::ItemData *item = nullptr;

@@ -87,7 +87,7 @@ namespace RoF2
 		const int16 TRIBUTE_SIZE = 5;
 		const int16 TROPHY_TRIBUTE_SIZE = 0;//unknown
 		const int16 GUILD_TRIBUTE_SIZE = 2;//unverified
-		const int16 MERCHANT_SIZE = 200;
+		const int16 MERCHANT_SIZE = 1000;
 		const int16 DELETED_SIZE = 0;//unknown - "Recovery Tab"
 		const int16 CORPSE_SIZE = POSSESSIONS_SIZE;
 		const int16 BAZAAR_SIZE = 200;
