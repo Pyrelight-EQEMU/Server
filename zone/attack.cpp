@@ -1057,7 +1057,7 @@ void Mob::MeleeMitigation(Mob *attacker, DamageHitInfo &hit, ExtraAttackOptions 
 
 	// Pyrelight Custom Code
 	// Apply a 1% final bonus to melee damage per point of Heroic STR
-	if (attacker->isclient()) {
+	if (attacker->IsClient()) {
 		hit.damage_done = hit.damage_done * (100 + attacker->GetHeroicSTR()) / 100;
 	}
 
