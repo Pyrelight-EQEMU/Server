@@ -5066,7 +5066,7 @@ void Mob::TryCriticalHit(Mob *defender, DamageHitInfo &hit, ExtraAttackOptions *
 				crit_mod = 100;
 			}
 
-			//Pyrelight Custom Code
+			// Pyrelight Custom Code
 			//Heroic Dex increases crit_mod by 1% per point
 			if (IsClient() && GetHeroicDEX() > 0) { 
 				crit_mod = crit_mod * (0.01 * GetHeroicDEX());
@@ -6297,10 +6297,14 @@ void Mob::DoMainHandAttackRounds(Mob *target, ExtraAttackOptions *opts)
 		// A "quad" on live really is just a successful dual wield where both double attack
 		// The mobs that could triple lost the ability to when the triple attack skill was added in
 		Attack(target, EQ::invslot::slotPrimary, false, false, false, opts);
-		DoHeroicAGIExtraAttacks(target, EQ::invslot::slotPrimary, false, false, false, opts, GetHeroicAGI());
+		if (IsClient() && GetHeroicAGI() > 0) {
+			DoHeroicAGIExtraAttacks(target, EQ::invslot::slotPrimary, false, false, false, opts, GetHeroicAGI());
+		}
 		if (CanThisClassDoubleAttack() && CheckDoubleAttack()) {
 			Attack(target, EQ::invslot::slotPrimary, false, false, false, opts);
-			DoHeroicAGIExtraAttacks(target, EQ::invslot::slotPrimary, false, false, false, opts, GetHeroicAGI());
+			if (IsClient() && GetHeroicAGI() > 0) {
+				DoHeroicAGIExtraAttacks(target, EQ::invslot::slotPrimary, false, false, false, opts, GetHeroicAGI());
+			}
 			if ((IsPet() || IsTempPet()) && IsPetOwnerClient()) {
 				int chance = spellbonuses.PC_Pet_Flurry + itembonuses.PC_Pet_Flurry + aabonuses.PC_Pet_Flurry;
 				if (chance && zone->random.Roll(chance))
@@ -6330,8 +6334,7 @@ void Mob::DoMainHandAttackRounds(Mob *target, ExtraAttackOptions *opts)
 	// out reasonably and will save us compute resources.
 	int32 RandRoll = zone->random.Int(0, 99);
 	if ((CanThisClassDoubleAttack() || GetSpecialAbility(SPECATK_TRIPLE) || GetSpecialAbility(SPECATK_QUAD))
-		// check double attack, this is NOT the same rules that clients use...
-		&&
+		// check double attack, this is NOT the same rules that clients use...	
 		RandRoll < (GetLevel() + NPCDualAttackModifier)) {
 		Attack(target, EQ::invslot::slotPrimary, false, false, false, opts);
 		// lets see if we can do a triple attack with the main hand
