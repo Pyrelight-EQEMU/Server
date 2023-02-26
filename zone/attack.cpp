@@ -1057,7 +1057,7 @@ void Mob::MeleeMitigation(Mob *attacker, DamageHitInfo &hit, ExtraAttackOptions 
 
 	// Heroic STA reduces incoming damage by 10 points per point of HSTAM, never to exceed 50% of total damage
 	if (defender->IsClient() && defender->GetHeroicSTA() > 0) {
-		hit.damage_done = std::min(static_cast<int>(0.50 * hit.damage_done, hit.damage_done - (defender->GetHeroicSTA() * 10)));
+		hit.damage_done = std::min(static_cast<int>(0.50 * hit.damage_done), hit.damage_done - (defender->GetHeroicSTA() * 10));
 	}	
 
 	Log(Logs::Detail, Logs::Attack, "mitigation %d vs offense %d. base %d rolled %f damage %d", mitigation, hit.offense, hit.base_damage, roll, hit.damage_done);
@@ -5068,8 +5068,8 @@ void Mob::TryCriticalHit(Mob *defender, DamageHitInfo &hit, ExtraAttackOptions *
 
 			//Pyrelight Custom Code
 			//Heroic Dex increases crit_mod by 1% per point
-			if (IsClient() && GetHeroicDex() > 0) { 
-				crit_mod = crit_mod * (0.01 * GetHeroicDex());
+			if (IsClient() && GetHeroicDEX() > 0) { 
+				crit_mod = crit_mod * (0.01 * GetHeroicDEX());
 			}
 
 			hit.damage_done = hit.damage_done * crit_mod / 100;
