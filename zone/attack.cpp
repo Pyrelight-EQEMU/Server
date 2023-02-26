@@ -340,7 +340,7 @@ bool Mob::CheckHitChance(Mob* other, DamageHitInfo &hit)
 
 	// Pyrelight Custom Code
 	// Add a raw chance to not get hit based on hAGI
-	if (defender->IsClient() && zone->random.Roll0(100) < static_cast<int>(100 * (1 / (1 + 0.0006*defender->GetHeroicAGI())))) {
+	if (defender->IsClient() && zone->random.Roll0(100) > static_cast<int>(100 * (1 / (1 + 0.0006*defender->GetHeroicAGI())))) {
 		return false;
 	}
 
