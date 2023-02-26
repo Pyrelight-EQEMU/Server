@@ -338,6 +338,12 @@ bool Mob::CheckHitChance(Mob* other, DamageHitInfo &hit)
 	int avoid_roll = zone->random.Roll0(avoidance);
 	Log(Logs::Detail, Logs::Attack, "CheckHitChance accuracy(%d => %d) avoidance(%d => %d)", accuracy, tohit_roll, avoidance, avoid_roll);
 
+	// Pyrelight Custom Code
+	// Add a raw chance to not get hit based on hAGI
+	if (defender->IsClient() && zone->random.Roll0(100) < static_cast<int>(100 * (1 / (1 + 0.0006*defender->GetHeroicAGI())))) {
+		return false;
+	}
+
 	// tie breaker? Don't want to be biased any one way
 	if (tohit_roll == avoid_roll)
 		return zone->random.Roll(50);
@@ -1048,6 +1054,23 @@ void Mob::MeleeMitigation(Mob *attacker, DamageHitInfo &hit, ExtraAttackOptions 
 
 	// +0.5 for rounding, min to 1 dmg
 	hit.damage_done = std::max(static_cast<int>(roll * static_cast<double>(hit.base_damage) + 0.5), 1);
+
+	// Pyrelight Custom Code
+	// Apply a 1% final bonus to melee damage per point of Heroic STR
+	if (attacker->isclient()) {
+		hit.damage_done = hit.damage_done * (100 + attacker->GetHeroicSTR()) / 100;
+	}
+
+	// Apply a redunction in melee damage based on HSTA. This should never reach 0%
+	// Written by chatgpt so lets gooooooo
+	// 75% dmg at 80 HSTA
+	// 50% dmg at 200 HSTA
+	// 25% dmg at 540 HSTA
+	// 10% dmg at 1800 HSTA
+	// 1%  dmg at 18000
+	if (defender->IsClient()) {
+		hit.damage_done = static_cast<int>(hit.damage_done * (1 / (1 + 0.005*defender->GetHeroicSTA())));
+	}	
 
 	Log(Logs::Detail, Logs::Attack, "mitigation %d vs offense %d. base %d rolled %f damage %d", mitigation, hit.offense, hit.base_damage, roll, hit.damage_done);
 }
