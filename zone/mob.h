@@ -236,6 +236,7 @@ public:
 	void DoMainHandAttackRounds(Mob *target, ExtraAttackOptions *opts = nullptr);
 	void DoOffHandAttackRounds(Mob *target, ExtraAttackOptions *opts = nullptr);
 	virtual bool CheckDoubleAttack();
+	void Mob::DoHeroicAGIExtraAttacks(Mob* other, int Hand, bool bRiposte, bool IsStrikethrough, bool IsFromSpell, ExtraAttackOptions *opts, int EffectiveHAgi);
 	// inline process for places where we need to do them outside of the AI_Process
 	void ProcessAttackRounds(Mob *target, ExtraAttackOptions *opts = nullptr)
 	{

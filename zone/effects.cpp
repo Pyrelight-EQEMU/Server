@@ -41,12 +41,20 @@ float Mob::GetActSpellRange(uint16 spell_id, float range)
 }
 
 int64 Mob::GetActSpellDamage(uint16 spell_id, int64 value, Mob* target) {
+	if (target == nullptr)
+		return value;
+
+	// Pyrelight Custom Code
+	// Heroic WIS reduces incoming spell damage by 10 points per point of HWIS, never to exceed 50% of total damage
+	if (target->IsClient() && target->GetHeroicWIS() > 0) {
+		value = std::min(static_clas<int>(0.50 * value, value - (target->GetHeroicWIS() * 10)));
+	}
 
 	if (spells[spell_id].target_type == ST_Self)
 		return value;
 
 	if (IsNPC())
-		value += value*CastToNPC()->GetSpellFocusDMG()/100;
+		value += value*CastToNPC()->GetSpellFocusDMG()/100;	
 
 	bool Critical = false;
 	int64 base_value = value;
@@ -80,6 +88,12 @@ int64 Mob::GetActSpellDamage(uint16 spell_id, int64 value, Mob* target) {
 			Critical = true;
 			ratio += itembonuses.SpellCritDmgIncrease + spellbonuses.SpellCritDmgIncrease + aabonuses.SpellCritDmgIncrease;
 			ratio += itembonuses.SpellCritDmgIncNoStack + spellbonuses.SpellCritDmgIncNoStack + aabonuses.SpellCritDmgIncNoStack;
+		}
+
+		//Pyrelight Custom Code
+		//Heroic INT increases spell critical damage
+		if (IsClient() && GetHeroicINT() > 0) {
+			ratio += GetHeroicINT();
 		}
 
 		else if ((IsOfClientBot() && GetClass() == WIZARD) || (IsMerc() && GetClass() == CASTERDPS)) {
@@ -193,9 +207,14 @@ int64 Mob::GetActReflectedSpellDamage(int32 spell_id, int64 value, int effective
 }
 
 int64 Mob::GetActDoTDamage(uint16 spell_id, int64 value, Mob* target, bool from_buff_tic) {
-
 	if (target == nullptr)
 		return value;
+
+	// Pyrelight Custom Code
+	// Heroic WIS reduces incoming spell damage by 10 points per point of HWIS, never to exceed 50% of total damage
+	if (target->IsClient() && target->GetHeroicWIS() > 0) {
+		value = std::min(static_clas<int>(0.50 * value, value - (target->GetHeroicWIS() * 10)));
+	}
 
 	if (IsNPC()) {
 		value += value * CastToNPC()->GetSpellFocusDMG() / 100;
@@ -333,6 +352,12 @@ int64 Mob::GetActSpellHealing(uint16 spell_id, int64 value, Mob* target, bool fr
 	int16 critical_chance = 0;
 	int8  critical_modifier = 1;
 
+	//Pyrelight Custom Code
+	//Heroic INT increases spell critical damage
+	if (IsClient() && GetHeroicINT() > 0) {
+		critical_modifier =+ (GetHeroicINT() * 0.01);
+	}
+ 
 	if (spells[spell_id].buff_duration < 1) {
 		critical_chance += itembonuses.CriticalHealChance + spellbonuses.CriticalHealChance + aabonuses.CriticalHealChance;
 
