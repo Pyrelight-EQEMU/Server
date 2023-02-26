@@ -213,7 +213,7 @@ int64 Mob::GetActDoTDamage(uint16 spell_id, int64 value, Mob* target, bool from_
 	// Pyrelight Custom Code
 	// Heroic WIS reduces incoming spell damage by 10 points per point of HWIS, never to exceed 50% of total damage
 	if (target->IsClient() && target->GetHeroicWIS() > 0) {
-		value = std::min(static_cast<int>(0.50 * value), value - (target->GetHeroicWIS() * 10));
+		value = std::min(static_cast<int64>(0.50 * value), value - (target->GetHeroicWIS() * 10));
 	}
 
 	if (IsNPC()) {
