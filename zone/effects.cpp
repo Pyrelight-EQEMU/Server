@@ -41,20 +41,17 @@ float Mob::GetActSpellRange(uint16 spell_id, float range)
 }
 
 int64 Mob::GetActSpellDamage(uint16 spell_id, int64 value, Mob* target) {
-	if (target == nullptr)
+	if (spells[spell_id].target_type == ST_Self)
 		return value;
+
+	if (IsNPC())
+		value += value*CastToNPC()->GetSpellFocusDMG()/100;
 
 	// Pyrelight Custom Code
 	// Heroic WIS reduces incoming spell damage by 10 points per point of HWIS, never to exceed 50% of total damage
 	if (target->IsClient() && target->GetHeroicWIS() > 0) {
 		value = std::min(static_cast<int64>(0.50 * value), value - (target->GetHeroicWIS() * 10));
-	}
-
-	if (spells[spell_id].target_type == ST_Self)
-		return value;
-
-	if (IsNPC())
-		value += value*CastToNPC()->GetSpellFocusDMG()/100;	
+	}	
 
 	bool Critical = false;
 	int64 base_value = value;
@@ -90,7 +87,7 @@ int64 Mob::GetActSpellDamage(uint16 spell_id, int64 value, Mob* target) {
 			ratio += itembonuses.SpellCritDmgIncNoStack + spellbonuses.SpellCritDmgIncNoStack + aabonuses.SpellCritDmgIncNoStack;
 		}
 
-		//Pyrelight Custom Code
+		// Pyrelight Custom Code
 		//Heroic INT increases spell critical damage
 		if (IsClient() && GetHeroicINT() > 0) {
 			ratio += GetHeroicINT();
@@ -352,10 +349,10 @@ int64 Mob::GetActSpellHealing(uint16 spell_id, int64 value, Mob* target, bool fr
 	int16 critical_chance = 0;
 	int8  critical_modifier = 1;
 
-	//Pyrelight Custom Code
+	// Pyrelight Custom Code
 	//Heroic INT increases spell critical damage
 	if (IsClient() && GetHeroicINT() > 0) {
-		critical_modifier =+ (GetHeroicINT() * 0.01);
+		critical_modifier += (GetHeroicINT() * 0.01);
 	}
  
 	if (spells[spell_id].buff_duration < 1) {
