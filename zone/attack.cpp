@@ -336,7 +336,7 @@ bool Mob::CheckHitChance(Mob* other, DamageHitInfo &hit)
 	// Then your chance to simply avoid the attack is checked (defender's avoidance roll beat the attacker's accuracy roll.)
 	int tohit_roll = zone->random.Roll0(accuracy);
 	int avoid_roll = zone->random.Roll0(avoidance);
-	Log(Logs::Detail, Logs::Attack, "CheckHitChance accuracy(%d => %d) avoidance(%d => %d)", accuracy, tohit_roll, avoidance, avoid_roll);	
+	Log(Logs::Detail, Logs::Attack, "CheckHitChance accuracy(%d => %d) avoidance(%d => %d)", accuracy, tohit_roll, avoidance, avoid_roll);
 
 	// tie breaker? Don't want to be biased any one way
 	if (tohit_roll == avoid_roll)
@@ -1048,17 +1048,6 @@ void Mob::MeleeMitigation(Mob *attacker, DamageHitInfo &hit, ExtraAttackOptions 
 
 	// +0.5 for rounding, min to 1 dmg
 	hit.damage_done = std::max(static_cast<int>(roll * static_cast<double>(hit.base_damage) + 0.5), 1);
-
-	// Pyrelight Custom Code
-	// Apply a 1% final bonus to melee damage per point of Heroic STR
-	if (attacker->IsClient() && attacker->GetHeroicSTR() > 0) {
-		hit.damage_done = hit.damage_done * ((100 + attacker->GetHeroicSTR()) / 100);
-	}
-
-	// Heroic STA reduces incoming damage by 10 points per point of HSTAM, never to exceed 50% of total damage
-	if (defender->IsClient() && defender->GetHeroicSTA() > 0) {
-		hit.damage_done = std::min(static_cast<int64>(0.50 * hit.damage_done), hit.damage_done - (defender->GetHeroicSTA() * 10));
-	}	
 
 	Log(Logs::Detail, Logs::Attack, "mitigation %d vs offense %d. base %d rolled %f damage %d", mitigation, hit.offense, hit.base_damage, roll, hit.damage_done);
 }
@@ -5029,7 +5018,7 @@ void Mob::TryCriticalHit(Mob *defender, DamageHitInfo &hit, ExtraAttackOptions *
 	else if (GetClass() == ROGUE && GetLevel() >= 12 && hit.skill == EQ::skills::SkillThrowing)
 		innate_crit = true;
 
-	// we have a chance to crit!	
+	// we have a chance to crit!
 	if (innate_crit || crit_chance) {
 		int difficulty = 0;
 		if (hit.skill == EQ::skills::SkillArchery)
@@ -5050,7 +5039,7 @@ void Mob::TryCriticalHit(Mob *defender, DamageHitInfo &hit, ExtraAttackOptions *
 			dex_bonus = dex_bonus * 3 / 5;
 
 		if (crit_chance)
-			dex_bonus += dex_bonus * crit_chance / 100;		
+			dex_bonus += dex_bonus * crit_chance / 100;
 
 		// check if we crited
 		if (roll < dex_bonus) {
@@ -5064,12 +5053,6 @@ void Mob::TryCriticalHit(Mob *defender, DamageHitInfo &hit, ExtraAttackOptions *
 			int crit_mod = 170 + GetCritDmgMod(hit.skill);
 			if (crit_mod < 100) {
 				crit_mod = 100;
-			}
-
-			//Pyrelight Custom Code
-			//Heroic Dex increases crit_mod by 1% per point
-			if (IsClient() && GetHeroicDEX() > 0) { 
-				crit_mod = crit_mod * (0.01 * GetHeroicDEX());
 			}
 
 			hit.damage_done = hit.damage_done * crit_mod / 100;
@@ -6297,14 +6280,8 @@ void Mob::DoMainHandAttackRounds(Mob *target, ExtraAttackOptions *opts)
 		// A "quad" on live really is just a successful dual wield where both double attack
 		// The mobs that could triple lost the ability to when the triple attack skill was added in
 		Attack(target, EQ::invslot::slotPrimary, false, false, false, opts);
-		if (IsClient() && GetHeroicAGI() > 0) {
-			DoHeroicAGIExtraAttacks(target, EQ::invslot::slotPrimary, false, false, false, opts, GetHeroicAGI());
-		}
 		if (CanThisClassDoubleAttack() && CheckDoubleAttack()) {
 			Attack(target, EQ::invslot::slotPrimary, false, false, false, opts);
-			if (IsClient() && GetHeroicAGI() > 0) {
-				DoHeroicAGIExtraAttacks(target, EQ::invslot::slotPrimary, false, false, false, opts, GetHeroicAGI());
-			}
 			if ((IsPet() || IsTempPet()) && IsPetOwnerClient()) {
 				int chance = spellbonuses.PC_Pet_Flurry + itembonuses.PC_Pet_Flurry + aabonuses.PC_Pet_Flurry;
 				if (chance && zone->random.Roll(chance))
@@ -6348,24 +6325,6 @@ void Mob::DoMainHandAttackRounds(Mob *target, ExtraAttackOptions *opts)
 				Attack(target, EQ::invslot::slotPrimary, false, false, false, opts);
 			}
 		}
-	}
-}
-
-// Pyrelight Custom Code
-void Mob::DoHeroicAGIExtraAttacks(Mob* other, int Hand, bool bRiposte, bool IsStrikethrough, bool IsFromSpell, ExtraAttackOptions *opts, int EffectiveHAgi) {
-	
-	// TODO maybe make this change based upon weapon delay. Right now the code path makes my head hurt and I don't want to deal with it
-	if (EffectiveHAgi <= 0 || zone->random.Int(1,3) == 3) {
-		// 33% chance to fail
-		return;
-	}
-	
-	if (EffectiveHAgi > 0) {
-		int32 RandRoll = zone->random.Roll0(100);
-		if (EffectiveHAgi >= RandRoll) {
-			Attack(other,Hand,bRiposte,IsStrikethrough,IsFromSpell,opts);		
-			DoHeroicAGIExtraAttacks(other,Hand,bRiposte,IsStrikethrough,IsFromSpell,opts,(EffectiveHAgi-100));
-		}	
 	}
 }
 
