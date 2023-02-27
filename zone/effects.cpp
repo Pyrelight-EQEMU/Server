@@ -80,6 +80,12 @@ int64 Mob::GetActSpellDamage(uint16 spell_id, int64 value, Mob* target) {
 			Critical = true;
 			ratio += itembonuses.SpellCritDmgIncrease + spellbonuses.SpellCritDmgIncrease + aabonuses.SpellCritDmgIncrease;
 			ratio += itembonuses.SpellCritDmgIncNoStack + spellbonuses.SpellCritDmgIncNoStack + aabonuses.SpellCritDmgIncNoStack;
+
+			//Pyrelight Custom Code
+			// Heroic INT gives +1% critical damage
+			if (IsClient() && GetHeroicINT() > 0) {
+				ratio += GetHeroicINT();	
+			}
 		}
 
 		else if ((IsOfClientBot() && GetClass() == WIZARD) || (IsMerc() && GetClass() == CASTERDPS)) {
@@ -127,6 +133,12 @@ int64 Mob::GetActSpellDamage(uint16 spell_id, int64 value, Mob* target) {
 				this, true, 100, Chat::SpellCrit, FilterSpellCrits,
 				OTHER_CRIT_BLAST, 0, GetName(), itoa(-value));
 
+			//Pyrelight Custom Code
+			// Heroic WIS Blocks up to 50% of damage at a rate of 10 damage per 1 point of the stat
+			if (target->IsClient() && target->GetHeroicWIS() > 0) {
+				value = std::max(static_cast<int64>(0.50 * value), static_cast<int64>(value - (10 * target->GetHeroicWIS())));
+			}
+
 			if (IsClient())
 				MessageString(Chat::SpellCrit, YOU_CRIT_BLAST, itoa(-value));
 
@@ -161,6 +173,12 @@ int64 Mob::GetActSpellDamage(uint16 spell_id, int64 value, Mob* target) {
 
 	if (IsNPC() && CastToNPC()->GetSpellScale())
 		value = int64(static_cast<float>(value) * CastToNPC()->GetSpellScale() / 100.0f);
+
+	//Pyrelight Custom Code
+	// Heroic WIS Blocks up to 50% of damage at a rate of 10 damage per 1 point of the stat
+	if (target->IsClient() && target->GetHeroicWIS() > 0) {
+		value = std::max(static_cast<int64>(0.50 * value), static_cast<int64>(value - (10 * target->GetHeroicWIS())));
+	}
 
 	return value;
 }
@@ -215,6 +233,13 @@ int64 Mob::GetActDoTDamage(uint16 spell_id, int64 value, Mob* target, bool from_
 	if (!spells[spell_id].good_effect && chance > 0 && (zone->random.Roll(chance))) {
 		int64 ratio = 200;
 		ratio += itembonuses.DotCritDmgIncrease + spellbonuses.DotCritDmgIncrease + aabonuses.DotCritDmgIncrease;
+
+		//Pyrelight Custom Code
+		// Heroic INT gives +1% critical damage
+		if (IsClient() && GetHeroicINT() > 0) {
+			ratio += GetHeroicINT();	
+		}
+
 		value = base_value*ratio/100;
 		value += int64(base_value*GetFocusEffect(focusImprovedDamage, spell_id, nullptr, from_buff_tic)/100)*ratio/100;
 		value += int64(base_value*GetFocusEffect(focusImprovedDamage2, spell_id, nullptr, from_buff_tic)/100)*ratio/100;
@@ -278,6 +303,12 @@ int64 Mob::GetActDoTDamage(uint16 spell_id, int64 value, Mob* target, bool from_
 
 	if (IsNPC() && CastToNPC()->GetSpellScale())
 		value = int64(static_cast<float>(value) * CastToNPC()->GetSpellScale() / 100.0f);
+
+	//Pyrelight Custom Code
+	// Heroic WIS Blocks up to 50% of damage at a rate of 10 damage per 1 point of the stat
+	if (target->IsClient() && target->GetHeroicWIS() > 0) {
+		value = std::max(static_cast<int64>(0.50 * value), static_cast<int64>(value - (10 * target->GetHeroicWIS())));
+	}
 
 	return value;
 }

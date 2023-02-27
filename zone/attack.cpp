@@ -1049,6 +1049,19 @@ void Mob::MeleeMitigation(Mob *attacker, DamageHitInfo &hit, ExtraAttackOptions 
 	// +0.5 for rounding, min to 1 dmg
 	hit.damage_done = std::max(static_cast<int>(roll * static_cast<double>(hit.base_damage) + 0.5), 1);
 
+	//Pyrelight Custom Code
+	// Heroic STR increases damage by 1%
+	if (attacker->IsClient() && attacker->GetHeroicSTR() > 0) {
+		hit.damage_done *= ((attacker->GetHeroicSTR() / 100) + 1);
+	}
+
+	//Pyrelight Custom Code
+	// Heroic STA Blocks up to 50% of damage at a rate of 10 damage per 1 point of the stat
+	if (defender->IsClient() && defender->GetHeroicSTA() > 0) {
+		hit.damage_done = std::max(static_cast<int64>(0.50 * hit.damage_done), static_cast<int64>(hit.damage_done - (10 * defender->GetHeroicSTA())));
+	}
+	
+
 	Log(Logs::Detail, Logs::Attack, "mitigation %d vs offense %d. base %d rolled %f damage %d", mitigation, hit.offense, hit.base_damage, roll, hit.damage_done);
 }
 
@@ -1632,6 +1645,13 @@ bool Mob::Attack(Mob* other, int Hand, bool bRiposte, bool IsStrikethrough, bool
 	// If we are this far, this means we are atleast making a swing.
 
 	other->AddToHateList(this, hate);
+
+	//Pyrelight Custom Code
+	// We need to always make sure that owners are on the hate list
+	// Because our pets can become ignored by mobs as a feature.
+	if (IsPet() && IsPetOwnerClient()) {
+		other->AddToHateList(GetOwner(), std::floor(hate/100));
+	}
 
 	//Guard Assist Code
 	if (RuleB(Character, PVPEnableGuardFactionAssist) &&
@@ -6278,10 +6298,51 @@ void Mob::DoMainHandAttackRounds(Mob *target, ExtraAttackOptions *opts)
 
 	if (RuleB(Combat, UseLiveCombatRounds)) {
 		// A "quad" on live really is just a successful dual wield where both double attack
-		// The mobs that could triple lost the ability to when the triple attack skill was added in
-		Attack(target, EQ::invslot::slotPrimary, false, false, false, opts);
+		// The mobs that could triple lost the ability to when the triple attack skill was added in		
+		if (Attack(target, EQ::invslot::slotPrimary, false, false, false, opts)) {
+			//Pyrelight Custom Code
+			// Heroic AGI has the most complicated extra effect.
+			// Having it gives you a chance to perform extra attacks. Getting an extra attack 'depletes' some amount of your
+			// effective HAGI and gives you a chance to use the remaining to make another. There is always a 25% chance to fail
+			// the extra attack, and if any attack here misses then the chain stops.
+			if (IsClient() && GetHeroicAGI() > 0) {
+				auto effective_hagi = GetHeroicAGI();
+				while (effective_hagi > 0) {
+					if (zone->random.Roll(75) && zone->random.Roll(effective_hagi)) {
+						if (Attack(target, EQ::invslot::slotPrimary, false, false, false, opts)) {
+							effective_hagi = effective_hagi - zone->random.Real(1,150);
+						} else {
+							break;
+						}						
+					} else {
+						break;
+					}
+				}
+			}
+		}	
+
 		if (CanThisClassDoubleAttack() && CheckDoubleAttack()) {
-			Attack(target, EQ::invslot::slotPrimary, false, false, false, opts);
+			if (Attack(target, EQ::invslot::slotPrimary, false, false, false, opts)) {
+				//Pyrelight Custom Code
+				// Heroic AGI has the most complicated extra effect.
+				// Having it gives you a chance to perform extra attacks. Getting an extra attack 'depletes' some amount of your
+				// effective HAGI and gives you a chance to use the remaining to make another. There is always a 25% chance to fail
+				// the extra attack, and if any attack here misses then the chain stops.
+				if (IsClient() && GetHeroicAGI() > 0) {
+					auto effective_hagi = GetHeroicAGI();
+					while (effective_hagi > 0) {
+						if (zone->random.Roll(75) && zone->random.Roll(effective_hagi)) {
+							if (Attack(target, EQ::invslot::slotPrimary, false, false, false, opts)) {
+								effective_hagi = effective_hagi - zone->random.Real(1,150);
+							} else {
+								break;
+							}						
+						} else {
+							break;
+						}
+					}
+				}
+			}	
 			if ((IsPet() || IsTempPet()) && IsPetOwnerClient()) {
 				int chance = spellbonuses.PC_Pet_Flurry + itembonuses.PC_Pet_Flurry + aabonuses.PC_Pet_Flurry;
 				if (chance && zone->random.Roll(chance))
@@ -6338,10 +6399,49 @@ void Mob::DoOffHandAttackRounds(Mob *target, ExtraAttackOptions *opts)
 		(RuleB(Combat, UseLiveCombatRounds) && GetSpecialAbility(SPECATK_QUAD))) ||
 		GetEquippedItemFromTextureSlot(EQ::textures::weaponSecondary) != 0) {
 		if (CheckDualWield()) {
-			Attack(target, EQ::invslot::slotSecondary, false, false, false, opts);
+			if (Attack(target, EQ::invslot::slotSecondary, false, false, false, opts)) {
+				//Pyrelight Custom Code
+				// Heroic AGI has the most complicated extra effect.
+				// Having it gives you a chance to perform extra attacks. Getting an extra attack 'depletes' some amount of your
+				// effective HAGI and gives you a chance to use the remaining to make another. There is always a 25% chance to fail
+				// the extra attack, and if any attack here misses then the chain stops.
+				if (IsClient() && GetHeroicAGI() > 0) {
+					auto effective_hagi = GetHeroicAGI();
+					while (effective_hagi > 0) {
+						if (zone->random.Roll(75) && zone->random.Roll(effective_hagi)) {
+							if (Attack(target, EQ::invslot::slotPrimary, false, false, false, opts)) {
+								effective_hagi = effective_hagi - zone->random.Real(1,150);
+							} else {
+								break;
+							}						
+						} else {
+							break;
+						}
+					}
+				}
+			}
 			if (CanThisClassDoubleAttack() && GetLevel() > 35 && CheckDoubleAttack()) {
-				Attack(target, EQ::invslot::slotSecondary, false, false, false, opts);
-
+				if (Attack(target, EQ::invslot::slotPrimary, false, false, false, opts)) {
+					//Pyrelight Custom Code
+					// Heroic AGI has the most complicated extra effect.
+					// Having it gives you a chance to perform extra attacks. Getting an extra attack 'depletes' some amount of your
+					// effective HAGI and gives you a chance to use the remaining to make another. There is always a 25% chance to fail
+					// the extra attack, and if any attack here misses then the chain stops.
+					if (IsClient() && GetHeroicAGI() > 0) {
+						auto effective_hagi = GetHeroicAGI();
+						while (effective_hagi > 0) {
+							if (zone->random.Roll(75) && zone->random.Roll(effective_hagi)) {
+								if (Attack(target, EQ::invslot::slotPrimary, false, false, false, opts)) {
+									effective_hagi = effective_hagi - zone->random.Real(1,150);
+								} else {
+									break;
+								}						
+							} else {
+								break;
+							}
+						}
+					}
+				}
 				if ((IsPet() || IsTempPet()) && IsPetOwnerClient()) {
 					int chance = spellbonuses.PC_Pet_Flurry + itembonuses.PC_Pet_Flurry + aabonuses.PC_Pet_Flurry;
 					if (chance && zone->random.Roll(chance))
