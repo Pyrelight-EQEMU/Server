@@ -1922,8 +1922,14 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 #ifdef SPELL_EFFECT_SPAM
 				snprintf(effect_desc, _EDLEN, "Melee Negate Attack Rune: %+i", effect_value);
 #endif
-				if(buffslot >= 0)
-					buffs[buffslot].hit_number = effect_value;
+				
+				if(buffslot >= 0) {
+					if (RuleB(Spells, RuneUseHealAmt) && (IsClient() || IsBot())) {											
+							buffs[buffslot].hit_number = static_cast<uint32>std:floor(effect_value * ((1 + itembonuses.HealAmt)/100)) ;
+					} else {
+							buffs[buffslot].hit_number = effect_value;;
+					}					
+				}
 				break;
 			}
 			case SE_AppraiseLDonChest:
