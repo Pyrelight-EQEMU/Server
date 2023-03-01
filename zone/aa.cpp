@@ -1289,9 +1289,45 @@ void Client::ActivateAlternateAdvancementAbility(int rank_id, int target_id) {
 	if (!ability) {
 		return;
 	}
-
+	
 	if (rank->level_req > GetLevel()) {
-		Message(Chat::Red, "You must be at least level %u to use this ability.", rank->level_req);
+
+		//Pyrelight Custom Code
+		// This needs to be cleaned up and refactored at some point if it works
+		std::string query = StringFormat("SELECT class,level " 
+										 "FROM multiclass_data " 
+										 "WHERE id = %u", 
+										 CharacterID()); 
+		auto results = database.QueryDatabase(query);
+
+		bool allowed_cast = false;
+
+		if (results.RowCount() > 0) {
+			int r = 0;
+			int lowest_level = 100;
+			for (auto& row = results.begin(); row != results.end(); ++row) {
+
+				int this_class = NO_CLASS;
+				int this_level = 0;			
+
+				this_class = atoi(row[r]); r++;
+				this_level = atoi(row[r]); r++;
+
+				if (lowest_level > this_level) {
+					lowest_level = this_level;
+				}
+
+				if (GetSpellLevel(rank->spell, this_class) > this_level) {
+					allowed_cast = true;
+					break;
+				}
+			}
+		}
+
+		if (!allowed_cast) {
+			Message(Chat::Red, "You must be at least level %u to use this ability.", lowest_level);
+		}
+		
 		return;
 	}
 
