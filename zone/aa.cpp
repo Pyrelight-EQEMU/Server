@@ -1306,7 +1306,7 @@ void Client::ActivateAlternateAdvancementAbility(int rank_id, int target_id) {
 		if (results.RowCount() > 0) {
 			int r = 0;
 			int lowest_level = 100;
-			for (auto& row = results.begin(); row != results.end(); ++row) {
+			for (auto& row = results.begin(); row != results.end(); ++row) {				
 
 				int this_class = NO_CLASS;
 				int this_level = 0;			
@@ -1327,9 +1327,8 @@ void Client::ActivateAlternateAdvancementAbility(int rank_id, int target_id) {
 
 		if (!allowed_cast) {
 			Message(Chat::Red, "You must be at least level %u to use this ability.", lowest_level);
+			return;
 		}
-		
-		return;
 	}
 
 	if (!IsValidSpell(rank->spell)) {

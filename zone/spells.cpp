@@ -433,6 +433,15 @@ bool Mob::DoCastSpell(uint16 spell_id, uint16 target_id, CastingSlot slot,
 	if (mana_cost > 0 && slot != CastingSlot::Item) {
 		int my_curmana = GetMana();
 		int my_maxmana = GetMaxMana();
+
+		//Pyrelight Custom Code
+		// Use endurance instead of mana if we somehow cast a spell
+
+		if (GetMaxMana() == 0 && GetMana() == 0) {
+			my_curmana = GetEndurance();
+			my_maxmana = GetMaxMana();
+		}
+
 		if (my_curmana < mana_cost) {// not enough mana
 			//this is a special case for NPCs with no mana...
 			if (IsNPC() && my_curmana == my_maxmana){
@@ -453,7 +462,7 @@ bool Mob::DoCastSpell(uint16 spell_id, uint16 target_id, CastingSlot slot,
 		}
 	}
 
-	if (mana_cost > GetMana()) {
+	if (mana_cost > GetMana() && GetMana() != 0) {
 		mana_cost = GetMana();
 	}
 
@@ -2612,8 +2621,17 @@ bool Mob::SpellFinished(uint16 spell_id, Mob *spell_target, CastingSlot slot, in
 			mana_used *= 2;
 		}
 		// clamp if we some how got focused above our current mana
-		if (GetMana() < mana_used)
+		if (GetMana() < mana_used && GetMaxMana() != 0)
 			mana_used = GetMana();
+		
+		//Pyrelight Custom Code
+		// Substitute endurance for mana if we have 0 mana
+		if (GetMaxMana() == 0) {
+			LogSpells("Spell [{}]: consuming [{}] endurance instead of mana", spell_id, mana_used);
+			SetEndurance(GetEndurance() - mana_used);
+			TryTriggerOnCastRequirement();
+		}
+
 		LogSpells("Spell [{}]: consuming [{}] mana", spell_id, mana_used);
 		if (!DoHPToManaCovert(mana_used)) {
 			SetMana(GetMana() - mana_used);
