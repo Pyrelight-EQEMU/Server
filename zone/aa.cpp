@@ -1301,6 +1301,7 @@ void Client::ActivateAlternateAdvancementAbility(int rank_id, int target_id) {
 		auto results = database.QueryDatabase(query);
 
 		bool allowed_cast = false;
+		int lowest_level = 100;
 
 		if (results.RowCount() > 0) {
 			int r = 0;
@@ -1313,7 +1314,7 @@ void Client::ActivateAlternateAdvancementAbility(int rank_id, int target_id) {
 				this_class = atoi(row[r]); r++;
 				this_level = atoi(row[r]); r++;
 
-				if (lowest_level > this_level) {
+				if (lowest_level > this_level && GetSpellLevel(rank->spell, this_class)) {
 					lowest_level = this_level;
 				}
 
