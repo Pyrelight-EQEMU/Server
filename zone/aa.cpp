@@ -1314,11 +1314,15 @@ void Client::ActivateAlternateAdvancementAbility(int rank_id, int target_id) {
 				this_class = atoi(row[r]); r++;
 				this_level = atoi(row[r]); r++;
 
+				LogDebug("Evaluating Multiclass Data: [{}], [{}]", this_class, this_level);
+
 				if (lowest_level > this_level && GetSpellLevel(rank->spell, this_class)) {
 					lowest_level = this_level;
+					LogDebug("MULTICLASS: Found new lowest level");
 				}
 
 				if (GetSpellLevel(rank->spell, this_class) > this_level) {
+					LogDebug("We are allowed to cast this spell");
 					allowed_cast = true;
 					break;
 				}
