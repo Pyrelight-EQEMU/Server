@@ -1925,7 +1925,7 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 				
 				if(buffslot >= 0) {
 					if (RuleB(Spells, RuneUseHealAmt) && (IsClient() || IsBot())) {											
-							buffs[buffslot].hit_number = static_cast<uint32>(std:floor(effect_value * ((1 + itembonuses.HealAmt)/100))) ;
+							buffs[buffslot].hit_number = static_cast<uint32>(std::floor(effect_value * ((1 + itembonuses.HealAmt)/100))) ;
 					} else {
 							buffs[buffslot].hit_number = effect_value;;
 					}					
