@@ -1311,6 +1311,14 @@ void Client::ActivateAlternateAdvancementAbility(int rank_id, int target_id) {
 			for (auto& row = results.begin(); row != results.end(); ++row) {
 				iclass = atoi(row[0]);	
 				ilevel = atoi(row[1]);
+
+				if (CanUseSpell(rank->spell, iclass, ilevel)) {
+					lowest_level = ilevel;
+					if (ilevel <= GetLevel()) {
+						allowed_cast = true;
+						return;
+					}
+				}
 			}
 		}
 
