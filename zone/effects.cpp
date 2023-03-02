@@ -84,7 +84,7 @@ int64 Mob::GetActSpellDamage(uint16 spell_id, int64 value, Mob* target) {
 			//Pyrelight Custom Code
 			// Heroic INT gives +1% critical damage
 			if (IsClient() && GetHeroicINT() > 0) {
-				ratio += GetHeroicINT();	
+				ratio += (GetHeroicINT()/10);	
 			}
 		}
 

@@ -1052,7 +1052,7 @@ void Mob::MeleeMitigation(Mob *attacker, DamageHitInfo &hit, ExtraAttackOptions 
 	//Pyrelight Custom Code
 	// Heroic STR increases damage by 1%
 	if (attacker->IsClient() && attacker->GetHeroicSTR() > 0) {
-		hit.damage_done *= ((attacker->GetHeroicSTR() / 100) + 1);
+		hit.damage_done *= ((attacker->GetHeroicSTR() / 1000) + 1);
 	}
 
 	//Pyrelight Custom Code
