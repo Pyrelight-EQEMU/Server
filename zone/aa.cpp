@@ -1298,8 +1298,8 @@ void Client::ActivateAlternateAdvancementAbility(int rank_id, int target_id) {
 		bool allowed_cast = false;
 		int lowest_level = GetLevel();
 
-		int this_class = NO_CLASS;
-		int this_level = 0;
+		auto iclass = NO_CLASS;
+		auto ilevel = 0;
 
 		std::string query = StringFormat("SELECT class,level " 
 										 "FROM multiclass_data " 
@@ -1307,15 +1307,11 @@ void Client::ActivateAlternateAdvancementAbility(int rank_id, int target_id) {
 										 CharacterID()); 
 		auto results = database.QueryDatabase(query);
 
-		if (results.RowCount() > 0) {
+		if (results.RowCount() > 0) { 
 			int r = 0;
-			for (auto& row = results.begin(); row != results.end(); ++row) {			
-
-				this_class = atoi(row[r]); r++;	
-				//this_level = atoi(row[r]); r++;	
-
-				LogDebug("ok, wtf2?");
-
+			for (auto& row = results.begin(); row != results.end(); ++row) {
+				iclass = atoi(row[r]); r++;	
+				ilevel = atoi(row[r]); r++;
 			}
 		}
 
