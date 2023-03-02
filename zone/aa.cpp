@@ -1307,7 +1307,7 @@ void Client::ActivateAlternateAdvancementAbility(int rank_id, int target_id) {
 
 		if (results.RowCount() > 0) {
 			int r = 0;
-			int lowest_level = 100;
+			int lowest_level = GetLevel();
 			for (auto& row = results.begin(); row != results.end(); ++row) {				
 
 				int this_class = NO_CLASS;
@@ -1316,22 +1316,18 @@ void Client::ActivateAlternateAdvancementAbility(int rank_id, int target_id) {
 				this_class = atoi(row[r]); r++;
 				this_level = atoi(row[r]); r++;
 
-				LogDebug("Evaluating Multiclass Data: [{}], [{}]", this_class, this_level);
+				int spell_level = GetSpellLevel(rank->spell,this_class);
 
-				auto spell_level = GetSpellLevel(rank->spell, this_class);
-				if (spell_level > 0 && spell_level < 200) {
-
-					if (lowest_level > this_level && spell_level) {
+				if (spell_level < 255 && spell_level > 0) {
+					if (this_level < lowest_level) {
 						lowest_level = this_level;
-						LogDebug("MULTICLASS: Found new lowest level");
 					}
 
-					if (spell_level > this_level && ) {
-						LogDebug("We are allowed to cast this spell");
+					if (this_level <= GetLevel()) {
 						allowed_cast = true;
 						break;
 					}
-				}
+				}			
 			}
 		}
 
