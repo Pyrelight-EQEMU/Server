@@ -1303,6 +1303,8 @@ void Client::ActivateAlternateAdvancementAbility(int rank_id, int target_id) {
 		bool allowed_cast = false;
 		int lowest_level = 100;
 
+		LogDebug("Evaluating Multiclass Data Rowcounmt: [{}]", results.RowCount());
+
 		if (results.RowCount() > 0) {
 			int r = 0;
 			int lowest_level = 100;
