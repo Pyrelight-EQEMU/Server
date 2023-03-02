@@ -1301,13 +1301,12 @@ void Client::ActivateAlternateAdvancementAbility(int rank_id, int target_id) {
 		auto results = database.QueryDatabase(query);
 
 		bool allowed_cast = false;
-		int lowest_level = 100;
+		int lowest_level = GetLevel();
 
-		LogDebug("Evaluating Multiclass Data Rowcounmt: [{}]", results.RowCount());
+		LogDebug("Evaluating Multiclass Data Rowcount: [{}]", results.RowCount());
 
 		if (results.RowCount() > 0) {
 			int r = 0;
-			int lowest_level = GetLevel();
 			for (auto& row = results.begin(); row != results.end(); ++row) {				
 
 				int this_class = NO_CLASS;
