@@ -1318,15 +1318,19 @@ void Client::ActivateAlternateAdvancementAbility(int rank_id, int target_id) {
 
 				LogDebug("Evaluating Multiclass Data: [{}], [{}]", this_class, this_level);
 
-				if (lowest_level > this_level && GetSpellLevel(rank->spell, this_class)) {
-					lowest_level = this_level;
-					LogDebug("MULTICLASS: Found new lowest level");
-				}
+				auto spell_level = GetSpellLevel(rank->spell, this_class);
+				if (spell_level > 0 && spell_level < 200) {
 
-				if (GetSpellLevel(rank->spell, this_class) > this_level) {
-					LogDebug("We are allowed to cast this spell");
-					allowed_cast = true;
-					break;
+					if (lowest_level > this_level && spell_level) {
+						lowest_level = this_level;
+						LogDebug("MULTICLASS: Found new lowest level");
+					}
+
+					if (spell_level > this_level && ) {
+						LogDebug("We are allowed to cast this spell");
+						allowed_cast = true;
+						break;
+					}
 				}
 			}
 		}
