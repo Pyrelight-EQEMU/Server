@@ -1294,11 +1294,6 @@ void Client::ActivateAlternateAdvancementAbility(int rank_id, int target_id) {
 
 		//Pyrelight Custom Code
 		// This needs to be cleaned up and refactored at some point if it works
-		std::string query = StringFormat("SELECT class,level " 
-										 "FROM multiclass_data " 
-										 "WHERE id = %u", 
-										 CharacterID()); 
-		auto results = database.QueryDatabase(query);
 
 		bool allowed_cast = false;
 		int lowest_level = GetLevel();
@@ -1308,6 +1303,11 @@ void Client::ActivateAlternateAdvancementAbility(int rank_id, int target_id) {
 
 		LogDebug("Evaluating Multiclass Data Rowcount: [{}]", results.RowCount());
 
+		std::string query = StringFormat("SELECT class,level " 
+										 "FROM multiclass_data " 
+										 "WHERE id = %u", 
+										 CharacterID()); 
+		auto results = database.QueryDatabase(query);
 		if (results.RowCount() > 0) {
 			int r = 0;
 			for (auto& row = results.begin(); row != results.end(); ++row) {				
