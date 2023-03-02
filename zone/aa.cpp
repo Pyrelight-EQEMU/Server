@@ -1289,19 +1289,6 @@ void Client::ActivateAlternateAdvancementAbility(int rank_id, int target_id) {
 	if (!ability) {
 		return;
 	}
-
-	//Pyrelight Custom Code
-	// Check for mana before activating ability
-	auto mana_cost = spells[rank->spell].mana;
-	bool cast_fail = true;
-	if (GetMaxMana() == 0) {
-		mana_cost <= GetEndurance() ? cast_fail = true : cast_fail = false;
-	} else {
-		mana_cost <= GetMana() ? cast_fail = true : cast_fail = false;
-	}
-	if (cast_fail) {
-		MessageString(Chat::Red, INSUFFICIENT_MANA);
-	}
 	
 	if (rank->level_req > GetLevel()) {
 
