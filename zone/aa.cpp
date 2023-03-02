@@ -1305,7 +1305,7 @@ void Client::ActivateAlternateAdvancementAbility(int rank_id, int target_id) {
 
 		LogDebug("Evaluating Multiclass Data Rowcount: [{}]", results.RowCount());
 
-		if (results.RowCount() > 0) {
+		if (results.RowCount() > 0 && false) {
 			int r = 0;
 			for (auto& row = results.begin(); row != results.end(); ++row) {				
 
