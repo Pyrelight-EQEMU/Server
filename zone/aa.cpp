@@ -1308,10 +1308,9 @@ void Client::ActivateAlternateAdvancementAbility(int rank_id, int target_id) {
 		auto results = database.QueryDatabase(query);
 
 		if (results.RowCount() > 0) { 
-			int r = 0;
 			for (auto& row = results.begin(); row != results.end(); ++row) {
-				iclass = atoi(row[r]); r++;	
-				ilevel = atoi(row[r]); r++;
+				iclass = atoi(row[0]);	
+				ilevel = atoi(row[1]);
 			}
 		}
 
