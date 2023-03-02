@@ -1313,11 +1313,13 @@ void Client::ActivateAlternateAdvancementAbility(int rank_id, int target_id) {
 				int this_level = 0;			
 
 				this_class = atoi(row[r]); r++;
-				this_level = atoi(row[r]); r++;
+				this_level = atoi(row[r]); r++;					
 
-				int spell_level = GetSpellLevel(rank->spell,this_class);	
+				if (CanUseSpell(rank->spell, this_class, this_level)) {
+					allowed_cast = true;
+					break;
+				}
 
-				LogDebug("No Deadlock YAY!");			
 			}
 		}
 
