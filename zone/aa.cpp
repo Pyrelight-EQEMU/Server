@@ -1300,14 +1300,13 @@ void Client::ActivateAlternateAdvancementAbility(int rank_id, int target_id) {
 
 		int this_class = NO_CLASS;
 		int this_level = 0;
-
-		LogDebug("Evaluating Multiclass Data Rowcount: [{}]", results.RowCount());
-
+		
 		std::string query = StringFormat("SELECT class,level " 
 										 "FROM multiclass_data " 
 										 "WHERE id = %u", 
 										 CharacterID()); 
 		auto results = database.QueryDatabase(query);
+
 		if (results.RowCount() > 0) {
 			int r = 0;
 			for (auto& row = results.begin(); row != results.end(); ++row) {			
