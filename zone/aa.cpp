@@ -1294,7 +1294,7 @@ void Client::ActivateAlternateAdvancementAbility(int rank_id, int target_id) {
 	// Check for mana before activating ability
 	auto mana_cost = spells[rank->spell].mana;
 	bool cast_fail = true;
-	if (GetMaxMana() = 0) {
+	if (GetMaxMana() == 0) {
 		mana_cost <= GetEndurance() ? cast_fail = true : cast_fail = false;
 	} else {
 		mana_cost <= GetMana() ? cast_fail = true : cast_fail = false;
