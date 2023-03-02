@@ -1305,7 +1305,7 @@ void Client::ActivateAlternateAdvancementAbility(int rank_id, int target_id) {
 
 		LogDebug("Evaluating Multiclass Data Rowcount: [{}]", results.RowCount());
 
-		if (results.RowCount() > 0 && false) {
+		if (results.RowCount() > 0) {
 			int r = 0;
 			for (auto& row = results.begin(); row != results.end(); ++row) {				
 
@@ -1315,18 +1315,9 @@ void Client::ActivateAlternateAdvancementAbility(int rank_id, int target_id) {
 				this_class = atoi(row[r]); r++;
 				this_level = atoi(row[r]); r++;
 
-				int spell_level = GetSpellLevel(rank->spell,this_class);
+				int spell_level = GetSpellLevel(rank->spell,this_class);	
 
-				if (spell_level < 255 && spell_level > 0) {
-					if (this_level < lowest_level) {
-						lowest_level = this_level;
-					}
-
-					if (this_level <= GetLevel()) {
-						allowed_cast = true;
-						break;
-					}
-				}			
+				LogDebug("No Deadlock YAY!");			
 			}
 		}
 
