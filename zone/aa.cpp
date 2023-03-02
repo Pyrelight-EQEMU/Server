@@ -1311,7 +1311,7 @@ void Client::ActivateAlternateAdvancementAbility(int rank_id, int target_id) {
 			int r = 0;
 			for (auto& row = results.begin(); row != results.end(); ++row) {			
 
-				//this_class = atoi(row[r]); r++;	
+				this_class = atoi(row[r]); r++;	
 				//this_level = atoi(row[r]); r++;	
 
 				LogDebug("ok, wtf2?");
