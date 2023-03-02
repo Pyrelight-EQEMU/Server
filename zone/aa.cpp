@@ -1303,14 +1303,17 @@ void Client::ActivateAlternateAdvancementAbility(int rank_id, int target_id) {
 		bool allowed_cast = false;
 		int lowest_level = GetLevel();
 
+		int this_class = NO_CLASS;
+		int this_level = 0;
+
 		LogDebug("Evaluating Multiclass Data Rowcount: [{}]", results.RowCount());
 
 		if (results.RowCount() > 0) {
 			int r = 0;
 			for (auto& row = results.begin(); row != results.end(); ++row) {				
 
-				int this_class = atoi(row[r]); r++;
-				int this_level = atoi(row[r]); r++;		
+				this_class = atoi(row[r]); r++;	
+				this_level = atoi(row[r]); r++;	
 
 				LogDebug("ok, wtf2?");
 
