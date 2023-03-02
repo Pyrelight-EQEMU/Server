@@ -1309,16 +1309,7 @@ void Client::ActivateAlternateAdvancementAbility(int rank_id, int target_id) {
 			int r = 0;
 			for (auto& row = results.begin(); row != results.end(); ++row) {				
 
-				int this_class = NO_CLASS;
-				int this_level = 0;			
-
-				this_class = atoi(row[r]); r++;
-				this_level = atoi(row[r]); r++;					
-
-				if (CanUseSpell(rank->spell, this_class, this_level)) {
-					allowed_cast = true;
-					break;
-				}
+				LogDebug("ok, wtf?");
 
 			}
 		}
