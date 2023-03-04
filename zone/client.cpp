@@ -11858,7 +11858,7 @@ void Client::SetBaseClass(uint32 class_id) {
 	// Save Current Data
 	Save();
 	// Query Multiclass data for new class
-	std::string query = StringFormat("SELECT class,level,exp " 
+	std::string query = StringFormat("SELECT class,level,exp,aa_points,aa_exp " 
 									 "FROM multiclass_data " 
 									 "WHERE id = %u AND class= %u", 
 									  CharacterID(),
@@ -11870,7 +11870,10 @@ void Client::SetBaseClass(uint32 class_id) {
 			m_pp.class_ = atoi(row[r]); r++;	
 			m_pp.level = atoi(row[r]); r++;	
 			m_pp.exp = atoi(row[r]); r++;
+			m_pp.aapoints = atoi(row[r]); r++;
+			m_pp.expAA = atoi(row[r]); r++;
 		}
+		Save();
 	} else {
 		m_pp.class_ = class_id;
 		m_pp.level = 1;
