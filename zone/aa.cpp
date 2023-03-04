@@ -1398,6 +1398,16 @@ void Client::ActivateAlternateAdvancementAbility(int rank_id, int target_id) {
 		}
 	}
 
+	// Pyrelight Custom Code
+	// if this is an Off-Class ability, double our cast time and mana cost
+	int mana_cost = spells[rank->spell].mana;
+	int cast_time = spells[rank->spell].cast_time; // This might be .casttime or .casttime_
+
+	if (!CanUseSpell(rank->spell, GetClass(), GetLevel())) {
+		mana_cost = std::ceil(mana_cost * 2);
+		cast_time = std::ceil(cast_time * 2);
+	}
+
 	if (use_toggle_passive_hotkey) {
 		TogglePassiveAlternativeAdvancement(*rank, ability->id);
 	}
@@ -1414,7 +1424,7 @@ void Client::ActivateAlternateAdvancementAbility(int rank_id, int target_id) {
 			}
 		}
 		else {
-			if (!CastSpell(rank->spell, target_id, EQ::spells::CastingSlot::AltAbility, -1, -1, 0, -1, rank->spell_type + pTimerAAStart, timer_duration, nullptr, rank->id)) {
+			if (!CastSpell(rank->spell, target_id, EQ::spells::CastingSlot::AltAbility, cast_time, mana_cost, 0, -1, rank->spell_type + pTimerAAStart, timer_duration, nullptr, rank->id)) {
 				return;
 			}
 		}
