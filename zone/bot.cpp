@@ -2241,16 +2241,16 @@ void Bot::AI_Bot_Init()
 	AIautocastspell_timer.reset(nullptr);
 	casting_spell_AIindex = static_cast<uint8>(AIBot_spells.size());
 
-	roambox_max_x = 0;
-	roambox_max_y = 0;
-	roambox_min_x = 0;
-	roambox_min_y = 0;
-	roambox_distance = 0;
-	roambox_destination_x = 0;
-	roambox_destination_y = 0;
-	roambox_destination_z = 0;
-	roambox_min_delay = 2500;
-	roambox_delay = 2500;
+	m_roambox.max_x     = 0;
+	m_roambox.max_y     = 0;
+	m_roambox.min_x     = 0;
+	m_roambox.min_y     = 0;
+	m_roambox.distance  = 0;
+	m_roambox.dest_x    = 0;
+	m_roambox.dest_y    = 0;
+	m_roambox.dest_z    = 0;
+	m_roambox.delay     = 2500;
+	m_roambox.min_delay = 2500;
 }
 
 void Bot::SpellProcess() {
@@ -2470,6 +2470,7 @@ void Bot::AI_Process()
 	}
 
 	// We also need a leash owner and follow mob (subset of primary AI criteria)
+	bot_group->VerifyGroup();
 	Client* leash_owner = (bot_group->GetLeader() && bot_group->GetLeader()->IsClient() ? bot_group->GetLeader()->CastToClient() : bot_owner);
 	if (!leash_owner) {
 		return;
@@ -6152,8 +6153,11 @@ void Bot::ProcessBotOwnerRefDelete(Mob* botOwner) {
 int64 Bot::CalcMaxMana() {
 	switch(GetCasterClass()) {
 		case 'I':
+			max_mana = (GenerateBaseManaPoints() + itembonuses.Mana + spellbonuses.Mana + GroupLeadershipAAManaEnhancement());
+			max_mana += (GetHeroicINT() * 10);
 		case 'W': {
 			max_mana = (GenerateBaseManaPoints() + itembonuses.Mana + spellbonuses.Mana + GroupLeadershipAAManaEnhancement());
+			max_mana += (GetHeroicWIS() * 10);
 			break;
 		}
 		case 'N': {
@@ -7103,6 +7107,7 @@ int32 Bot::LevelRegen() {
 
 int64 Bot::CalcHPRegen() {
 	int32 regen = (LevelRegen() + itembonuses.HPRegen + spellbonuses.HPRegen);
+	regen += GetHeroicSTA() / 20;
 	regen += (aabonuses.HPRegen + GroupLeadershipAAHealthRegeneration());
 	regen = ((regen * RuleI(Character, HPRegenMultiplier)) / 100);
 	return regen;
@@ -7174,6 +7179,7 @@ int64 Bot::CalcMaxHP() {
 	int32 bot_hp = 0;
 	uint32 nd = 10000;
 	bot_hp += (GenerateBaseHitPoints() + itembonuses.HP);
+	bot_hp += (GetHeroicSTA() * 10);
 	nd += aabonuses.MaxHP;
 	bot_hp = ((float)bot_hp * (float)nd / (float)10000);
 	bot_hp += (spellbonuses.HP + aabonuses.HP);

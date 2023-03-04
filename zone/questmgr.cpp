@@ -88,19 +88,28 @@ void QuestManager::Process() {
 	end = QTimerList.end();
 	while (cur != end) {
 		if (cur->Timer_.Enabled() && cur->Timer_.Check()) {
-			if(entity_list.IsMobInZone(cur->mob)) {
-				if(cur->mob->IsNPC()) {
+			if (cur->mob) {
+				if (cur->mob->IsNPC()) {
 					if (parse->HasQuestSub(cur->mob->GetNPCTypeID(), EVENT_TIMER)) {
 						parse->EventNPC(EVENT_TIMER, cur->mob->CastToNPC(), nullptr, cur->name, 0);
 					}
-				} else if (cur->mob->IsEncounter()) {
-					parse->EventEncounter(EVENT_TIMER, cur->mob->CastToEncounter()->GetEncounterName(), cur->name, 0, nullptr);
-				} else if (cur->mob->IsClient()) {
+				}
+				else if (cur->mob->IsEncounter()) {
+					parse->EventEncounter(
+						EVENT_TIMER,
+						cur->mob->CastToEncounter()->GetEncounterName(),
+						cur->name,
+						0,
+						nullptr
+					);
+				}
+				else if (cur->mob->IsClient()) {
 					if (parse->PlayerHasQuestSub(EVENT_TIMER)) {
 						//this is inheriently unsafe if we ever make it so more than npc/client start timers
 						parse->EventPlayer(EVENT_TIMER, cur->mob->CastToClient(), cur->name, 0);
 					}
-				} else if (cur->mob->IsBot()) {
+				}
+				else if (cur->mob->IsBot()) {
 					if (parse->BotHasQuestSub(EVENT_TIMER)) {
 						parse->EventBot(EVENT_TIMER, cur->mob->CastToBot(), nullptr, cur->name, 0);
 					}
@@ -109,12 +118,15 @@ void QuestManager::Process() {
 				//we MUST reset our iterator since the quest could have removed/added any
 				//number of timers... worst case we have to check a bunch of timers twice
 				cur = QTimerList.begin();
-				end = QTimerList.end();	//dunno if this is needed, cant hurt...
-			} else {
+				end = QTimerList.end();    //dunno if this is needed, cant hurt...
+			}
+			else {
 				cur = QTimerList.erase(cur);
 			}
-		} else
+		}
+		else {
 			++cur;
+		}
 	}
 
 	auto cur_iter = STimerList.begin();
@@ -2118,7 +2130,7 @@ void QuestManager::playertexture(int newtexture)
 	initiator->SendIllusionPacket(initiator->GetRace(), 0xFF, newtexture);
 }
 
-void QuestManager::playerfeature(char *feature, int setting)
+void QuestManager::playerfeature(const char* feature, int setting)
 {
 	QuestManagerCurrentQuestVars();
 	uint16 Race = initiator->GetRace();
@@ -2175,7 +2187,7 @@ void QuestManager::playerfeature(char *feature, int setting)
 										DrakkinHeritage, DrakkinTattoo, DrakkinDetails, Size);
 }
 
-void QuestManager::npcfeature(char *feature, int setting)
+void QuestManager::npcfeature(const char* feature, int setting)
 {
 	QuestManagerCurrentQuestVars();
 	uint16 Race = owner->GetRace();
