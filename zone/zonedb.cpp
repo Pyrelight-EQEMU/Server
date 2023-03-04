@@ -4408,28 +4408,31 @@ uint32 ZoneDatabase::SaveSaylinkID(const char* saylink_text)
 }
 
 double ZoneDatabase::GetAAEXPModifier(uint32 character_id, uint32 zone_id, int16 instance_version) const {
-	const std::string query = fmt::format(
-		SQL(
-			SELECT
-			`aa_modifier`
-			FROM
-			`character_exp_modifiers`
-			WHERE
-			`character_id` = {}
-			AND
-			(`zone_id` = {} OR `zone_id` = 0) AND
-			(`instance_version` = {} OR `instance_version` = -1)
-			ORDER BY `zone_id`, `instance_version` DESC
-			LIMIT 1
-		),
-		character_id,
-		zone_id,
-		instance_version
-	);
+	
+	if (!RuleB(AA, DisableCharacterAAXPModifiers)) {		
+		const std::string query = fmt::format(
+			SQL(
+				SELECT
+				`aa_modifier`
+				FROM
+				`character_exp_modifiers`
+				WHERE
+				`character_id` = {}
+				AND
+				(`zone_id` = {} OR `zone_id` = 0) AND
+				(`instance_version` = {} OR `instance_version` = -1)
+				ORDER BY `zone_id`, `instance_version` DESC
+				LIMIT 1
+			),
+			character_id,
+			zone_id,
+			instance_version
+		);
 
-	auto results = database.QueryDatabase(query);
-	for (auto& row = results.begin(); row != results.end(); ++row) {
-		return atof(row[0]);
+		auto results = database.QueryDatabase(query);
+		for (auto& row = results.begin(); row != results.end(); ++row) {
+			return atof(row[0]);
+		}
 	}
 
 	return 1.0f;

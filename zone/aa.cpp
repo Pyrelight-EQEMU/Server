@@ -1289,44 +1289,6 @@ void Client::ActivateAlternateAdvancementAbility(int rank_id, int target_id) {
 	if (!ability) {
 		return;
 	}
-	
-	if (rank->level_req > GetLevel()) {
-
-		//Pyrelight Custom Code
-		// This needs to be cleaned up and refactored at some point if it works
-
-		bool allowed_cast = false;
-		int lowest_level = GetLevel();
-
-		auto iclass = NO_CLASS;
-		auto ilevel = 0;
-
-		std::string query = StringFormat("SELECT class,level " 
-										 "FROM multiclass_data " 
-										 "WHERE id = %u", 
-										 CharacterID()); 
-		auto results = database.QueryDatabase(query);
-
-		if (results.RowCount() > 0) { 
-			for (auto& row = results.begin(); row != results.end(); ++row) {
-				iclass = atoi(row[0]);	
-				ilevel = atoi(row[1]);
-
-				if (CanUseSpell(rank->spell, iclass, ilevel)) {
-					lowest_level =  GetSpellLevel(rank->spell,iclass);
-					if (ilevel <= GetLevel()) {
-						allowed_cast = true;
-						break;
-					}
-				}
-			}
-		}
-
-		if (!allowed_cast) {
-			Message(Chat::Red, "You must be at least level %u to use this ability.", lowest_level);
-			return;
-		}
-	}
 
 	if (!IsValidSpell(rank->spell)) {
 		return;
@@ -1705,7 +1667,7 @@ bool Mob::CanPurchaseAlternateAdvancementRank(AA::Rank *rank, bool check_price, 
 	if(!ability)
 		return false;
 	
-	if(!(ability->classes & (1 << GetClass()))) {
+	if(!(ability->classes & (1 << GetClass())) && check_grant) {
 		Message(Chat::Red, "You cannot purchase cross-class AA without having that class active.");
 		return false;		
 	}
