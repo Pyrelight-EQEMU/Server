@@ -3259,12 +3259,6 @@ bool Mob::CheckSpellLevelRestriction(Mob *caster, uint16 spell_id)
 					can_cast = false;
 				}
 			}
-
-			// Pyrelight Custom Code
-			// let's be WAY more restrictive with buffs
-			if ((GetLevel() - 5) < caster->GetLevel()) {
-				can_cast = false;
-			}
 		}
 	}
 
