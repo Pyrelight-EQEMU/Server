@@ -255,7 +255,7 @@ bool Mob::CastSpell(uint16 spell_id, uint16 target_id, CastingSlot slot,
 					AA::Rank *rank = zone->GetAlternateAdvancementRankBySpell(spell_id);			
 					
 					if (rank) {
-						LogDebug("We found an AA with this ability... [{}]", rank->id)
+						LogDebug("We found an AA with this ability... [{}]", rank->id);
 						CastToClient()->SendAlternateAdvancementTimer(rank->spell_type, 0, 0);
 					}				
 				}
