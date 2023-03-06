@@ -1523,6 +1523,15 @@ AA::Rank *Zone::GetAlternateAdvancementRank(int rank_id) {
 	return nullptr;
 }
 
+AA::Rank *Zone::GetAlternateAdvancementRankBySpell(int spell_id) {
+    for (const auto& [id, rank] : aa_ranks) {
+        if (rank->spell == spell_id) {
+            return rank.get();
+        }
+    }
+    return nullptr;
+}
+
 std::pair<AA::Ability*, AA::Rank*> Zone::GetAlternateAdvancementAbilityAndRank(int id, int points_spent) {
 	AA::Ability *ability = GetAlternateAdvancementAbility(id);
 
