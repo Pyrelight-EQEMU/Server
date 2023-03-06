@@ -2684,9 +2684,9 @@ bool Mob::SpellFinished(uint16 spell_id, Mob *spell_target, CastingSlot slot, in
 				// If this is a spell that we can cast, we also send the timers for that, too.
 				if (GetMinLevel(rank->spell)) { 
 					if (spells[rank->spell].is_discipline) {
-						CastToClient()->SendDisciplineTimer(spells[rank->spell].timer_id, spells[rank->spell].recast_time / 1000);
+						CastToClient()->SendDisciplineTimer(spells[rank->spell].timer_id, rank->recast_time);
 					} else {
-						CastToClient()->SetLinkedSpellReuseTimer(spells[rank->spell].timer_id, (spells[rank->spell].recast_time / 1000) - (casting_spell_recast_adjust / 1000));
+						CastToClient()->SetLinkedSpellReuseTimer(spells[rank->spell].timer_id, rank->recast_time);
 					}
 				}
 			}
