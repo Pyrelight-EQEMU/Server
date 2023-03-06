@@ -864,6 +864,14 @@ bool Client::UseDiscipline(uint32 spell_id, uint32 target) {
 				}
 			}
 			SendDisciplineTimer(spells[spell_id].timer_id, reduced_recast);
+			//Pyrelight Custom Code
+			// Tie reuse timers together
+			LogDebug("We are setting a disc reuse timer. Check to see if there's also an AA for it...");
+			AA::Rank *rank = zone->GetAlternateAdvancementRankBySpell(spell_id);
+			if (rank) {
+				LogDebug("We found an AA with this ability... [{}]", rank->id);
+				CastToClient()->SendAlternateAdvancementTimer(rank->spell_type, 0, 0);
+			}
 		}
 	}
 
@@ -928,16 +936,7 @@ void Client::SendDisciplineTimer(uint32 timer_id, uint32 duration)
 		dts->Duration = duration;
 		QueuePacket(outapp);
 		safe_delete(outapp);
-	}
-	
-	//Pyrelight Custom Code
-	// Tie reuse timers together
-	LogDebug("We are setting a disc reuse timer. Check to see if there's also an AA for it...");
-	AA::Rank *rank = zone->GetAlternateAdvancementRankBySpell(spell_id);
-	if (rank) {
-		LogDebug("We found an AA with this ability... [{}]", rank->id);
-		CastToClient()->SendAlternateAdvancementTimer(rank->spell_type, 0, 0);
-	}
+	}	
 }
 
 /**
