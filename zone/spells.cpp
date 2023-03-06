@@ -249,8 +249,13 @@ bool Mob::CastSpell(uint16 spell_id, uint16 target_id, CastingSlot slot,
 			if (parse->EventPlayer(EVENT_CAST_BEGIN, CastToClient(), export_string, 0) != 0) {
 				if (IsDiscipline(spell_id)) {
 					CastToClient()->SendDisciplineTimer(spells[spell_id].timer_id, 0);
-					AA::Rank *rank = zone->GetAlternateAdvancementRankBySpell(spell_id);
+
+					LogDebug("We are trying to activate a disc");
+
+					AA::Rank *rank = zone->GetAlternateAdvancementRankBySpell(spell_id);			
+					
 					if (rank) {
+						LogDebug("We found an AA with this ability... [{}]", rank->id)
 						CastToClient()->SendAlternateAdvancementTimer(rank->spell_type, 0, 0);
 					}				
 				}
