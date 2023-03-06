@@ -821,7 +821,7 @@ bool ZoneDatabase::LoadCharacterDisciplines(uint32 character_id, PlayerProfile_S
 
 	auto character_disciplines = CharacterDisciplinesRepository::GetWhere(
 		database, fmt::format(
-			"`id` = {} AND `class_id` = %u ORDER BY `slot_id`",
+			"`id` = {} AND `class_id` = {} ORDER BY `slot_id`",
 			character_id, pp->class_
 		)
 	);
