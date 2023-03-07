@@ -1470,7 +1470,7 @@ void Mob::TuneCommonOutgoingHitSuccess(Mob* defender, DamageHitInfo &hit, ExtraA
 				hit.damage_done = ass;
 		}
 	}
-	else if (hit.skill == EQ::skills::SkillFrenzy && GetClass() == BERSERKER && GetLevel() > 50) {
+	else if (hit.skill == EQ::skills::SkillFrenzy && (GetClass() == BERSERKER || GetClass() == SHADOWKNIGHT) && GetLevel() > 50) {
 		extra_mincap = 4 * GetLevel() / 5;
 	}
 

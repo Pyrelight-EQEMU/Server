@@ -2950,7 +2950,7 @@ bool Client::BindWound(Mob *bindmob, bool start, bool fail)
 
 						int max_percent = 50 + maxHPBonus;
 
-						if (GetClass() == MONK && GetSkill(EQ::skills::SkillBindWound) > 200) {
+						if ((GetClass() == MONK || GetClass() == BEASTLORD) && GetSkill(EQ::skills::SkillBindWound) > 200) {
 							max_percent = 70 + maxHPBonus;
 						}
 
@@ -3001,7 +3001,7 @@ bool Client::BindWound(Mob *bindmob, bool start, bool fail)
 						if (GetRawSkill(EQ::skills::SkillBindWound) > 200) {
 							if ((GetClass() == MONK) || (GetClass() == BEASTLORD))
 								percent_base = 70;
-							else if ((GetLevel() > 50) && ((GetClass() == WARRIOR) || (GetClass() == ROGUE) || (GetClass() == CLERIC)))
+							else if ((GetLevel() > 50) && ((GetClass() == WARRIOR || GetClass() == PALADIN) || (GetClass() == ROGUE || GetClass() == RANGER) || (GetClass() == CLERIC)))
 								percent_base = 70;
 						}
 

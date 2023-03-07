@@ -1360,10 +1360,6 @@ void Client::ActivateAlternateAdvancementAbility(int rank_id, int target_id) {
 		}
 	}	
 
-	if (!CanUseSpell(rank->spell, GetClass(), GetLevel())) {
-		mana_cost = std::ceil(mana_cost * 2);
-	}
-
 	if (use_toggle_passive_hotkey) {
 		TogglePassiveAlternativeAdvancement(*rank, ability->id);
 	}

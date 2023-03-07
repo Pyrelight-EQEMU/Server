@@ -110,7 +110,7 @@ int Mob::GetBaseSkillDamage(EQ::skills::SkillType skill, Mob *target)
 		// until we get a better inv system for NPCs they get nerfed!
 		if (IsClient()) {
 			auto *inst = CastToClient()->GetInv().GetItem(EQ::invslot::slotPrimary);
-			if (inst && inst->GetItem() && inst->GetItem()->ItemType == EQ::item::ItemType1HPiercing) {
+			if (inst && inst->GetItem()) {
 				base = inst->GetItemBackstabDamage(true);
 				if (!inst->GetItemBackstabDamage()) {
 					base += inst->GetItemWeaponDamage(true);
@@ -332,7 +332,7 @@ void Client::OPCombatAbility(const CombatAbility_Struct *ca_atk)
 		int32 max_dmg = GetBaseSkillDamage(EQ::skills::SkillFrenzy, GetTarget());
 		DoAnim(anim1HWeapon, 0, false);
 
-		if (GetClass() == BERSERKER) {
+		if (GetClass() == SHADOWKNIGHT) {
 			int chance = GetLevel() * 2 + GetSkill(EQ::skills::SkillFrenzy);
 			if (zone->random.Roll0(450) < chance)
 				AtkRounds++;
@@ -359,10 +359,8 @@ void Client::OPCombatAbility(const CombatAbility_Struct *ca_atk)
 		return;
 	}
 
-	switch (GetClass()) {
-	case BERSERKER:
-	case WARRIOR:
-	case RANGER:
+	switch (GetClass()) {		
+	/*
 	case BEASTLORD:
 		if (ca_atk->m_atk != 100 || ca_atk->m_skill != EQ::skills::SkillKick)
 			break;
@@ -380,7 +378,8 @@ void Client::OPCombatAbility(const CombatAbility_Struct *ca_atk)
 			DoSpecialAttackDamage(GetTarget(), EQ::skills::SkillKick, dmg, 0, ht, ReuseTime);
 		}
 		break;
-	case MONK: {
+	*/
+	case BEASTLORD: {
 		ReuseTime = MonkSpecialAttack(GetTarget(), ca_atk->m_skill) - 1 - skill_reduction;
 
 		// Live AA - Technique of Master Wu
@@ -430,7 +429,7 @@ void Client::OPCombatAbility(const CombatAbility_Struct *ca_atk)
 		}
 		break;
 	}
-	case ROGUE: {
+	case RANGER: {
 		if (ca_atk->m_atk != 100 || ca_atk->m_skill != EQ::skills::SkillBackstab)
 			break;
 		ReuseTime = BackstabReuseTime-1 - skill_reduction;
@@ -541,7 +540,7 @@ void Mob::TryBackstab(Mob *other, int ReuseTime) {
 	//make sure we have a proper weapon if we are a client.
 	if(IsClient()) {
 		const EQ::ItemInstance *wpn = CastToClient()->GetInv().GetItem(EQ::invslot::slotPrimary);
-		if (!wpn || (wpn->GetItem()->ItemType != EQ::item::ItemType1HPiercing)){
+		if (!wpn){
 			MessageString(Chat::Red, BACKSTAB_WEAPON);
 			return;
 		}
@@ -1848,11 +1847,7 @@ void Client::DoClassAttacks(Mob *ca_target, uint16 skill, bool IsRiposte)
 
 	if (skill == -1){
 		switch(GetClass()){
-		case WARRIOR:
-		case RANGER:
-		case BEASTLORD:
-			skill_to_use = EQ::skills::SkillKick;
-			break;
+		case WARRIOR:	
 		case BERSERKER:
 			skill_to_use = EQ::skills::SkillFrenzy;
 			break;
@@ -1860,7 +1855,7 @@ void Client::DoClassAttacks(Mob *ca_target, uint16 skill, bool IsRiposte)
 		case PALADIN:
 			skill_to_use = EQ::skills::SkillBash;
 			break;
-		case MONK:
+		case BEASTLORD:
 			if(GetLevel() >= 30)
 			{
 				skill_to_use = EQ::skills::SkillFlyingKick;
@@ -1886,7 +1881,7 @@ void Client::DoClassAttacks(Mob *ca_target, uint16 skill, bool IsRiposte)
 				skill_to_use = EQ::skills::SkillKick;
 			}
 			break;
-		case ROGUE:
+		case RANGER:
 			skill_to_use = EQ::skills::SkillBackstab;
 			break;
 		}
@@ -1926,7 +1921,7 @@ void Client::DoClassAttacks(Mob *ca_target, uint16 skill, bool IsRiposte)
 		ReuseTime = (FrenzyReuseTime - 1) / HasteMod;
 
 		// bards can do riposte frenzy for some reason
-		if (!IsRiposte && GetClass() == BERSERKER) {
+		if (!IsRiposte && (GetClass() == BERSERKER || GetClass() == SHADOWKNIGHT)) {
 			int chance = GetLevel() * 2 + GetSkill(EQ::skills::SkillFrenzy);
 			if (zone->random.Roll0(450) < chance)
 				AtkRounds++;
