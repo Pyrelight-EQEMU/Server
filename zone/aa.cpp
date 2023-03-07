@@ -1358,11 +1358,7 @@ void Client::ActivateAlternateAdvancementAbility(int rank_id, int target_id) {
 			MessageString(Chat::SpellFailure, STAND_TO_CAST);
 			return;
 		}
-	}
-
-	// Pyrelight Custom Code
-	// if this is an Off-Class ability, double our cast time and mana cost
-	int mana_cost = spells[rank->spell].mana;
+	}	
 
 	if (!CanUseSpell(rank->spell, GetClass(), GetLevel())) {
 		mana_cost = std::ceil(mana_cost * 2);
@@ -1384,7 +1380,7 @@ void Client::ActivateAlternateAdvancementAbility(int rank_id, int target_id) {
 			}
 		}
 		else {
-			if (!CastSpell(rank->spell, target_id, EQ::spells::CastingSlot::AltAbility, -1, mana_cost, 0, -1, rank->spell_type + pTimerAAStart, timer_duration, nullptr, rank->id)) {				
+			if (!CastSpell(rank->spell, target_id, EQ::spells::CastingSlot::AltAbility, -1, -1, 0, -1, rank->spell_type + pTimerAAStart, timer_duration, nullptr, rank->id)) {
 				return;
 			}
 		}

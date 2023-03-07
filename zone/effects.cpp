@@ -82,7 +82,7 @@ int64 Mob::GetActSpellDamage(uint16 spell_id, int64 value, Mob* target) {
 			ratio += itembonuses.SpellCritDmgIncNoStack + spellbonuses.SpellCritDmgIncNoStack + aabonuses.SpellCritDmgIncNoStack;
 
 			//Pyrelight Custom Code
-			// Heroic INT gives +1% critical damage
+			// Heroic INT gives +0.01% critical damage
 			if (IsClient() && GetHeroicINT() > 0) {
 				ratio += (GetHeroicINT()/10);	
 			}
@@ -235,9 +235,9 @@ int64 Mob::GetActDoTDamage(uint16 spell_id, int64 value, Mob* target, bool from_
 		ratio += itembonuses.DotCritDmgIncrease + spellbonuses.DotCritDmgIncrease + aabonuses.DotCritDmgIncrease;
 
 		//Pyrelight Custom Code
-		// Heroic INT gives +1% critical damage
+		// Heroic INT gives +0.01% critical damage
 		if (IsClient() && GetHeroicINT() > 0) {
-			ratio += GetHeroicINT();	
+			ratio += (GetHeroicINT()/10);	
 		}
 
 		value = base_value*ratio/100;
@@ -863,15 +863,7 @@ bool Client::UseDiscipline(uint32 spell_id, uint32 target) {
 					return false;
 				}
 			}
-			SendDisciplineTimer(spells[spell_id].timer_id, reduced_recast);
-			//Pyrelight Custom Code
-			// Tie reuse timers together
-			LogDebug("We are setting a disc reuse timer. Check to see if there's also an AA for it...");
-			AA::Rank *rank = zone->GetAlternateAdvancementRankBySpell(spell_id);
-			if (rank) {
-				LogDebug("We found an AA with this ability... [{}]", rank->id);
-				CastToClient()->SendAlternateAdvancementTimer(rank->spell_type, 0, 0);
-			}
+			SendDisciplineTimer(spells[spell_id].timer_id, reduced_recast);			
 		}
 	}
 

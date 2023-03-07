@@ -249,15 +249,6 @@ bool Mob::CastSpell(uint16 spell_id, uint16 target_id, CastingSlot slot,
 			if (parse->EventPlayer(EVENT_CAST_BEGIN, CastToClient(), export_string, 0) != 0) {
 				if (IsDiscipline(spell_id)) {
 					CastToClient()->SendDisciplineTimer(spells[spell_id].timer_id, 0);
-
-					//Pyrelight Custom Code
-					// Tie reuse timers together
-					LogDebug("We are setting a disc reuse timer. Check to see if there's also an AA for it...");
-					AA::Rank *rank = zone->GetAlternateAdvancementRankBySpell(spell_id);
-					if (rank) {
-						LogDebug("We found an AA with this ability... [{}]", rank->id);
-						CastToClient()->SendAlternateAdvancementTimer(rank->spell_type, 0, 0);
-					}
 				}
 				else {
 					CastToClient()->SendSpellBarEnable(spell_id);
@@ -441,15 +432,7 @@ bool Mob::DoCastSpell(uint16 spell_id, uint16 target_id, CastingSlot slot,
 	// we calculated this above, now enforce it
 	if (mana_cost > 0 && slot != CastingSlot::Item) {
 		int my_curmana = GetMana();
-		int my_maxmana = GetMaxMana();
-
-		//Pyrelight Custom Code
-		// Use endurance instead of mana if we somehow cast a spell
-
-		if (GetMaxMana() == 0 && GetMana() == 0) {
-			my_curmana = GetEndurance();
-			my_maxmana = GetMaxMana();
-		}
+		int my_maxmana = GetMaxMana();		
 
 		if (my_curmana < mana_cost) {// not enough mana
 			//this is a special case for NPCs with no mana...
@@ -2632,14 +2615,6 @@ bool Mob::SpellFinished(uint16 spell_id, Mob *spell_target, CastingSlot slot, in
 		// clamp if we some how got focused above our current mana
 		if (GetMana() < mana_used && GetMaxMana() != 0)
 			mana_used = GetMana();
-		
-		//Pyrelight Custom Code
-		// Substitute endurance for mana if we have 0 mana
-		if (GetMaxMana() == 0) {
-			LogSpells("Spell [{}]: consuming [{}] endurance instead of mana", spell_id, mana_used);
-			SetEndurance(GetEndurance() - mana_used);
-			TryTriggerOnCastRequirement();
-		}
 
 		LogSpells("Spell [{}]: consuming [{}] mana", spell_id, mana_used);
 		if (!DoHPToManaCovert(mana_used)) {
@@ -2679,16 +2654,6 @@ bool Mob::SpellFinished(uint16 spell_id, Mob *spell_target, CastingSlot slot, in
 				}
 				//set AA recast timer
 				CastToClient()->SendAlternateAdvancementTimer(rank->spell_type, 0, 0);
-
-				//Pyrelight Custom Code
-				// If this is a spell that we can cast, we also send the timers for that, too.
-				if (GetMinLevel(rank->spell)) { 
-					if (spells[rank->spell].is_discipline) {
-						CastToClient()->SendDisciplineTimer(spells[rank->spell].timer_id, rank->recast_time);
-					} else {
-						CastToClient()->SetLinkedSpellReuseTimer(spells[rank->spell].timer_id, rank->recast_time);
-					}
-				}
 			}
 		}
 		//handle bard AA and Discipline recast timers when singing

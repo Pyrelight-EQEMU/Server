@@ -421,12 +421,6 @@ void Client::CalculateExp(uint64 in_add_exp, uint64 &add_exp, uint64 &add_aaxp, 
 		//figure out how much of this goes to AAs
 		add_aaxp = add_exp * m_epp.perAA / 100;
 
-		if (RuleB(Character, EnableCharacterEXPMods)) {
-			double characterModifier = GetEXPModifier(zone->GetZoneID(), zone->GetInstanceVersion());
-
-			add_aaxp = add_aaxp + add_exp * (1.0 - characterModifier);
-		}	
-
 		//take that amount away from regular exp
 		add_exp -= add_aaxp;
 
@@ -480,9 +474,13 @@ void Client::CalculateExp(uint64 in_add_exp, uint64 &add_exp, uint64 &add_aaxp, 
 			add_exp *= zone->level_exp_mod[GetLevel()].ExpMod;
 		}
 	}
-
+	
 	if (RuleR(Character, FinalExpMultiplier) >= 0) {
 		add_exp *= RuleR(Character, FinalExpMultiplier);
+	}
+
+	if (RuleB(Character, EnableCharacterEXPMods)) {
+		add_exp *= GetEXPModifier(zone->GetZoneID(), zone->GetInstanceVersion());
 	}
 
 	//Enforce Percent XP Cap per kill, if rule is enabled
@@ -563,16 +561,13 @@ void Client::AddEXP(uint64 in_add_exp, uint8 conlevel, bool resexp) {
 		}
 	}
 
-	//Pyrelight Custom Code
-	// Cut this
-	/*
+	
 	// AA Sanity Checking for players who set aa exp and deleveled below allowed aa level.
 	if (GetLevel() <= 50 && m_epp.perAA > 0) {
 		Message(Chat::Yellow, "You are below the level allowed to gain AA Experience. AA Experience set to 0%");
 		aaexp = 0;
 		m_epp.perAA = 0;
 	}
-	*/
 
 	// Now update our character's normal and AA xp
 	SetEXP(exp, aaexp, resexp);
@@ -822,18 +817,12 @@ void Client::SetEXP(uint64 set_exp, uint64 set_aaxp, bool isrezzexp) {
 	m_pp.exp = set_exp;
 	m_pp.expAA = set_aaxp;
 
-	//Pyrelight Custom Code
-	// Remove Sanity Check for 1-50 AAXP
-	SendAlternateAdvancementStats();
-	SendAlternateAdvancementTable();
-	/*
+	
 	if (GetLevel() < 51) {	
 		m_epp.perAA = 0;	// turn off aa exp if they drop below 51
 	} else {
 		SendAlternateAdvancementStats();    //otherwise, send them an AA update
 	}
-	*/
-
 
 	//send the expdata in any case so the xp bar isnt stuck after leveling
 	uint32 tmpxp1 = GetEXPForLevel(GetLevel()+1);

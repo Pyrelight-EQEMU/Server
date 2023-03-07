@@ -1050,7 +1050,7 @@ void Mob::MeleeMitigation(Mob *attacker, DamageHitInfo &hit, ExtraAttackOptions 
 	hit.damage_done = std::max(static_cast<int>(roll * static_cast<double>(hit.base_damage) + 0.5), 1);
 
 	//Pyrelight Custom Code
-	// Heroic STR increases damage by 1%
+	// Heroic STR increases damage by 0.1%
 	if (attacker->IsClient() && attacker->GetHeroicSTR() > 0) {
 		hit.damage_done *= ((attacker->GetHeroicSTR() / 1000) + 1);
 	}
@@ -1645,13 +1645,6 @@ bool Mob::Attack(Mob* other, int Hand, bool bRiposte, bool IsStrikethrough, bool
 	// If we are this far, this means we are atleast making a swing.
 
 	other->AddToHateList(this, hate);
-
-	//Pyrelight Custom Code
-	// We need to always make sure that owners are on the hate list
-	// Because our pets can become ignored by mobs as a feature.
-	if (IsPet() && IsPetOwnerClient()) {
-		other->AddToHateList(GetOwner(), std::floor(hate/100));
-	}
 
 	//Guard Assist Code
 	if (RuleB(Character, PVPEnableGuardFactionAssist) &&
