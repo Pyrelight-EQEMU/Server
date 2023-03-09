@@ -1358,10 +1358,6 @@ void Client::ActivateAlternateAdvancementAbility(int rank_id, int target_id) {
 			MessageString(Chat::SpellFailure, STAND_TO_CAST);
 			return;
 		}
-	}	
-
-	if (!CanUseSpell(rank->spell, GetClass(), GetLevel())) {
-		mana_cost = std::ceil(mana_cost * 2);
 	}
 
 	if (use_toggle_passive_hotkey) {
