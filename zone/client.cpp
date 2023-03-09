@@ -3001,7 +3001,7 @@ bool Client::BindWound(Mob *bindmob, bool start, bool fail)
 						if (GetRawSkill(EQ::skills::SkillBindWound) > 200) {
 							if ((GetClass() == MONK) || (GetClass() == BEASTLORD))
 								percent_base = 70;
-							else if ((GetLevel() > 50) && ((GetClass() == WARRIOR) || (GetClass() == ROGUE) || (GetClass() == CLERIC)))
+							else if ((GetLevel() > 50) && ((GetClass() == WARRIOR || GetClass() == PALADIN) || (GetClass() == ROGUE) || (GetClass() == CLERIC)))
 								percent_base = 70;
 						}
 

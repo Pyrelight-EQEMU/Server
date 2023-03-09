@@ -4067,7 +4067,7 @@ void Mob::CommonDamage(Mob* attacker, int64 &damage, const uint16 spell_id, cons
 				}
 			}
 			else if (skill_used == EQ::skills::SkillKick &&
-				(attacker->GetLevel() > 55 || attacker->IsNPC()) && GetClass() == WARRIOR) {
+				(attacker->GetLevel() > 55 || attacker->IsNPC()) && (GetClass() == WARRIOR || GetClass() == PALADIN)) {
 				can_stun = true;
 			}
 
@@ -5269,7 +5269,7 @@ void Mob::ApplyMeleeDamageMods(uint16 skill, int64 &damage, Mob *defender, Extra
 		dmgbonusmod += opts->melee_damage_bonus_flat;
 
 	if (defender) {
-		if (defender->IsOfClientBotMerc() && defender->GetClass() == WARRIOR) {
+		if (defender->IsOfClientBotMerc() && (defender->GetClass() == WARRIOR || defender->GetClass() == PALADIN)) {
 			dmgbonusmod -= 5;
 		}
 		// 168 defensive

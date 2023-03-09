@@ -1132,7 +1132,7 @@ int32	Client::CalcMR()
 			MR = 20;
 	}
 	MR += itembonuses.MR + spellbonuses.MR + aabonuses.MR;
-	if (GetClass() == WARRIOR || (GetClass() == BERSERKER || GetClass() == SHADOWKNIGHT)) {
+	if ((GetClass() == WARRIOR || GetClass() == PALADIN) || (GetClass() == BERSERKER || GetClass() == SHADOWKNIGHT)) {
 		MR += GetLevel() / 2;
 	}
 	if (MR < 1) {
