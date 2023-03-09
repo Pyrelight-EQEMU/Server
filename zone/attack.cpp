@@ -5024,7 +5024,7 @@ void Mob::TryCriticalHit(Mob *defender, DamageHitInfo &hit, ExtraAttackOptions *
 	// We either require an innate crit chance or some SPA 169 to crit
 	bool innate_crit = false;
 	int crit_chance = GetCriticalChanceBonus(hit.skill);
-	if ((GetClass() == WARRIOR || GetClass() == BERSERKER) && GetLevel() >= 12)
+	if (((GetClass() == WARRIOR || GetClass() == PALADIN) || (GetClass() == BERSERKER || GetClass() == SHADOWKNIGHT)) && GetLevel() >= 12)
 		innate_crit = true;
 	else if (GetClass() == RANGER && GetLevel() >= 12 && hit.skill == EQ::skills::SkillArchery)
 		innate_crit = true;
@@ -5047,8 +5047,8 @@ void Mob::TryCriticalHit(Mob *defender, DamageHitInfo &hit, ExtraAttackOptions *
 			dex_bonus = 255 + ((dex_bonus - 255) / 5);
 		dex_bonus += 45; // chances did not match live without a small boost
 
-						 // so if we have an innate crit we have a better chance, except for ber throwing
-		if (!innate_crit || (GetClass() == BERSERKER && hit.skill == EQ::skills::SkillThrowing))
+		// so if we have an innate crit we have a better chance, except for ber throwing
+		if (!innate_crit || ((GetClass() == BERSERKER || GetClass() == SHADOWKNIGHT) && hit.skill == EQ::skills::SkillThrowing))
 			dex_bonus = dex_bonus * 3 / 5;
 
 		if (crit_chance)
@@ -5845,7 +5845,7 @@ void Mob::CommonOutgoingHitSuccess(Mob* defender, DamageHitInfo &hit, ExtraAttac
 
 	// BER weren't parsing the halving
 	if (hit.skill == EQ::skills::SkillArchery ||
-		(hit.skill == EQ::skills::SkillThrowing && GetClass() != BERSERKER))
+		(hit.skill == EQ::skills::SkillThrowing && (GetClass() != BERSERKER && GetClass() != SHADOWKNIGHT)))
 		hit.damage_done /= 2;
 
 	if (hit.damage_done < 1)
@@ -5883,7 +5883,7 @@ void Mob::CommonOutgoingHitSuccess(Mob* defender, DamageHitInfo &hit, ExtraAttac
 				hit.damage_done = ass;
 		}
 	}
-	else if (hit.skill == EQ::skills::SkillFrenzy && GetClass() == BERSERKER && GetLevel() > 50) {
+	else if (hit.skill == EQ::skills::SkillFrenzy && (GetClass() == BERSERKER || GetClass() == SHADOWKNIGHT) && GetLevel() > 50) {
 		extra_mincap = 4 * GetLevel() / 5;
 	}
 
