@@ -186,29 +186,27 @@ std::string SharedDatabase::GetMailKey(int CharID, bool key_only)
 
 bool SharedDatabase::SaveCursor(uint32 char_id, std::list<EQ::ItemInstance*>::const_iterator &start, std::list<EQ::ItemInstance*>::const_iterator &end)
 {
-	// Delete cursor items
-	const std::string query = StringFormat("DELETE FROM inventory WHERE charid = %i "
-	                                       "AND ((slotid >= 8000 AND slotid <= 8999) "
-	                                       "OR slotid = %i OR (slotid >= %i AND slotid <= %i) )",
-	                                       char_id, EQ::invslot::slotCursor,
-	                                       EQ::invbag::CURSOR_BAG_BEGIN, EQ::invbag::CURSOR_BAG_END);
-	const auto results = QueryDatabase(query);
+    // Delete cursor items
+    std::string query = StringFormat("DELETE FROM inventory WHERE slotid = %i OR (slotid >= %i AND slotid <= %i)",
+                                    EQ::invslot::slotCursor,
+                                    EQ::invbag::CURSOR_BAG_BEGIN, EQ::invbag::CURSOR_BAG_END);
+    auto results = QueryDatabase(query);
     if (!results.Success()) {
         std::cout << "Clearing cursor failed: " << results.ErrorMessage() << std::endl;
         return false;
     }
 
-    int i = 8000;
-    for(auto& it = start; it != end; ++it, i++) {
-		if (i > 8999) { break; } // shouldn't be anything in the queue that indexes this high
-		const EQ::ItemInstance *inst = *it;
-		const int16 use_slot = (i == 8000) ? EQ::invslot::slotCursor : i;
-		if (!SaveInventory(char_id, inst, use_slot)) {
-			return false;
-		}
+    int i = EQ::invslot::slotCursor;
+    for(auto it = start; it != end; ++it, i++) {
+        if (i > EQ::invbag::CURSOR_BAG_END) { break; } // shouldn't be anything in the queue that indexes this high
+        EQ::ItemInstance *inst = *it;
+        int16 use_slot = (i == EQ::invslot::slotCursor) ? EQ::invslot::slotCursor : i;
+        if (!SaveInventory(char_id, inst, use_slot)) {
+            return false;
+        }
     }
 
-	return true;
+    return true;
 }
 
 bool SharedDatabase::VerifyInventory(uint32 account_id, int16 slot_id, const EQ::ItemInstance* inst)
@@ -778,9 +776,10 @@ bool SharedDatabase::GetInventory(uint32 char_id, EQ::InventoryProfile *inv)
 					inst->PutAugment(this, i, aug[i]);
 			}
 		}
-
+		
+	
 		int16 put_slot_id;
-		if (slot_id >= 8000 && slot_id <= 8999) {
+		if (slot_id >= EQ::invbag::CURSOR_BAG_BEGIN && slot_id <= EQ::invbag::CURSOR_BAG_END) {
 			put_slot_id = inv->PushCursor(*inst);
 		}
 		/* COMMENTING THIS OUT FOR NOW.. THIS IS CAUSING ISSUES

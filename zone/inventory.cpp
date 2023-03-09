@@ -3798,7 +3798,7 @@ bool Client::InterrogateInventory(Client* requester, bool log, bool silent, bool
 		if (cursor_itr == m_inv.cursor_cbegin())
 			continue;
 
-		instmap[8000 + limbo] = *cursor_itr;
+		instmap[EQ::invbag::CURSOR_BAG_BEGIN + limbo] = *cursor_itr;
 	}
 
 	// call InterrogateInventory_ for error check
@@ -3904,7 +3904,7 @@ bool Client::InterrogateInventory_error(int16 head, int16 index, const EQ::ItemI
 		(head >= EQ::invslot::EQUIPMENT_BEGIN && head <= EQ::invslot::EQUIPMENT_END) ||
 		(head >= EQ::invslot::TRIBUTE_BEGIN && head <= EQ::invslot::TRIBUTE_END) ||
 		(head >= EQ::invslot::WORLD_BEGIN && head <= EQ::invslot::WORLD_END) ||
-		(head >= 8000 && head <= 8101)) {
+		(head >= EQ::invbag::CURSOR_BAG_BEGIN && head <= EQ::invbag::CURSOR_BAG_END)) {
 		switch (depth)
 		{
 		case 0: // requirement: inst is extant
