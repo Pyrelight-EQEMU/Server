@@ -128,7 +128,7 @@ uint64 Client::CalcEXP(uint8 consider_level, bool ignore_modifiers) {
 
 		if (RuleB(Character, UseRaceClassExpBonuses)) {
 			if (
-				GetClass() == WARRIOR ||
+				(GetClass() == WARRIOR || GetClass() == PALADIN) ||
 				GetClass() == ROGUE ||
 				GetBaseRace() == HALFLING
 			) {
@@ -295,7 +295,7 @@ void Client::CalculateStandardAAExp(uint64 &add_aaxp, uint8 conlevel, bool resex
 			aatotalmod *= 1.05;
 		}
 
-		if (GetClass() == ROGUE || GetClass() == WARRIOR) {
+		if (GetClass() == ROGUE || (GetClass() == WARRIOR || GetClass() == PALADIN)) {
 			aatotalmod *= 1.05;
 		}
 	}
@@ -443,7 +443,7 @@ void Client::CalculateExp(uint64 in_add_exp, uint64 &add_exp, uint64 &add_aaxp, 
 				totalmod *= 1.05;
 			}
 
-			if (GetClass() == ROGUE || GetClass() == WARRIOR) {
+			if (GetClass() == ROGUE || (GetClass() == WARRIOR || GetClass() == PALADIN)) {
 				totalmod *= 1.05;
 			}
 		}
@@ -1061,7 +1061,7 @@ uint32 Client::GetEXPForLevel(uint16 check_level)
 			classmod = 1.1;
 		} else if(GetClass() == ROGUE) {
 			classmod = 0.91;
-		} else if(GetClass() == WARRIOR) {
+		} else if((GetClass() == WARRIOR || GetClass() == PALADIN)) {
 			classmod = 0.9;
 		}
 

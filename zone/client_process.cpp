@@ -434,7 +434,7 @@ bool Client::Process() {
 			}
 		}
 
-		if (GetClass() == WARRIOR || GetClass() == BERSERKER) {
+		if ((GetClass() == WARRIOR || GetClass() == PALADIN) || (GetClass() == BERSERKER || GetClass() == SHADOWKNIGHT)) {
 			if (!dead && !IsBerserk() && GetHPRatio() < RuleI(Combat, BerserkerFrenzyStart)) {
 				entity_list.MessageCloseString(this, false, 200, 0, BERSERK_START, GetName());
 				berserk = true;
@@ -1578,7 +1578,7 @@ void Client::OPGMTraining(const EQApplicationPacket *app)
 		}
 	}
 
-	if (ClientVersion() < EQ::versions::ClientVersion::RoF2 && GetClass() == BERSERKER) {
+	if (ClientVersion() < EQ::versions::ClientVersion::RoF2 && (GetClass() == BERSERKER || GetClass() == SHADOWKNIGHT)) {
 		gmtrain->skills[EQ::skills::Skill1HPiercing] = gmtrain->skills[EQ::skills::Skill2HPiercing];
 		gmtrain->skills[EQ::skills::Skill2HPiercing] = 0;
 	}
