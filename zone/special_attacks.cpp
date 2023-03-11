@@ -362,7 +362,9 @@ void Client::OPCombatAbility(const CombatAbility_Struct *ca_atk)
 	switch (GetClass()) {
 	case BERSERKER:
 	case WARRIOR:
-	case RANGER:	
+	case RANGER:
+	case PALADIN:
+	case SHADOWKNIGHT:
 		if (ca_atk->m_atk != 100 || ca_atk->m_skill != EQ::skills::SkillKick)
 			break;
 		if (GetTarget() != this) {
