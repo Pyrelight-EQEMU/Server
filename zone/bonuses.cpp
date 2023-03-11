@@ -122,7 +122,7 @@ void Client::CalcBonuses()
 
 	// hmm maybe a better way to do this
 	int metabolism = spellbonuses.Metabolism + itembonuses.Metabolism + aabonuses.Metabolism;
-	int timer = (GetClass() == MONK || GetClass() == BEASTLORD) ? CONSUMPTION_MNK_TIMER : CONSUMPTION_TIMER;
+	int timer = GetClass() == MONK ? CONSUMPTION_MNK_TIMER : CONSUMPTION_TIMER;
 	timer = timer * (100 + metabolism) / 100;
 	if (timer != consume_food_timer.GetTimerTime())
 		consume_food_timer.SetTimer(timer);

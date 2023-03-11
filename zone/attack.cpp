@@ -565,7 +565,7 @@ bool Mob::AvoidDamage(Mob *other, DamageHitInfo &hit)
 	}
 
 	// dodge
-	if (CanThisClassDodge() && (InFront || (GetClass() == MONK || GetClass() == BEASTLORD))) {
+	if (CanThisClassDodge() && (InFront || GetClass() == MONK)) {
 		if (IsClient())
 			CastToClient()->CheckIncreaseSkill(EQ::skills::SkillDodge, other, -10);
 		// check auto discs ... I guess aa/items too :P
@@ -746,7 +746,7 @@ int Mob::GetClassRaceACBonus()
 {
 	int ac_bonus = 0;
 	auto level = GetLevel();
-	if ((GetClass() == MONK || GetClass() == BEASTLORD)) {
+	if (GetClass() == MONK) {
 		int hardcap = 30;
 		int softcap = 14;
 		if (level > 99) {
@@ -831,7 +831,7 @@ int Mob::GetClassRaceACBonus()
 		}
 	}
 
-	if (GetClass() == ROGUE || GetClass() == RANGER) {
+	if (GetClass() == ROGUE) {
 		int level_scaler = level - 26;
 		if (GetAGI() < 80)
 			ac_bonus = level_scaler / 4;
@@ -845,6 +845,22 @@ int Mob::GetClassRaceACBonus()
 			ac_bonus = (level_scaler * 5) / 4;
 		if (ac_bonus > 12)
 			ac_bonus = 12;
+	}
+
+	if (GetClass() == BEASTLORD) {
+		int level_scaler = level - 6;
+		if (GetAGI() < 80)
+			ac_bonus = level_scaler / 5;
+		else if (GetAGI() < 85)
+			ac_bonus = (level_scaler * 2) / 5;
+		else if (GetAGI() < 90)
+			ac_bonus = (level_scaler * 3) / 5;
+		else if (GetAGI() < 100)
+			ac_bonus = (level_scaler * 4) / 5;
+		else if (GetAGI() >= 100)
+			ac_bonus = (level_scaler * 5) / 5;
+		if (ac_bonus > 16)
+			ac_bonus = 16;
 	}
 
 	if (GetRace() == IKSAR)
@@ -3285,7 +3301,7 @@ int Mob::GetHandToHandDamage(void)
 		7, 7, 7, 8, 8, 8, 8, 8, 8, 9,        // 21-30
 		9, 9, 9, 9, 9, 10, 10, 10, 10, 10,   // 31-40
 		10, 11, 11, 11, 11, 11, 11, 12, 12 }; // 41-49
-	if ((GetClass() == MONK || GetClass() == BEASTLORD)) {
+	if (GetClass() == MONK) {
 		if (IsClient() && CastToClient()->GetItemIDAt(12) == 10652 && GetLevel() > 50)
 			return 9;
 		if (level > 62)
@@ -3344,7 +3360,7 @@ int Mob::GetHandToHandDelay(void)
 		28, 28, 28, 27, 27, 27, 27, 27, 26, 26, // 61-70
 		26, 26, 26 };                            // 71-73
 
-	if ((GetClass() == MONK || GetClass() == BEASTLORD)) {
+	if (GetClass() == MONK) {
 		// Have a look to see if we have epic fists on
 		if (IsClient() && CastToClient()->GetItemIDAt(12) == 10652 && GetLevel() > 50)
 			return 16;
@@ -5008,11 +5024,11 @@ void Mob::TryCriticalHit(Mob *defender, DamageHitInfo &hit, ExtraAttackOptions *
 	// We either require an innate crit chance or some SPA 169 to crit
 	bool innate_crit = false;
 	int crit_chance = GetCriticalChanceBonus(hit.skill);
-	if ((GetClass() == WARRIOR || GetClass() == BERSERKER || GetClass() == PALADIN || GetClass() == SHADOWKNIGHT) && GetLevel() >= 12)
+	if ((GetClass() == WARRIOR || GetClass() == BERSERKER) && GetLevel() >= 12)
 		innate_crit = true;
-	else if (GetClass() == RANGER && GetLevel() >= 12 && (hit.skill == EQ::skills::SkillArchery || hit.skill == EQ::skills::SkillThrowing))
+	else if (GetClass() == RANGER && GetLevel() >= 12 && hit.skill == EQ::skills::SkillArchery)
 		innate_crit = true;
-	else if ((GetClass() == ROGUE || GetClass() == SHADOWKNIGHT) && GetLevel() >= 12 && hit.skill == EQ::skills::SkillThrowing)
+	else if (GetClass() == ROGUE && GetLevel() >= 12 && hit.skill == EQ::skills::SkillThrowing)
 		innate_crit = true;
 
 	// we have a chance to crit!
@@ -5032,7 +5048,7 @@ void Mob::TryCriticalHit(Mob *defender, DamageHitInfo &hit, ExtraAttackOptions *
 		dex_bonus += 45; // chances did not match live without a small boost
 
 						 // so if we have an innate crit we have a better chance, except for ber throwing
-		if (!innate_crit || ((GetClass() == BERSERKER || GetClass() == SHADOWKNIGHT) && hit.skill == EQ::skills::SkillThrowing))
+		if (!innate_crit || (GetClass() == BERSERKER && hit.skill == EQ::skills::SkillThrowing))
 			dex_bonus = dex_bonus * 3 / 5;
 
 		if (crit_chance)
@@ -5056,7 +5072,7 @@ void Mob::TryCriticalHit(Mob *defender, DamageHitInfo &hit, ExtraAttackOptions *
 			LogCombat("Crit success roll [{}] dex chance [{}] og dmg [{}] crit_mod [{}] new dmg [{}]", roll, dex_bonus, og_damage, crit_mod, hit.damage_done);
 
 			// step 3: check deadly strike
-			if ((GetClass() == ROGUE || GetClass() == RANGER) && (hit.skill == EQ::skills::SkillThrowing || hit.skill == EQ::skills::SkillArchery)) {
+			if (GetClass() == ROGUE && hit.skill == EQ::skills::SkillThrowing) {
 				if (BehindMob(defender, GetX(), GetY())) {
 					int chance = GetLevel() * 12;
 					if (zone->random.Int(1, 1000) < chance) {
@@ -5236,7 +5252,7 @@ void Mob::DoRiposte(Mob *defender)
 	if (DoubleRipChance && zone->random.Roll(DoubleRipChance)) {
 		LogCombat("Preforming a return SPECIAL ATTACK ([{}] percent chance)", DoubleRipChance);
 
-		if (defender->GetClass() == MONK || defender->GetClass() == BEASTLORD)
+		if (defender->GetClass() == MONK)
 			defender->MonkSpecialAttack(this, defender->aabonuses.GiveDoubleRiposte[SBIndex::DOUBLE_RIPOSTE_SKILL]);
 		else if (defender->IsClient()) // so yeah, even if you don't have the skill you can still do the attack :P (and we don't crash anymore)
 			defender->CastToClient()->DoClassAttacks(this, defender->aabonuses.GiveDoubleRiposte[SBIndex::DOUBLE_RIPOSTE_SKILL], true);
@@ -5397,7 +5413,7 @@ const DamageTable &Mob::GetDamageTable() const
 		{ 415, 15,  40 }, // 105
 	};
 
-	bool monk = (GetClass() == MONK || GetClass() == BEASTLORD);
+	bool monk = GetClass() == MONK;
 	bool melee = IsWarriorClass();
 	// tables caped at 105 for now -- future proofed for a while at least :P
 	int level = std::min(static_cast<int>(GetLevel()), 105);
@@ -5867,7 +5883,7 @@ void Mob::CommonOutgoingHitSuccess(Mob* defender, DamageHitInfo &hit, ExtraAttac
 				hit.damage_done = ass;
 		}
 	}
-	else if (hit.skill == EQ::skills::SkillFrenzy && (GetClass() == BERSERKER || GetClass() == SHADOWKNIGHT) && GetLevel() > 50) {
+	else if (hit.skill == EQ::skills::SkillFrenzy && GetClass() == BERSERKER && GetLevel() > 50) {
 		extra_mincap = 4 * GetLevel() / 5;
 	}
 
