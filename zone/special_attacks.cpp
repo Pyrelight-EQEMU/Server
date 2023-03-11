@@ -362,8 +362,7 @@ void Client::OPCombatAbility(const CombatAbility_Struct *ca_atk)
 	switch (GetClass()) {
 	case BERSERKER:
 	case WARRIOR:
-	case RANGER:
-	case BEASTLORD:
+	case RANGER:	
 		if (ca_atk->m_atk != 100 || ca_atk->m_skill != EQ::skills::SkillKick)
 			break;
 		if (GetTarget() != this) {
@@ -380,6 +379,7 @@ void Client::OPCombatAbility(const CombatAbility_Struct *ca_atk)
 			DoSpecialAttackDamage(GetTarget(), EQ::skills::SkillKick, dmg, 0, ht, ReuseTime);
 		}
 		break;
+	case BEASTLORD:
 	case MONK: {
 		ReuseTime = MonkSpecialAttack(GetTarget(), ca_atk->m_skill) - 1 - skill_reduction;
 

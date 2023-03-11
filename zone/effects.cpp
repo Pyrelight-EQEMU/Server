@@ -1267,7 +1267,7 @@ void EntityList::AEAttack(
 			) {
 
 			for (int i = 0; i < attack_rounds; i++) {
-				if (!attacker->IsClient() || attacker->GetClass() == MONK || attacker->GetClass() == RANGER) {
+				if (!attacker->IsClient() || attacker->GetClass() == MONK || attacker->GetClass() == RANGER || attacker->GetClass() == BEASTLORD) {
 					attacker->Attack(current_mob, Hand, false, false, is_from_spell);
 				} else {
 					attacker->CastToClient()->DoAttackRounds(current_mob, Hand, is_from_spell);

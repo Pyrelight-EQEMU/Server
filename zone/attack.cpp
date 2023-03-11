@@ -565,7 +565,7 @@ bool Mob::AvoidDamage(Mob *other, DamageHitInfo &hit)
 	}
 
 	// dodge
-	if (CanThisClassDodge() && (InFront || GetClass() == MONK)) {
+	if (CanThisClassDodge() && (InFront || GetClass() == MONK || GetClass() == BEASTLORD)) {
 		if (IsClient())
 			CastToClient()->CheckIncreaseSkill(EQ::skills::SkillDodge, other, -10);
 		// check auto discs ... I guess aa/items too :P
@@ -746,7 +746,7 @@ int Mob::GetClassRaceACBonus()
 {
 	int ac_bonus = 0;
 	auto level = GetLevel();
-	if (GetClass() == MONK) {
+	if (GetClass() == MONK || GetClass() == BEASTLORD) {
 		int hardcap = 30;
 		int softcap = 14;
 		if (level > 99) {
@@ -847,6 +847,7 @@ int Mob::GetClassRaceACBonus()
 			ac_bonus = 12;
 	}
 
+	/*
 	if (GetClass() == BEASTLORD) {
 		int level_scaler = level - 6;
 		if (GetAGI() < 80)
@@ -862,6 +863,7 @@ int Mob::GetClassRaceACBonus()
 		if (ac_bonus > 16)
 			ac_bonus = 16;
 	}
+	*/
 
 	if (GetRace() == IKSAR)
 		ac_bonus += EQ::Clamp(static_cast<int>(level), 10, 35);
@@ -3301,18 +3303,18 @@ int Mob::GetHandToHandDamage(void)
 		7, 7, 7, 8, 8, 8, 8, 8, 8, 9,        // 21-30
 		9, 9, 9, 9, 9, 10, 10, 10, 10, 10,   // 31-40
 		10, 11, 11, 11, 11, 11, 11, 12, 12 }; // 41-49
-	if (GetClass() == MONK) {
+	if (GetClass() == MONK || GetClass() == BEASTLORD) {
 		if (IsClient() && CastToClient()->GetItemIDAt(12) == 10652 && GetLevel() > 50)
 			return 9;
 		if (level > 62)
 			return 15;
 		return mnk_dmg[level];
-	}
+	}/*
 	else if (GetClass() == BEASTLORD) {
 		if (level > 49)
 			return 13;
 		return bst_dmg[level];
-	}
+	}*/
 	return 2;
 }
 
@@ -3360,7 +3362,7 @@ int Mob::GetHandToHandDelay(void)
 		28, 28, 28, 27, 27, 27, 27, 27, 26, 26, // 61-70
 		26, 26, 26 };                            // 71-73
 
-	if (GetClass() == MONK) {
+	if (GetClass() == MONK || GetClass() == BEASTLORD) {
 		// Have a look to see if we have epic fists on
 		if (IsClient() && CastToClient()->GetItemIDAt(12) == 10652 && GetLevel() > 50)
 			return 16;
@@ -3368,13 +3370,13 @@ int Mob::GetHandToHandDelay(void)
 		if (level > 62)
 			return GetRace() == IKSAR ? 21 : 20;
 		return GetRace() == IKSAR ? mnk_iks_delay[level] : mnk_hum_delay[level];
-	}
+	}/*
 	else if (GetClass() == BEASTLORD) {
 		int level = GetLevel();
 		if (level > 73)
 			return 25;
 		return bst_delay[level];
-	}
+	}*/
 	return 35;
 }
 
@@ -5252,7 +5254,7 @@ void Mob::DoRiposte(Mob *defender)
 	if (DoubleRipChance && zone->random.Roll(DoubleRipChance)) {
 		LogCombat("Preforming a return SPECIAL ATTACK ([{}] percent chance)", DoubleRipChance);
 
-		if (defender->GetClass() == MONK)
+		if (defender->GetClass() == MONK || defender->GetClass() == BEASTLORD)
 			defender->MonkSpecialAttack(this, defender->aabonuses.GiveDoubleRiposte[SBIndex::DOUBLE_RIPOSTE_SKILL]);
 		else if (defender->IsClient()) // so yeah, even if you don't have the skill you can still do the attack :P (and we don't crash anymore)
 			defender->CastToClient()->DoClassAttacks(this, defender->aabonuses.GiveDoubleRiposte[SBIndex::DOUBLE_RIPOSTE_SKILL], true);
@@ -5413,7 +5415,7 @@ const DamageTable &Mob::GetDamageTable() const
 		{ 415, 15,  40 }, // 105
 	};
 
-	bool monk = GetClass() == MONK;
+	bool monk = GetClass() == MONK || GetClass() == BEASTLORD;
 	bool melee = IsWarriorClass();
 	// tables caped at 105 for now -- future proofed for a while at least :P
 	int level = std::min(static_cast<int>(GetLevel()), 105);
