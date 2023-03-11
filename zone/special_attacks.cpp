@@ -364,7 +364,6 @@ void Client::OPCombatAbility(const CombatAbility_Struct *ca_atk)
 	case WARRIOR:
 	case RANGER:
 	case PALADIN:
-	case SHADOWKNIGHT:
 		if (ca_atk->m_atk != 100 || ca_atk->m_skill != EQ::skills::SkillKick)
 			break;
 		if (GetTarget() != this) {
@@ -432,6 +431,7 @@ void Client::OPCombatAbility(const CombatAbility_Struct *ca_atk)
 		}
 		break;
 	}
+	case ENCHANTER:
 	case ROGUE: {
 		if (ca_atk->m_atk != 100 || ca_atk->m_skill != EQ::skills::SkillBackstab)
 			break;
