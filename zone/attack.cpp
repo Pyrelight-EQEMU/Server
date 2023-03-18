@@ -3224,21 +3224,31 @@ uint8 Mob::GetWeaponDamageBonus(const EQ::ItemData *weapon, bool offhand)
 		return 1 + ((level - 28) / 3); // how does weaponless scale?
 
 	auto delay = weapon->Delay;
-	if (weapon->IsType1HWeapon() || weapon->ItemType == EQ::item::ItemTypeMartial) {
+	if (weapon->IsType1HWeapon()) {
+		auto bonus = 0;
 		// we assume sinister strikes is checked before calling here
 		if (!offhand) {
 			if (delay <= 39)
-				return 1 + ((level - 28) / 3);
+				bonus = 1 + ((level - 28) / 3);
 			else if (delay < 43)
-				return 2 + ((level - 28) / 3) + ((delay - 40) / 3);
+				bonus = 2 + ((level - 28) / 3) + ((delay - 40) / 3);
 			else if (delay < 45)
-				return 3 + ((level - 28) / 3) + ((delay - 40) / 3);
+				bonus = 3 + ((level - 28) / 3) + ((delay - 40) / 3);
 			else if (delay >= 45)
-				return 4 + ((level - 28) / 3) + ((delay - 40) / 3);
+				bonus = 4 + ((level - 28) / 3) + ((delay - 40) / 3);
 		}
 		else {
-			return 1 + ((level - 40) / 3) * (delay / 30); // YOOO shit's useless waste of AAs
+			bonus = 1 + ((level - 40) / 3) * (delay / 30); // YOOO shit's useless waste of AAs
 		}
+
+		//Pyrelight Custom Code
+		// This adds a special effect for the Monk epic which doubles the damage bonus
+		// for martial (h2h) weapons.
+		if (weapon->ItemType == EQ::item::ItemTypeMartial && IsClient() && CastToClient()->GetItemIDAt(12) == 10652 && GetLevel() > 46) {
+			bonus = bonus * 2;
+		}
+
+		return bonus;
 	}
 	else {
 		// 2h damage bonus
