@@ -746,6 +746,10 @@ int Mob::GetClassRaceACBonus()
 {
 	int ac_bonus = 0;
 	auto level = GetLevel();
+	//Pyrelight Custom Code
+	// This is the code for the overweight AC penalty which we don't want to apply
+	// for Beastlords.
+	/*
 	if (GetClass() == MONK || GetClass() == BEASTLORD) {
 		int hardcap = 30;
 		int softcap = 14;
@@ -830,6 +834,7 @@ int Mob::GetClassRaceACBonus()
 			ac_bonus -= static_cast<int>(temp * multiplier);
 		}
 	}
+	*/
 
 	if (GetClass() == ROGUE) {
 		int level_scaler = level - 26;
@@ -847,7 +852,6 @@ int Mob::GetClassRaceACBonus()
 			ac_bonus = 12;
 	}
 
-	/*
 	if (GetClass() == BEASTLORD) {
 		int level_scaler = level - 6;
 		if (GetAGI() < 80)
@@ -863,7 +867,6 @@ int Mob::GetClassRaceACBonus()
 		if (ac_bonus > 16)
 			ac_bonus = 16;
 	}
-	*/
 
 	if (GetRace() == IKSAR)
 		ac_bonus += EQ::Clamp(static_cast<int>(level), 10, 35);
