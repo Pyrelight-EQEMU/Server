@@ -746,6 +746,10 @@ int Mob::GetClassRaceACBonus()
 {
 	int ac_bonus = 0;
 	auto level = GetLevel();
+	//Pyrelight Custom Code
+	// This is the code for the overweight AC penalty which we don't want to apply
+	// for Beastlords.
+	/*
 	if (GetClass() == MONK || GetClass() == BEASTLORD) {
 		int hardcap = 30;
 		int softcap = 14;
@@ -830,6 +834,7 @@ int Mob::GetClassRaceACBonus()
 			ac_bonus -= static_cast<int>(temp * multiplier);
 		}
 	}
+	*/
 
 	if (GetClass() == ROGUE) {
 		int level_scaler = level - 26;
@@ -847,7 +852,6 @@ int Mob::GetClassRaceACBonus()
 			ac_bonus = 12;
 	}
 
-	/*
 	if (GetClass() == BEASTLORD) {
 		int level_scaler = level - 6;
 		if (GetAGI() < 80)
@@ -863,7 +867,6 @@ int Mob::GetClassRaceACBonus()
 		if (ac_bonus > 16)
 			ac_bonus = 16;
 	}
-	*/
 
 	if (GetRace() == IKSAR)
 		ac_bonus += EQ::Clamp(static_cast<int>(level), 10, 35);
@@ -3221,21 +3224,31 @@ uint8 Mob::GetWeaponDamageBonus(const EQ::ItemData *weapon, bool offhand)
 		return 1 + ((level - 28) / 3); // how does weaponless scale?
 
 	auto delay = weapon->Delay;
-	if (weapon->IsType1HWeapon() || weapon->ItemType == EQ::item::ItemTypeMartial) {
+	if (weapon->IsType1HWeapon()) {
+		auto bonus = 0;
 		// we assume sinister strikes is checked before calling here
 		if (!offhand) {
 			if (delay <= 39)
-				return 1 + ((level - 28) / 3);
+				bonus = 1 + ((level - 28) / 3);
 			else if (delay < 43)
-				return 2 + ((level - 28) / 3) + ((delay - 40) / 3);
+				bonus = 2 + ((level - 28) / 3) + ((delay - 40) / 3);
 			else if (delay < 45)
-				return 3 + ((level - 28) / 3) + ((delay - 40) / 3);
+				bonus = 3 + ((level - 28) / 3) + ((delay - 40) / 3);
 			else if (delay >= 45)
-				return 4 + ((level - 28) / 3) + ((delay - 40) / 3);
+				bonus = 4 + ((level - 28) / 3) + ((delay - 40) / 3);
 		}
 		else {
-			return 1 + ((level - 40) / 3) * (delay / 30); // YOOO shit's useless waste of AAs
+			bonus = 1 + ((level - 40) / 3) * (delay / 30); // YOOO shit's useless waste of AAs
 		}
+
+		//Pyrelight Custom Code
+		// This adds a special effect for the Monk epic which doubles the damage bonus
+		// for martial (h2h) weapons.
+		if (weapon->ItemType == EQ::item::ItemTypeMartial && IsClient() && CastToClient()->GetItemIDAt(12) == 10652 && GetLevel() > 46) {
+			bonus = bonus * 2;
+		}
+
+		return bonus;
 	}
 	else {
 		// 2h damage bonus
@@ -3297,24 +3310,10 @@ int Mob::GetHandToHandDamage(void)
 		12, 12, 12, 12, 13, 13, 13, 13, 13, 14, // 41-50
 		14, 14, 14, 14, 14, 14, 14, 14, 14, 14, // 51-60
 		14, 14 };                                // 61-62
-	static uint8 bst_dmg[] = { 99,
-		4, 4, 4, 4, 4, 5, 5, 5, 5, 5,        // 1-10
-		5, 6, 6, 6, 6, 6, 6, 7, 7, 7,        // 11-20
-		7, 7, 7, 8, 8, 8, 8, 8, 8, 9,        // 21-30
-		9, 9, 9, 9, 9, 10, 10, 10, 10, 10,   // 31-40
-		10, 11, 11, 11, 11, 11, 11, 12, 12 }; // 41-49
+
 	if (GetClass() == MONK || GetClass() == BEASTLORD) {
-		if (IsClient() && CastToClient()->GetItemIDAt(12) == 10652 && GetLevel() > 50)
-			return 9;
-		if (level > 62)
-			return 15;
 		return mnk_dmg[level];
-	}/*
-	else if (GetClass() == BEASTLORD) {
-		if (level > 49)
-			return 13;
-		return bst_dmg[level];
-	}*/
+	}
 	return 2;
 }
 
@@ -3335,48 +3334,19 @@ int Mob::GetHandToHandDelay(void)
 		return iksar - epic / 21 + 38;
 	}
 
-	int delay = 35;
-	static uint8 mnk_hum_delay[] = { 99,
+	static uint8 mnk_delay[] = { 99,
 		35, 35, 35, 35, 35, 35, 35, 35, 35, 35, // 1-10
 		35, 35, 35, 35, 35, 35, 35, 35, 35, 35, // 11-20
 		35, 35, 35, 35, 35, 35, 35, 34, 34, 34, // 21-30
 		34, 33, 33, 33, 33, 32, 32, 32, 32, 31, // 31-40
 		31, 31, 31, 30, 30, 30, 30, 29, 29, 29, // 41-50
 		29, 28, 28, 28, 28, 27, 27, 27, 27, 26, // 51-60
-		24, 22 };                                // 61-62
-	static uint8 mnk_iks_delay[] = { 99,
-		35, 35, 35, 35, 35, 35, 35, 35, 35, 35, // 1-10
-		35, 35, 35, 35, 35, 35, 35, 35, 35, 35, // 11-20
-		35, 35, 35, 35, 35, 35, 35, 35, 35, 34, // 21-30
-		34, 34, 34, 34, 34, 33, 33, 33, 33, 33, // 31-40
-		33, 32, 32, 32, 32, 32, 32, 31, 31, 31, // 41-50
-		31, 31, 31, 30, 30, 30, 30, 30, 30, 29, // 51-60
-		25, 23 };                                // 61-62
-	static uint8 bst_delay[] = { 99,
-		35, 35, 35, 35, 35, 35, 35, 35, 35, 35, // 1-10
-		35, 35, 35, 35, 35, 35, 35, 35, 35, 35, // 11-20
-		35, 35, 35, 35, 35, 35, 35, 35, 34, 34, // 21-30
-		34, 34, 34, 33, 33, 33, 33, 33, 32, 32, // 31-40
-		32, 32, 32, 31, 31, 31, 31, 31, 30, 30, // 41-50
-		30, 30, 30, 29, 29, 29, 29, 29, 28, 28, // 51-60
-		28, 28, 28, 27, 27, 27, 27, 27, 26, 26, // 61-70
-		26, 26, 26 };                            // 71-73
+		24, 22 };                        // 61-62
 
-	if (GetClass() == MONK || GetClass() == BEASTLORD) {
-		// Have a look to see if we have epic fists on
-		if (IsClient() && CastToClient()->GetItemIDAt(12) == 10652 && GetLevel() > 50)
-			return 16;
+	if (GetClass() == MONK || GetClass() == BEASTLORD) {\
 		int level = GetLevel();
-		if (level > 62)
-			return GetRace() == IKSAR ? 21 : 20;
-		return GetRace() == IKSAR ? mnk_iks_delay[level] : mnk_hum_delay[level];
-	}/*
-	else if (GetClass() == BEASTLORD) {
-		int level = GetLevel();
-		if (level > 73)
-			return 25;
-		return bst_delay[level];
-	}*/
+		return mnk_delay[level];
+	}
 	return 35;
 }
 
