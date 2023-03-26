@@ -1973,7 +1973,7 @@ void Client::CalcRestState()
 				} else {
 					// Pyrelight custom code
 					// We clear all rest enabled debuffs if we're otherwise eligible for rest.
-					BuffFadeBySlot(j)
+					BuffFadeBySlot(j);
 				}
 		}
 	}
