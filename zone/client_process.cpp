@@ -1968,9 +1968,9 @@ void Client::CalcRestState()
 	for (unsigned int j = 0; j < buff_count; j++) {
 		if(IsValidSpell(buffs[j].spellid)) {
 			if(IsDetrimentalSpell(buffs[j].spellid) && (buffs[j].ticsremaining > 0))
-				if(!DetrimentalSpellAllowsRest(buffs[j].spellid))
+				if(!DetrimentalSpellAllowsRest(buffs[j].spellid)) {
 					return;
-				else {
+				} else {
 					// Pyrelight custom code
 					// We clear all rest enabled debuffs if we're otherwise eligible for rest.
 					BuffFadeBySlot(j)
