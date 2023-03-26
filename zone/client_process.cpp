@@ -502,6 +502,7 @@ bool Client::Process() {
 			CalcATK();
 			CalcMaxEndurance();
 			CalcRestState();
+			ClearRestingDetrimentalEffects();
 			DoHPRegen();
 			DoManaRegen();
 			DoEnduranceRegen();
@@ -1968,17 +1969,33 @@ void Client::CalcRestState()
 	for (unsigned int j = 0; j < buff_count; j++) {
 		if(IsValidSpell(buffs[j].spellid)) {
 			if(IsDetrimentalSpell(buffs[j].spellid) && (buffs[j].ticsremaining > 0))
-				if(!DetrimentalSpellAllowsRest(buffs[j].spellid)) {
+				if(!DetrimentalSpellAllowsRest(buffs[j].spellid))
 					return;
-				} else {
-					// Pyrelight custom code
-					// We clear all rest enabled debuffs if we're otherwise eligible for rest.
-					BuffFadeBySlot(j);
-				}
 		}
 	}
 
 	ooc_regen = true;
+}
+
+// Pyrelight custom code
+// We clear all rest enabled debuffs if we're otherwise eligible for rest.
+void Client::ClearRestingDetrimentalEffects()
+{
+	// Add rule check here if you want to upstream this
+	// If (!RuleB(Character, ClearRestingDetrimentalEffectsEnabled))
+	//     return;
+
+	// This checks AggroCount and whether the 30 second rest timer has elapsed
+	if(!rest_timer.Check(false))
+		return;
+
+	uint32 buff_count = GetMaxTotalSlots();
+	for (unsigned int j = 0; j < buff_count; j++) {
+		if(IsValidSpell(buffs[j].spellid)) {
+			if(IsDetrimentalSpell(buffs[j].spellid) && (buffs[j].ticsremaining > 0))
+				BuffFadeBySlot(j);
+		}
+	}
 }
 
 void Client::DoTracking()
