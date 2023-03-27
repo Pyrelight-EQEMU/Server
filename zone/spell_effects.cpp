@@ -3838,6 +3838,12 @@ void Mob::BuffProcess()
 						CastToClient()->SendBuffNumHitPacket(buffs[buffs_i], buffs_i);
 					buffs[buffs_i].UpdateClient = false;
 				}
+			} else {
+				// Pyrelight custom code
+				// We clear all debuffs from NPCs if they are not engaged in combat
+				if (!IsEngaged() && IsDetrimentalSpell(buffs[buffs_i].spellid) && (buffs[buffs_i].ticsremaining > 0)) {
+					BuffFadeBySlot(buffs_i);
+				}
 			}
 		}
 	}
