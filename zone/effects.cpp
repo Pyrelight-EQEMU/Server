@@ -396,7 +396,7 @@ int64 Mob::GetActDoTDamage(uint16 spell_id, int64 value, Mob* target, bool from_
 			damage_redunction_value = (2/3) * RuleI(Character, HeroicWisdomDamageReduction) * target->GetHeroicSTA();
 		}
 		value = (std::max(static_cast<int64>(value * RuleR(Character, HeroicWisdomDamageReductionCap) / 100), // Capped Damage Reduction
-                                             value - damage_redunction_value)); // Reduced Damage
+                                             value - damage_reduction_value)); // Reduced Damage
 	}
 
 	return value;
