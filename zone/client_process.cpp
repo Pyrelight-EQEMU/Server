@@ -345,6 +345,17 @@ bool Client::Process() {
 									RangedAttack(GetTarget());
 									if (CheckDoubleRangedAttack())
 										RangedAttack(GetTarget(), true);
+
+									if (RuleR(Character, HeroicAgilityExtraAttackRate) > 0 && GetHeroicAGI() > 0) {
+										int effective_hagi = GetHeroicAGI();		
+										while (effective_hagi > 0) {
+											if (zone->random.Roll(effective_hagi * RuleR(Character, HeroicAgilityExtraAttackRate))) {
+												MessageString(Chat::NPCFlurry, YOU_FLURRY);
+												RangedAttack(GetTarget(), true);
+												effective_hagi -= zone->random.Int(50,100);
+											}
+										}
+									}
 								}
 								else
 									ranged_timer.Start();
