@@ -159,7 +159,7 @@ int64 Mob::GetActSpellDamage(uint16 spell_id, int64 value, Mob* target) {
 				OTHER_CRIT_BLAST, nullptr, GetName(), itoa(-value));
 
 			if (RuleI(Character, HeroicWisdomDamageReduction) > 0) {
-				int64 damage_redunction_value = 0;
+				int64 damage_reduction_value = 0;
 				if (target->IsClient() && target->GetHeroicSTA() > 0) {
 					damage_redunction_value = RuleI(Character, HeroicWisdomDamageReduction) * target->GetHeroicSTA();
 				} else if (RuleB(Character, ExtraHeroicModifiersForPets) && target->IsPetOwnerClient() && target->GetOwner()->GetHeroicSTR() > 0) {
