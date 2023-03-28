@@ -389,7 +389,7 @@ int64 Mob::GetActDoTDamage(uint16 spell_id, int64 value, Mob* target, bool from_
 		value = int64(static_cast<float>(value) * CastToNPC()->GetSpellScale() / 100.0f);
 
 	if (RuleI(Character, HeroicWisdomDamageReduction) > 0) {
-		auto damage_redunction_value = 0;
+		auto damage_reduction_value = 0;
 		if (target->IsClient() && target->GetHeroicSTA() > 0) {
 			damage_redunction_value = RuleI(Character, HeroicWisdomDamageReduction) * target->GetHeroicSTA();
 		} else if (RuleB(Character, ExtraHeroicModifiersForPets) && target->IsPetOwnerClient() && target->GetOwner()->GetHeroicWIS() > 0) {
