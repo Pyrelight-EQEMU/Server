@@ -1054,19 +1054,6 @@ void Mob::MeleeMitigation(Mob *attacker, DamageHitInfo &hit, ExtraAttackOptions 
 	// +0.5 for rounding, min to 1 dmg
 	hit.damage_done = std::max(static_cast<int>(roll * static_cast<double>(hit.base_damage) + 0.5), 1);
 
-	//Pyrelight Custom Code
-	// Heroic STR increases damage by 0.1%
-	if (attacker->IsClient() && attacker->GetHeroicSTR() > 0) {
-		hit.damage_done *= ((attacker->GetHeroicSTR() / 1000) + 1);
-	}
-
-	//Pyrelight Custom Code
-	// Heroic STA Blocks up to 50% of damage at a rate of 10 damage per 1 point of the stat
-	if (defender->IsClient() && defender->GetHeroicSTA() > 0) {
-		hit.damage_done = std::max(static_cast<int64>(0.50 * hit.damage_done), static_cast<int64>(hit.damage_done - (10 * defender->GetHeroicSTA())));
-	}
-	
-
 	Log(Logs::Detail, Logs::Attack, "mitigation %d vs offense %d. base %d rolled %f damage %d", mitigation, hit.offense, hit.base_damage, roll, hit.damage_done);
 }
 
@@ -1458,7 +1445,29 @@ void Mob::DoAttack(Mob *other, DamageHitInfo &hit, ExtraAttackOptions *opts, boo
 			}
 			other->MeleeMitigation(this, hit, opts);
 			if (hit.damage_done > 0) {
-				ApplyDamageTable(hit);
+				ApplyDamageTable(hit);				
+
+				if (RuleR(Character, HeroicStrengthDamageBonus) > 0) {
+					auto damage_scalar = 1;
+					if (IsClient() && GetHeroicSTR() > 0) {
+						damage_scalar += std::ceil(RuleR(Character, HeroicStrengthDamageBonus) / 100 * GetHeroicSTR());
+					} else if (RuleB(Character, ExtraHeroicModifiersForPets) && IsPetOwnerClient() && GetOwner()->GetHeroicSTR() > 0) {
+						damage_scalar += std::ceil((1/3) * RuleR(Character, HeroicStrengthDamageBonus) / 100 * GetOwner()->GetHeroicSTR());
+					}
+					hit.damage_done = static_cast<int64>(hit.damage_done * damage_scalar);
+				}
+
+				if (RuleI(Character, HeroicStaminaDamageReduction) > 0) {
+					int64 damage_redunction_value = 0;
+					if (other->IsClient() && other->GetHeroicSTA() > 0) {
+						damage_redunction_value = std::ceil(RuleI(Character, HeroicStaminaDamageReduction) * other->GetHeroicSTA());
+					} else if (RuleB(Character, ExtraHeroicModifiersForPets) && other->IsPetOwnerClient() && other->GetOwner()->GetHeroicSTR() > 0) {
+						damage_redunction_value = std::ceil((2/3) * RuleI(Character, HeroicStaminaDamageReduction) * other->GetHeroicSTA());
+					}
+					hit.damage_done = static_cast<int64>(std::max(static_cast<int64>(hit.damage_done * RuleR(Character, HeroicStaminaDamageReductionCap) / 100), // Capped Damage Reduction
+																  					 hit.damage_done - damage_redunction_value)); // Reduced Damage
+				}
+
 				CommonOutgoingHitSuccess(other, hit, opts);
 			}
 			LogCombat("Final damage after all reductions: [{}]", hit.damage_done);
@@ -4920,6 +4929,10 @@ void Mob::TryPetCriticalHit(Mob *defender, DamageHitInfo &hit)
 		// For pets use PetCriticalHit for base chance, pets do not innately critical with without it
 		critChance += CritPetChance;
 
+	if (RuleR(Character, HeroicDexterityExtraCriticalDamage) > 0 && RuleB(Character, ExtraHeroicModifiersForPets) && IsPetOwnerClient()) {
+		critMod += GetHeroicDEX() * RuleR(Character, HeroicDexterityExtraCriticalDamage);
+	}
+
 	if (critChance > 0) {
 		if (zone->random.Roll(critChance)) {
 			critMod += GetCritDmgMod(hit.skill, owner);
@@ -5022,7 +5035,7 @@ void Mob::TryCriticalHit(Mob *defender, DamageHitInfo &hit, ExtraAttackOptions *
 	// We either require an innate crit chance or some SPA 169 to crit
 	bool innate_crit = false;
 	int crit_chance = GetCriticalChanceBonus(hit.skill);
-	if (((GetClass() == WARRIOR || GetClass() == PALADIN) || (GetClass() == BERSERKER || GetClass() == SHADOWKNIGHT)) && GetLevel() >= 12)
+	if ((GetClass() == WARRIOR || GetClass() == PALADIN || GetClass() == BERSERKER || GetClass() == SHADOWKNIGHT) && GetLevel() >= 12)
 		innate_crit = true;
 	else if (GetClass() == RANGER && GetLevel() >= 12 && hit.skill == EQ::skills::SkillArchery)
 		innate_crit = true;
@@ -5066,7 +5079,11 @@ void Mob::TryCriticalHit(Mob *defender, DamageHitInfo &hit, ExtraAttackOptions *
 				crit_mod = 100;
 			}
 
-			hit.damage_done = hit.damage_done * crit_mod / 100;
+			if (RuleR(Character, HeroicDexterityExtraCriticalDamage) > 0 && IsClient()) {
+				crit_mod += GetHeroicDEX() * RuleR(Character, HeroicDexterityExtraCriticalDamage);
+			}
+
+			hit.damage_done = (hit.damage_done * crit_mod) / 100;
 			LogCombat("Crit success roll [{}] dex chance [{}] og dmg [{}] crit_mod [{}] new dmg [{}]", roll, dex_bonus, og_damage, crit_mod, hit.damage_done);
 
 			// step 3: check deadly strike
@@ -5084,11 +5101,11 @@ void Mob::TryCriticalHit(Mob *defender, DamageHitInfo &hit, ExtraAttackOptions *
 
 						entity_list.FilteredMessageCloseString(
 							this, /* Sender */
-							false, /* Skip Sender */
+							false,  /* Skip Sender */
 							RuleI(Range, CriticalDamage),
 							Chat::MeleeCrit, /* Type: 301 */
 							FilterMeleeCrits, /* FilterType: 12 */
-							DEADLY_STRIKE, /* MessageFormat: %1 scores a Deadly Strike!(%2) */
+							CRITICAL_HIT, /* MessageFormat: %1 scores a critical hit! (%2) */
 							0,
 							GetCleanName(), /* Message1 */
 							itoa(hit.damage_done + hit.min_damage) /* Message2 */
@@ -6185,7 +6202,7 @@ void Client::DoAttackRounds(Mob *target, int hand, bool IsFromSpell)
 	if (!target)
 		return;
 
-	Attack(target, hand, false, false, IsFromSpell);
+	bool successful_hit = Attack(target, hand, false, false, IsFromSpell);
 
 	bool candouble = CanThisClassDoubleAttack();
 	// extra off hand non-sense, can only double with skill of 150 or above
@@ -6252,6 +6269,21 @@ void Client::DoAttackRounds(Mob *target, int hand, bool IsFromSpell)
 			}
 		}
 	}
+
+	if (RuleR(Character, HeroicAgilityExtraAttackRate) > 0 && GetHeroicAGI() > 0 && successful_hit) {
+		int chain = 0;
+		int effective_hagi = GetHeroicAGI();		
+		while (effective_hagi > 0) {
+			if (zone->random.Roll(effective_hagi * RuleR(Character, HeroicAgilityExtraAttackRate))) {
+				MessageString(Chat::NPCFlurry, YOU_FLURRY);
+				if (Attack(target, hand, false, false, IsFromSpell)) {
+					effective_hagi -= ++chain * zone->random.Int(50,100);
+				} else {
+					break;
+				}
+			}
+		}
+	}
 }
 
 bool Mob::CheckDualWield()
@@ -6289,51 +6321,10 @@ void Mob::DoMainHandAttackRounds(Mob *target, ExtraAttackOptions *opts)
 
 	if (RuleB(Combat, UseLiveCombatRounds)) {
 		// A "quad" on live really is just a successful dual wield where both double attack
-		// The mobs that could triple lost the ability to when the triple attack skill was added in		
-		if (Attack(target, EQ::invslot::slotPrimary, false, false, false, opts)) {
-			//Pyrelight Custom Code
-			// Heroic AGI has the most complicated extra effect.
-			// Having it gives you a chance to perform extra attacks. Getting an extra attack 'depletes' some amount of your
-			// effective HAGI and gives you a chance to use the remaining to make another. There is always a 25% chance to fail
-			// the extra attack, and if any attack here misses then the chain stops.
-			if (IsClient() && GetHeroicAGI() > 0) {
-				auto effective_hagi = GetHeroicAGI();
-				while (effective_hagi > 0) {
-					if (zone->random.Roll(75) && zone->random.Roll(effective_hagi)) {
-						if (Attack(target, EQ::invslot::slotPrimary, false, false, false, opts)) {
-							effective_hagi = effective_hagi - zone->random.Real(1,150);
-						} else {
-							break;
-						}						
-					} else {
-						break;
-					}
-				}
-			}
-		}	
-
+		// The mobs that could triple lost the ability to when the triple attack skill was added in
+		Attack(target, EQ::invslot::slotPrimary, false, false, false, opts);
 		if (CanThisClassDoubleAttack() && CheckDoubleAttack()) {
-			if (Attack(target, EQ::invslot::slotPrimary, false, false, false, opts)) {
-				//Pyrelight Custom Code
-				// Heroic AGI has the most complicated extra effect.
-				// Having it gives you a chance to perform extra attacks. Getting an extra attack 'depletes' some amount of your
-				// effective HAGI and gives you a chance to use the remaining to make another. There is always a 25% chance to fail
-				// the extra attack, and if any attack here misses then the chain stops.
-				if (IsClient() && GetHeroicAGI() > 0) {
-					auto effective_hagi = GetHeroicAGI();
-					while (effective_hagi > 0) {
-						if (zone->random.Roll(75) && zone->random.Roll(effective_hagi)) {
-							if (Attack(target, EQ::invslot::slotPrimary, false, false, false, opts)) {
-								effective_hagi = effective_hagi - zone->random.Real(1,150);
-							} else {
-								break;
-							}						
-						} else {
-							break;
-						}
-					}
-				}
-			}	
+			Attack(target, EQ::invslot::slotPrimary, false, false, false, opts);
 			if ((IsPet() || IsTempPet()) && IsPetOwnerClient()) {
 				int chance = spellbonuses.PC_Pet_Flurry + itembonuses.PC_Pet_Flurry + aabonuses.PC_Pet_Flurry;
 				if (chance && zone->random.Roll(chance))
@@ -6390,49 +6381,10 @@ void Mob::DoOffHandAttackRounds(Mob *target, ExtraAttackOptions *opts)
 		(RuleB(Combat, UseLiveCombatRounds) && GetSpecialAbility(SPECATK_QUAD))) ||
 		GetEquippedItemFromTextureSlot(EQ::textures::weaponSecondary) != 0) {
 		if (CheckDualWield()) {
-			if (Attack(target, EQ::invslot::slotSecondary, false, false, false, opts)) {
-				//Pyrelight Custom Code
-				// Heroic AGI has the most complicated extra effect.
-				// Having it gives you a chance to perform extra attacks. Getting an extra attack 'depletes' some amount of your
-				// effective HAGI and gives you a chance to use the remaining to make another. There is always a 25% chance to fail
-				// the extra attack, and if any attack here misses then the chain stops.
-				if (IsClient() && GetHeroicAGI() > 0) {
-					auto effective_hagi = GetHeroicAGI();
-					while (effective_hagi > 0) {
-						if (zone->random.Roll(75) && zone->random.Roll(effective_hagi)) {
-							if (Attack(target, EQ::invslot::slotPrimary, false, false, false, opts)) {
-								effective_hagi = effective_hagi - zone->random.Real(1,150);
-							} else {
-								break;
-							}						
-						} else {
-							break;
-						}
-					}
-				}
-			}
+			Attack(target, EQ::invslot::slotSecondary, false, false, false, opts);
 			if (CanThisClassDoubleAttack() && GetLevel() > 35 && CheckDoubleAttack()) {
-				if (Attack(target, EQ::invslot::slotPrimary, false, false, false, opts)) {
-					//Pyrelight Custom Code
-					// Heroic AGI has the most complicated extra effect.
-					// Having it gives you a chance to perform extra attacks. Getting an extra attack 'depletes' some amount of your
-					// effective HAGI and gives you a chance to use the remaining to make another. There is always a 25% chance to fail
-					// the extra attack, and if any attack here misses then the chain stops.
-					if (IsClient() && GetHeroicAGI() > 0) {
-						auto effective_hagi = GetHeroicAGI();
-						while (effective_hagi > 0) {
-							if (zone->random.Roll(75) && zone->random.Roll(effective_hagi)) {
-								if (Attack(target, EQ::invslot::slotPrimary, false, false, false, opts)) {
-									effective_hagi = effective_hagi - zone->random.Real(1,150);
-								} else {
-									break;
-								}						
-							} else {
-								break;
-							}
-						}
-					}
-				}
+				Attack(target, EQ::invslot::slotSecondary, false, false, false, opts);
+
 				if ((IsPet() || IsTempPet()) && IsPetOwnerClient()) {
 					int chance = spellbonuses.PC_Pet_Flurry + itembonuses.PC_Pet_Flurry + aabonuses.PC_Pet_Flurry;
 					if (chance && zone->random.Roll(chance))
@@ -6442,7 +6394,6 @@ void Mob::DoOffHandAttackRounds(Mob *target, ExtraAttackOptions *opts)
 		}
 	}
 }
-
 
 int Mob::GetPetAvoidanceBonusFromOwner()
 {
@@ -6457,6 +6408,7 @@ int Mob::GetPetAvoidanceBonusFromOwner()
 
 	return 0;
 }
+
 int Mob::GetPetACBonusFromOwner()
 {
 	Mob *owner = nullptr;
@@ -6470,6 +6422,7 @@ int Mob::GetPetACBonusFromOwner()
 
 	return 0;
 }
+
 int Mob::GetPetATKBonusFromOwner()
 {
 	Mob *owner = nullptr;
