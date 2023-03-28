@@ -345,6 +345,24 @@ bool Client::Process() {
 									RangedAttack(GetTarget());
 									if (CheckDoubleRangedAttack())
 										RangedAttack(GetTarget(), true);
+
+									if (RuleR(Character, HeroicAgilityExtraAttackRate) > 0 && GetHeroicAGI() > 0) {
+										int chain = 0;
+										int effective_hagi = GetHeroicAGI();
+										while (effective_hagi > 0) {
+											if (zone->random.Roll(static_cast<int>(std::floor(effective_hagi * RuleR(Character, HeroicAgilityExtraAttackRate))))) {
+												attack_timer.Disable();
+												RangedAttack(GetTarget(), true);
+												chain++;
+											} else {												
+												break;
+											}
+											effective_hagi -= zone->random.Int(1,100);
+										}
+										if (chain > 0) {
+											Message(Chat::NPCFlurry, "You unleash a FLURRY of %d extra arrows.", chain);
+										}
+									}
 								}
 								else
 									ranged_timer.Start();

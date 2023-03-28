@@ -4121,6 +4121,70 @@ bool Mob::SpellOnTarget(
 			);
 		}
 
+		// Pyrelight Custom Code		
+		if (IsClient() && RuleB(Character,HeroicCharismaResistRerollEnabled) && spell_effectiveness < 100) {			
+			bool changed_result = false;
+			int new_result = spell_effectiveness;
+			int effective_hcha = spellOwner->GetHeroicCHA();			
+
+			while (effective_hcha > 0) {
+				if (zone->random.Roll(static_cast<int>(std::floor(effective_hcha*3)))) {
+					new_result = spelltar->ResistSpell(
+									spells[spell_id].resist_type,
+									spell_id,
+									this,
+									use_resist_adjust,
+									resist_adjust,
+									true,
+									false,
+									false,
+									level_override);
+
+					if (new_result >= 100) {
+						changed_result = true;
+						break;
+					} 
+							
+				}
+				effective_hcha =- zone->random.Int(1,100);
+			}	
+
+			if (spelltar->IsClient() && RuleB(Character,HeroicCharismaResistRerollEnabled) && spell_effectiveness == 100) {
+				bool changed_result = false;
+				int effective_hcha = spelltar->GetHeroicCHA();
+
+				while (effective_hcha > 0) {
+					if (zone->random.Roll(static_cast<int>(std::floor(effective_hcha*3)))) {
+						new_result = spelltar->ResistSpell(
+									 spells[spell_id].resist_type,
+									 spell_id,
+									 this,
+									 use_resist_adjust,
+									 resist_adjust,
+									 true,
+									 false,
+									 false,
+									 level_override);
+
+						if (new_result >= 100) {
+							changed_result = true;
+							break;
+						}
+					}							
+				}
+				effective_hcha -= zone->random.Int(1,100);				
+			}			
+
+			if (changed_result) {
+				if (new_result == 100) {
+					Message(Chat::SpellFailure, "Your heroic presence has bypassed your target's resistances!");
+				} else {
+					spelltar->Message(Chat::SpellFailure, "Your heroic presence resists the spell!");
+				}
+				spell_effectiveness = new_result;
+			}
+		}
+
 		if (spell_effectiveness < 100) {
 			if (spell_effectiveness == 0 || !IsPartialCapableSpell(spell_id)) {
 				LogSpells("Spell [{}] was completely resisted by [{}]", spell_id, spelltar->GetName());

@@ -334,6 +334,22 @@ void Client::OPCombatAbility(const CombatAbility_Struct *ca_atk)
 			RangedAttack(GetTarget());
 			if (CheckDoubleRangedAttack())
 				RangedAttack(GetTarget(), true);
+
+			if (RuleR(Character, HeroicAgilityExtraAttackRate) > 0 && GetHeroicAGI() > 0) {
+				int chain = 0;
+				int effective_hagi = GetHeroicAGI();		
+				while (effective_hagi > 0) {
+					if (zone->random.Roll(static_cast<int>(std::floor(effective_hagi * RuleR(Character, HeroicAgilityExtraAttackRate))))) {
+						attack_timer.Disable();
+						RangedAttack(GetTarget(), true);
+						chain++;						
+					}
+					effective_hagi -= zone->random.Int(1,100);
+				}
+				if (chain > 0) {
+					Message(Chat::NPCFlurry, "You unleash a FLURRY of %d extra arrows.", chain);
+				}
+			}
 			return;
 		}
 		// could we return here? Im not sure is m_atk 11 is used for real specials
@@ -819,23 +835,6 @@ void Client::RangedAttack(Mob* other, bool CanDoubleAttack) {
 	//Shoots projectile and/or applies the archery damage
 	DoArcheryAttackDmg(other, RangeWeapon, Ammo,0,0,0,0,0,0, AmmoItem, ammo_slot);
 
-	//Pyrelight Custom Code
-	// HAGI ranged flurries work a little different, only a fail to trigger can cause the chain to stop
-	// little bitty buff to ranged attacks.
-	// We can use more arrows than we have, but fuck it whatever I'm not getting into fixing that
-	auto effective_agi = GetHeroicAGI();
-	auto num_attacks = 1;
-
-	while (effective_agi > 0) {
-		if (zone->random.Roll(75) && zone->random.Roll(effective_agi)) {
-			DoArcheryAttackDmg(other, RangeWeapon, Ammo,0,0,0,0,0,0, AmmoItem, ammo_slot);
-			effective_agi = effective_agi - zone->random.Real(1,150);
-			num_attacks++;
-		} else {
-			break;
-		}
-	}
-
 	//EndlessQuiver AA base1 = 100% Chance to avoid consumption arrow.
 	int ChanceAvoidConsume = aabonuses.ConsumeProjectile + itembonuses.ConsumeProjectile + spellbonuses.ConsumeProjectile;
 
@@ -849,7 +848,7 @@ void Client::RangedAttack(Mob* other, bool CanDoubleAttack) {
 			(ChanceAvoidConsume < 100 && zone->random.Int(0,99) > ChanceAvoidConsume)
 		)
 	) {
-		DeleteItemInInventory(ammo_slot, num_attacks, true);
+		DeleteItemInInventory(ammo_slot, true);
 		LogCombat("Consumed Archery Ammo from slot {}.", ammo_slot);
 	} else if (!consumes_ammo) {
 		LogCombat("Archery Ammo Consumption is disabled.");
@@ -1349,6 +1348,16 @@ void NPC::DoRangedAttackDmg(Mob* other, bool Launch, int16 damage_mod, int16 cha
 
 	DoAttack(other, my_hit);
 
+	if (RuleR(Character, HeroicStrengthDamageBonus) > 0) {
+		auto damage_scalar = 1;
+		if (IsClient() && GetHeroicSTR() > 0) {
+			damage_scalar += std::ceil(RuleR(Character, HeroicStrengthDamageBonus) / 100 * GetHeroicSTR());
+		} else if (RuleB(Character, ExtraHeroicModifiersForPets) && IsPetOwnerClient() && GetOwner()->GetHeroicSTR() > 0) {
+			damage_scalar += std::ceil((1/3) * RuleR(Character, HeroicStrengthDamageBonus) / 100 * GetOwner()->GetHeroicSTR());
+		}
+		my_hit.damage_done = static_cast<int64>(my_hit.damage_done * damage_scalar);
+	}
+
 	TotalDmg = my_hit.damage_done;
 
 	if (TotalDmg > 0) {
@@ -1454,25 +1463,9 @@ void Client::ThrowingAttack(Mob* other, bool CanDoubleAttack) { //old was 51
 
 	DoThrowingAttackDmg(other, RangeWeapon, item, 0, 0, 0, 0, 0,ammo_slot);
 
-	//Pyrelight Custom Code
-	// HAGI ranged flurries work a little different, only a fail to trigger can cause the chain to stop
-	// little bitty buff to ranged attacks.
-	auto effective_agi = GetHeroicAGI();
-	auto num_attacks = 1;
-
-	while (effective_agi > 0) {
-		if (zone->random.Roll(75) && zone->random.Roll(effective_agi)) {
-			DoThrowingAttackDmg(other, RangeWeapon, item, 0, 0, 0, 0, 0,ammo_slot);
-			effective_agi = effective_agi - zone->random.Real(1,150);
-			num_attacks++;
-		} else {
-			break;
-		}
-	}
-
 	// Consume Ammo, unless Ammo Consumption is disabled
 	if (RuleB(Combat, ThrowingConsumesAmmo)) {
-		DeleteItemInInventory(ammo_slot, num_attacks, true);
+		DeleteItemInInventory(ammo_slot, true);
 		LogCombat("Consumed Throwing Ammo from slot {}.", ammo_slot);
 	} else {
 		LogCombat("Throwing Ammo Consumption is disabled.");
