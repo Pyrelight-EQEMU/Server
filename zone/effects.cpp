@@ -48,12 +48,6 @@ int64 Mob::GetActSpellDamage(uint16 spell_id, int64 value, Mob* target) {
 	if (IsNPC())
 		value += value*CastToNPC()->GetSpellFocusDMG()/100;
 
-	// Pyrelight Custom Code
-	// Heroic WIS reduces incoming spell damage by 10 points per point of HWIS, never to exceed 50% of total damage
-	if (target->IsClient() && target->GetHeroicWIS() > 0) {
-		value = std::min(static_cast<int64>(0.50 * value), value - (target->GetHeroicWIS() * 10));
-	}
-
 	if (spells[spell_id].target_type == ST_Self) {
 		return value;
 	}
@@ -104,10 +98,13 @@ int64 Mob::GetActSpellDamage(uint16 spell_id, int64 value, Mob* target) {
 			ratio += itembonuses.SpellCritDmgIncrease + spellbonuses.SpellCritDmgIncrease + aabonuses.SpellCritDmgIncrease;
 			ratio += itembonuses.SpellCritDmgIncNoStack + spellbonuses.SpellCritDmgIncNoStack + aabonuses.SpellCritDmgIncNoStack;
 
-			//Pyrelight Custom Code
-			// Heroic INT gives +0.01% critical damage
-			if (IsClient() && GetHeroicINT() > 0) {
-				ratio += (GetHeroicINT()/10);	
+			if (RuleR(Character, HeroicIntelligenceExtraCriticalDamage) > 0) {
+				if (IsClient()) {
+					ratio *= 1 + (GetOwnerOrSelf()->GetHeroicINT() * RuleR(Character, HeroicIntelligenceExtraCriticalDamage));
+				} 
+				if (IsPetOwnerClient()) {
+					ratio *= 1 + (0.33 * GetOwnerOrSelf()->GetHeroicINT() * RuleR(Character, HeroicIntelligenceExtraCriticalDamage));
+				}
 			}
 		}
 
@@ -161,10 +158,15 @@ int64 Mob::GetActSpellDamage(uint16 spell_id, int64 value, Mob* target) {
 				this, true, 100, Chat::SpellCrit, FilterSpellCrits,
 				OTHER_CRIT_BLAST, nullptr, GetName(), itoa(-value));
 
-			//Pyrelight Custom Code
-			// Heroic WIS Blocks up to 50% of damage at a rate of 10 damage per 1 point of the stat
-			if (target->IsClient() && target->GetHeroicWIS() > 0) {
-				value = std::max(static_cast<int64>(0.50 * value), static_cast<int64>(value - (10 * target->GetHeroicWIS())));
+			if (RuleI(Character, HeroicWisdomDamageReduction) > 0) {
+				int64 damage_reduction_value = 0;
+				if (target->IsClient() && target->GetHeroicSTA() > 0) {
+					damage_reduction_value = RuleI(Character, HeroicWisdomDamageReduction) * target->GetHeroicSTA();
+				} else if (RuleB(Character, ExtraHeroicModifiersForPets) && target->IsPetOwnerClient() && target->GetOwner()->GetHeroicSTR() > 0) {
+					damage_reduction_value = 0.66 * RuleI(Character, HeroicWisdomDamageReduction) * target->GetHeroicSTA();
+				}
+				value = (std::max(static_cast<int64>(value * RuleR(Character, HeroicWisdomDamageReductionCap) / 100), // Capped Damage Reduction
+                                                     value - damage_reduction_value)); // Reduced Damage
 			}
 
 			if (IsClient())
@@ -208,10 +210,15 @@ int64 Mob::GetActSpellDamage(uint16 spell_id, int64 value, Mob* target) {
 		value -= GetExtraSpellAmt(spell_id, GetSpellDmg(), base_value);
 	}
 
-	//Pyrelight Custom Code
-	// Heroic WIS Blocks up to 50% of damage at a rate of 10 damage per 1 point of the stat
-	if (target->IsClient() && target->GetHeroicWIS() > 0) {
-		value = std::max(static_cast<int64>(0.50 * value), static_cast<int64>(value - (10 * target->GetHeroicWIS())));
+	if (RuleI(Character, HeroicWisdomDamageReduction) > 0) {
+		auto damage_reduction_value = 0;
+		if (target->IsClient() && target->GetHeroicWIS() > 0) {
+			damage_reduction_value = RuleI(Character, HeroicWisdomDamageReduction) * target->GetHeroicWIS();
+		} else if (RuleB(Character, ExtraHeroicModifiersForPets) && target->IsPetOwnerClient() && target->GetOwner()->GetHeroicWIS() > 0) {
+			damage_reduction_value = 0.66 * RuleI(Character, HeroicWisdomDamageReduction) * target->GetHeroicWIS();
+		}
+		value = (std::max(static_cast<int64>(value * RuleR(Character, HeroicWisdomDamageReductionCap) / 100), // Capped Damage Reduction
+                                             value - damage_reduction_value)); // Reduced Damage
 	}
 
 	return value;
@@ -284,10 +291,13 @@ int64 Mob::GetActDoTDamage(uint16 spell_id, int64 value, Mob* target, bool from_
 		int64 ratio = 200;
 		ratio += itembonuses.DotCritDmgIncrease + spellbonuses.DotCritDmgIncrease + aabonuses.DotCritDmgIncrease;
 
-		//Pyrelight Custom Code
-		// Heroic INT gives +0.01% critical damage
-		if (IsClient() && GetHeroicINT() > 0) {
-			ratio += (GetHeroicINT()/10);	
+		if (RuleR(Character, HeroicIntelligenceExtraCriticalDamage) > 0) {
+			if (IsClient()) {
+				ratio *= 1 + (GetOwnerOrSelf()->GetHeroicINT() * RuleR(Character, HeroicIntelligenceExtraCriticalDamage));
+			} 
+			if (IsPetOwnerClient()) {
+				ratio *= 1 + (0.33 * GetOwnerOrSelf()->GetHeroicINT() * RuleR(Character, HeroicIntelligenceExtraCriticalDamage));
+			}
 		}
 
 		value = base_value*ratio/100;
@@ -378,10 +388,15 @@ int64 Mob::GetActDoTDamage(uint16 spell_id, int64 value, Mob* target, bool from_
 	if (IsNPC() && CastToNPC()->GetSpellScale())
 		value = int64(static_cast<float>(value) * CastToNPC()->GetSpellScale() / 100.0f);
 
-	//Pyrelight Custom Code
-	// Heroic WIS Blocks up to 50% of damage at a rate of 10 damage per 1 point of the stat
-	if (target->IsClient() && target->GetHeroicWIS() > 0) {
-		value = std::max(static_cast<int64>(0.50 * value), static_cast<int64>(value - (10 * target->GetHeroicWIS())));
+	if (RuleI(Character, HeroicWisdomDamageReduction) > 0) {
+		auto damage_reduction_value = 0;
+		if (target->IsClient() && target->GetHeroicSTA() > 0) {
+			damage_reduction_value = RuleI(Character, HeroicWisdomDamageReduction) * target->GetHeroicWIS();
+		} else if (RuleB(Character, ExtraHeroicModifiersForPets) && target->IsPetOwnerClient() && target->GetOwner()->GetHeroicWIS() > 0) {
+			damage_reduction_value = 0.66 * RuleI(Character, HeroicWisdomDamageReduction) * target->GetHeroicWIS();
+		}
+		value = (std::max(static_cast<int64>(value * RuleR(Character, HeroicWisdomDamageReductionCap) / 100), // Capped Damage Reduction
+                                             value - damage_reduction_value)); // Reduced Damage
 	}
 
 	return value;
@@ -470,6 +485,15 @@ int64 Mob::GetActSpellHealing(uint16 spell_id, int64 value, Mob* target, bool fr
 
 		if (zone->random.Roll(critical_chance)) {
 			critical_modifier = 2; //At present time no critical heal amount modifier SPA exists.
+
+			if (RuleR(Character, HeroicIntelligenceExtraCriticalDamage) > 0) {
+				if (IsClient()) {
+					critical_modifier *= 1 + (GetOwnerOrSelf()->GetHeroicINT() * RuleR(Character, HeroicIntelligenceExtraCriticalDamage));
+				} 
+				if (IsPetOwnerClient()) {
+					critical_modifier *= 1 + ((1/3) * GetOwnerOrSelf()->GetHeroicINT() * RuleR(Character, HeroicIntelligenceExtraCriticalDamage));
+				}
+			}
 		}
 	}
 
