@@ -392,7 +392,7 @@ int64 Mob::GetActDoTDamage(uint16 spell_id, int64 value, Mob* target, bool from_
 		auto damage_redunction_value = 0;
 		if (target->IsClient() && target->GetHeroicSTA() > 0) {
 			damage_redunction_value = RuleI(Character, HeroicWisdomDamageReduction) * target->GetHeroicSTA();
-		} else if (RuleB(Character, ExtraHeroicModifiersForPets) && target->IsPetOwnerClient() && target->GetOwner()->GetHeroicSTR() > 0) {
+		} else if (RuleB(Character, ExtraHeroicModifiersForPets) && target->IsPetOwnerClient() && target->GetOwner()->GetHeroicWIS() > 0) {
 			damage_redunction_value = (2/3) * RuleI(Character, HeroicWisdomDamageReduction) * target->GetHeroicSTA();
 		}
 		value = (std::max(static_cast<int64>(value * RuleR(Character, HeroicWisdomDamageReductionCap) / 100), // Capped Damage Reduction
