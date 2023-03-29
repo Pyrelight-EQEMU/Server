@@ -158,6 +158,9 @@ namespace EQ
 		// Get a list of augments from a specific slot ID
 		std::vector<uint32> GetAugmentIDsBySlotID(int16 slot_id);
 
+		//Check if a player has any item or augment with a specific click effect ID equipped
+		bool IsClickEffectEquipped(uint32 spellid);
+
 		// Check whether there is space for the specified number of the specified item.
 		bool HasSpaceForItem(const ItemData *ItemToTry, int16 Quantity);
 

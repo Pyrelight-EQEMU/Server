@@ -683,6 +683,33 @@ int EQ::InventoryProfile::CountItemEquippedByID(uint32 item_id)
 	return quantity;
 }
 
+// Pyrelight Custom Code
+bool EQ::InventoryProfile::IsClickEffectEquipped(uint32 spellid) {
+
+	bool has_equipped = false;
+	ItemInstance* item = nullptr;
+	ItemInstance* augment = nullptr;
+	EQ::item::ItemEffect_Struct eff;
+
+	for (int slot_id = EQ::invslot::EQUIPMENT_BEGIN; slot_id <= EQ::invslot::EQUIPMENT_END; ++slot_id) {
+		item = GetItem(slot_id);
+		if (!item) { continue; }
+		eff = item->GetItem()->Click;
+		if (eff.Effect == spellid) {
+			return true;
+		}			
+		for (uint8 augment_slot = invaug::SOCKET_BEGIN; augment_slot <= invaug::SOCKET_END; ++augment_slot) {
+			augment = item->GetAugment(augment_slot);
+			if (!augment) { continue; }
+			eff = augment->GetItem()->Click;
+			if (eff.Effect == spellid) {
+				return true;
+			}
+		}			
+	}
+	return false;
+}
+
 //This function has a flaw in that it only returns the last stack that it looked at
 //when quantity is greater than 1 and not all of quantity can be found in 1 stack.
 int16 EQ::InventoryProfile::HasItem(uint32 item_id, uint8 quantity, uint8 where)
