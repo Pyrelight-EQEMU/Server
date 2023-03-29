@@ -3798,7 +3798,7 @@ void Mob::BuffProcess()
 	for (int buffs_i = 0; buffs_i < buff_count; ++buffs_i)
 	{
 		if (IsValidSpell(buffs[buffs_i].spellid))
-		{
+		{			
 			DoBuffTic(buffs[buffs_i], buffs_i, entity_list.GetMob(buffs[buffs_i].casterid));
 			// If the Mob died during DoBuffTic, then the buff we are currently processing will have been removed
 			if(!IsValidSpell(buffs[buffs_i].spellid)) {
@@ -3810,8 +3810,54 @@ void Mob::BuffProcess()
 			    spells[buffs[buffs_i].spellid].buff_duration_formula != DF_Aura &&
 				buffs[buffs_i].ticsremaining != PERMANENT_BUFF_DURATION) {
 				if(!zone->BuffTimersSuspended() || !IsSuspendableSpell(buffs[buffs_i].spellid))
-				{
-					--buffs[buffs_i].ticsremaining;
+				{	
+					// Logic for excluding ticking here					
+					bool suspended = false;
+
+					if (!spells[buffs[buffs_i].spellid].short_buff_box) { 
+						if (IsClient()) {
+							if (strcmp(buffs[buffs_i].caster_name, GetName()) == 0) {
+								suspended = true;							
+							} else if (IsGrouped()) {
+								std::list<Mob*> group_list;
+								GetGroup()->GetMemberList(group_list);
+								for (auto member_iter : group_list) {
+									if (strcmp(buffs[buffs_i].caster_name, member_iter->GetName()) == 0) {
+										suspended = true;									
+									}
+								}
+							}
+						} else if (IsPet()) {
+							if (strcmp(buffs[buffs_i].caster_name, GetOwner()->GetName()) == 0) {
+								suspended = true;
+								if (GetOwner()->IsClient()) {
+									SendBuffsToClient(GetOwner()->CastToClient());
+									SendPetBuffsToClient();
+								}
+							} else if (GetOwner()->IsGrouped()) {
+								std::list<Mob*> group_list;
+								GetOwner()->GetGroup()->GetMemberList(group_list);
+								for (auto member_iter : group_list) {
+									if (strcmp(buffs[buffs_i].caster_name, member_iter->GetName()) == 0) {
+										suspended = true;
+										if (GetOwner()->IsClient()) {
+											SendBuffsToClient(member_iter->GetOwner()->CastToClient());
+											SendPetBuffsToClient();
+										}						
+									}
+								}
+							}
+						}
+					}
+
+					if (!suspended) { 
+						--buffs[buffs_i].ticsremaining;
+					} else {
+						buffs[buffs_i].UpdateClient = true;
+					}
+
+					LogDebug("Buff Tic: [{}] [{}] [{}]", buffs[buffs_i].spellid, buffs[buffs_i].casterid, buffs[buffs_i].caster_name);
+					LogDebug("Buff Extra [{}] [{}] [{}]", GetName(), buffs[buffs_i].caster_name, strcmp(buffs[buffs_i].caster_name, GetName()));
 
 					if (buffs[buffs_i].ticsremaining < 0) {
 						LogSpells("Buff [{}] in slot [{}] has expired. Fading", buffs[buffs_i].spellid, buffs_i);
@@ -3833,10 +3879,8 @@ void Mob::BuffProcess()
 				if(buffs[buffs_i].UpdateClient == true)
 				{
 					CastToClient()->SendBuffDurationPacket(buffs[buffs_i], buffs_i);
-					// Hack to get UF to play nicer, RoF seems fine without it
-					if (CastToClient()->ClientVersion() == EQ::versions::ClientVersion::UF && buffs[buffs_i].hit_number > 0)
-						CastToClient()->SendBuffNumHitPacket(buffs[buffs_i], buffs_i);
-					buffs[buffs_i].UpdateClient = false;
+					CastToClient()->SendBuffNumHitPacket(buffs[buffs_i], buffs_i);
+					buffs[buffs_i].UpdateClient = false;					
 				}
 			} else {
 				// Pyrelight custom code
