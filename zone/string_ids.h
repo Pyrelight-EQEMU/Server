@@ -53,7 +53,7 @@
 #define SPELL_FIZZLE				173		//Your spell fizzles!
 #define MUST_EQUIP_ITEM				179		//You cannot use this item unless it is equipped.
 #define MISS_NOTE					180		//You miss a note, bringing your song to a close!
-#define CANNOT_USE_ITEM				181		//Your race, class, or deity cannot use this item.
+#define CANNOT_USE_ITEM				12043		//Your race, class, or deity cannot use this item.
 #define ITEM_OUT_OF_CHARGES			182		//Item is out of charges.
 #define TARGET_NO_MANA				191		//Your target has no mana to affect
 #define TARGET_GROUP_MEMBER			196		//You must first target a group member.
