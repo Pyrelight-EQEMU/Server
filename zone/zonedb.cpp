@@ -3136,7 +3136,7 @@ void ZoneDatabase::LoadBuffs(Client *client)
 			continue;
 
 		Client *caster = entity_list.GetClientByName(row[3]);
-		uint32 caster_level = Strings::ToInt(row[2]);
+		uint32 caster_level = Strings::ToInt(row[2]);		
 		int32 ticsremaining = Strings::ToInt(row[4]);
 		uint32 counters = Strings::ToUnsignedInt(row[5]);
 		uint32 hit_number = Strings::ToUnsignedInt(row[6]);
@@ -3159,7 +3159,7 @@ void ZoneDatabase::LoadBuffs(Client *client)
 			buffs[slot_id].client = true;
 		} else {
 			buffs[slot_id].casterid = 0;
-			strcpy(buffs[slot_id].caster_name, "");
+			strcpy(buffs[slot_id].caster_name, row[3]);
 			buffs[slot_id].client = false;
 		}
 
@@ -3238,11 +3238,13 @@ void ZoneDatabase::LoadAuras(Client *c)
 void ZoneDatabase::SavePetInfo(Client *client)
 {
 	PetInfo *petinfo = nullptr;
-
-	std::string query = StringFormat("DELETE FROM `character_pet_buffs` WHERE `char_id` = %u", client->CharacterID());
-	auto results = database.QueryDatabase(query);
+	std::string query;
+	MySQLRequestResult results;
+	
+	query = StringFormat("DELETE FROM `character_pet_buffs` WHERE `char_id` = %u", client->CharacterID());
+	results = database.QueryDatabase(query);
 	if (!results.Success())
-		return;
+		return;	
 
 	query = StringFormat("DELETE FROM `character_pet_inventory` WHERE `char_id` = %u", client->CharacterID());
 	results = database.QueryDatabase(query);
@@ -3275,18 +3277,18 @@ void ZoneDatabase::SavePetInfo(Client *client)
 				continue;
 			}
 			if (query.length() == 0)
-				query = StringFormat("INSERT INTO `character_pet_buffs` "
+				query = StringFormat("REPLACE INTO `character_pet_buffs` "
 						"(`char_id`, `pet`, `slot`, `spell_id`, `caster_level`, "
-						"`ticsremaining`, `counters`, `instrument_mod`) "
-						"VALUES (%u, %u, %u, %u, %u, %d, %d, %u)",
+						"`ticsremaining`, `counters`, `instrument_mod`, `castername`) "
+						"VALUES (%u, %u, %u, %u, %u, %d, %d, %u, '%s')",
 						client->CharacterID(), pet, index, petinfo->Buffs[index].spellid,
 						petinfo->Buffs[index].level, petinfo->Buffs[index].duration,
-						petinfo->Buffs[index].counters, petinfo->Buffs[index].bard_modifier);
+						petinfo->Buffs[index].counters, petinfo->Buffs[index].bard_modifier, client->GetPet()->GetBuffs()[index].caster_name);
 			else
-				query += StringFormat(", (%u, %u, %u, %u, %u, %d, %d, %u)",
+				query += StringFormat(", (%u, %u, %u, %u, %u, %d, %d, %u, '%s')",
 						client->CharacterID(), pet, index, petinfo->Buffs[index].spellid,
 						petinfo->Buffs[index].level, petinfo->Buffs[index].duration,
-						petinfo->Buffs[index].counters, petinfo->Buffs[index].bard_modifier);
+						petinfo->Buffs[index].counters, petinfo->Buffs[index].bard_modifier, client->GetPet()->GetBuffs()[index].caster_name);
 		}
 		database.QueryDatabase(query);
 		query.clear();
@@ -3404,7 +3406,6 @@ void ZoneDatabase::LoadPetInfo(Client *client)
 
 		uint32 caster_level = Strings::ToInt(row[3]);
 		int caster_id = 0;
-		// The castername field is currently unused
 		int32 ticsremaining = Strings::ToInt(row[5]);
 		uint32 counters = Strings::ToUnsignedInt(row[6]);
 		uint8 bard_mod = Strings::ToUnsignedInt(row[7]);
@@ -3412,11 +3413,11 @@ void ZoneDatabase::LoadPetInfo(Client *client)
 		pi->Buffs[slot_id].spellid = spell_id;
 		pi->Buffs[slot_id].level = caster_level;
 		pi->Buffs[slot_id].player_id = caster_id;
-		pi->Buffs[slot_id].effect_type = 2; // Always 2 in buffs struct for real buffs
-
+		pi->Buffs[slot_id].effect_type = 2; // Always 2 in buffs struct for real buffs		
 		pi->Buffs[slot_id].duration = ticsremaining;
 		pi->Buffs[slot_id].counters = counters;
 		pi->Buffs[slot_id].bard_modifier = bard_mod;
+		strcpy(pi->Buffs[slot_id].caster_name, row[4]);
 	}
 
 	query = StringFormat("SELECT `pet`, `slot`, `item_id` "

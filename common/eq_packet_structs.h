@@ -527,7 +527,7 @@ struct SpellBuff_Struct
 /*024*/	float	y;				// referenced by SPA 441
 /*028*/	float	x;				// unsure if all buffs get them
 /*032*/	float	z;				// as valid data
-/*036*/
+/*036*/ char    caster_name[64];
 };
 
 struct SpellBuffPacket_Struct {
