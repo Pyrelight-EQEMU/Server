@@ -361,6 +361,37 @@ bool EQ::InventoryProfile::SwapItem(
 				fail_state = swapLevel;
 				return false;
 			}
+			if (RuleB(Items, LoreEquipOnly)) {
+				if (source_item->LoreGroup == -1) {
+					if (HasItemEquippedByID(source_item->ID)) {
+						fail_state = swapItemLore;
+						return false;
+					}
+				}
+				if (source_item->LoreGroup != 0) {
+					//TODO Handle lore groups
+				}
+				if (source_item_instance->IsAugmented()) {
+					for (int i = EQ::invaug::SOCKET_BEGIN; i <= EQ::invaug::SOCKET_END; i++) {
+						EQ::ItemInstance *itm = source_item_instance->GetAugment(i);
+						if (itm && HasAugmentEquippedByID(itm->GetID())) {
+							fail_state = swapAugLore;
+							return false;
+						}
+					}
+				}			
+			}
+		}
+		if (RuleB(Items, LoreEquipOnly) && (destination_slot >= invslot::GENERAL_BEGIN && destination_slot <= invslot::GENERAL_END)) {
+			auto source_item = source_item_instance->GetItem();			
+			if (source_item->IsClassBag() && source_item->LoreGroup == -1) {
+				for (int i = EQ::invslot::GENERAL_BEGIN; i <= EQ::invslot::GENERAL_END; i++) {
+					if (GetItem(i) && GetItem(i)->GetID() == source_item->ID) {
+						fail_state = swapItemLore;
+						return false;
+					}
+				}
+			}
 		}
 	}
 
@@ -1629,7 +1660,7 @@ int16 EQ::InventoryProfile::_HasItemByUse(ItemInstQueue& iqueue, uint8 use, uint
 }
 
 int16 EQ::InventoryProfile::_HasItemByLoreGroup(std::map<int16, ItemInstance*>& bucket, uint32 loregroup)
-{
+{	
 	for (auto iter = bucket.begin(); iter != bucket.end(); ++iter) {
 		if (iter->first <= EQ::invslot::POSSESSIONS_END && iter->first >= EQ::invslot::POSSESSIONS_BEGIN) {
 			if ((((uint64)1 << iter->first) & m_lookup->PossessionsBitmask) == 0)

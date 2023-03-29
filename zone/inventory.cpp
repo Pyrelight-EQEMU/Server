@@ -171,7 +171,7 @@ uint32 Client::NukeItem(uint32 itemnum, uint8 where_to_check) {
 bool Client::CheckLoreConflict(const EQ::ItemData* item)
 {
 	if (!item) { return false; }
-	if (!item->IsClassBag()) { return false; }
+	if (RuleB(Items, LoreEquipOnly)) { return false; }
 	if (!item->LoreFlag) { return false; }
 	if (item->LoreGroup == 0) { return false; }
 
@@ -1153,11 +1153,8 @@ void Client::SendCursorBuffer()
 	if (test_item == nullptr) { return; }
 
 	bool lore_pass = true;
-	if (test_item->LoreGroup == -1) {
-		lore_pass = (m_inv.HasItem(test_item->ID, 0, ~(invWhereSharedBank | invWhereCursor)) == INVALID_INDEX);
-	}
-	else if (test_item->LoreGroup != 0) {
-		lore_pass = (m_inv.HasItemByLoreGroup(test_item->LoreGroup, ~(invWhereSharedBank | invWhereCursor)) == INVALID_INDEX);
+	if (test_item->LoreGroup != 0 && !RuleB(Items, LoreEquipOnly)) {
+		lore_pass = (m_inv.HasItemByLoreGroup(test_item->LoreGroup, ~(invWhereSharedBank | invWhereCursor)) == INVALID_INDEX);		
 	}
 
 	if (!lore_pass) {
@@ -1897,10 +1894,7 @@ bool Client::SwapItem(MoveItem_Struct* move_in) {
 			if (!test_item->LoreFlag) { return true; }
 
 			bool lore_pass = true;
-			if (test_item->LoreGroup == -1) {
-				lore_pass = (m_inv.HasItem(test_item->ID, 0, ~(invWhereSharedBank | invWhereCursor)) == INVALID_INDEX);
-			}
-			else if (test_item->LoreGroup != 0) {
+			if (test_item->LoreGroup != 0 && !RuleB(Items, LoreEquipOnly)) {
 				lore_pass = (m_inv.HasItemByLoreGroup(test_item->LoreGroup, ~(invWhereSharedBank | invWhereCursor)) == INVALID_INDEX);
 			}
 
@@ -2049,7 +2043,7 @@ bool Client::SwapItem(MoveItem_Struct* move_in) {
 			Trader_EndTrader();
 			Message(Chat::Red,"You cannot move your Trader Satchels, or items inside them, while Trading.");
 		}
-	}
+	}	
 
 	// Step 2: Validate item in from_slot
 	// After this, we can assume src_inst is a valid ptr
@@ -2105,7 +2099,6 @@ bool Client::SwapItem(MoveItem_Struct* move_in) {
 			}
 		}
 	}
-
 
 	// Check for No Drop Hacks
 	Mob* with = trade->With();
@@ -2343,9 +2336,9 @@ bool Client::SwapItem(MoveItem_Struct* move_in) {
 			else if (fail_state == EQ::InventoryProfile::swapLevel)
 				fail_message = "You are not sufficient level to use this item.";
 			else if (fail_state == EQ::InventoryProfile::swapItemLore)
-				fail_message = "You already have a version of this item equipped.";
+				fail_message = "You already have this LORE item equipped.";
 			else if (fail_state == EQ::InventoryProfile::swapAugLore)
-                                fail_message = "You already have a version of one of the augmentations slotted in this item equipped.";
+                fail_message = "You already have one of the LORE augments in this item equipped.";
 			if (fail_message)
 				Message(Chat::Red, "%s", fail_message);
 
