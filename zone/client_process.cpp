@@ -1158,7 +1158,7 @@ void Client::OPMemorizeSpell(const EQApplicationPacket* app)
 
 				if (
 					RuleB(Character, RestrictSpellScribing) &&
-					!item->IsEquipable(GetRace(), GetClass())
+					!item->IsClassEquipable(GetClass())
 				) {
 					MessageString(Chat::Red, CANNOT_USE_ITEM);
 					break;
