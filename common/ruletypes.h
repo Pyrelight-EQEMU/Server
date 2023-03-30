@@ -459,6 +459,7 @@ RULE_BOOL(Spells, TargetsTargetRequiresCombatRange, true, "Disable to remove com
 RULE_BOOL(Spells, NPCBuffLevelRestrictions, false, "Impose BuffLevelRestrictions on NPCs if true")
 RULE_BOOL(Spells, ResurrectionEffectsBlock, true, "If enabled, resurrection effects cannot be overwritten.")
 RULE_BOOL(Spells, RuneUseHealAmt, false, "Applies Heal Amount stat to Rune-type effects.")
+RULE_BOOL(Spells, DispelBeneficialReduceDuration, true, "NPC-cast dispels reduce remaining duration on beneficial spells instead of removing them.")
 RULE_CATEGORY_END()
 
 RULE_CATEGORY(Combat)
