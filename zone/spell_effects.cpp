@@ -1142,7 +1142,12 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 						spells[buffs[slot].spellid].dispel_flag == 0)
 					{
 						if (zone->random.Int(1, 1000) <= chance) {
-							BuffFadeBySlot(slot);
+							if (RuleB(Spells,DispelBeneficialReduceDuration) && !caster->IsClient()) {
+								buffs[slot].ticsremaining = zone->random.Int(1,buffs[slot].ticsremaining);
+								buffs[slot].UpdateClient = true;
+							} else {
+								BuffFadeBySlot(slot);
+							}							
 							slot = buff_count;
 						}
 					}
