@@ -2445,7 +2445,7 @@ void NPC::PetOnSpawn(NewSpawn_Struct* ns)
 			{
 				SetPetOwnerClient(true);
 				std::string tmp_lastname = client->GetName();
-				tmp_lastname += "'s Pet";
+				tmp_lastname += "'s Minion";
 				if (tmp_lastname.size() < sizeof(ns->spawn.lastName))
 					strn0cpy(ns->spawn.lastName, tmp_lastname.c_str(), sizeof(ns->spawn.lastName));
 			}
