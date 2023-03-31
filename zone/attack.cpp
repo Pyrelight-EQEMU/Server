@@ -6270,15 +6270,16 @@ void Client::DoAttackRounds(Mob *target, int hand, bool IsFromSpell)
 		}
 	}
 
+	// Pyrelight Custom Code
 	if (RuleR(Character, HeroicAgilityExtraAttackRate) > 0 && GetHeroicAGI() > 0 && successful_hit) {
 		int chain = 0;
 		int effective_hagi = GetHeroicAGI();		
 		while (effective_hagi > 0) {
 			if (zone->random.Roll(effective_hagi * RuleR(Character, HeroicAgilityExtraAttackRate))) {
-				MessageString(Chat::NPCFlurry, YOU_FLURRY);
 				if (Attack(target, hand, false, false, IsFromSpell)) {
 					effective_hagi -= ++chain * zone->random.Int(50,100);
 				} else {
+					Message(Chat::NPCFlurry, "You unleash a flurry of %d extra attacks.", chain);
 					break;
 				}
 			}
