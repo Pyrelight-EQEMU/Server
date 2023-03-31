@@ -774,6 +774,7 @@ bool Client::MemorizeSpellFromItem(uint32 item_id) {
 
 	if (
 		item_name.substr(0, 7) != std::string("Spell: ") &&
+		item_name.substr(0, 9) != std::string("Ancient: ") &&
 		item_name.substr(0, 6) != std::string("Song: ")
 	) {
 		Message(Chat::Red, "This item is not a scroll.");
