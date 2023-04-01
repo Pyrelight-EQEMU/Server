@@ -6279,7 +6279,9 @@ void Client::DoAttackRounds(Mob *target, int hand, bool IsFromSpell)
 				if (Attack(target, hand, false, false, IsFromSpell)) {
 					effective_hagi -= ++chain * zone->random.Int(50,100);
 				} else {
-					Message(Chat::NPCFlurry, "You unleash a flurry of %d extra attacks.", chain);
+					if (chain > 0) {
+						Message(Chat::NPCFlurry, "You unleash a flurry of %d extra attacks.", chain);
+					}
 					break;
 				}
 			}

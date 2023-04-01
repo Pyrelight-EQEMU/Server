@@ -355,7 +355,9 @@ bool Client::Process() {
 												RangedAttack(GetTarget(), true);
 												effective_hagi -= zone->random.Int(50,100);
 											} else {
-												Message(Chat::NPCFlurry, "You unleash a flurry of %d extra arrows.", chain);
+												if (chain > 0) {
+													Message(Chat::NPCFlurry, "You unleash a flurry of %d extra arrows.", chain);
+												}
 												break;
 											}
 										}
