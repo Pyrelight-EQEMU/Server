@@ -224,6 +224,7 @@ RULE_BOOL(Character, EnableRaidEXPModifier, true, "Enable or disable the raid ex
 RULE_BOOL(Character, EnableRaidMemberEXPModifier, true, "Enable or disable the raid experience modifier based on members in raid, default is true")
 RULE_BOOL(Character, LeaveCursorMoneyOnCorpse, false, "Enable or disable leaving cursor money on player corpses")
 RULE_BOOL(Character, ItemExtraSkillDamageCalcAsPercent, false, "If enabled, apply Item Extra Skill Damage as Percentage-based modifiers")
+RULE_REAL(Character, ClericBonusProcRate, 1.25, "Value to multiply cleric final proc rate by.")
 RULE_CATEGORY_END()
 
 RULE_CATEGORY(Mercs)
@@ -459,6 +460,7 @@ RULE_BOOL(Spells, NPCBuffLevelRestrictions, false, "Impose BuffLevelRestrictions
 RULE_BOOL(Spells, ResurrectionEffectsBlock, true, "If enabled, resurrection effects cannot be overwritten.")
 RULE_BOOL(Spells, RuneUseHealAmt, false, "Applies Heal Amount stat to Rune-type effects.")
 RULE_BOOL(Spells, DispelBeneficialReduceDuration, true, "NPC-cast dispels reduce remaining duration on beneficial spells instead of removing them.")
+RULE_REAL(Spells, NonCasterSpellDmgPenalty, 1, "Factor to multiply non-caster spell damage by")
 RULE_CATEGORY_END()
 
 RULE_CATEGORY(Combat)
