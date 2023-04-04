@@ -347,13 +347,18 @@ bool Client::Process() {
 										RangedAttack(GetTarget(), true);
 
 									if (RuleR(Character, HeroicAgilityExtraAttackRate) > 0 && GetHeroicAGI() > 0) {
-										int effective_hagi = GetHeroicAGI();		
+										int chain = 0;
+										int effective_hagi = GetHeroicAGI();
 										while (effective_hagi > 0) {
 											if (zone->random.Roll(effective_hagi * RuleR(Character, HeroicAgilityExtraAttackRate))) {
-												MessageString(Chat::NPCFlurry, YOU_FLURRY);
 												RangedAttack(GetTarget(), true);
-												effective_hagi -= zone->random.Int(50,100);
+												effective_hagi -= ++chain * zone->random.Int(50,100);
+											} else {												
+												break;
 											}
+										}
+										if (chain > 0) {
+											Message(Chat::NPCFlurry, "You unleash a FLURRY of %d extra arrows.", chain);
 										}
 									}
 								}
