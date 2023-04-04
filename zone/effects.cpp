@@ -403,38 +403,40 @@ int64 Mob::GetExtraSpellAmt(uint16 spell_id, int64 extra_spell_amt, int64 base_s
 
 	if (RuleB(Spells, FlatItemExtraSpellAmt)) {
 		if (RuleB(Spells, ItemExtraSpellAmtCalcAsPercent)) {
-			return std::abs(base_spell_dmg) * extra_spell_amt / 100;
+			extra_spell_amt = std::abs(base_spell_dmg) * extra_spell_amt / 100;
+		} 		
+	} else {
+		int total_cast_time = 0;
+
+		if (spells[spell_id].recast_time >= spells[spell_id].recovery_time) {
+			total_cast_time = spells[spell_id].recast_time + spells[spell_id].cast_time;
 		} else {
-			return extra_spell_amt;
+			total_cast_time = spells[spell_id].recovery_time + spells[spell_id].cast_time;
+		}
+
+		if (total_cast_time > 0 && total_cast_time <= 2500) {
+			extra_spell_amt = extra_spell_amt * 25 / 100;
+		} else if (total_cast_time > 2500 && total_cast_time < 7000) {
+			extra_spell_amt = extra_spell_amt * (167 * ((total_cast_time - 1000) / 1000)) / 1000;
+		} else {
+			extra_spell_amt = extra_spell_amt * total_cast_time / 7000;
+		}
+
+		//Confirmed with parsing 10/9/21 ~Kayen
+		if (extra_spell_amt * 2 > std::abs(base_spell_dmg)) {
+			extra_spell_amt = std::abs(base_spell_dmg) / 2;
+		}
+
+		if (RuleB(Spells, ItemExtraSpellAmtCalcAsPercent)) {
+			extra_spell_amt = std::abs(base_spell_dmg) * extra_spell_amt / 100;
 		}
 	}
 
-	int total_cast_time = 0;
-
-	if (spells[spell_id].recast_time >= spells[spell_id].recovery_time) {
-		total_cast_time = spells[spell_id].recast_time + spells[spell_id].cast_time;
-	} else {
-		total_cast_time = spells[spell_id].recovery_time + spells[spell_id].cast_time;
+	if (base_spell_dmg < 0 && !(IsINTCasterClass(GetClass()) || IsWISCasterClass(GetClass()))) { // This is a DD
+		return static_cast<float>(extra_spell_amt) * RuleR(Spells, NonCasterSpellDmgPenalty);
+	} else { // This is a heal
+		return extra_spell_amt;
 	}
-
-	if (total_cast_time > 0 && total_cast_time <= 2500) {
-		extra_spell_amt = extra_spell_amt * 25 / 100;
-	} else if (total_cast_time > 2500 && total_cast_time < 7000) {
-		extra_spell_amt = extra_spell_amt * (167 * ((total_cast_time - 1000) / 1000)) / 1000;
-	} else {
-		extra_spell_amt = extra_spell_amt * total_cast_time / 7000;
-	}
-
-	//Confirmed with parsing 10/9/21 ~Kayen
-	if (extra_spell_amt * 2 > std::abs(base_spell_dmg)) {
-		extra_spell_amt = std::abs(base_spell_dmg) / 2;
-	}
-
-	if (RuleB(Spells, ItemExtraSpellAmtCalcAsPercent)) {
-		return std::abs(base_spell_dmg) * extra_spell_amt / 100;
-	}
-
-	return extra_spell_amt;
 }
 
 int64 Mob::GetActSpellHealing(uint16 spell_id, int64 value, Mob* target, bool from_buff_tic) {

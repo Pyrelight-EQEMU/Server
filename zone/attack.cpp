@@ -1461,8 +1461,8 @@ void Mob::DoAttack(Mob *other, DamageHitInfo &hit, ExtraAttackOptions *opts, boo
 					int64 damage_redunction_value = 0;
 					if (other->IsClient() && other->GetHeroicSTA() > 0) {
 						damage_redunction_value = std::ceil(RuleI(Character, HeroicStaminaDamageReduction) * other->GetHeroicSTA());
-					} else if (RuleB(Character, ExtraHeroicModifiersForPets) && other->IsPetOwnerClient() && other->GetOwner()->GetHeroicSTR() > 0) {
-						damage_redunction_value = std::ceil((2/3) * RuleI(Character, HeroicStaminaDamageReduction) * other->GetHeroicSTA());
+					} else if (RuleB(Character, ExtraHeroicModifiersForPets) && other->IsPetOwnerClient()) {
+						damage_redunction_value = RuleI(Character, HeroicStaminaDamageReduction) * std::max(other->GetOwner()->GetHeroicINT(), other->GetOwner()->GetHeroicWIS());
 					}
 					hit.damage_done = static_cast<int64>(std::max(static_cast<int64>(hit.damage_done * RuleR(Character, HeroicStaminaDamageReductionCap) / 100), // Capped Damage Reduction
 																  					 hit.damage_done - damage_redunction_value)); // Reduced Damage
@@ -4494,6 +4494,10 @@ float Mob::GetProcChances(float ProcBonus, uint16 hand)
 		ProcChance = RuleR(Combat, BaseProcChance) +
 			static_cast<float>(mydex) / RuleR(Combat, ProcDexDivideBy);
 		ProcChance += ProcChance * ProcBonus / 100.0f;
+	}
+
+	if (GetClass() == CLERIC) {
+		ProcChance *= RuleR(Character, ClericBonusProcRate);
 	}
 
 	LogCombat("Proc chance [{}] ([{}] from bonuses)", ProcChance, ProcBonus);
