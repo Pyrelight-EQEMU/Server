@@ -4740,6 +4740,7 @@ bool Mob::IsImmuneToSpell(uint16 spell_id, Mob *caster)
 	}
 
 	// slow and haste spells
+	/*
 	if(GetSpecialAbility(UNSLOWABLE) && IsEffectInSpell(spell_id, SE_AttackSpeed))
 	{
 		LogSpells("We are immune to Slow spells");
@@ -4752,6 +4753,7 @@ bool Mob::IsImmuneToSpell(uint16 spell_id, Mob *caster)
 		}
 		return true;
 	}
+	*/
 
 	// client vs client fear
 	if(IsEffectInSpell(spell_id, SE_Fear))
