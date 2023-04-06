@@ -3837,7 +3837,7 @@ void Mob::BuffProcess()
 								suspended = true;
 							}
 
-							if (IsPet()) {
+							if (IsPet() && GetOwner()) {
 								SendPetBuffsToClient();
 							}
 						}							
