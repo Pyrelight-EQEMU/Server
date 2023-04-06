@@ -5416,7 +5416,7 @@ void Mob::Stun(int duration)
 	{
 		stunned = true;
 		stunned_timer.Start(duration);
-		stunned_immunity_timer.Start(duration * 3);
+		stunned_immunity_timer.Start(stunned_immunity_timer.GetRemainingTime() + duration * 3);
 		SendAddPlayerState(PlayerState::Stunned);
 	}
 }

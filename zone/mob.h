@@ -1736,7 +1736,7 @@ protected:
 	Mob* bindwound_target;
 
 	Timer stunned_timer;
-	Timer stun_immunity_timer;
+	Timer stunned_immunity_timer;
 	Timer spun_timer;
 	Timer bardsong_timer;
 	Timer gravity_timer;
