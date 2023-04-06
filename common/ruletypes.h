@@ -110,6 +110,7 @@ RULE_REAL(Character, HeroicDexterityExtraCriticalDamage, 0.25, "The percentage i
 RULE_REAL(Character, HeroicIntelligenceExtraCriticalDamage, 0.25, "The percentage increase to spell critical damage/heal which each point of Heroic INT grants")
 RULE_INT(Character, HeroicWisdomDamageReduction, 10, "Number of points of spell damage that each point of Heroic WIS should mitigate, up to the cap set in HeroicWISDamageReductionCap.")
 RULE_REAL(Character, HeroicWisdomDamageReductionCap, 50.0, "Maximum percentage of spell damage that Heroic WIS should be able to mitigate.")
+RULE_BOOL(Character, HeroicCharismaResistRerollEnabled, true, "Allow for Heroic Charisma to reroll spell resistance checks.")
 RULE_BOOL(Character, ExtraHeroicModifiersForPets, true, "Pets get a lesser version of heroic stat modifiers")
 RULE_INT(Character, SkillUpModifier, 100, "The probability for a skill-up is multiplied by value/100")
 RULE_BOOL(Character, SharedBankPlat, false, "Shared bank platinum. Off by default to prevent duplication")
