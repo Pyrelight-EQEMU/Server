@@ -562,6 +562,7 @@ void Mob::AI_ShutDown() {
 	rewind_timer.Disable();
 	bindwound_timer.Disable();
 	stunned_timer.Disable();
+	stunned_immunity_timer.Disable();
 	spun_timer.Disable();
 	bardsong_timer.Disable();
 	gravity_timer.Disable();

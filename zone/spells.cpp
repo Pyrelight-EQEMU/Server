@@ -5414,10 +5414,13 @@ void Mob::Stun(int duration)
 			InterruptSpell(spell_id);
 	}
 
-	if(duration > 0)
+	duration = (IsClient()) ? std::max(duration, 3000) : duration;
+
+	if(duration > 0 && stunned_immunity_timer.GetRemainingTime() == 0)
 	{
 		stunned = true;
 		stunned_timer.Start(duration);
+		stunned_immunity_timer.Start(stunned_immunity_timer.GetRemainingTime() + duration * 3);
 		SendAddPlayerState(PlayerState::Stunned);
 	}
 }
