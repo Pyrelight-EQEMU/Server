@@ -748,7 +748,11 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 							effect_value += effect_value*caster->GetFocusEffect(focusFcStunTimeMod, spell_id)/100;
 						}
 
-						Stun(effect_value);
+						if (IsClient()) {
+							Stun(std::max(effect_value, 3000));
+						} else {
+							Stun(effect_value);
+						}
 					} else {
 						if (IsClient())
 							MessageString(Chat::Stun, SHAKE_OFF_STUN);
