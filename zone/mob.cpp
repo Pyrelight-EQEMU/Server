@@ -111,6 +111,7 @@ Mob::Mob(
 	rewind_timer(30000),
 	bindwound_timer(10000),
 	stunned_timer(0),
+	stunned_immunity_timer(0),
 	spun_timer(0),
 	bardsong_timer(6000),
 	forget_timer(0),

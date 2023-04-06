@@ -5411,11 +5411,12 @@ void Mob::Stun(int duration)
 	}
 
 	duration = (IsClient()) ? std::max(duration, 3000) : duration;
-	
-	if(duration > 0)
+
+	if(duration > 0 && stunned_immunity_timer.GetRemainingTime() == 0)
 	{
 		stunned = true;
 		stunned_timer.Start(duration);
+		stunned_immunity_timer.Start(duration * 3);
 		SendAddPlayerState(PlayerState::Stunned);
 	}
 }
