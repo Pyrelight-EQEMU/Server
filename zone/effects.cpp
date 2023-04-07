@@ -158,7 +158,7 @@ int64 Mob::GetActSpellDamage(uint16 spell_id, int64 value, Mob* target) {
 				int64 damage_reduction_value = 0;
 				if (target->IsClient() && target->GetHeroicWIS() > 0) {
 					damage_reduction_value = std::ceil(RuleI(Character, HeroicWisdomDamageReduction) * target->GetHeroicWIS());
-				} else if (RuleB(Character, ExtraHeroicModifiersForPets) && target->IsPetOwnerClient() && target->GetOwner()->GetHeroicSTR() > 0) {
+				} else if (RuleB(Character, ExtraHeroicModifiersForPets) && target->IsPetOwnerClient() && target->GetOwner()->GetHeroicWIS() > 0) {
 					damage_reduction_value = std::ceil((2/3) * RuleI(Character, HeroicWisdomDamageReduction) * target->GetHeroicWIS());
 				}
 				if (damage_reduction_value > 0) {
@@ -211,7 +211,7 @@ int64 Mob::GetActSpellDamage(uint16 spell_id, int64 value, Mob* target) {
 		int64 damage_reduction_value = 0;
 		if (target->IsClient() && target->GetHeroicWIS() > 0) {
 			damage_reduction_value = std::ceil(RuleI(Character, HeroicWisdomDamageReduction) * target->GetHeroicWIS());
-		} else if (RuleB(Character, ExtraHeroicModifiersForPets) && target->IsPetOwnerClient() && target->GetOwner()->GetHeroicSTR() > 0) {
+		} else if (RuleB(Character, ExtraHeroicModifiersForPets) && target->IsPetOwnerClient() && target->GetOwner()->GetHeroicWIS() > 0) {
 			damage_reduction_value = std::ceil((2/3) * RuleI(Character, HeroicWisdomDamageReduction) * target->GetHeroicWIS());
 		}
 		if (damage_reduction_value > 0) {

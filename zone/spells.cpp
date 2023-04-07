@@ -4127,57 +4127,59 @@ bool Mob::SpellOnTarget(
 			int effective_hcha = GetHeroicCHA();
 
 			while (effective_hcha > 0) {
-				int new_eff = spelltar->ResistSpell(
-								spells[spell_id].resist_type,
-								spell_id,
-								this,
-								use_resist_adjust,
-								resist_adjust,
-								true,
-								false,
-								false,
-								level_override);
+				if (zone->random.Roll(static_cast<int>(std::floor(effective_hcha*3)))) {
+					int new_eff = spelltar->ResistSpell(
+									spells[spell_id].resist_type,
+									spell_id,
+									this,
+									use_resist_adjust,
+									resist_adjust,
+									true,
+									false,
+									false,
+									level_override);
 
-				if (new_eff >= 100) {
-					changed_result = true;
-					break;
-				} else {
-					effective_hcha =- zone->random.Int(25,100);
+					if (new_eff >= 100) {
+						changed_result = true;
+						break;
+					} 
+					effective_hcha =- zone->random.Int(25,100);				
+				}
+
+				if (changed_result) {
+					spell_effectiveness = 100;
+					Message(Chat::SpellFailure, "Your heroic presence has bypassed your target's resistances!");
 				}
 			}
 
-			if (changed_result) {
-				spell_effectiveness = 100;
-				Message(Chat::SpellFailure, "Your heroic presence has bypassed your target's resistances!");
-			}
-		}
+			if (spelltar->IsClient() && RuleB(Character,HeroicCharismaResistRerollEnabled) && spell_effectiveness == 100) {
+				bool changed_result = false;
+				int effective_hcha = spelltar->GetHeroicCHA();
 
-		if (spelltar->IsClient() && RuleB(Character,HeroicCharismaResistRerollEnabled) && spell_effectiveness == 100) {
-			bool changed_result = false;
-			int effective_hcha = spelltar->GetHeroicCHA();
+				while (effective_hcha > 0) {
+					if (zone->random.Roll(static_cast<int>(std::floor(effective_hcha*3)))) {
+						int new_eff = spelltar->ResistSpell(
+										spells[spell_id].resist_type,
+										spell_id,
+										this,
+										use_resist_adjust,
+										resist_adjust,
+										true,
+										false,
+										false,
+										level_override);
 
-			while (effective_hcha > 0) {
-				int new_eff = spelltar->ResistSpell(
-								spells[spell_id].resist_type,
-								spell_id,
-								this,
-								use_resist_adjust,
-								resist_adjust,
-								true,
-								false,
-								false,
-								level_override);
-
-				if (new_eff >= 100) {
-					changed_result = true;
-					break;
-				} else {
-					effective_hcha -= zone->random.Int(50,100);
+						if (new_eff >= 100) {
+							changed_result = true;
+							break;
+						}
+					}
+					effective_hcha -= zone->random.Int(50,100);				
 				}
-			}
-			if (changed_result) {
-				spell_effectiveness = 0;
-				spelltar->Message(Chat::SpellFailure, "Your heroic presence resists the spell!");
+				if (changed_result) {
+					spell_effectiveness = 0;
+					spelltar->Message(Chat::SpellFailure, "Your heroic presence resists the spell!");
+				}
 			}
 		}
 
