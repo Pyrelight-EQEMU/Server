@@ -307,34 +307,7 @@ int64 Mob::GetActDoTDamage(uint16 spell_id, int64 value, Mob* target, bool from_
 					GetFocusEffect(focusFcDamageAmt, spell_id, nullptr, from_buff_tic) +
 					GetFocusEffect(focusFcDamageAmt2, spell_id, nullptr, from_buff_tic) +
 					GetFocusEffect(focusFcAmplifyAmt, spell_id, nullptr, from_buff_tic);
-
-		if (RuleB(Spells, DOTsScaleWithSpellDmg)) {
-			if (
-				RuleB(Spells, IgnoreSpellDmgLvlRestriction) &&
-				!spells[spell_id].no_heal_damage_item_mod &&
-				GetSpellDmg()
-			) {
-				extra_dmg += GetExtraSpellAmt(spell_id, GetSpellDmg(), base_value)*ratio/100;
-			}
-			else if (
-				!spells[spell_id].no_heal_damage_item_mod &&
-				GetSpellDmg() &&
-				spells[spell_id].classes[(GetClass() % 17) - 1] >= GetLevel() - 5
-			) {
-				extra_dmg += GetExtraSpellAmt(spell_id, GetSpellDmg(), base_value)*ratio/100;
-			}
-		}
-
-		if (RuleB(Spells, AllowExtraDmgSkill) && !RuleB(Character, ItemExtraSkillDamageCalcAsPercent)) {
-			extra_dmg += GetSkillDmgAmt(spells[spell_id].skill) * ratio / 100;
-		}
-
-		if (extra_dmg) {
-			int duration = CalcBuffDuration(this, target, spell_id);
-			if (duration > 0)
-				extra_dmg /= (duration/2);
-		}
-
+		
 		value -= extra_dmg;
 	}
 	else {
@@ -351,48 +324,44 @@ int64 Mob::GetActDoTDamage(uint16 spell_id, int64 value, Mob* target, bool from_
 					GetFocusEffect(focusFcDamageAmt2, spell_id, nullptr, from_buff_tic) +
 					GetFocusEffect(focusFcAmplifyAmt, spell_id, nullptr, from_buff_tic);
 
-		if (RuleB(Spells, DOTsScaleWithSpellDmg)) {
-			if (
-				RuleB(Spells, IgnoreSpellDmgLvlRestriction) &&
-				!spells[spell_id].no_heal_damage_item_mod &&
-				GetSpellDmg()
-			) {
-				extra_dmg += GetExtraSpellAmt(spell_id, GetSpellDmg(), base_value);
-			}
-			else if (
-				!spells[spell_id].no_heal_damage_item_mod &&
-				GetSpellDmg() &&
-				spells[spell_id].classes[(GetClass() % 17) - 1] >= GetLevel() - 5
-			) {
-				extra_dmg += GetExtraSpellAmt(spell_id, GetSpellDmg(), base_value);
-			}
-		}
-
-		if (RuleB(Spells, AllowExtraDmgSkill) && !RuleB(Character, ItemExtraSkillDamageCalcAsPercent)) {
-			extra_dmg += GetSkillDmgAmt(spells[spell_id].skill);
-		}
-
-		if (extra_dmg) {
-			int duration = CalcBuffDuration(this, target, spell_id);
-			if (duration > 0)
-				extra_dmg /= (duration/2);
-		}
-
 		value -= extra_dmg;
 	}
 
 	if (IsNPC() && CastToNPC()->GetSpellScale())
 		value = int64(static_cast<float>(value) * CastToNPC()->GetSpellScale() / 100.0f);
 
+	if (RuleB(Spells, DOTsScaleWithSpellDmg)) {
+		if (
+			RuleB(Spells, IgnoreSpellDmgLvlRestriction) &&
+			!spells[spell_id].no_heal_damage_item_mod &&
+			GetSpellDmg()
+		) {
+			extra_dmg += GetExtraSpellAmt(spell_id, GetSpellDmg(), base_value);
+		}
+		else if (
+			!spells[spell_id].no_heal_damage_item_mod &&
+			GetSpellDmg() &&
+			spells[spell_id].classes[(GetClass() % 17) - 1] >= GetLevel() - 5
+		) {
+			extra_dmg += GetExtraSpellAmt(spell_id, GetSpellDmg(), base_value);
+		}
+	}
+
+	if (RuleB(Spells, AllowExtraDmgSkill) && !RuleB(Character, ItemExtraSkillDamageCalcAsPercent)) {
+		extra_dmg += GetSkillDmgAmt(spells[spell_id].skill);
+	}
+
+	value -= extra_dmg;
+
 	if (RuleI(Character, HeroicWisdomDamageReduction) > 0) {
 		auto damage_reduction_value = 0;
-		if (target->IsClient() && target->GetHeroicSTA() > 0) {
+		if (target->IsClient() && target->GetHeroicWIS() > 0) {
 			damage_reduction_value = RuleI(Character, HeroicWisdomDamageReduction) * target->GetHeroicWIS();
 		} else if (RuleB(Character, ExtraHeroicModifiersForPets) && target->IsPetOwnerClient() && target->GetOwner()->GetHeroicWIS() > 0) {
 			damage_reduction_value = (2/3) * RuleI(Character, HeroicWisdomDamageReduction) * target->GetHeroicWIS();
 		}
-		value = (std::max(static_cast<int64>(value * RuleR(Character, HeroicWisdomDamageReductionCap) / 100), // Capped Damage Reduction
-                                             value - damage_reduction_value)); // Reduced Damage
+		value = (std::min(static_cast<int64>(value * RuleR(Character, HeroicWisdomDamageReductionCap) / 100), // Capped Damage Reduction
+                                             value + damage_reduction_value)); // Reduced Damage
 	}
 
 	return value;

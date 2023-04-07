@@ -3874,7 +3874,10 @@ void Mob::BuffProcess()
 			} else {
 				// Pyrelight custom code
 				// We clear all debuffs from NPCs if they are not engaged in combat
-				if (!IsEngaged() && IsDetrimentalSpell(buffs[buffs_i].spellid) && (buffs[buffs_i].ticsremaining > 0)) {
+				int spellid = buffs[buffs_i].spellid;
+				if (!IsEngaged() && IsDetrimentalSpell(spellid) && (buffs[buffs_i].ticsremaining) > 0 
+				 && !IsCharmSpell(spellid) && !IsHarmonySpell(spellid) && !IsAllianceSpellLine(spellid) && !IsMezSpell(spellid)) {
+					LogDebug("Fading Buff: [{}]", spellid);
 					BuffFadeBySlot(buffs_i);
 				}
 			}

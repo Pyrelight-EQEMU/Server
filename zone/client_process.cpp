@@ -2007,7 +2007,7 @@ void Client::ClearRestingDetrimentalEffects()
 	//     return;
 
 	// This checks AggroCount and whether the 30 second rest timer has elapsed
-	if(!rest_timer.Check(false))
+	if(!ooc_regen)
 		return;
 
 	uint32 buff_count = GetMaxTotalSlots();
