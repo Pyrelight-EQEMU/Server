@@ -986,6 +986,18 @@ void Mob::DoArcheryAttackDmg(Mob *other, const EQ::ItemInstance *RangeWeapon, co
 		if (RangeWeapon && other && !other->HasDied()) {
 			TryCombatProcs(RangeWeapon, other, EQ::invslot::slotRange);
 		}
+		// Pri/Sec Procs
+		EQ::ItemInstance* primary = GetInv().GetItem(EQ::invslot::slotPrimary);
+		EQ::ItemInstance* secondary = GetInv().GetItem(EQ::invslot::slotSecondary);
+
+		int which_wep = zone->random.Roll0(3);
+
+		if (primary && other && !other->HasDied() && which_wep <= 1) {
+			TryCombatProcs(primary, other, EQ::invslot::slotRange);
+		}
+		if (secondary && other && !other->HasDied() && which_wep == 2) {
+			TryCombatProcs(secondary, other, EQ::invslot::slotRange);
+		}
 
 		// Ammo Proc, do not try spell procs if from ammo.
 		if (last_ammo_used) {
