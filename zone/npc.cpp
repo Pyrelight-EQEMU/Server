@@ -943,13 +943,13 @@ bool NPC::Process()
 			}
 		}
 		else if (GetHP() < GetMaxHP() && GetOwnerID() != 0) {
-			if (!IsEngaged()) {
-				// if (ooc_regen > 0) {
-				// 	pet_regen_bonus = std::max(ooc_regen_calc, npc_hp_regen);
-				// }
-				// else {
+			if (!IsEngaged() && (!GetOwner()->IsClient() || GetOwner()->CastToClient()->GetAggroCount() == 0)) {
+				if (ooc_regen > 0) {
+					pet_regen_bonus = std::max(ooc_regen_calc, npc_hp_regen);
+				}
+				else {
 					pet_regen_bonus = npc_hp_regen + (GetLevel() / 5);
-				// }
+				}
 
 				SetHP(GetHP() + npc_sitting_regen_bonus + pet_regen_bonus);
 			}
