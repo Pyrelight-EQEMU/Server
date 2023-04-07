@@ -339,7 +339,7 @@ void Client::OPCombatAbility(const CombatAbility_Struct *ca_atk)
 				int chain = 0;
 				int effective_hagi = GetHeroicAGI();		
 				while (effective_hagi > 0) {
-					if (zone->random.Roll(effective_hagi * RuleR(Character, HeroicAgilityExtraAttackRate))) {
+					if (zone->random.Roll(static_cast<int>(std::floor(effective_hagi * RuleR(Character, HeroicAgilityExtraAttackRate))))) {
 						RangedAttack(GetTarget(), true);
 						effective_hagi -= ++chain * zone->random.Int(50,100);
 					}
