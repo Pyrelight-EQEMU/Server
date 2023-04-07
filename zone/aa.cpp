@@ -958,7 +958,14 @@ void Client::SendAlternateAdvancementRank(int aa_id, int level) {
 		aai->grant_only = ability->grant_only;
 	}
 
-	aai->level_req = rank->level_req;
+	// Pyrelight Custom Code
+	// Overwrite the required level for aaMnemonicRetention
+	if (zone->GetAlternateAdvancementAbilityByRank(aaMnemonicRetention)->id == aa_id && GetAAByAAID(aa_id) >= level) {		
+		aai->level_req = 1;
+	} else { 
+		aai->level_req = rank->level_req;
+	}
+		
 	aai->current_level = level;
 	aai->max_level = ability->GetMaxLevel(this);	
 	aai->prev_id = rank->prev_id;

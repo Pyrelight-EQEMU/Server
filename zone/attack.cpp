@@ -1461,8 +1461,8 @@ void Mob::DoAttack(Mob *other, DamageHitInfo &hit, ExtraAttackOptions *opts, boo
 					int64 damage_redunction_value = 0;
 					if (other->IsClient() && other->GetHeroicSTA() > 0) {
 						damage_redunction_value = std::ceil(RuleI(Character, HeroicStaminaDamageReduction) * other->GetHeroicSTA());
-					} else if (RuleB(Character, ExtraHeroicModifiersForPets) && other->IsPetOwnerClient() && other->GetOwner()->GetHeroicSTR() > 0) {
-						damage_redunction_value = std::ceil((2/3) * RuleI(Character, HeroicStaminaDamageReduction) * other->GetHeroicSTA());
+					} else if (RuleB(Character, ExtraHeroicModifiersForPets) && other->IsPetOwnerClient()) {
+						damage_redunction_value = RuleI(Character, HeroicStaminaDamageReduction) * std::max(other->GetOwner()->GetHeroicINT(), other->GetOwner()->GetHeroicWIS());
 					}
 					hit.damage_done = static_cast<int64>(std::max(static_cast<int64>(hit.damage_done * RuleR(Character, HeroicStaminaDamageReductionCap) / 100), // Capped Damage Reduction
 																  					 hit.damage_done - damage_redunction_value)); // Reduced Damage
@@ -4496,6 +4496,10 @@ float Mob::GetProcChances(float ProcBonus, uint16 hand)
 		ProcChance += ProcChance * ProcBonus / 100.0f;
 	}
 
+	if (GetClass() == CLERIC) {
+		ProcChance *= RuleR(Character, ClericBonusProcRate);
+	}
+
 	LogCombat("Proc chance [{}] ([{}] from bonuses)", ProcChance, ProcBonus);
 	return ProcChance;
 }
@@ -6270,18 +6274,21 @@ void Client::DoAttackRounds(Mob *target, int hand, bool IsFromSpell)
 		}
 	}
 
+	// Pyrelight Custom Code
 	if (RuleR(Character, HeroicAgilityExtraAttackRate) > 0 && GetHeroicAGI() > 0 && successful_hit) {
 		int chain = 0;
 		int effective_hagi = GetHeroicAGI();		
 		while (effective_hagi > 0) {
-			if (zone->random.Roll(effective_hagi * RuleR(Character, HeroicAgilityExtraAttackRate))) {
-				MessageString(Chat::NPCFlurry, YOU_FLURRY);
+			if (zone->random.Roll(static_cast<int>(std::floor(effective_hagi * RuleR(Character, HeroicAgilityExtraAttackRate))))) {
 				if (Attack(target, hand, false, false, IsFromSpell)) {
-					effective_hagi -= ++chain * zone->random.Int(50,100);
-				} else {
+					effective_hagi -= ++chain * zone->random.Int(1,100);
+				} else {		
 					break;
 				}
 			}
+		}
+		if (chain > 0) {
+			Message(Chat::NPCFlurry, "You unleash a FLURRY of %d extra attacks.", chain);
 		}
 	}
 }

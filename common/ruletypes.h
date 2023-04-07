@@ -110,6 +110,7 @@ RULE_REAL(Character, HeroicDexterityExtraCriticalDamage, 0.25, "The percentage i
 RULE_REAL(Character, HeroicIntelligenceExtraCriticalDamage, 0.25, "The percentage increase to spell critical damage/heal which each point of Heroic INT grants")
 RULE_INT(Character, HeroicWisdomDamageReduction, 10, "Number of points of spell damage that each point of Heroic WIS should mitigate, up to the cap set in HeroicWISDamageReductionCap.")
 RULE_REAL(Character, HeroicWisdomDamageReductionCap, 50.0, "Maximum percentage of spell damage that Heroic WIS should be able to mitigate.")
+RULE_BOOL(Character, HeroicCharismaResistRerollEnabled, true, "Allow for Heroic Charisma to reroll spell resistance checks.")
 RULE_BOOL(Character, ExtraHeroicModifiersForPets, true, "Pets get a lesser version of heroic stat modifiers")
 RULE_INT(Character, SkillUpModifier, 100, "The probability for a skill-up is multiplied by value/100")
 RULE_BOOL(Character, SharedBankPlat, false, "Shared bank platinum. Off by default to prevent duplication")
@@ -224,6 +225,7 @@ RULE_BOOL(Character, EnableRaidEXPModifier, true, "Enable or disable the raid ex
 RULE_BOOL(Character, EnableRaidMemberEXPModifier, true, "Enable or disable the raid experience modifier based on members in raid, default is true")
 RULE_BOOL(Character, LeaveCursorMoneyOnCorpse, false, "Enable or disable leaving cursor money on player corpses")
 RULE_BOOL(Character, ItemExtraSkillDamageCalcAsPercent, false, "If enabled, apply Item Extra Skill Damage as Percentage-based modifiers")
+RULE_REAL(Character, ClericBonusProcRate, 1.25, "Value to multiply cleric final proc rate by.")
 RULE_CATEGORY_END()
 
 RULE_CATEGORY(Mercs)
@@ -459,6 +461,7 @@ RULE_BOOL(Spells, NPCBuffLevelRestrictions, false, "Impose BuffLevelRestrictions
 RULE_BOOL(Spells, ResurrectionEffectsBlock, true, "If enabled, resurrection effects cannot be overwritten.")
 RULE_BOOL(Spells, RuneUseHealAmt, false, "Applies Heal Amount stat to Rune-type effects.")
 RULE_BOOL(Spells, DispelBeneficialReduceDuration, true, "NPC-cast dispels reduce remaining duration on beneficial spells instead of removing them.")
+RULE_REAL(Spells, NonCasterSpellDmgPenalty, 1, "Factor to multiply non-caster spell damage by")
 RULE_CATEGORY_END()
 
 RULE_CATEGORY(Combat)

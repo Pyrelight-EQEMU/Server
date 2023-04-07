@@ -747,7 +747,6 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 						if (caster && (caster->IsClient() || caster->IsBot())) {
 							effect_value += effect_value*caster->GetFocusEffect(focusFcStunTimeMod, spell_id)/100;
 						}
-
 						Stun(effect_value);
 					} else {
 						if (IsClient())
@@ -3815,44 +3814,32 @@ void Mob::BuffProcess()
 			    spells[buffs[buffs_i].spellid].buff_duration_formula != DF_Aura &&
 				buffs[buffs_i].ticsremaining != PERMANENT_BUFF_DURATION) {
 				if(!zone->BuffTimersSuspended() || !IsSuspendableSpell(buffs[buffs_i].spellid))
-				{	
-					// Logic for excluding ticking here					
+				{								
 					bool suspended = false;
 
-					if (!spells[buffs[buffs_i].spellid].short_buff_box) { 
-						if (IsClient()) {
-							if (strcmp(buffs[buffs_i].caster_name, GetName()) == 0) {
-								suspended = true;							
-							} else if (IsGrouped()) {
-								std::list<Mob*> group_list;
-								GetGroup()->GetMemberList(group_list);
-								for (auto member_iter : group_list) {
-									if (strcmp(buffs[buffs_i].caster_name, member_iter->GetName()) == 0) {
-										suspended = true;									
-									}
+					// Logic for excluding ticking here		
+					// Pyrelight Custom Code	
+					if (!spells[buffs[buffs_i].spellid].short_buff_box && (IsClient() || (IsPet() && IsPetOwnerClient()))) {
+						Client* client = GetOwnerOrSelf()->CastToClient();
+						Client* caster = entity_list.GetClientByName(buffs[buffs_i].caster_name);
+						uint32 spellid = buffs[buffs_i].spellid;
+						
+						
+						if (caster && client) {
+							if (caster == client || (client->GetGroup() && client->GetGroup()->IsGroupMember(caster))) {
+								if (caster->FindSpellBookSlotBySpellID(spellid) >= 1 || caster->GetInv().IsClickEffectEquipped(spellid)) {
+									suspended = true;
 								}
 							}
-						} else if (IsPet()) {
-							if (strcmp(buffs[buffs_i].caster_name, GetOwner()->GetName()) == 0) {
+
+							if (client->client_state == CLIENT_LINKDEAD || caster->client_state == CLIENT_LINKDEAD) {
 								suspended = true;
-								if (GetOwner()->IsClient()) {
-									SendBuffsToClient(GetOwner()->CastToClient());
-									SendPetBuffsToClient();
-								}
-							} else if (GetOwner()->IsGrouped()) {
-								std::list<Mob*> group_list;
-								GetOwner()->GetGroup()->GetMemberList(group_list);
-								for (auto member_iter : group_list) {
-									if (strcmp(buffs[buffs_i].caster_name, member_iter->GetName()) == 0) {
-										suspended = true;
-										if (GetOwner()->IsClient()) {
-											SendBuffsToClient(member_iter->GetOwner()->CastToClient());
-											SendPetBuffsToClient();
-										}						
-									}
-								}
 							}
-						}
+
+							if (IsPet() && GetOwner()) {
+								SendPetBuffsToClient();
+							}
+						}							
 					}
 
 					if (!suspended) { 
@@ -3860,9 +3847,6 @@ void Mob::BuffProcess()
 					} else {
 						buffs[buffs_i].UpdateClient = true;
 					}
-
-					LogDebug("Buff Tic: [{}] [{}] [{}]", buffs[buffs_i].spellid, buffs[buffs_i].casterid, buffs[buffs_i].caster_name);
-					LogDebug("Buff Extra [{}] [{}] [{}]", GetName(), buffs[buffs_i].caster_name, strcmp(buffs[buffs_i].caster_name, GetName()));
 
 					if (buffs[buffs_i].ticsremaining < 0) {
 						LogSpells("Buff [{}] in slot [{}] has expired. Fading", buffs[buffs_i].spellid, buffs_i);

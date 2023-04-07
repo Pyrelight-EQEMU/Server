@@ -336,13 +336,16 @@ void Client::OPCombatAbility(const CombatAbility_Struct *ca_atk)
 				RangedAttack(GetTarget(), true);
 
 			if (RuleR(Character, HeroicAgilityExtraAttackRate) > 0 && GetHeroicAGI() > 0) {
+				int chain = 0;
 				int effective_hagi = GetHeroicAGI();		
 				while (effective_hagi > 0) {
-					if (zone->random.Roll(effective_hagi * RuleR(Character, HeroicAgilityExtraAttackRate))) {
+					if (zone->random.Roll(static_cast<int>(std::floor(effective_hagi * RuleR(Character, HeroicAgilityExtraAttackRate))))) {
 						RangedAttack(GetTarget(), true);
-						MessageString(Chat::NPCFlurry, YOU_FLURRY);
-						effective_hagi -= zone->random.Int(50,100);
+						effective_hagi -= ++chain * zone->random.Int(50,100);
 					}
+				}
+				if (chain > 0) {
+					Message(Chat::NPCFlurry, "You unleash a FLURRY of %d extra arrows.", chain);
 				}
 			}
 			return;

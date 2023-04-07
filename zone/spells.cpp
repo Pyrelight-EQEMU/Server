@@ -4121,6 +4121,68 @@ bool Mob::SpellOnTarget(
 			);
 		}
 
+		// Pyrelight Custom Code		
+		if (IsClient() && RuleB(Character,HeroicCharismaResistRerollEnabled) && spell_effectiveness < 100) {			
+			bool changed_result = false;
+			int effective_hcha = GetHeroicCHA();
+
+			while (effective_hcha > 0) {
+				if (zone->random.Roll(static_cast<int>(std::floor(effective_hcha*3)))) {
+					int new_eff = spelltar->ResistSpell(
+									spells[spell_id].resist_type,
+									spell_id,
+									this,
+									use_resist_adjust,
+									resist_adjust,
+									true,
+									false,
+									false,
+									level_override);
+
+					if (new_eff >= 100) {
+						changed_result = true;
+						break;
+					} 
+					effective_hcha =- zone->random.Int(25,100);				
+				}
+
+				if (changed_result) {
+					spell_effectiveness = 100;
+					Message(Chat::SpellFailure, "Your heroic presence has bypassed your target's resistances!");
+				}
+			}
+
+			if (spelltar->IsClient() && RuleB(Character,HeroicCharismaResistRerollEnabled) && spell_effectiveness == 100) {
+				bool changed_result = false;
+				int effective_hcha = spelltar->GetHeroicCHA();
+
+				while (effective_hcha > 0) {
+					if (zone->random.Roll(static_cast<int>(std::floor(effective_hcha*3)))) {
+						int new_eff = spelltar->ResistSpell(
+										spells[spell_id].resist_type,
+										spell_id,
+										this,
+										use_resist_adjust,
+										resist_adjust,
+										true,
+										false,
+										false,
+										level_override);
+
+						if (new_eff >= 100) {
+							changed_result = true;
+							break;
+						}
+					}
+					effective_hcha -= zone->random.Int(50,100);				
+				}
+				if (changed_result) {
+					spell_effectiveness = 0;
+					spelltar->Message(Chat::SpellFailure, "Your heroic presence resists the spell!");
+				}
+			}
+		}
+
 		if (spell_effectiveness < 100) {
 			if (spell_effectiveness == 0 || !IsPartialCapableSpell(spell_id)) {
 				LogSpells("Spell [{}] was completely resisted by [{}]", spell_id, spelltar->GetName());
@@ -4680,6 +4742,7 @@ bool Mob::IsImmuneToSpell(uint16 spell_id, Mob *caster)
 	}
 
 	// slow and haste spells
+	/*
 	if(GetSpecialAbility(UNSLOWABLE) && IsEffectInSpell(spell_id, SE_AttackSpeed))
 	{
 		LogSpells("We are immune to Slow spells");
@@ -4692,6 +4755,7 @@ bool Mob::IsImmuneToSpell(uint16 spell_id, Mob *caster)
 		}
 		return true;
 	}
+	*/
 
 	// client vs client fear
 	if(IsEffectInSpell(spell_id, SE_Fear))
@@ -5348,10 +5412,13 @@ void Mob::Stun(int duration)
 			InterruptSpell(spell_id);
 	}
 
-	if(duration > 0)
+	duration = (IsClient()) ? std::max(duration, 3000) : duration;
+
+	if(duration > 0 && stunned_immunity_timer.GetRemainingTime() == 0)
 	{
 		stunned = true;
 		stunned_timer.Start(duration);
+		stunned_immunity_timer.Start(stunned_immunity_timer.GetRemainingTime() + duration * 3);
 		SendAddPlayerState(PlayerState::Stunned);
 	}
 }
