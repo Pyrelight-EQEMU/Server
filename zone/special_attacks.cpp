@@ -993,10 +993,10 @@ void Mob::DoArcheryAttackDmg(Mob *other, const EQ::ItemInstance *RangeWeapon, co
 		int which_wep = zone->random.Roll0(3);
 
 		if (primary && other && !other->HasDied() && which_wep <= 1) {
-			TryCombatProcs(primary, other, EQ::invslot::slotRange);
+			if (zone->random.Roll0(2)) TryCombatProcs(primary, other, EQ::invslot::slotRange);
 		}
 		if (secondary && other && !other->HasDied() && which_wep == 2) {
-			TryCombatProcs(secondary, other, EQ::invslot::slotRange);
+			if (zone->random.Roll0(2)) TryCombatProcs(secondary, other, EQ::invslot::slotRange);
 		}
 
 		// Ammo Proc, do not try spell procs if from ammo.
