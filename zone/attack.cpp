@@ -3813,7 +3813,21 @@ void Mob::CommonDamage(Mob* attacker, int64 &damage, const uint16 spell_id, cons
 
 				healed = RuleB(Spells, CompoundLifetapHeals) ? attacker->GetActSpellHealing(spell_id, healed) : healed;
 				LogCombat("Applying lifetap heal of [{}] to [{}]", healed, attacker->GetName());
+
+				// Pyrelight Custom Code
+				// New Necromancer Epic 1.0 Effect. Share Lifetaps with pet, and if you have a pet also share them at a reduced value with your group.
 				attacker->HealDamage(healed);
+				if (attacker->IsClient() && attacker->HasPet() && attacker->GetInv().HasItemEquippedByID(20544)) {
+					attacker->GetPet()->HealDamage(healed);
+					if (attacker->IsGrouped()) {
+						Group* group = attacker->GetGroup();
+						for (int i = 0; i < MAX_GROUP_MEMBERS; ++i) {							
+							if (group->members[i] && group->members[i] != attacker) {
+								group->members[i]->HealDamage(static_cast<int64>(std::floor(healed/5)));
+							}
+						}
+					}
+				}
 
 				//we used to do a message to the client, but its gone now.
 				// emote goes with every one ... even npcs

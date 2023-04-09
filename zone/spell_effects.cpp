@@ -3816,9 +3816,9 @@ void Mob::BuffProcess()
 				if(!zone->BuffTimersSuspended() || !IsSuspendableSpell(buffs[buffs_i].spellid))
 				{								
 					bool suspended = false;
-
-					// Logic for excluding ticking here		
+							
 					// Pyrelight Custom Code	
+					// We pause the timers on buffs that we or our group members cast, as long as those are spells they own
 					if (!spells[buffs[buffs_i].spellid].short_buff_box && (IsClient() || (IsPet() && IsPetOwnerClient()))) {
 						Client* client = GetOwnerOrSelf()->CastToClient();
 						Client* caster = entity_list.GetClientByName(buffs[buffs_i].caster_name);
