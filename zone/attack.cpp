@@ -3813,10 +3813,10 @@ void Mob::CommonDamage(Mob* attacker, int64 &damage, const uint16 spell_id, cons
 
 				healed = RuleB(Spells, CompoundLifetapHeals) ? attacker->GetActSpellHealing(spell_id, healed) : healed;
 				LogCombat("Applying lifetap heal of [{}] to [{}]", healed, attacker->GetName());
+				attacker->HealDamage(healed);
 
 				// Pyrelight Custom Code
-				// New Necromancer Epic 1.0 Effect. Share Lifetaps with pet, and if you have a pet also share them at a reduced value with your group.
-				attacker->HealDamage(healed);
+				// New Necromancer Epic 1.0 Effect. Share Lifetaps with pet, and if you have a pet also share them at a reduced value with your group.				
 				if (attacker->IsClient() && attacker->HasPet() && attacker->GetInv().HasItemEquippedByID(20544)) {
 					attacker->GetPet()->HealDamage(healed);
 					if (attacker->IsGrouped()) {
