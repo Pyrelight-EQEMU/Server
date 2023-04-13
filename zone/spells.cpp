@@ -461,6 +461,10 @@ bool Mob::DoCastSpell(uint16 spell_id, uint16 target_id, CastingSlot slot,
 	// oddly still send this. Since those cases don't reach here, we don't need to check them
 	if (slot != CastingSlot::Discipline) {
 		SendBeginCast(spell_id, orgcasttime);
+	}	
+
+	if (RuleB(Spells, ReallocateInstantHealCastTimeToRecast) && IsClient() && IsHealSpell(spell_id)) {		
+		cast_time = 500;
 	}
 
 	// cast time is 0, just finish it right now and be done with it
@@ -516,6 +520,10 @@ void Mob::SendBeginCast(uint16 spell_id, uint32 casttime)
 	begincast->caster_id = GetID();
 	begincast->spell_id = spell_id;
 	begincast->cast_time = casttime; // client calculates reduced time by itself
+
+	if (RuleB(Spells, ReallocateInstantHealCastTimeToRecast) && IsClient() && IsHealSpell(spell_id)) {
+		casttime = 500;
+	}
 
 	outapp->priority = 3;
 
@@ -1714,7 +1722,10 @@ void Mob::CastedSpellFinished(uint16 spell_id, uint32 target_id, CastingSlot slo
 
 			// this causes the delayed refresh of the spell bar gems
 			if (spells[spell_id].timer_id > 0 && slot < CastingSlot::MaxGems) {
-				c->SetLinkedSpellReuseTimer(spells[spell_id].timer_id, (spells[spell_id].recast_time / 1000) - (casting_spell_recast_adjust / 1000));
+				if (RuleB(Spells, ReallocateInstantHealCastTimeToRecast) && IsHealSpell(spell_id)) {
+					 casting_spell_recast_adjust -= GetActSpellCasttime(spell_id, spells[spell_id].cast_time); 
+				}
+				c->SetLinkedSpellReuseTimer(spells[spell_id].timer_id, 60);
 			}
 
 			c->MemorizeSpell(static_cast<uint32>(slot), spell_id, memSpellSpellbar, casting_spell_recast_adjust);

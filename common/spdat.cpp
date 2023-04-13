@@ -1041,6 +1041,14 @@ bool IsVeryFastHealSpell(uint16 spell_id)
 	return false;
 }
 
+bool IsHealSpell(uint16 spell_id)
+{
+	return (IsRegularSingleTargetHealSpell(spell_id) || IsRegularGroupHealSpell(spell_id) ||
+	        IsCompleteHealSpell(spell_id) || IsGroupCompleteHealSpell(spell_id) ||
+			IsHealOverTimeSpell(spell_id) || IsGroupHealOverTimeSpell(spell_id) ||
+			IsPercentalHealSpell(spell_id));
+}
+
 bool IsRegularSingleTargetHealSpell(uint16 spell_id)
 {
 	spell_id = (IsEffectInSpell(spell_id, SE_CurrentHP)) ? spell_id : GetTriggerSpellID(spell_id, SE_CurrentHP);

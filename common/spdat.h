@@ -1529,6 +1529,7 @@ bool IsRegularSingleTargetHealSpell(uint16 spell_id);
 bool IsRegularGroupHealSpell(uint16 spell_id);
 bool IsGroupCompleteHealSpell(uint16 spell_id);
 bool IsGroupHealOverTimeSpell(uint16 spell_id);
+bool IsHealSpell(uint16 spell_id);
 bool IsDebuffSpell(uint16 spell_id);
 bool IsResistDebuffSpell(uint16 spell_id);
 bool IsSelfConversionSpell(uint16 spell_id);
