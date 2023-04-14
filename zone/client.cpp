@@ -11850,8 +11850,16 @@ void Client::SetBaseClass(uint32 class_id) {
 	} else {
 		m_pp.class_ = class_id;
 		m_pp.level = 1;
-		m_pp.exp = 1;
-		Save();		
+		m_pp.exp = 0;
+		m_pp.aapoints = 0;
+		m_pp.expAA = 0;
+
+		for (int slot_id = EQ::invslot::EQUIPMENT_BEGIN; slot_id <= EQ::invslot::EQUIPMENT_END; ++slot_id)
+		{
+			DeleteItemInInventory(slot_id);
+		}	
+		
+		Save();
 	}
 }
 
