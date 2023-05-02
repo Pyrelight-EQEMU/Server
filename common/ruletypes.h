@@ -463,7 +463,6 @@ RULE_BOOL(Spells, RuneUseHealAmt, false, "Applies Heal Amount stat to Rune-type 
 RULE_BOOL(Spells, DispelBeneficialReduceDuration, true, "NPC-cast dispels reduce remaining duration on beneficial spells instead of removing them.")
 RULE_REAL(Spells, NonCasterSpellDmgPenalty, 1, "Factor to multiply non-caster spell damage by")
 RULE_INT(Spells,InnateCasterSpellDamage, 2, "Base factor for Innate Caster Spell Damage bonus. T1 is base, T2 is squared, T3 is cubed.")
-RULE_BOOL(Spells,ReallocateInstantHealCastTimeToRecast, true, "Make client-cast instant heals actually instant, and reallocate their cast timers to recast")
 RULE_CATEGORY_END()
 
 RULE_CATEGORY(Combat)
