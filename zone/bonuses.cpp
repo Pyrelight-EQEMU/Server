@@ -147,18 +147,16 @@ void Client::CalcBonuses()
 
 int Mob::CalcRecommendedLevelBonus(uint8 current_level, uint8 recommended_level, int base_stat)
 {
-    int level_difference = recommended_level - current_level;
-    float percent_reduction = 0.0f;
-    
-    if (level_difference >= 5) {
-        percent_reduction = std::min(0.8f, 0.2f * std::floor(level_difference / 5.0f));
-    }
-    
-    int modified_stat = std::ceil(base_stat * (1.0f - percent_reduction));
-    
-    return modified_stat;
-}
+	if (recommended_level && current_level < recommended_level) {
+		int32 stat_modifier = (current_level * 10000 / recommended_level) * base_stat;
 
+		stat_modifier += stat_modifier < 0 ? -5000 : 5000;
+
+		return (stat_modifier / 10000);
+	}
+
+	return 0;
+}
 
 void Mob::CalcItemBonuses(StatBonuses* b) {
 	ClearItemFactionBonuses();
