@@ -9179,7 +9179,7 @@ void Client::Handle_OP_ItemVerifyRequest(const EQApplicationPacket *app)
 			else if (item->ItemType == EQ::item::ItemTypeSpell)
 			{
 				spell_id = item->Scroll.Effect;
-				if (RuleB(Spells, AllowSpellMemorizeFromItem))
+				if (RuleB(Spells, AllowSpellMemorizeFromItem) && item->ReqLevel <= this->GetLevel())
 				{
 					int highest_spell_id = GetHighestScribedSpellinSpellGroup(spells[spell_id].spell_group);
 					if (spells[spell_id].spell_group > 0 && highest_spell_id > 0)
