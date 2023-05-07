@@ -117,7 +117,7 @@ void Client::CalcBonuses()
 
 	// Pyrelight Custom Code
 	// Give Casters an innate bonus to spell damage based on level.
-	if (RuleI(spells,InnateCasterSpellDamage) > 0 && IsClient() && IsCasterClass()) {
+	if (RuleI(spells,InnateCasterSpellDamage) > 0 && IsClient() && IsCasterClass(GetClass())) {
 		int spelldmgbonus = 0;
 		if (GetLevel() <= 60) {
 			spelldmgbonus = (GetLevel() * RuleI(spells,InnateCasterSpellDamage));
