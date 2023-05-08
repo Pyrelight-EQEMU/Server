@@ -1371,12 +1371,13 @@ void Client::ActivateAlternateAdvancementAbility(int rank_id, int target_id) {
 		TogglePassiveAlternativeAdvancement(*rank, ability->id);
 	}
 	else {
+		/*
 		// Bards can cast instant cast AAs while they are casting or channeling item cast.
 		if (GetClass() == BARD && IsCasting() && spells[rank->spell].cast_time == 0) {
 			if (!DoCastingChecksOnCaster(rank->spell, EQ::spells::CastingSlot::AltAbility)) {
 				return;
 			}
-
+		
 			if (!SpellFinished(rank->spell, entity_list.GetMob(target_id), EQ::spells::CastingSlot::AltAbility, spells[rank->spell].mana, -1, spells[rank->spell].resist_difficulty, false, -1,
 				rank->spell_type + pTimerAAStart, timer_duration, false, rank->id)) {
 				return;
@@ -1386,6 +1387,12 @@ void Client::ActivateAlternateAdvancementAbility(int rank_id, int target_id) {
 			if (!CastSpell(rank->spell, target_id, EQ::spells::CastingSlot::AltAbility, -1, -1, 0, -1, rank->spell_type + pTimerAAStart, timer_duration, nullptr, rank->id)) {
 				return;
 			}
+		}
+		*/
+		//Pyrelight Custom Code
+		// Fuck Bards
+		if (!CastSpell(rank->spell, target_id, EQ::spells::CastingSlot::AltAbility, -1, -1, 0, -1, rank->spell_type + pTimerAAStart, timer_duration, nullptr, rank->id)) {
+				return;
 		}
 	}
 }
