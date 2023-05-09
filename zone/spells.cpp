@@ -5437,7 +5437,7 @@ void Client::Stun(int duration)
 {	
 	if (stunned_immunity_timer.Check()) {
 		Mob::Stun(duration);
-		stunned_immunity_timer.Start(duration * 3)
+		stunned_immunity_timer.Start(duration * 3);
 		
 		auto outapp = new EQApplicationPacket(OP_Stun, sizeof(Stun_Struct));
 		Stun_Struct* stunon = (Stun_Struct*) outapp->pBuffer;
