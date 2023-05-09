@@ -5414,13 +5414,10 @@ void Mob::Stun(int duration)
 			InterruptSpell(spell_id);
 	}
 
-	duration = (IsClient()) ? std::max(duration, 3000) : duration;
-
-	if(duration > 0 && stunned_immunity_timer.GetRemainingTime() == 0)
+	if(duration > 0)
 	{
 		stunned = true;
 		stunned_timer.Start(duration);
-		stunned_immunity_timer.Start(stunned_immunity_timer.GetRemainingTime() + duration * 3);
 		SendAddPlayerState(PlayerState::Stunned);
 	}
 }
@@ -5435,15 +5432,19 @@ void Mob::UnStun() {
 
 // Stuns "this"
 void Client::Stun(int duration)
-{
-	Mob::Stun(duration);
-
-	auto outapp = new EQApplicationPacket(OP_Stun, sizeof(Stun_Struct));
-	Stun_Struct* stunon = (Stun_Struct*) outapp->pBuffer;
-	stunon->duration = duration;
-	outapp->priority = 5;
-	QueuePacket(outapp);
-	safe_delete(outapp);
+{	
+	if (!stunned_immunity_timer.Enabled() || stunned_immunity_timer.Check()) {		
+		duration = std::min(duration, 3000);
+		Mob::Stun(duration);
+		stunned_immunity_timer.Start(duration * 3);
+		
+		auto outapp = new EQApplicationPacket(OP_Stun, sizeof(Stun_Struct));
+		Stun_Struct* stunon = (Stun_Struct*) outapp->pBuffer;
+		stunon->duration = duration;
+		outapp->priority = 5;
+		QueuePacket(outapp);
+		safe_delete(outapp);
+	}
 }
 
 void Client::UnStun() {
