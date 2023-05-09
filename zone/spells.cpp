@@ -5414,9 +5414,9 @@ void Mob::Stun(int duration)
 			InterruptSpell(spell_id);
 	}
 
-	duration = (IsClient()) ? std::max(duration, 3000) : duration;
+	duration = (IsClient()) ? std::min(duration, 3000) : duration;
 
-	if(duration > 0 && stunned_immunity_timer.GetRemainingTime() == 0)
+	if(duration > 0 && stunned_immunity_timer.Check())
 	{
 		stunned = true;
 		stunned_timer.Start(duration);
