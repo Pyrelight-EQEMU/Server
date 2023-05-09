@@ -6739,7 +6739,7 @@ void Client::SendStatsWindow(Client* client, bool use_window)
 	}
 
 	std::string bard_info = "";
-	if(true) {
+	if(GetClass() == BARD) {
 		bard_info = indP + "Singing: " + itoa(GetSingMod()) + "<br>" +
 					indP + "Brass: " + itoa(GetBrassMod()) + "<br>" +
 					indP + "String: " + itoa(GetStringMod()) + "<br>" +
@@ -6798,7 +6798,7 @@ void Client::SendStatsWindow(Client* client, bool use_window)
 	/*	SpellDmg*/	indP << "Spell Dmg: " << GetSpellDmg() << " / " << RuleI(Character, ItemSpellDmgCap) << "<br>" <<
 	/*	Clair	*/	indP << "Clairvoyance: " << GetClair() << " / " << RuleI(Character, ItemClairvoyanceCap) << "<br>" <<
 	/*	DSMit	*/	indP << "Dmg Shld Mit: " << GetDSMit() << " / " << RuleI(Character, ItemDSMitigationCap) << "<br><br>";
-	if(true)
+	if(GetClass() == BARD)
 		final_string << bard_info << "<br>";
 	if(skill_mods.size() > 0)
 		final_string << skill_mods << "<br>";
@@ -6839,7 +6839,7 @@ void Client::SendStatsWindow(Client* client, bool use_window)
 	client->Message(Chat::White, " hMR: %i  hPR: %i  hFR: %i  hCR: %i  hDR: %i hCorruption: %i", GetHeroicMR(), GetHeroicPR(), GetHeroicFR(), GetHeroicCR(), GetHeroicDR(), GetHeroicCorrup());
 	client->Message(Chat::White, " Shielding: %i  Spell Shield: %i  DoT Shielding: %i Stun Resist: %i  Strikethrough: %i  Avoidance: %i  Accuracy: %i  Combat Effects: %i", GetShielding(), GetSpellShield(), GetDoTShield(), GetStunResist(), GetStrikeThrough(), GetAvoidance(), GetAccuracy(), GetCombatEffects());
 	client->Message(Chat::White, " Heal Amt.: %i  Spell Dmg.: %i  Clairvoyance: %i DS Mitigation: %i", GetHealAmt(), GetSpellDmg(), GetClair(), GetDSMit());
-	if(true)
+	if(GetClass() == BARD)
 		client->Message(Chat::White, " Singing: %i  Brass: %i  String: %i Percussion: %i Wind: %i", GetSingMod(), GetBrassMod(), GetStringMod(), GetPercMod(), GetWindMod());
 
 	Extra_Info:

@@ -1373,9 +1373,9 @@ void Mob::CastedSpellFinished(uint16 spell_id, uint32 target_id, CastingSlot slo
 	bool bard_song_mode = false;
 	bool regain_conc = false;
 	Mob *spell_target = entity_list.GetMob(target_id);
-	// Pyrelight Custom Code
-	// Allow ANYONE to move while casting bard songs
-	if(IsBardSong(spell_id))    
+	// here we do different things if this is a bard casting a bard song from
+	// a spell bar slot
+	if(GetClass() == BARD) // bard's can move when casting any spell...
 	{
 		if (IsBardSong(spell_id) && slot < CastingSlot::MaxGems) {
 			if (spells[spell_id].buff_duration == 0xFFFF) {
@@ -2666,7 +2666,7 @@ bool Mob::SpellFinished(uint16 spell_id, Mob *spell_target, CastingSlot slot, in
 			}
 		}
 		//handle bard AA and Discipline recast timers when singing
-		if (IsBardSong(CastingSpellID()) && spell_id != casting_spell_id && timer != 0xFFFFFFFF) {
+		if (GetClass() == BARD && spell_id != casting_spell_id && timer != 0xFFFFFFFF) {
 			CastToClient()->GetPTimers().Start(timer, timer_duration);
 			LogSpells("Spell [{}]: Setting BARD custom reuse timer [{}] to [{}]", spell_id, casting_spell_timer, casting_spell_timer_duration);
 		}
@@ -6180,7 +6180,8 @@ bool Mob::UseBardSpellLogic(uint16 spell_id, int slot)
 	return
 	(
 		IsValidSpell(spell_id) &&
-		slot != -1 &&		
+		slot != -1 &&
+		GetClass() == BARD &&
 		slot <= EQ::spells::SPELL_GEM_COUNT &&
 		IsBardSong(spell_id)
 	);

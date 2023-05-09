@@ -493,22 +493,11 @@ bool IsTGBCompatibleSpell(uint16 spell_id)
 
 bool IsBardSong(uint16 spell_id)
 {
-	if (IsValidSpell(spell_id) &&
-		spells[spell_id].classes[BARD - 1] < 255 &&
-		!spells[spell_id].is_discipline &&
-		(spells[spell_id].skill == EQ::skills::SkillPercussionInstruments ||
-		spells[spell_id].skill == EQ::skills::SkillWindInstruments ||
-		spells[spell_id].skill == EQ::skills::SkillStringedInstruments ||
-		spells[spell_id].skill == EQ::skills::SkillSinging))
-	{
+	if (IsValidSpell(spell_id) && spells[spell_id].classes[BARD - 1] < 255 && !spells[spell_id].is_discipline)
 		return true;
-	}
-	else
-	{
-		return false;
-	}
-}
 
+	return false;
+}
 
 bool IsEffectInSpell(uint16 spellid, int effect)
 {
