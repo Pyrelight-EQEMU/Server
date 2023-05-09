@@ -5435,7 +5435,7 @@ void Mob::UnStun() {
 // Stuns "this"
 void Client::Stun(int duration)
 {	
-	if (stunned_immunity_timer.Check()) {
+	if (!stunned_immunity_timer.Enabled() || stunned_immunity_timer.Check()) {
 		Mob::Stun(duration);
 		stunned_immunity_timer.Start(duration * 3);
 		
