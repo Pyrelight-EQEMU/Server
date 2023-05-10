@@ -5401,6 +5401,11 @@ void Mob::SendSpellBarEnable(uint16 spell_id)
 
 void Mob::Stun(int duration)
 {
+	if (IsPet() && IsPetOwnerClient()) {
+		if (stunned_immunity_timer.Enabled() && !stunned_immunity_timer.Check()) {
+			return;
+		}
+	}
 	//make sure a shorter stun does not overwrite a longer one.
 	if(stunned && stunned_timer.GetRemainingTime() > uint32(duration))
 		return;
@@ -5416,6 +5421,9 @@ void Mob::Stun(int duration)
 
 	if(duration > 0)
 	{
+		if (IsPet() && IsPetOwnerClient()) {
+			stunned_immunity_timer.Start(duration * 3);
+		}
 		stunned = true;
 		stunned_timer.Start(duration);
 		SendAddPlayerState(PlayerState::Stunned);
