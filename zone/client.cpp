@@ -11853,6 +11853,7 @@ void Client::SetBaseClass(uint32 class_id) {
 		m_pp.exp = 0;
 		m_pp.aapoints = 0;
 		m_pp.expAA = 0;
+		Save(1);
 
 		query = StringFormat(
 			"SELECT itemid, item_charges, slot FROM starting_items "
@@ -11867,38 +11868,13 @@ void Client::SetBaseClass(uint32 class_id) {
 
 		results = database.QueryDatabase(query);
 
-		std::string query_values;
+		std::string insert_query;
 
 		for (auto& row = results.begin(); row != results.end(); ++row) {
-			// Create insert values for each row
-			std::string row_values = StringFormat("(%u, %i, %u, %u, %i)",
-												CharacterID(),
-												row[2],
-												class_id,
-												row[0],
-												row[1]);
-
-			// Add a comma between values, but not before the first value
-			if (!query_values.empty()) {
-				query_values += ", ";
-			}
-
-			// Append the new values
-			query_values += row_values;
+			insert_query = StringFormat("INSERT INTO `inventory` (charid, slotid, class, itemid, charges, color) VALUES (%u, %i, %u, %u, %i, %u)"
+										 CharacterID(), row[2], class_id, row[0], row[1], 0);
+			database.QueryDatabase(insert_query);	
 		}
-
-		if (!query_values.empty()) {
-			// Build the final insert query
-			std::string query = StringFormat(
-				"INSERT INTO `inventory` (charid, slotid, class, itemid, charges) VALUES %s",
-				query_values.c_str()
-			);
-
-			// Execute the query
-			database.QueryDatabase(query);
-		}
-		
-		Save(1);
 	}
 }
 
