@@ -11854,12 +11854,7 @@ void Client::SetBaseClass(uint32 class_id) {
 		m_pp.aapoints = 0;
 		m_pp.expAA = 0;
 
-		for (int slot_id = EQ::invslot::EQUIPMENT_BEGIN; slot_id <= EQ::invslot::EQUIPMENT_END; ++slot_id)
-		{
-			DeleteItemInInventory(slot_id);
-		}	
-		
-		Save();
+		Save(1);
 	}
 }
 

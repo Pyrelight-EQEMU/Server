@@ -2336,9 +2336,10 @@ bool Client::StoreCharacter(
 		const EQ::ItemInstance *new_inventory_item = p_inventory_profile->GetItem(i);
 		if (new_inventory_item) {
 			invquery = StringFormat(
-				"INSERT INTO `inventory` (charid, slotid, itemid, charges, color) VALUES (%u, %i, %u, %i, %u)",
+				"INSERT INTO `inventory` (charid, slotid, class, itemid, charges, color) VALUES (%u, %i, %u, %u, %i, %u)",
 				character_id,
 				i,
+				p_player_profile_struct->class_,
 				new_inventory_item->GetItem()->ID,
 				new_inventory_item->GetCharges(),
 				new_inventory_item->GetColor()

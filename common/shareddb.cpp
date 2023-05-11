@@ -516,7 +516,7 @@ bool SharedDatabase::SetStartingItems(PlayerProfile_Struct* pp, EQ::InventoryPro
 		inv->PutItem(slot, *myinst);
 		safe_delete(myinst);
 	}
-
+	
 	return true;
 }
 

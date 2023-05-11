@@ -1138,7 +1138,6 @@ void QuestManager::permaclass(int class_id) {
 	QuestManagerCurrentQuestVars();
 	//Makes the client the class specified
 	initiator->SetBaseClass(class_id);
-	initiator->Save(2);
 	initiator->Kick("Base class change by QuestManager");
 }
 
