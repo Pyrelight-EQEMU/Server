@@ -11853,18 +11853,17 @@ void Client::SetBaseClass(uint32 class_id) {
 		m_pp.exp = 0;
 		m_pp.aapoints = 0;
 		m_pp.expAA = 0;
-		
+
 		query = StringFormat(
 			"SELECT itemid, item_charges, slot FROM starting_items "
 			"WHERE (race = %i or race = 0) AND (class = %i or class = 0) AND "
 			"(deityid = %i or deityid = 0) AND (zoneid = %i or zoneid = 0) AND "
-			"gm <= %i %s ORDER BY id",
-			si_race,
-			si_class,
-			si_deity,
-			si_current_zone,
-			admin_level,
-			ContentFilterCriteria::apply().c_str()
+			"gm <= %i ORDER BY id",
+			m_pp.race,
+			class_id,
+			m_pp.deity,
+			m_pp.zone_id,
+			0
 		);
 
 		results = database.QueryDatabase(query);
