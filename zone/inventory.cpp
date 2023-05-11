@@ -2081,7 +2081,8 @@ bool Client::SwapItem(MoveItem_Struct* move_in) {
 			}
 		}
 	}
-	
+
+	/*
 	if (dst_inst &&
 		(dst_slot_id >= EQ::invslot::SHARED_BANK_BEGIN) && (dst_slot_id <= EQ::invslot::SHARED_BANK_END) ||
 		(dst_slot_id >= EQ::invbag::SHARED_BANK_BAGS_BEGIN) && (dst_slot_id <= EQ::invbag::SHARED_BANK_BAGS_END)) {
@@ -2098,6 +2099,14 @@ bool Client::SwapItem(MoveItem_Struct* move_in) {
 				}
 			}
 		}
+	}
+	*/
+
+	// Pyrelight Custom Code - Disable use of shared bank
+	if (dst_inst &&
+		(dst_slot_id >= EQ::invslot::SHARED_BANK_BEGIN) && (dst_slot_id <= EQ::invslot::SHARED_BANK_END) ||
+		(dst_slot_id >= EQ::invbag::SHARED_BANK_BAGS_BEGIN) && (dst_slot_id <= EQ::invbag::SHARED_BANK_BAGS_END)) {
+		return(false);
 	}
 
 	// Check for No Drop Hacks
