@@ -2335,15 +2335,16 @@ bool Client::StoreCharacter(
 	for (int16  i = EQ::invslot::EQUIPMENT_BEGIN; i <= EQ::invbag::BANK_BAGS_END;) {
 		const EQ::ItemInstance *new_inventory_item = p_inventory_profile->GetItem(i);
 		if (new_inventory_item) {
-			invquery = StringFormat(
+			std::string invquery = StringFormat(
 				"INSERT INTO `inventory` (charid, slotid, class, itemid, charges, color) VALUES (%u, %i, %u, %u, %i, %u)",
 				character_id,
 				i,
-				p_player_profile_struct->class_,
+				(i > EQ::invslot::EQUIPMENT_END) ? 0 : p_player_profile_struct->class_,
 				new_inventory_item->GetItem()->ID,
 				new_inventory_item->GetCharges(),
 				new_inventory_item->GetColor()
 			);
+
 
 			auto results = database.QueryDatabase(invquery);
 		}

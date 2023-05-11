@@ -11857,30 +11857,47 @@ void Client::SetBaseClass(uint32 class_id) {
 		query = StringFormat(
 			"SELECT itemid, item_charges, slot FROM starting_items "
 			"WHERE (race = %i or race = 0) AND (class = %i or class = 0) AND "
-			"(deityid = %i or deityid = 0) AND (zoneid = %i or zoneid = 0) AND "
-			"gm <= %i ORDER BY id",
+			"(deityid = %i or deityid = 0) AND (zoneid = %i or zoneid = 0) AND slot < 22"
+			"ORDER BY id",
 			m_pp.race,
 			class_id,
 			m_pp.deity,
-			m_pp.zone_id,
-			0
+			m_pp.zone_id
 		);
 
 		results = database.QueryDatabase(query);
-		const EQ::ItemData *myitem;
+
+		std::string query_values;
 
 		for (auto& row = results.begin(); row != results.end(); ++row) {
-			query = StringFormat(
-				"INSERT INTO `inventory` (charid, slotid, class, itemid, charges) VALUES (%u, %i, %u, %u, %i)",
-				CharacterID(),
-				row[2],
-				class_id,
-				row[0],
-				row[1]
-			);
-			database.QueryDatabase(query);
+			// Create insert values for each row
+			std::string row_values = StringFormat("(%u, %i, %u, %u, %i)",
+												CharacterID(),
+												row[2],
+												class_id,
+												row[0],
+												row[1]);
+
+			// Add a comma between values, but not before the first value
+			if (!query_values.empty()) {
+				query_values += ", ";
+			}
+
+			// Append the new values
+			query_values += row_values;
 		}
 
+		if (!query_values.empty()) {
+			// Build the final insert query
+			std::string query = StringFormat(
+				"INSERT INTO `inventory` (charid, slotid, class, itemid, charges) VALUES %s",
+				query_values.c_str()
+			);
+
+			// Execute the query
+			database.QueryDatabase(query);
+		}
+		
 		Save(1);
 	}
 }
