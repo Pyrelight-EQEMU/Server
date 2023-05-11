@@ -11853,6 +11853,34 @@ void Client::SetBaseClass(uint32 class_id) {
 		m_pp.exp = 0;
 		m_pp.aapoints = 0;
 		m_pp.expAA = 0;
+		
+		query = StringFormat(
+			"SELECT itemid, item_charges, slot FROM starting_items "
+			"WHERE (race = %i or race = 0) AND (class = %i or class = 0) AND "
+			"(deityid = %i or deityid = 0) AND (zoneid = %i or zoneid = 0) AND "
+			"gm <= %i %s ORDER BY id",
+			si_race,
+			si_class,
+			si_deity,
+			si_current_zone,
+			admin_level,
+			ContentFilterCriteria::apply().c_str()
+		);
+
+		results = database.QueryDatabase(query);
+		const EQ::ItemData *myitem;
+
+		for (auto& row = results.begin(); row != results.end(); ++row) {
+			query = StringFormat(
+				"INSERT INTO `inventory` (charid, slotid, class, itemid, charges) VALUES (%u, %i, %u, %u, %i)",
+				CharacterID(),
+				row[2],
+				class_id,
+				row[0],
+				row[1]
+			);
+			database.QueryDatabase(query);
+		}
 
 		Save(1);
 	}
