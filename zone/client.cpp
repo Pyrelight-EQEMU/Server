@@ -11858,7 +11858,7 @@ void Client::SetBaseClass(uint32 class_id) {
 		query = StringFormat(
 			"SELECT itemid, item_charges, slot FROM starting_items "
 			"WHERE (race = %i or race = 0) AND (class = %i or class = 0) AND "
-			"(deityid = %i or deityid = 0) AND (zoneid = %i or zoneid = 0) AND slot < 22"
+			"(deityid = %i or deityid = 0) AND (zoneid = %i or zoneid = 0) AND slot < 22 "
 			"ORDER BY id",
 			m_pp.race,
 			class_id,
