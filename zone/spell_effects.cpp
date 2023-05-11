@@ -1637,7 +1637,7 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 				if(spell_id == SPELL_LIFEBURN) //Dook- Lifeburn fix
 					break;
 
-				if(IsClient()) {
+				if(IsClient() && spells[spell_id].good_effect) {
 					CastToClient()->SetHorseId(0); // dismount if have horse
 
 					if (zone->random.Int(0, 99) > spells[spell_id].base_value[i]) {

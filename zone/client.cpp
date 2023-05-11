@@ -2629,11 +2629,12 @@ bool Client::HasSkill(EQ::skills::SkillType skill_id) const {
 }
 
 bool Client::CanHaveSkill(EQ::skills::SkillType skill_id) const {
-	if (ClientVersion() < EQ::versions::ClientVersion::RoF2 && class_ == BERSERKER && skill_id == EQ::skills::Skill1HPiercing)
-		skill_id = EQ::skills::Skill2HPiercing;
+	//if (ClientVersion() < EQ::versions::ClientVersion::RoF2 && class_ == BERSERKER && skill_id == EQ::skills::Skill1HPiercing)
+	//	skill_id = EQ::skills::Skill2HPiercing;
 
-	return(content_db.GetSkillCap(GetClass(), skill_id, RuleI(Character, MaxLevel)) > 0);
+	//return(content_db.GetSkillCap(GetClass(), skill_id, RuleI(Character, MaxLevel)) > 0);
 	//if you don't have it by max level, then odds are you never will?
+	return true;
 }
 
 uint16 Client::MaxSkill(EQ::skills::SkillType skillid, uint16 class_, uint16 level) const {
@@ -6946,8 +6947,8 @@ void Client::SendAlternateCurrencyValue(uint32 currency_id, bool send_if_null)
 		update->currency_number = currency_id;
 		update->amount = value;
 		update->unknown072 = 1;
-		FastQueuePacket(&outapp);
 	}
+	SendAltCurrencies();
 }
 
 uint32 Client::GetAlternateCurrencyValue(uint32 currency_id) const

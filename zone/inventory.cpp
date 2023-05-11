@@ -1861,7 +1861,7 @@ bool Client::IsBankSlot(uint32 slot)
 // Moves items around both internally and in the database
 // In the future, this can be optimized by pushing all changes through one database REPLACE call
 bool Client::SwapItem(MoveItem_Struct* move_in) {
-
+    
 	uint32 src_slot_check = move_in->from_slot;
 	uint32 dst_slot_check = move_in->to_slot;
 	uint32 stack_count_check = move_in->number_in_stack;
@@ -2081,7 +2081,8 @@ bool Client::SwapItem(MoveItem_Struct* move_in) {
 			}
 		}
 	}
-	
+
+	/*
 	if (dst_inst &&
 		(dst_slot_id >= EQ::invslot::SHARED_BANK_BEGIN) && (dst_slot_id <= EQ::invslot::SHARED_BANK_END) ||
 		(dst_slot_id >= EQ::invbag::SHARED_BANK_BAGS_BEGIN) && (dst_slot_id <= EQ::invbag::SHARED_BANK_BAGS_END)) {
@@ -2097,6 +2098,49 @@ bool Client::SwapItem(MoveItem_Struct* move_in) {
 					DeleteItemInInventory(EQ::InventoryProfile::CalcSlotId(dst_slot_id, idx), 0, false);
 				}
 			}
+		}
+	}
+	*/
+
+	// Pyrelight Custom Code - Disable use of shared bank
+	if (dst_inst &&
+		(dst_slot_id >= EQ::invslot::SHARED_BANK_BEGIN) && (dst_slot_id <= EQ::invslot::SHARED_BANK_END) ||
+		(dst_slot_id >= EQ::invbag::SHARED_BANK_BAGS_BEGIN) && (dst_slot_id <= EQ::invbag::SHARED_BANK_BAGS_END)) {
+		return(false);
+	}
+
+	if (dst_slot_id == EQ::invslot::slotPrimary || dst_slot_id == EQ::invslot::slotSecondary || dst_slot_id == EQ::invslot::slotRange) {
+		EQ::skills::SkillType correspondingSkillType;
+		
+		switch (src_inst->GetItemType()) {
+			case EQ::item::ItemType1HBlunt:
+				correspondingSkillType = EQ::skills::Skill1HBlunt;
+				break;
+			case EQ::item::ItemType1HSlash:
+				correspondingSkillType = EQ::skills::Skill1HSlashing;
+				break;
+			case EQ::item::ItemType1HPiercing:
+				correspondingSkillType = EQ::skills::Skill1HPiercing;
+				break;
+			case EQ::item::ItemType2HBlunt:
+				correspondingSkillType = EQ::skills::Skill2HBlunt;
+				break;
+			case EQ::item::ItemType2HSlash:
+				correspondingSkillType = EQ::skills::Skill2HSlashing;
+				break;
+			case EQ::item::ItemType2HPiercing:
+				correspondingSkillType = EQ::skills::Skill2HPiercing;
+				break;
+			case EQ::item::ItemTypeMartial:
+				correspondingSkillType = EQ::skills::SkillHandtoHand;
+				break;
+			default:
+				break;
+		}
+
+		if (GetSkill(correspondingSkillType) <= 0) {
+			Message(Chat::Red, "You lack the skills to use this item.");
+			return false;
 		}
 	}
 
@@ -2338,7 +2382,7 @@ bool Client::SwapItem(MoveItem_Struct* move_in) {
 			else if (fail_state == EQ::InventoryProfile::swapItemLore)
 				fail_message = "You already have this LORE item equipped.";
 			else if (fail_state == EQ::InventoryProfile::swapAugLore)
-                fail_message = "You already have one of the LORE augments in this item equipped.";
+                fail_message = "You already have one of the LORE augments in this item equipped.";			
 			if (fail_message)
 				Message(Chat::Red, "%s", fail_message);
 
