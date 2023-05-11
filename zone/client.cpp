@@ -11872,7 +11872,7 @@ void Client::SetBaseClass(uint32 class_id) {
 
 		for (auto& row = results.begin(); row != results.end(); ++row) {
 			insert_query = StringFormat("INSERT INTO `inventory` (charid, slotid, class, itemid, charges, color) VALUES (%u, %i, %u, %i, %i, %i)",
-										 CharacterID(), row[2], class_id, row[0], row[1], 0);
+										 CharacterID(), std::stoi(row[2]), class_id, std::stoi(row[0]), std::stoi(row[1]), 0);
 			database.QueryDatabase(insert_query);	
 		}
 	}
