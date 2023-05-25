@@ -432,42 +432,6 @@ void Object::HandleCombine(Client* user, const NewCombine_Struct* in_combine, Ob
 		return;
 	}
 
-	//changing from a switch to string of if's since we don't need to iterate through all of the skills in the SkillType enum
-	if (spec.tradeskill == EQ::skills::SkillAlchemy) {
-		if (user_pp.class_ != SHAMAN) {
-			user->Message(Chat::Red, "This tradeskill can only be performed by a shaman.");
-			auto outapp = new EQApplicationPacket(OP_TradeSkillCombine, 0);
-			user->QueuePacket(outapp);
-			safe_delete(outapp);
-			return;
-		}
-		else if (user_pp.level < MIN_LEVEL_ALCHEMY) {
-			user->Message(Chat::Red, "You cannot perform alchemy until you reach level %i.", MIN_LEVEL_ALCHEMY);
-			auto outapp = new EQApplicationPacket(OP_TradeSkillCombine, 0);
-			user->QueuePacket(outapp);
-			safe_delete(outapp);
-			return;
-		}
-	}
-	else if (spec.tradeskill == EQ::skills::SkillTinkering) {
-		if (user_pp.race != GNOME) {
-			user->Message(Chat::Red, "Only gnomes can tinker.");
-			auto outapp = new EQApplicationPacket(OP_TradeSkillCombine, 0);
-			user->QueuePacket(outapp);
-			safe_delete(outapp);
-			return;
-		}
-	}
-	else if (spec.tradeskill == EQ::skills::SkillMakePoison) {
-		if (user_pp.class_ != ROGUE && user_pp.class_ != ENCHANTER) {
-			user->Message(Chat::Red, "Only enchanters can mix poisons.");
-			auto outapp = new EQApplicationPacket(OP_TradeSkillCombine, 0);
-			user->QueuePacket(outapp);
-			safe_delete(outapp);
-			return;
-		}
-	}
-
 	// Check if Combine would result in Lore conflict
 	if (user->CheckTradeskillLoreConflict(spec.recipe_id)) {
 		auto outapp = new EQApplicationPacket(OP_TradeSkillCombine, 0);

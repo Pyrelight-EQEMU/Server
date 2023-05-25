@@ -2100,20 +2100,23 @@ bool CheckCharCreateInfoTitanium(CharCreate_Struct *cc)
 void Client::SetClassStartingSkills(PlayerProfile_Struct *pp)
 {
 	for (uint32 i = 0; i <= EQ::skills::HIGHEST_SKILL; ++i) {
-		if (pp->skills[i] == 0) {
-			// Skip specialized, tradeskills (fishing excluded), Alcohol Tolerance, and Bind Wound
-			if (EQ::skills::IsSpecializedSkill((EQ::skills::SkillType)i) ||
-				(EQ::skills::IsTradeskill((EQ::skills::SkillType)i) && i != EQ::skills::SkillFishing) ||
-				i == EQ::skills::SkillAlcoholTolerance || i == EQ::skills::SkillBindWound)
-				continue;
-
-			pp->skills[i] = content_db.GetSkillCap(pp->class_, (EQ::skills::SkillType)i, 1);
+		if (i == EQ::skills::Skill1HBlunt || i == EQ::skills::Skill2HBlunt) {
+			pp->skills[i] = 1;
+		} else if (i == EQ::skills::Skill1HSlashing) {
+			if (pp->class_ == PALADIN || pp->class_ == SHADOWKNIGHT || pp->class_ == RANGER || pp->class_ == DRUID) {
+				pp->skills[i] = 1;
+			}
+		} else if (i == EQ::skills::Skill1HPiercing) {
+			if (pp->class_ != CLERIC) {
+				pp->skills[i] = 1;
+			}
+		} else if (i == EQ::skills::Skill2HSlashing || i == EQ::skills::Skill2HPiercing) {
+			if (pp->class_ == PALADIN || pp->class_ == SHADOWKNIGHT || pp->class_ == RANGER) {
+				pp->skills[i] = 1;
+			}
+		} else if (pp->skills[i] == 0) {	
+			pp->skills[i] = 0;
 		}
-	}
-
-	if (cle->GetClientVersion() < static_cast<uint8>(EQ::versions::ClientVersion::RoF2) && pp->class_ == BERSERKER) {
-		pp->skills[EQ::skills::Skill1HPiercing] = pp->skills[EQ::skills::Skill2HPiercing];
-		pp->skills[EQ::skills::Skill2HPiercing] = 0;
 	}
 }
 
@@ -2158,7 +2161,7 @@ void Client::SetRaceStartingSkills( PlayerProfile_Struct *pp )
 	case IKSAR:
 		{
 			pp->skills[EQ::skills::SkillForage] = 50;
-			pp->skills[EQ::skills::SkillSwimming] = 100;
+			pp->skills[EQ::skills::SkillSwimming] = 100;			
 			break;
 		}
 	case WOOD_ELF:

@@ -309,7 +309,7 @@ namespace RoF2
 
 		const size_t CHARACTER_CREATION_LIMIT = 10;
 
-		const size_t SAY_LINK_BODY_SIZE = 56;
+		const size_t SAY_LINK_BODY_SIZE = 77;
 
 	} /*constants*/
 

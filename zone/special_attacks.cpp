@@ -280,243 +280,159 @@ void Mob::DoSpecialAttackDamage(Mob *who, EQ::skills::SkillType skill, int32 bas
 
 // We should probably refactor this to take the struct not the packet
 void Client::OPCombatAbility(const CombatAbility_Struct *ca_atk)
-{
+{	
 	if (!GetTarget())
 		return;
 	// make sure were actually able to use such an attack. (Bards can throw while casting. ~Kayen confirmed on live 1/22)
-	if ((spellend_timer.Enabled() && GetClass() != BARD)|| IsFeared() || IsStunned() || IsMezzed() || DivineAura() || dead)
+	if ((spellend_timer.Enabled() && GetClass() != BARD) || IsFeared() || IsStunned() || IsMezzed() || DivineAura() || dead)
 		return;
 
-	pTimerType timer = pTimerCombatAbility;
-	// RoF2+ Tiger Claw is unlinked from other monk skills, if they ever do that for other classes there will need
-	// to be more checks here
-	if (ClientVersion() >= EQ::versions::ClientVersion::RoF2 && ca_atk->m_skill == EQ::skills::SkillTigerClaw)
-		timer = pTimerCombatAbility2;
+	// RoF2+ Tiger Claw is unlinked from other monk skills, if they ever do that for other classes there will need to be more checks here
+	pTimerType timer = (ClientVersion() >= EQ::versions::ClientVersion::RoF2 && ca_atk->m_skill == EQ::skills::SkillTigerClaw) ? pTimerCombatAbility2 : pTimerCombatAbility;
 
 	bool CanBypassSkillCheck = false;
-
-	if (ca_atk->m_skill == EQ::skills::SkillBash) { // SLAM - Bash without a shield equipped
-		switch (GetRace())
-		{
-		case OGRE:
-		case TROLL:
-		case BARBARIAN:
-			CanBypassSkillCheck = true;
-		default:
-			break;
-		}
-	}
-
-	/* Check to see if actually have skill */
-	if (!MaxSkill(static_cast<EQ::skills::SkillType>(ca_atk->m_skill)) && !CanBypassSkillCheck)
-		return;
-
-	if (GetTarget()->GetID() != ca_atk->m_target)
-		return; // invalid packet.
-
-	if (!IsAttackAllowed(GetTarget()))
-		return;
-
-	// These two are not subject to the combat ability timer, as they
-	// allready do their checking in conjunction with the attack timer
-	// throwing weapons
-	if (ca_atk->m_atk == EQ::invslot::slotRange) {
-		if (ca_atk->m_skill == EQ::skills::SkillThrowing) {
-			SetAttackTimer();
-			ThrowingAttack(GetTarget());
-			if (CheckDoubleRangedAttack())
-				ThrowingAttack(GetTarget(), true);
-			return;
-		}
-		// ranged attack (archery)
-		if (ca_atk->m_skill == EQ::skills::SkillArchery) {
-			SetAttackTimer();
-			RangedAttack(GetTarget());
-			if (CheckDoubleRangedAttack())
-				RangedAttack(GetTarget(), true);
-
-			if (RuleR(Character, HeroicAgilityExtraAttackRate) > 0 && GetHeroicAGI() > 0) {
-				int chain = 0;
-				int effective_hagi = GetHeroicAGI();		
-				while (effective_hagi > 0) {
-					if (zone->random.Roll(static_cast<int>(std::floor(effective_hagi * RuleR(Character, HeroicAgilityExtraAttackRate))))) {
-						attack_timer.Disable();
-						RangedAttack(GetTarget(), true);
-						chain++;						
-					}
-					effective_hagi -= zone->random.Int(1,100);
-				}
-				if (chain > 0) {
-					Message(Chat::NPCFlurry, "You unleash a FLURRY of %d extra arrows.", chain);
-				}
-			}
-			return;
-		}
-		// could we return here? Im not sure is m_atk 11 is used for real specials
-	}
-
-	// check range for all these abilities, they are all close combat stuff
-	if (!CombatRange(GetTarget()))
-		return;
-
-	if (!p_timers.Expired(&database, timer, false)) {
-		Message(Chat::Red, "Ability recovery time not yet met.");
-		return;
-	}
 
 	int ReuseTime = 0;
 	int ClientHaste = GetHaste();
 	int HasteMod = 0;
 
-	if (ClientHaste >= 0)
-		HasteMod = (10000 / (100 + ClientHaste)); //+100% haste = 2x as many attacks
-	else
-		HasteMod = (100 - ClientHaste); //-100% haste = 1/2 as many attacks
-
 	int64 dmg = 0;
-
 	int32 skill_reduction = GetSkillReuseTime(ca_atk->m_skill);
 
-	// not sure what the '100' indicates..if ->m_atk is not used as 'slot' reference, then change SlotRange above back to '11'
-	if (ca_atk->m_atk == 100 &&
-	    ca_atk->m_skill == EQ::skills::SkillBash) { // SLAM - Bash without a shield equipped
-		if (GetTarget() != this) {
-
-			CheckIncreaseSkill(EQ::skills::SkillBash, GetTarget(), 10);
-			DoAnim(animTailRake, 0, false);
-
-			int32 ht = 0;
-			if (GetWeaponDamage(GetTarget(), GetInv().GetItem(EQ::invslot::slotSecondary)) <= 0 &&
-			    GetWeaponDamage(GetTarget(), GetInv().GetItem(EQ::invslot::slotShoulders)) <= 0)
-				dmg = -5;
-			else
-				ht = dmg = GetBaseSkillDamage(EQ::skills::SkillBash, GetTarget());
-
-			ReuseTime = BashReuseTime - 1 - skill_reduction;
-			ReuseTime = (ReuseTime * HasteMod) / 100;
-			DoSpecialAttackDamage(GetTarget(), EQ::skills::SkillBash, dmg, 0, ht, ReuseTime);
-			if (ReuseTime > 0)
-				p_timers.Start(timer, ReuseTime);
+	if (ca_atk->m_skill == EQ::skills::SkillBash) { // SLAM - Bash without a shield equipped
+		switch (GetRace())
+		{
+			case OGRE:
+			case TROLL:
+			case BARBARIAN:
+				CanBypassSkillCheck = true;
+			default:
+				break;
 		}
+	}
+
+	/* Check to see if actually have skill */
+	if (!GetSkill(static_cast<EQ::skills::SkillType>(ca_atk->m_skill)) && !CanBypassSkillCheck) {
+		Message(Chat::Red, "You must have learned this skill in order to use it.");
 		return;
 	}
 
-	if (ca_atk->m_atk == 100 && ca_atk->m_skill == EQ::skills::SkillFrenzy) {
-		CheckIncreaseSkill(EQ::skills::SkillFrenzy, GetTarget(), 10);
-		int AtkRounds = 1;
-		int32 max_dmg = GetBaseSkillDamage(EQ::skills::SkillFrenzy, GetTarget());
-		DoAnim(anim1HWeapon, 0, false);
+	if (GetTarget()->GetID() != ca_atk->m_target || GetTarget() == this)
+		return; // invalid packet.
 
-		if (GetClass() == BERSERKER || GetClass() == SHADOWKNIGHT) {
-			int chance = GetLevel() * 2 + GetSkill(EQ::skills::SkillFrenzy);
-			if (zone->random.Roll0(450) < chance)
-				AtkRounds++;
-			if (zone->random.Roll0(450) < chance)
-				AtkRounds++;
+	//Archery and Throwing are ranged skills that do all of their reuse checking independently
+	if (ca_atk->m_skill != EQ::skills::SkillThrowing && ca_atk->m_skill != EQ::skills::SkillArchery) {
+		if (!IsAttackAllowed(GetTarget()) || !CombatRange(GetTarget()))
+			return;
+
+		if (!p_timers.Expired(&database, timer, false)) {
+			Message(Chat::Red, "Ability recovery time not yet met.");
+			return;
 		}
 
-		ReuseTime = FrenzyReuseTime - 1 - skill_reduction;
-		ReuseTime = (ReuseTime * HasteMod) / 100;
-
-		auto primary_in_use = GetInv().GetItem(EQ::invslot::slotPrimary);
-		if (primary_in_use && GetWeaponDamage(GetTarget(), primary_in_use) <= 0) {
-			max_dmg = DMG_INVULNERABLE;
-		}
-
-		while (AtkRounds > 0) {
-			if (GetTarget())
-				DoSpecialAttackDamage(GetTarget(), EQ::skills::SkillFrenzy, max_dmg, 0, max_dmg, ReuseTime);
-			AtkRounds--;
-		}
-
-		if (ReuseTime > 0)
-			p_timers.Start(timer, ReuseTime);
-		return;
+		if (ClientHaste >= 0)
+			HasteMod = (10000 / (100 + ClientHaste)); //+100% haste = 2x as many attacks
+		else
+			HasteMod = (100 - ClientHaste); //-100% haste = 1/2 as many attacks
 	}
 
-	switch (GetClass()) {
-	case BERSERKER:
-	case WARRIOR:
-	case RANGER:	
-		if (ca_atk->m_atk != 100 || ca_atk->m_skill != EQ::skills::SkillKick)
-			break;
-		if (GetTarget() != this) {
-			CheckIncreaseSkill(EQ::skills::SkillKick, GetTarget(), 10);
-			DoAnim(animKick, 0, false);
+	int32 ht = 0;
+	
+	// We dropped the magic number check entirely. Only archery\ranged checked for anything different anyway.
+	switch (ca_atk->m_skill) {
+		case EQ::skills::SkillArchery:
+		case EQ::skills::SkillThrowing:
+			if (ca_atk->m_atk == EQ::invslot::slotRange) {
+				SetAttackTimer();
+				(ca_atk->m_skill == EQ::skills::SkillArchery) ? RangedAttack(GetTarget()) : ThrowingAttack(GetTarget());
+				if (CheckDoubleRangedAttack())
+					(ca_atk->m_skill == EQ::skills::SkillArchery) ? RangedAttack(GetTarget()) : ThrowingAttack(GetTarget());
 
-			int32 ht = 0;
-			if (GetWeaponDamage(GetTarget(), GetInv().GetItem(EQ::invslot::slotFeet)) <= 0)
-				dmg = -5;
-			else
-				ht = dmg = GetBaseSkillDamage(EQ::skills::SkillKick, GetTarget());
-
-			ReuseTime = KickReuseTime - 1 - skill_reduction;
-			DoSpecialAttackDamage(GetTarget(), EQ::skills::SkillKick, dmg, 0, ht, ReuseTime);
-		}
-		break;
-	case BEASTLORD:
-	case MONK: {
-		ReuseTime = MonkSpecialAttack(GetTarget(), ca_atk->m_skill) - 1 - skill_reduction;
-
-		// Live AA - Technique of Master Wu
-		int wuchance = itembonuses.DoubleSpecialAttack + spellbonuses.DoubleSpecialAttack + aabonuses.DoubleSpecialAttack;
-
-		if (wuchance) {
-			const int MonkSPA[5] = {
-				EQ::skills::SkillFlyingKick,
-				EQ::skills::SkillDragonPunch,
-				EQ::skills::SkillEagleStrike,
-				EQ::skills::SkillTigerClaw,
-				EQ::skills::SkillRoundKick
-			};
-			int extra = 0;
-			// always 1/4 of the double attack chance, 25% at rank 5 (100/4)
-			while (wuchance > 0) {
-				if (zone->random.Roll(wuchance)) {
-					++extra;
+				if (RuleR(Character, HeroicAgilityExtraAttackRate) > 0 && GetHeroicAGI() > 0) {
+					int chain = 0;
+					int effective_hagi = GetHeroicAGI();        
+					while (effective_hagi > 0) {
+						if (zone->random.Roll(static_cast<int>(std::floor(effective_hagi * RuleR(Character, HeroicAgilityExtraAttackRate))))) {
+							attack_timer.Disable();
+							(ca_atk->m_skill == EQ::skills::SkillArchery) ? RangedAttack(GetTarget(), true) : ThrowingAttack(GetTarget(), true);
+							chain++;                        
+						}
+						effective_hagi -= zone->random.Int(1,100);
+					}
+					if (chain > 0) {
+						Message(Chat::NPCFlurry, (ca_atk->m_skill == EQ::skills::SkillArchery) ?
+						"You unleash a FLURRY of %d extra arrows." :
+						"You unleash a FLURRY of %d extra throws.", chain);
+					}
 				}
-				else {
-					break;
-				}
-				wuchance /= 4;
+			} else {
+				Message(Chat::Red, "You must equip a ranged weapon to use this ability.");
 			}
-			if (extra) {
-				SendColoredText(
-					400,
-					fmt::format(
-						"The spirit of Master Wu fills you! You gain {} additional attack{}.",
-						extra,
-						extra != 1 ? "s" : ""
-					)
-				);
-			}
-			auto classic = RuleB(Combat, ClassicMasterWu);
-			while (extra) {
-				MonkSpecialAttack(GetTarget(), (classic ? MonkSPA[zone->random.Int(0, 4)] : ca_atk->m_skill));
-				--extra;
-			}
-		}
+			return; // These don't care about the remainder of this function
+			case EQ::skills::SkillBash: {
+				CheckIncreaseSkill(EQ::skills::SkillBash, GetTarget(), 10);
+				DoAnim(animTailRake, 0, false);
+				
+				if (GetWeaponDamage(GetTarget(), GetInv().GetItem(EQ::invslot::slotSecondary)) <= 0 &&
+					GetWeaponDamage(GetTarget(), GetInv().GetItem(EQ::invslot::slotShoulders)) <= 0)
+					dmg = -5;
+				else
+					ht = dmg = GetBaseSkillDamage(EQ::skills::SkillBash, GetTarget());
 
-		if (ReuseTime < 100) {
-			// hackish... but we return a huge reuse time if this is an
-			// invalid skill, otherwise, we can safely assume it is a
-			// valid monk skill and just cast it to a SkillType
-			CheckIncreaseSkill((EQ::skills::SkillType)ca_atk->m_skill, GetTarget(), 10);
-		}
-		break;
-	}
-	case ENCHANTER:
-	case ROGUE: {
-		if (ca_atk->m_atk != 100 || ca_atk->m_skill != EQ::skills::SkillBackstab)
-			break;
-		ReuseTime = BackstabReuseTime-1 - skill_reduction;
-		TryBackstab(GetTarget(), ReuseTime);
-		break;
-	}
-	default:
-		//they have no abilities... wtf? make em wait a bit
-		ReuseTime = 9 - skill_reduction;
-		break;
+				ReuseTime = BashReuseTime - 1 - skill_reduction;
+				ReuseTime = (ReuseTime * HasteMod) / 100;
+				DoSpecialAttackDamage(GetTarget(), EQ::skills::SkillBash, dmg, 0, ht, ReuseTime);
+				break;
+			}
+			case EQ::skills::SkillKick: {
+				CheckIncreaseSkill(EQ::skills::SkillKick, GetTarget(), 10);
+				DoAnim(animKick, 0, false);
+
+				if (GetWeaponDamage(GetTarget(), GetInv().GetItem(EQ::invslot::slotFeet)) <= 0)
+					dmg = -5;
+				else
+					ht = dmg = GetBaseSkillDamage(EQ::skills::SkillKick, GetTarget());
+
+				ReuseTime = KickReuseTime - 1 - skill_reduction;
+				DoSpecialAttackDamage(GetTarget(), EQ::skills::SkillKick, dmg, 0, ht, ReuseTime);
+				break;
+			}
+			case EQ::skills::SkillBackstab: {
+				ReuseTime = BackstabReuseTime-1 - skill_reduction;
+				TryBackstab(GetTarget(), ReuseTime);
+				break;
+			}
+			case EQ::skills::SkillFrenzy: {
+				CheckIncreaseSkill(EQ::skills::SkillFrenzy, GetTarget(), 10);
+				int AtkRounds = 1;
+				int32 max_dmg = GetInv().GetItem(EQ::invslot::slotPrimary)->GetItemWeaponDamage();
+				DoAnim(anim1HWeapon, 0, false);
+
+				int chance = GetLevel() * 2 + GetSkill(EQ::skills::SkillFrenzy);
+				AtkRounds += (zone->random.Roll0(450) < chance) + (zone->random.Roll0(450) < chance);			
+
+				ReuseTime = FrenzyReuseTime - 1 - skill_reduction;
+				ReuseTime = (ReuseTime * HasteMod) / 100;
+
+				auto primary_in_use = GetInv().GetItem(EQ::invslot::slotPrimary);
+				if (primary_in_use && GetWeaponDamage(GetTarget(), primary_in_use) <= 0) {
+					max_dmg = DMG_INVULNERABLE;
+				}
+
+				while (AtkRounds > 0) {
+					if (GetTarget())
+						DoSpecialAttackDamage(GetTarget(), EQ::skills::SkillFrenzy, max_dmg, 0, max_dmg, ReuseTime);
+					AtkRounds--;
+				}		
+				break;
+			}
+			case EQ::skills::SkillFlyingKick:
+			case EQ::skills::SkillDragonPunch:
+			case EQ::skills::SkillEagleStrike:
+			case EQ::skills::SkillTigerClaw:
+			case EQ::skills::SkillRoundKick:				
+			default:
+				return;
 	}
 
 	ReuseTime = (ReuseTime * HasteMod) / 100;
@@ -524,6 +440,7 @@ void Client::OPCombatAbility(const CombatAbility_Struct *ca_atk)
 		p_timers.Start(timer, ReuseTime);
 	}
 }
+
 
 //returns the reuse time in sec for the special attack used.
 int Mob::MonkSpecialAttack(Mob *other, uint8 unchecked_type)

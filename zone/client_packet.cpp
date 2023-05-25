@@ -2982,7 +2982,7 @@ void Client::Handle_OP_ApplyPoison(const EQApplicationPacket *app)
 
 	bool IsPoison = (poison && poison->ItemType == EQ::item::ItemTypePoison);
 
-	if (IsPoison && (GetClass() == ROGUE || GetClass() == ENCHANTER)) {
+	if (IsPoison && GetSkill(EQ::skills::SkillApplyPoison) > 0) {
 
 		// Live always checks for skillup, even when poison is too high
 		CheckIncreaseSkill(EQ::skills::SkillApplyPoison, nullptr, 10);
@@ -6359,6 +6359,10 @@ void Client::Handle_OP_Fishing(const EQApplicationPacket *app)
 
 void Client::Handle_OP_Forage(const EQApplicationPacket *app)
 {
+	if (GetSkill(EQ::skills::SkillForage) <= 0) {
+		Message(Chat::Red, "You must have learned this skill in order to use it.");
+		return;
+	}
 
 	if (!p_timers.Expired(&database, pTimerForaging, false)) {
 		Message(Chat::Red, "Ability recovery time not yet met.");
@@ -14729,6 +14733,7 @@ void Client::Handle_OP_Taunt(const EQApplicationPacket *app)
 	}
 
 	if (!HasSkill(EQ::skills::SkillTaunt)) {
+		Message(Chat::Red, "You must have learned this skill in order to use it.");
 		return;
 	}
 
@@ -14769,14 +14774,12 @@ void Client::Handle_OP_TGB(const EQApplicationPacket *app)
 
 void Client::Handle_OP_Track(const EQApplicationPacket *app)
 {
-	if (!CanThisClassTrack()) {
+	if (GetSkill(EQ::skills::SkillTracking) == 0) {
+		Message(Chat::Red, "You must have the tracking skill in order to track");
 		return;
-	}
-
-	if (GetSkill(EQ::skills::SkillTracking) == 0)
-		SetSkill(EQ::skills::SkillTracking, 1);
-	else
+	} else {
 		CheckIncreaseSkill(EQ::skills::SkillTracking, nullptr, 15);
+	}
 
 	if (!entity_list.MakeTrackPacket(this))
 		LogError("Unable to generate OP_Track packet requested by client");
@@ -14786,7 +14789,8 @@ void Client::Handle_OP_Track(const EQApplicationPacket *app)
 
 void Client::Handle_OP_TrackTarget(const EQApplicationPacket *app)
 {
-	if (!CanThisClassTrack()) {
+	if (GetSkill(EQ::skills::SkillTracking) == 0) {
+		Message(Chat::Red, "You must have the tracking skill in order to track");
 		return;
 	}
 
