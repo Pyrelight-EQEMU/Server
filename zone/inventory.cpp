@@ -2109,7 +2109,6 @@ bool Client::SwapItem(MoveItem_Struct* move_in) {
 		return(false);
 	}
 
-
 	if (dst_slot_id == EQ::invslot::slotPrimary || dst_slot_id == EQ::invslot::slotSecondary || dst_slot_id == EQ::invslot::slotRange) {
 		EQ::skills::SkillType correspondingSkillType;
 		
@@ -2139,7 +2138,7 @@ bool Client::SwapItem(MoveItem_Struct* move_in) {
 				break;
 		}
 
-		if (GetSkill(correspondingSkillType) <= 0) {
+		if (correspondingSkillType && GetSkill(correspondingSkillType) <= 0) {
 			Message(Chat::Red, "You lack the skills to use this item.");
 			return false;
 		}
