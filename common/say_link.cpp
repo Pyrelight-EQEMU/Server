@@ -302,6 +302,7 @@ std::string EQ::SayLinkEngine::GenerateQuestSaylink(std::string saylink_text, bo
 	if (saylink.id > 0) {
 		saylink_id = saylink.id;
 	}
+	LogDebug("Saylink_ID: {}", saylink.id);
 
 	/**
 	 * Generate the actual link
