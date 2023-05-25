@@ -8773,7 +8773,7 @@ void Client::Handle_OP_ItemLinkClick(const EQApplicationPacket *app)
 		// and the second augment for silent.
 		std::string response = "";
 		bool silentsaylink = ivrs->augments[1] > 0 ? true : false;
-		uint32 sayid = silentsaylink ? ivrs->augments[1] : ivrs->augments[0];
+		int sayid = silentsaylink ? ivrs->augments[1] : ivrs->augments[0];
 
 		LogDebug("sayid: {}, response: {}", sayid, response);
 
