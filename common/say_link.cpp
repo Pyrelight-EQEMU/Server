@@ -56,7 +56,7 @@ bool EQ::saylink::DegenerateLinkBody(SayLinkBody_Struct &say_link_body_struct, c
 bool EQ::saylink::GenerateLinkBody(std::string &say_link_body, const SayLinkBody_Struct &say_link_body_struct)
 {
 	say_link_body = StringFormat(
-		"%1X" "%08X" "%08X" "%08X" "%08X" "%08X" "%08X" "%08X" "%1X" "%04X" "%02X" "%05X" "%08X",
+		"%1X" "%05X" "%05X" "%05X" "%05X" "%05X" "%05X" "%05X" "%1X" "%04X" "%02X" "%05X" "%08X",
 		(0x0F & say_link_body_struct.action_id),
 		(0x000FFFFF & say_link_body_struct.item_id),
 		(0x000FFFFF & say_link_body_struct.augment_1),
@@ -142,8 +142,8 @@ void EQ::SayLinkEngine::generate_body()
 	/*
 	Current server mask: EQClientRoF2
 
-	RoF2: "%1X" "%08X" "%08X" "%08X" "%08X" "%08X" "%08X" "%08X" "%1X" "%04X" "%02X" "%05X" "%08X" (56)
-	RoF:  "%1X" "%08X" "%08X" "%08X" "%08X" "%08X" "%08X" "%08X" "%1X" "%04X" "%1X"  "%05X" "%08X" (55)
+	RoF2: "%1X" "%05X" "%05X" "%05X" "%05X" "%05X" "%05X" "%05X" "%1X" "%04X" "%02X" "%05X" "%08X" (56)
+	RoF:  "%1X" "%05X" "%05X" "%05X" "%05X" "%05X" "%05X" "%05X" "%1X" "%04X" "%1X"  "%05X" "%08X" (55)
 	SoF:  "%1X" "%05X" "%05X" "%05X" "%05X" "%05X" "%05X"        "%1X" "%04X" "%1X"  "%05X" "%08X" (50)
 	6.2:  "%1X" "%05X" "%05X" "%05X" "%05X" "%05X" "%05X"        "%1X" "%04X" "%1X"         "%08X" (45)
 	*/
@@ -243,7 +243,7 @@ void EQ::SayLinkEngine::generate_body()
 	}
 
 	m_LinkBody = StringFormat(
-		"%1X" "%08X" "%08X" "%08X" "%08X" "%08X" "%08X" "%08X" "%1X" "%04X" "%02X" "%05X" "%08X",
+		"%1X" "%05X" "%05X" "%05X" "%05X" "%05X" "%05X" "%05X" "%1X" "%04X" "%02X" "%05X" "%08X",
 		(0x0F & m_LinkBodyStruct.action_id),
 		(0x000FFFFF & m_LinkBodyStruct.item_id),
 		(0x000FFFFF & m_LinkBodyStruct.augment_1),
