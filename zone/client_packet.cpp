@@ -8775,6 +8775,8 @@ void Client::Handle_OP_ItemLinkClick(const EQApplicationPacket *app)
 		bool silentsaylink = ivrs->augments[1] > 0 ? true : false;
 		uint32 sayid = silentsaylink ? ivrs->augments[1] : ivrs->augments[0];
 
+		LogDebug("sayid: {}, response: {}", sayid, response);
+
 		if (sayid > 0) {
 			std::string query = StringFormat("SELECT `phrase` FROM saylink WHERE `id` = '%i'", sayid);
 			auto results = database.QueryDatabase(query);
