@@ -8791,6 +8791,7 @@ void Client::Handle_OP_ItemLinkClick(const EQApplicationPacket *app)
 			auto row = results.begin();
 			response = row[0];
 		}
+		LogDebug("sayid: {}, response: {}", sayid, response);
 
 		if (!response.empty()) {
 			if (!silentsaylink) {
