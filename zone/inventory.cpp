@@ -2109,6 +2109,7 @@ bool Client::SwapItem(MoveItem_Struct* move_in) {
 		return(false);
 	}
 
+
 	if (dst_slot_id == EQ::invslot::slotPrimary || dst_slot_id == EQ::invslot::slotSecondary || dst_slot_id == EQ::invslot::slotRange) {
 		EQ::skills::SkillType correspondingSkillType;
 		
@@ -2143,7 +2144,7 @@ bool Client::SwapItem(MoveItem_Struct* move_in) {
 			return false;
 		}
 	}
-
+  
 	// Check for No Drop Hacks
 	Mob* with = trade->With();
 	if (((with && with->IsClient() && !with->CastToClient()->IsBecomeNPC() && dst_slot_id >= EQ::invslot::TRADE_BEGIN && dst_slot_id <= EQ::invslot::TRADE_END) ||
