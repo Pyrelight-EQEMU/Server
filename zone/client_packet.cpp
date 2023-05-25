@@ -8773,7 +8773,7 @@ void Client::Handle_OP_ItemLinkClick(const EQApplicationPacket *app)
 		// and the second augment for silent.
 		std::string response = "";
 		bool silentsaylink = ivrs->augments[1] > 0 ? true : false;
-		int sayid = silentsaylink ? ivrs->augments[1] : ivrs->augments[0];
+		uint32 sayid = silentsaylink ? ivrs->augments[1] : ivrs->augments[0];
 
 		if (sayid > 0) {
 			std::string query = StringFormat("SELECT `phrase` FROM saylink WHERE `id` = '%i'", sayid);
