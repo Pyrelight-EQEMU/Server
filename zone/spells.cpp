@@ -7120,7 +7120,7 @@ void Mob::DrawDebugCoordinateNode(std::string node_name, const glm::vec4 vec)
 	}
 }
 
-Mob* Mob::GetImpliedTarget(Mob* otarget, uint32 spell_id, int depth=0, Mob* original_otarget=nullptr) {
+Mob* Mob::GetImpliedTarget(Mob* otarget, uint32 spell_id, int depth, Mob* original_otarget) {
     // 'this' is the caster
     // 'otarget' is the original caster
     // 'spell_id' is the spell being used
