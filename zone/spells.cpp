@@ -7136,9 +7136,9 @@ Mob* Mob::GetImpliedTarget(Mob* otarget, uint32 spell_id, int depth, Mob* origin
 
     Mob* ntarget = nullptr;
 
-    if (!otarget && IsBeneficialSpell(spell_id)) {
-        return this;
-    }
+	if (!otarget &&IsBeneficialSpell(spell_id)) {
+		return this;
+	}
 
     SpellTargetType tt = spells[spell_id].target_type;
     // Stuff we can shortcut based on target type
@@ -7173,6 +7173,9 @@ Mob* Mob::GetImpliedTarget(Mob* otarget, uint32 spell_id, int depth, Mob* origin
             }		
         } else {
             if (!(otarget->IsClient() || otarget->IsPetOwnerClient())) {
+				if (!otarget->GetTarget()) {
+					return this;
+				}
                 ntarget = otarget->GetImpliedTarget(otarget->GetTarget(), spell_id, depth + 1, original_otarget);
             } else {
                 return otarget;
