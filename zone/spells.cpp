@@ -7172,7 +7172,7 @@ Mob* Mob::GetImpliedTarget(Mob* otarget, uint32 spell_id, int depth, Mob* origin
                 return otarget;
             }		
         } else {
-            if (!(otarget->IsClient() && otarget->IsPetOwnerClient())) {
+            if (!(otarget->IsClient() || otarget->IsPetOwnerClient())) {
                 ntarget = otarget->GetImpliedTarget(otarget->GetTarget(), spell_id, depth + 1, original_otarget);
             } else {
                 return otarget;
