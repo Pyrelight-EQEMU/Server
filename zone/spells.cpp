@@ -184,21 +184,12 @@ bool Mob::CastSpell(uint16 spell_id, uint16 target_id, CastingSlot slot,
 	if (RuleB(Spells,UseSpellImpliedTargeting) && IsClient()) {
 		Mob* spell_target = entity_list.GetMobID(target_id);
 		if (spell_target) {
-			Mob* targets_target = spell_target->GetTarget();
-			if (targets_target) {
-				// If either this is beneficial and the target is not a player or player's pet or vis versa
-				if ((IsBeneficialSpell(spell_id) && (!(spell_target->IsClient() || (spell_target->HasOwner() && spell_target->GetOwner()->IsClient()))))
-					|| (IsDetrimentalSpell(spell_id) && (spell_target->IsClient() || (spell_target->HasOwner() && spell_target->GetOwner()->IsClient())))) {
-					//Check if the target's target is a valid target; we can use DoCastingChecksOnTarget() here because we can let it handle the failure as vanilla would
-					if (DoCastingChecksOnTarget(true, spell_id, targets_target)) {
-						target_id = targets_target->GetID();
-					}
-					else {
-						//Just return false here because we are going to fail the next check block anyway if we reach this point.
-						StopCastSpell(spell_id, send_spellbar_enable);
-						return false;
-					}
-				}
+			spell_target = GetImpliedTarget(spell_target, spell_id);
+			if (DoCastingChecksOnTarget(true, spell_id, spell_target)) {
+				target_id = spell_target->GetID();
+			} else {
+				StopCastSpell(spell_id, send_spellbar_enable);
+				return false;
 			}
 		}
 	}
