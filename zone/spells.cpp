@@ -7129,7 +7129,7 @@ Mob* Mob::GetImpliedTarget(Mob* otarget, uint32 spell_id, int depth=0, Mob* orig
         original_otarget = otarget;
     }
 
-    if (depth > MAX_DEPTH) {
+    if (depth > 5) {
         // We've reached the maximum recursion depth
         return IsBeneficialSpell(spell_id) ? this : original_otarget;
     }
