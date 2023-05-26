@@ -7129,6 +7129,72 @@ void Mob::DrawDebugCoordinateNode(std::string node_name, const glm::vec4 vec)
 	}
 }
 
+Mob* Mob::GetImpliedTarget(Mob* otarget, uint32 spell_id, int depth=0, Mob* original_otarget=nullptr) {
+    // 'this' is the caster
+    // 'otarget' is the original caster
+    // 'spell_id' is the spell being used
+
+    if (depth == 0) {
+        original_otarget = otarget;
+    }
+
+    if (depth > MAX_DEPTH) {
+        // We've reached the maximum recursion depth
+        return IsBeneficialSpell(spell_id) ? this : original_otarget;
+    }
+
+    Mob* ntarget = nullptr;
+
+    if (!otarget && IsBeneficialSpell(spell_id)) {
+        return this;
+    }
+
+    SpellTargetType tt = spells[spell_id].target_type;
+    // Stuff we can shortcut based on target type
+    switch (tt) {
+        case SpellTargetType::ST_Pet:
+            return this->IsPet() ? this : GetPet();
+        case SpellTargetType::ST_PetMaster:
+            return GetOwner();
+        case SpellTargetType::ST_TargetsTarget:
+            return otarget->GetTarget() ? otarget->GetTarget() : otarget;
+        case SpellTargetType::ST_TargetAENoPlayersPets:
+        case SpellTargetType::ST_GroupClientAndPet:
+        case SpellTargetType::ST_Group:
+        case SpellTargetType::ST_AEBard:
+        case SpellTargetType::ST_GroupNoPets:
+        case SpellTargetType::ST_AECaster:
+        case SpellTargetType::ST_AEClientV1:
+        case SpellTargetType::ST_Beam:
+        case SpellTargetType::ST_Ring:
+        case SpellTargetType::ST_GroupTeleport:
+            return this;       
+        default:            
+            break;
+    }
+
+    if (otarget) {
+        if (!IsBeneficialSpell(spell_id)) {
+            if (otarget->IsClient() || otarget->IsPetOwnerClient()) {
+                ntarget = otarget->GetImpliedTarget(otarget->GetTarget(), spell_id, depth + 1, original_otarget);
+            } else {
+                return otarget;
+            }		
+        } else {
+            if (!(otarget->IsClient() && otarget->IsPetOwnerClient())) {
+                ntarget = otarget->GetImpliedTarget(otarget->GetTarget(), spell_id, depth + 1, original_otarget);
+            } else {
+                return otarget;
+            }
+        }
+    }
+
+    if (ntarget == nullptr && IsBeneficialSpell(spell_id)) {
+        ntarget = this;
+    }
+    return ntarget;
+}
+
 const CombatRecord &Mob::GetCombatRecord() const
 {
 	return m_combat_record;
