@@ -1644,7 +1644,7 @@ void Mob::CastedSpellFinished(uint16 spell_id, uint32 target_id, CastingSlot slo
 
 	if(IsOfClientBotMerc()) {
 		TrySympatheticProc(target, spell_id);
-		TryCombatProcs(GetInv().GetItem(EQ::invslot::slotPrimary), target, EQ::invslot::slotPrimary);		
+		TryCombatProcs(GetInv().GetItem(EQ::invslot::slotPrimary), proc_target, EQ::invslot::slotPrimary);		
 	}
 
 	TryTwincast(this, target, spell_id);
@@ -7131,6 +7131,9 @@ Mob* Mob::GetImpliedTarget(Mob* otarget, uint32 spell_id, int depth, Mob* origin
     // 'spell_id' is the spell being used
 
     if (depth == 0) {
+		if (!IsClient()) {
+			return otarget;
+		}
         original_otarget = otarget;
     }
 
@@ -7141,7 +7144,7 @@ Mob* Mob::GetImpliedTarget(Mob* otarget, uint32 spell_id, int depth, Mob* origin
 
     Mob* ntarget = nullptr;
 
-	if (!otarget && IsBeneficialSpell(spell_id)) {
+	if (!otarget &&IsBeneficialSpell(spell_id)) {
 		return this;
 	}
 
@@ -7191,19 +7194,9 @@ Mob* Mob::GetImpliedTarget(Mob* otarget, uint32 spell_id, int depth, Mob* origin
     if (ntarget == nullptr && IsBeneficialSpell(spell_id)) {
         ntarget = this;
     }
-	
-	bool IsOriginal = (original_otarget == otarget && depth == 0);
-	bool NoTarget = (ntarget == nullptr);
-	bool DetAtFriendly = (IsBeneficialSpell(spell_id) && (IsClient() || IsPetOwnerClient()));
-
-	// Combine conditions
-	bool isInvalidTargetCondition = IsOriginal && (NoTarget || DetAtFriendly);
-
-	if (isInvalidTargetCondition) {
-		ntarget = nullptr;
+	if (ntarget == nullptr && original_otarget == otarget && depth == 0 && IsClient()) {
 		Message(Chat::Red, "No valid target for this spell found.");
 	}
-
     return ntarget;
 }
 
