@@ -5390,7 +5390,7 @@ void Mob::SendSpellBarEnable(uint16 spell_id)
 	manachange->new_mana = GetMana();
 	manachange->spell_id = spell_id;
 	manachange->stamina = CastToClient()->GetEndurance();
-	manachange->keepcasting = 1;
+	manachange->keepcasting = 0;
 	manachange->slot = CastToClient()->FindMemmedSpellBySpellID(spell_id);
 	outapp->priority = 6;
 	CastToClient()->QueuePacket(outapp);
