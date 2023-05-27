@@ -1644,7 +1644,7 @@ void Mob::CastedSpellFinished(uint16 spell_id, uint32 target_id, CastingSlot slo
 
 	if(IsOfClientBotMerc()) {
 		TrySympatheticProc(target, spell_id);
-		TryCombatProcs(GetInv().GetItem(EQ::invslot::slotPrimary), proc_target, EQ::invslot::slotPrimary);		
+		TryCombatProcs(GetInv().GetItem(EQ::invslot::slotPrimary), target, EQ::invslot::slotPrimary);		
 	}
 
 	TryTwincast(this, target, spell_id);
@@ -7131,10 +7131,11 @@ Mob* Mob::GetImpliedTarget(Mob* otarget, uint32 spell_id, int depth, Mob* origin
     // 'spell_id' is the spell being used
 
     if (depth == 0) {
-		if (!IsClient()) {
+		if (IsClient()) {			
+			original_otarget = otarget;
+		} else {
 			return otarget;
-		}
-        original_otarget = otarget;
+		}        
     }
 
     if (depth > 5) {
