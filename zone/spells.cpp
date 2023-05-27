@@ -1708,7 +1708,7 @@ void Mob::CastedSpellFinished(uint16 spell_id, uint32 target_id, CastingSlot slo
 		if(IsClient())
 		{
 			Client *c = CastToClient();
-			//SendSpellBarEnable(spell_id);
+			SendSpellBarEnable(spell_id);
 
 			// this causes the delayed refresh of the spell bar gems
 			if (spells[spell_id].timer_id > 0 && slot < CastingSlot::MaxGems) {
@@ -5390,7 +5390,7 @@ void Mob::SendSpellBarEnable(uint16 spell_id)
 	manachange->new_mana = GetMana();
 	manachange->spell_id = spell_id;
 	manachange->stamina = CastToClient()->GetEndurance();
-	manachange->keepcasting = 0;
+	manachange->keepcasting = 1;
 	manachange->slot = CastToClient()->FindMemmedSpellBySpellID(spell_id);
 	outapp->priority = 6;
 	CastToClient()->QueuePacket(outapp);
