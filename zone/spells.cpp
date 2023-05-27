@@ -7198,7 +7198,7 @@ Mob* Mob::GetImpliedTarget(Mob* otarget, uint32 spell_id, int depth, Mob* origin
 
 	bool noTarget = (ntarget == nullptr);
 	bool isBeneficialTarget = (ntarget == this && IsBeneficial(spell_id));
-	bool clientOrPet = ((isClient() || isClientOfPet()) && !IsBeneficial());
+	bool clientOrPet = ((IsClient() || UsClientOfPet()) && !IsBeneficial());
 
 	// Combine conditions
 	bool isInvalidTargetCondition = isOriginalTargetMatch && isTopLevelDepth && isClientActor && (noTarget || isBeneficialTarget || clientOrPet);
