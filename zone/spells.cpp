@@ -7194,7 +7194,7 @@ Mob* Mob::GetImpliedTarget(Mob* otarget, uint32 spell_id, int depth, Mob* origin
 	
 	bool IsOriginal = (original_otarget == otarget && depth == 0);
 	bool NoTarget = (ntarget == nullptr);
-	bool DetAtFriendly = (IsBeneficial(spell_id) && (IsClient() || IsPetOwnerClient()));
+	bool DetAtFriendly = (IsBeneficialSpell(spell_id) && (IsClient() || IsPetOwnerClient()));
 
 	// Combine conditions
 	bool isInvalidTargetCondition = IsOriginal && (NoTarget || DetAtFriendly);
