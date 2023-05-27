@@ -7191,9 +7191,23 @@ Mob* Mob::GetImpliedTarget(Mob* otarget, uint32 spell_id, int depth, Mob* origin
     if (ntarget == nullptr && IsBeneficialSpell(spell_id)) {
         ntarget = this;
     }
-	if (ntarget == nullptr && original_otarget == otarget && depth == 0 && IsClient()) {
+	
+	bool isOriginalTargetMatch = (original_otarget == otarget);
+	bool isTopLevelDepth = (depth == 0);
+	bool isClientActor = IsClient();
+
+	bool noTarget = (ntarget == nullptr);
+	bool isBeneficialTarget = (ntarget == this && IsBeneficial(spell_id));
+	bool clientOrPet = ((isClient() || isClientOfPet()) && !IsBeneficial());
+
+	// Combine conditions
+	bool isInvalidTargetCondition = isOriginalTargetMatch && isTopLevelDepth && isClientActor && (noTarget || isBeneficialTarget || clientOrPet);
+
+	if (isInvalidTargetCondition) {
+		ntarget == nullptr;
 		Message(Chat::Red, "No valid target for this spell found.");
 	}
+
     return ntarget;
 }
 
