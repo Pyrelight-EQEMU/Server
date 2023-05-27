@@ -1712,7 +1712,7 @@ void Mob::CastedSpellFinished(uint16 spell_id, uint32 target_id, CastingSlot slo
 
 			// this causes the delayed refresh of the spell bar gems
 			if (spells[spell_id].timer_id > 0 && slot < CastingSlot::MaxGems) {
-				//c->SetLinkedSpellReuseTimer(spells[spell_id].timer_id, (spells[spell_id].recast_time / 1000) - (casting_spell_recast_adjust / 1000) + (spells[spell_id].cast_time / 1000));
+				c->SetLinkedSpellReuseTimer(spells[spell_id].timer_id, 10);
 			}
 
 			// Pyrelight Custom Code
