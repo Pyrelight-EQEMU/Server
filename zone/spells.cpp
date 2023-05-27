@@ -189,6 +189,7 @@ bool Mob::CastSpell(uint16 spell_id, uint16 target_id, CastingSlot slot,
 				target_id = spell_target->GetID();
 			} else {
 				StopCastSpell(spell_id, send_spellbar_enable);
+				Message(Chat::Red, "No valid target for this spell found.");
 				return false;
 			}
 		}
@@ -7195,9 +7196,6 @@ Mob* Mob::GetImpliedTarget(Mob* otarget, uint32 spell_id, int depth, Mob* origin
     if (ntarget == nullptr && IsBeneficialSpell(spell_id)) {
         ntarget = this;
     }
-	if (ntarget == nullptr && original_otarget == otarget && depth == 0 && IsClient()) {
-		Message(Chat::Red, "No valid target for this spell found.");
-	}
     return ntarget;
 }
 
