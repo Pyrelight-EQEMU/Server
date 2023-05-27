@@ -1646,7 +1646,7 @@ void Mob::CastedSpellFinished(uint16 spell_id, uint32 target_id, CastingSlot slo
 	if(IsOfClientBotMerc()) {
 		TrySympatheticProc(target, spell_id);
 		EQ::invslot::Type slots[] = {EQ::invslot::slotPrimary, EQ::invslot::slotSecondary, EQ::invslot::slotRange};
-		for(const auto &slot : slots) {	TryCombatProcs(GetInv().GetItem(slot), target); }
+		for(EQ::invslot::Type slot : slots) {	TryCombatProcs(GetInv().GetItem(slot), target); }
 	}
 
 	TryTwincast(this, target, spell_id);
