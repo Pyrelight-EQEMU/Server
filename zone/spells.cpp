@@ -400,8 +400,12 @@ bool Mob::DoCastSpell(uint16 spell_id, uint16 target_id, CastingSlot slot,
 		LogSpells("Spell Error: no target. spell=[{}]", spell_id);
 		if(IsClient()) {
 			//clients produce messages... npcs should not for this case
-			MessageString(Chat::Red, SPELL_NEED_TAR);
-			InterruptSpell();
+			if (IsBeneficialSpell(spell_id)) {
+				target_id = GetID();
+			} else {
+				MessageString(Chat::Red, SPELL_NEED_TAR);
+				InterruptSpell();
+			}
 		} else {
 			InterruptSpell(0, 0, 0);	//the 0 args should cause no messages
 		}
@@ -1640,6 +1644,11 @@ void Mob::CastedSpellFinished(uint16 spell_id, uint32 target_id, CastingSlot slo
 
 	if(IsOfClientBotMerc()) {
 		TrySympatheticProc(target, spell_id);
+
+		Mob* proc_target = GetImpliedTarget(target, spell_id);
+		if (proc_target) {
+			TryCombatProcs(GetInv().GetItem(EQ::invslot::slotPrimary), proc_target, EQ::invslot::slotPrimary);
+		}
 	}
 
 	TryTwincast(this, target, spell_id);
@@ -7186,6 +7195,9 @@ Mob* Mob::GetImpliedTarget(Mob* otarget, uint32 spell_id, int depth, Mob* origin
     if (ntarget == nullptr && IsBeneficialSpell(spell_id)) {
         ntarget = this;
     }
+	if (ntarget == nullptr && original_otarget = otarget && depth = 0 && IsClient()) {
+		Message(Chat::Red, "No valid target for this spell found.");
+	}
     return ntarget;
 }
 
