@@ -7192,19 +7192,15 @@ Mob* Mob::GetImpliedTarget(Mob* otarget, uint32 spell_id, int depth, Mob* origin
         ntarget = this;
     }
 	
-	bool isOriginalTargetMatch = (original_otarget == otarget);
-	bool isTopLevelDepth = (depth == 0);
-	bool isClientActor = IsClient();
-
-	bool noTarget = (ntarget == nullptr);
-	bool isBeneficialTarget = (ntarget == this && IsBeneficial(spell_id));
-	bool clientOrPet = ((IsClient() || UsClientOfPet()) && !IsBeneficial());
+	bool IsOriginal = (original_otarget == otarget && depth == 0);
+	bool NoTarget = (ntarget == nullptr);
+	bool DetAtFriendly = (IsBeneficial(spell_id) && (IsClient() || IsPetOwnerClient()));
 
 	// Combine conditions
-	bool isInvalidTargetCondition = isOriginalTargetMatch && isTopLevelDepth && isClientActor && (noTarget || isBeneficialTarget || clientOrPet);
+	bool isInvalidTargetCondition = IsOriginal && (NoTarget || DetAtFriendly);
 
 	if (isInvalidTargetCondition) {
-		ntarget == nullptr;
+		ntarget = nullptr;
 		Message(Chat::Red, "No valid target for this spell found.");
 	}
 
