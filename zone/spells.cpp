@@ -184,21 +184,13 @@ bool Mob::CastSpell(uint16 spell_id, uint16 target_id, CastingSlot slot,
 	if (RuleB(Spells,UseSpellImpliedTargeting) && IsClient()) {
 		Mob* spell_target = entity_list.GetMobID(target_id);
 		if (spell_target) {
-			Mob* targets_target = spell_target->GetTarget();
-			if (targets_target) {
-				// If either this is beneficial and the target is not a player or player's pet or vis versa
-				if ((IsBeneficialSpell(spell_id) && (!(spell_target->IsClient() || (spell_target->HasOwner() && spell_target->GetOwner()->IsClient()))))
-					|| (IsDetrimentalSpell(spell_id) && (spell_target->IsClient() || (spell_target->HasOwner() && spell_target->GetOwner()->IsClient())))) {
-					//Check if the target's target is a valid target; we can use DoCastingChecksOnTarget() here because we can let it handle the failure as vanilla would
-					if (DoCastingChecksOnTarget(true, spell_id, targets_target)) {
-						target_id = targets_target->GetID();
-					}
-					else {
-						//Just return false here because we are going to fail the next check block anyway if we reach this point.
-						StopCastSpell(spell_id, send_spellbar_enable);
-						return false;
-					}
-				}
+			spell_target = GetImpliedTarget(spell_target, spell_id);
+			if (DoCastingChecksOnTarget(true, spell_id, spell_target)) {
+				target_id = spell_target->GetID();
+			} else {
+				StopCastSpell(spell_id, send_spellbar_enable);
+				Message(Chat::Red, "No valid target for this spell found.");
+				return false;
 			}
 		}
 	}
@@ -409,8 +401,12 @@ bool Mob::DoCastSpell(uint16 spell_id, uint16 target_id, CastingSlot slot,
 		LogSpells("Spell Error: no target. spell=[{}]", spell_id);
 		if(IsClient()) {
 			//clients produce messages... npcs should not for this case
-			MessageString(Chat::Red, SPELL_NEED_TAR);
-			InterruptSpell();
+			if (IsBeneficialSpell(spell_id)) {
+				target_id = GetID();
+			} else {
+				MessageString(Chat::Red, SPELL_NEED_TAR);
+				InterruptSpell();
+			}
 		} else {
 			InterruptSpell(0, 0, 0);	//the 0 args should cause no messages
 		}
@@ -1649,6 +1645,8 @@ void Mob::CastedSpellFinished(uint16 spell_id, uint32 target_id, CastingSlot slo
 
 	if(IsOfClientBotMerc()) {
 		TrySympatheticProc(target, spell_id);
+		int16 slots[] = {EQ::invslot::slotPrimary, EQ::invslot::slotSecondary, EQ::invslot::slotRange};
+		for(int16 slot : slots) { TryCombatProcs(GetInv().GetItem(slot), target); }
 	}
 
 	TryTwincast(this, target, spell_id);
@@ -1716,6 +1714,8 @@ void Mob::CastedSpellFinished(uint16 spell_id, uint32 target_id, CastingSlot slo
 			if (spells[spell_id].timer_id > 0 && slot < CastingSlot::MaxGems) {
 				c->SetLinkedSpellReuseTimer(spells[spell_id].timer_id, (spells[spell_id].recast_time / 1000) - (casting_spell_recast_adjust / 1000));
 			}
+
+			// Pyrelight Custom Code
 
 			c->MemorizeSpell(static_cast<uint32>(slot), spell_id, memSpellSpellbar, casting_spell_recast_adjust);
 
@@ -7127,6 +7127,81 @@ void Mob::DrawDebugCoordinateNode(std::string node_name, const glm::vec4 vec)
 	if (!node) {
 		node = NPC::SpawnNodeNPC(node_name, "", GetPosition());
 	}
+}
+
+Mob* Mob::GetImpliedTarget(Mob* otarget, uint32 spell_id, int depth, Mob* original_otarget) {
+    // 'this' is the caster
+    // 'otarget' is the original target
+    // 'spell_id' is the spell being used	
+
+    if (depth == 0) {
+		if (IsClient()) {			
+			original_otarget = otarget;
+		} else {
+			return otarget;
+		}
+
+		// Shortcut naive cases
+		if (!otarget || otarget == this) {
+			if (IsBeneficialSpell(spell_id)) {
+				return this;
+			} else {
+				return GetPet() ? GetPet()->GetTarget() : nullptr;
+			}
+		}     
+	}
+
+    if (depth > 5) {
+        // We've reached the maximum recursion depth
+        return IsBeneficialSpell(spell_id) ? this : original_otarget;
+    }
+
+    Mob* ntarget = nullptr;
+
+    SpellTargetType tt = spells[spell_id].target_type;
+    // Stuff we can shortcut based on target type
+    switch (tt) {
+        case SpellTargetType::ST_Pet:
+            return this->IsPet() ? this : GetPet();
+        case SpellTargetType::ST_PetMaster:
+            return GetOwner();
+        case SpellTargetType::ST_TargetsTarget:
+            return otarget->GetTarget() ? otarget->GetTarget() : otarget;
+        case SpellTargetType::ST_TargetAENoPlayersPets:
+        case SpellTargetType::ST_Group:
+        case SpellTargetType::ST_AEBard:
+        case SpellTargetType::ST_AECaster:
+        case SpellTargetType::ST_Beam:
+        case SpellTargetType::ST_Ring:
+        case SpellTargetType::ST_GroupTeleport:
+            return this;       
+        default:            
+            break;
+    }
+
+    if (otarget) {
+        if (!IsBeneficialSpell(spell_id)) {
+            if (otarget->IsClient() || otarget->IsPetOwnerClient()) {
+                ntarget = otarget->GetImpliedTarget(otarget->GetTarget(), spell_id, depth + 1, original_otarget);
+            } else {
+                return otarget;
+            }		
+        } else {
+            if (!(otarget->IsClient() || otarget->IsPetOwnerClient())) {
+				if (!otarget->GetTarget()) {
+					return this;
+				}
+                ntarget = otarget->GetImpliedTarget(otarget->GetTarget(), spell_id, depth + 1, original_otarget);
+            } else {
+                return otarget;
+            }
+        }
+    }
+
+    if (ntarget == nullptr && IsBeneficialSpell(spell_id)) {
+        ntarget = this;
+    }
+    return ntarget;
 }
 
 const CombatRecord &Mob::GetCombatRecord() const
