@@ -4132,6 +4132,9 @@ int32 Mob::GetActSpellCasttime(uint16 spell_id, int32 casttime)
 void Mob::ExecWeaponProc(const EQ::ItemInstance *inst, uint16 spell_id, Mob *on, int level_override) {
 	// Changed proc targets to look up based on the spells goodEffect flag.
 	// This should work for the majority of weapons.
+	
+	on = GetImpliedTarget(on, spell_id);
+	
 	if (!on) {
 		return;
 	}

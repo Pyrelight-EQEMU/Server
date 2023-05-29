@@ -4615,7 +4615,7 @@ void Mob::TryCombatProcs(const EQ::ItemInstance* weapon_g, Mob *on, uint16 hand,
 		return;
 	}
 
-	if (!IsAttackAllowed(on)) {
+	if (!IsAttackAllowed(on) && !IsClient()) {
 		LogCombat("Preventing procing off of unattackable things");
 		return;
 	}
