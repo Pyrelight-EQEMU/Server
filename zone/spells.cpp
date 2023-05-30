@@ -7135,7 +7135,7 @@ Mob* Mob::GetImpliedTarget(Mob* otarget, uint32 spell_id, int depth, Mob* origin
     // 'spell_id' is the spell being used
 
 	// Shortcut naive cases
-	if (!otarget) {
+	if (!otarget || otarget == this) {
 		if (IsBeneficialSpell(spell_id)) {
 			return this;
 		} else {
