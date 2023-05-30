@@ -7168,12 +7168,9 @@ Mob* Mob::GetImpliedTarget(Mob* otarget, uint32 spell_id, int depth, Mob* origin
         case SpellTargetType::ST_TargetsTarget:
             return otarget->GetTarget() ? otarget->GetTarget() : otarget;
         case SpellTargetType::ST_TargetAENoPlayersPets:
-        case SpellTargetType::ST_GroupClientAndPet:
         case SpellTargetType::ST_Group:
         case SpellTargetType::ST_AEBard:
-        case SpellTargetType::ST_GroupNoPets:
         case SpellTargetType::ST_AECaster:
-        case SpellTargetType::ST_AEClientV1:
         case SpellTargetType::ST_Beam:
         case SpellTargetType::ST_Ring:
         case SpellTargetType::ST_GroupTeleport:
