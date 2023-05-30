@@ -7132,24 +7132,24 @@ void Mob::DrawDebugCoordinateNode(std::string node_name, const glm::vec4 vec)
 Mob* Mob::GetImpliedTarget(Mob* otarget, uint32 spell_id, int depth, Mob* original_otarget) {
     // 'this' is the caster
     // 'otarget' is the original target
-    // 'spell_id' is the spell being used
-
-	// Shortcut naive cases
-	if (!otarget || otarget == this) {
-		if (IsBeneficialSpell(spell_id)) {
-			return this;
-		} else {
-			return nullptr;
-		}
-	}
+    // 'spell_id' is the spell being used	
 
     if (depth == 0) {
 		if (IsClient()) {			
 			original_otarget = otarget;
 		} else {
 			return otarget;
-		}        
-    }
+		}
+
+		// Shortcut naive cases
+		if (!otarget || otarget == this) {
+			if (IsBeneficialSpell(spell_id)) {
+				return this;
+			} else {
+				return nullptr;
+			}
+		}     
+    }	
 
     if (depth > 5) {
         // We've reached the maximum recursion depth
