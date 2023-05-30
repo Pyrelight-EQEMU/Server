@@ -7131,8 +7131,17 @@ void Mob::DrawDebugCoordinateNode(std::string node_name, const glm::vec4 vec)
 
 Mob* Mob::GetImpliedTarget(Mob* otarget, uint32 spell_id, int depth, Mob* original_otarget) {
     // 'this' is the caster
-    // 'otarget' is the original caster
+    // 'otarget' is the original target
     // 'spell_id' is the spell being used
+
+	// Shortcut naive cases
+	if (!otarget) {
+		if (IsBeneficialSpell(spell_id)) {
+			return this;
+		} else {
+			return nullptr;
+		}
+	}
 
     if (depth == 0) {
 		if (IsClient()) {			
@@ -7148,10 +7157,6 @@ Mob* Mob::GetImpliedTarget(Mob* otarget, uint32 spell_id, int depth, Mob* origin
     }
 
     Mob* ntarget = nullptr;
-
-	if (!otarget &&IsBeneficialSpell(spell_id)) {
-		return this;
-	}
 
     SpellTargetType tt = spells[spell_id].target_type;
     // Stuff we can shortcut based on target type
