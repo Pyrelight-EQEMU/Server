@@ -7146,7 +7146,7 @@ Mob* Mob::GetImpliedTarget(Mob* otarget, uint32 spell_id, int depth, Mob* origin
 			if (IsBeneficialSpell(spell_id)) {
 				return this;
 			} else {
-				return nullptr;
+				return GetPet()->GetTarget();
 			}
 		}     
     }	
