@@ -5261,11 +5261,13 @@ void Mob::TryCriticalHit(Mob *defender, DamageHitInfo &hit, ExtraAttackOptions *
 	// We either require an innate crit chance or some SPA 169 to crit
 	bool innate_crit = false;
 	int crit_chance = GetCriticalChanceBonus(hit.skill);
-	if ((GetClass() == WARRIOR || GetClass() == PALADIN || GetClass() == BERSERKER || GetClass() == SHADOWKNIGHT) && GetLevel() >= 12)
+
+	auto primaryItem = GetInv().GetItem(EQ::invslot::slotPrimary);
+	std::set<uint8> AllTwoHanded = {EQ::item::ItemType2HBlunt, EQ::item::ItemType2HSlash, EQ::item::ItemType2HPiercing};
+
+	if (primaryItem && AllTwoHanded.count(primaryItem->GetItemType()))
 		innate_crit = true;
 	else if (GetClass() == RANGER && GetLevel() >= 12 && hit.skill == EQ::skills::SkillArchery)
-		innate_crit = true;
-	else if (GetClass() == ROGUE && GetLevel() >= 12 && hit.skill == EQ::skills::SkillThrowing)
 		innate_crit = true;
 
 	// we have a chance to crit!
@@ -5285,7 +5287,7 @@ void Mob::TryCriticalHit(Mob *defender, DamageHitInfo &hit, ExtraAttackOptions *
 		dex_bonus += 45; // chances did not match live without a small boost
 
 		// so if we have an innate crit we have a better chance, except for ber throwing
-		if (!innate_crit || ((GetClass() == BERSERKER || GetClass() == SHADOWKNIGHT) && hit.skill == EQ::skills::SkillThrowing))
+		if (!innate_crit || ((GetClass() == BERSERKER) && hit.skill == EQ::skills::SkillThrowing))
 			dex_bonus = dex_bonus * 3 / 5;
 
 		if (crit_chance)
