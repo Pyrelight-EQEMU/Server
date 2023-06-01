@@ -624,6 +624,15 @@ int32 Mob::GetActSpellDuration(uint16 spell_id, int32 duration)
 	tic_inc = GetFocusEffect(focusSpellDurByTic, spell_id);
 
 	float focused = ((duration * increase) / 100.0f) + tic_inc;
+
+	if (IsClient()) {
+		if (IsBeneficialSpell(spell_id) && spells[spell_id].short_buff_box) {
+			focused *= 1 + (GetHeroicINT() / 100);
+		} else if (!IsBeneficialSpell(spell_id)) {
+			focused *= 1 + (GetHeroicWIS() / 100);
+		}
+	}
+
 	int ifocused = static_cast<int>(focused);
 
 	// 7.6 is rounded to 7, 8.6 is rounded to 9
