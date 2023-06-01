@@ -1177,7 +1177,7 @@ int64 Mob::MeleeMitigation(Mob *attacker, DamageHitInfo &hit, ExtraAttackOptions
 	LuaParser::Instance()->MeleeMitigation(this, attacker, hit, opts, ignoreDefault);
 
 	if (ignoreDefault) {
-		return;
+		return 0;
 	}
 #endif
 
