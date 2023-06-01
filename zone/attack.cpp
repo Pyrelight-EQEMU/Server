@@ -1647,7 +1647,7 @@ void Mob::DoAttack(Mob *other, DamageHitInfo &hit, ExtraAttackOptions *opts, boo
 				}
 
 				if (RuleI(Character, HeroicStaminaDamageReduction) > 0) {
-					int64 damage_redunction_value = 0;
+					int64 damage_reduction_value = 0;
 					float damage_reduction_cap = RuleR(Character, HeroicStaminaDamageReductionCap);
 					// Calculate cap modifiers
 					if (GetInv().GetItem(EQ::invslot::slotSecondary)->GetItemType() == EQ::item::ItemTypeShield) {
@@ -1669,15 +1669,15 @@ void Mob::DoAttack(Mob *other, DamageHitInfo &hit, ExtraAttackOptions *opts, boo
 							break;
 						}
 
-					damage_redunction_value = std::min(damage_reduction_hardcap, damage_redunction_value);
+					damage_reduction_cap = std::min(damage_reduction_hardcap, damage_reduction_cap);
 					}
 					if (other->IsClient() && other->GetHeroicSTA() > 0) {
-						damage_redunction_value = std::ceil(RuleI(Character, HeroicStaminaDamageReduction) * other->GetHeroicSTA());
+						damage_reduction_value = std::ceil(RuleI(Character, HeroicStaminaDamageReduction) * other->GetHeroicSTA());
 					} else if (RuleB(Character, ExtraHeroicModifiersForPets) && other->IsPetOwnerClient()) {
-						damage_redunction_value = std::ceil((1/3) * RuleI(Character, HeroicStaminaDamageReduction) * std::max(other->GetOwner()->GetHeroicINT(), other->GetOwner()->GetHeroicWIS()));
+						damage_reduction_value = std::ceil((1/3) * RuleI(Character, HeroicStaminaDamageReduction) * std::max(other->GetOwner()->GetHeroicINT(), other->GetOwner()->GetHeroicWIS()));
 					}
 					hit.damage_done = static_cast<int64>(std::max(static_cast<int64>(hit.damage_done * damage_reduction_cap / 100), // Capped Damage Reduction
-																  					 hit.damage_done - damage_redunction_value)); // Reduced Damage
+																  					 hit.damage_done - damage_reduction_value)); // Reduced Damage
 				}
 
 				CommonOutgoingHitSuccess(other, hit, opts);
