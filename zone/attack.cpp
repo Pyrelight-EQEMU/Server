@@ -1655,7 +1655,7 @@ void Mob::DoAttack(Mob *other, DamageHitInfo &hit, ExtraAttackOptions *opts, boo
 					}
 					// Class-based hard caps
 					float damage_reduction_hardcap;
-					case (GetClass()) {
+					switch(GetClass()) {
 						case PALADIN:
 						case SHADOWKNIGHT:
 							damage_reduction_hardcap = 90;
