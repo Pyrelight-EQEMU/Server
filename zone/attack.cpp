@@ -1170,7 +1170,7 @@ double Mob::RollD20(int offense, int mitigation)
 	return mods[index];
 }
 //SYNC WITH: tune.cpp, mob.h TuneMeleeMitigation
-void Mob::MeleeMitigation(Mob *attacker, DamageHitInfo &hit, ExtraAttackOptions *opts)
+int64 Mob::MeleeMitigation(Mob *attacker, DamageHitInfo &hit, ExtraAttackOptions *opts)
 {
 #ifdef LUA_EQEMU
 	bool ignoreDefault = false;
@@ -1198,6 +1198,7 @@ void Mob::MeleeMitigation(Mob *attacker, DamageHitInfo &hit, ExtraAttackOptions 
 
 	// +0.5 for rounding, min to 1 dmg
 	hit.damage_done = std::max(static_cast<int>(roll * static_cast<double>(hit.base_damage) + 0.5), 1);
+	return hit.damage_done;
 
 	Log(Logs::Detail, Logs::Attack, "mitigation %d vs offense %d. base %d rolled %f damage %d", mitigation, hit.offense, hit.base_damage, roll, hit.damage_done);
 }
@@ -1560,7 +1561,7 @@ void Mob::DoAttack(Mob *other, DamageHitInfo &hit, ExtraAttackOptions *opts, boo
 	int effective_hdex = IsClient() ? GetHeroicDEX() : 0;
 	int effective_hagi = other->IsClient() ? GetHeroicAGI() : 0;
 
-	if (isClient()) {
+	if (IsClient()) {
 		auto primaryItem = GetInv().GetItem(EQ::invslot::slotPrimary);
 		auto secondaryItem = GetInv().GetItem(EQ::invslot::slotSecondary);
 
