@@ -106,7 +106,6 @@ RULE_REAL(Character, HeroicStrengthDamageBonus, 3.0, "Percentage that each point
 RULE_INT(Character, HeroicStaminaDamageReduction, 10, "Number of points of damage that each point of Heroic STA should mitigate, up to the cap set in HeroicStaminaDamageReductionCap.")
 RULE_REAL(Character, HeroicStaminaDamageReductionCap, 50.0, "Maximum percentage of damage that HeroicSTA should be able to mitigate.")
 RULE_REAL(Character, HeroicAgilityExtraAttackRate, 0.50, "The percentage chance for Heroic AGI to grant extra attacks.")
-RULE_REAL(Character, HeroicDexterityExtraCriticalDamage, 0.25, "The percentage increase to melee critical damage which each point of Heroic DEX grants")
 RULE_REAL(Character, HeroicIntelligenceExtraCriticalDamage, 0.25, "The percentage increase to spell critical damage/heal which each point of Heroic INT grants")
 RULE_INT(Character, HeroicWisdomDamageReduction, 10, "Number of points of spell damage that each point of Heroic WIS should mitigate, up to the cap set in HeroicWISDamageReductionCap.")
 RULE_REAL(Character, HeroicWisdomDamageReductionCap, 50.0, "Maximum percentage of spell damage that Heroic WIS should be able to mitigate.")

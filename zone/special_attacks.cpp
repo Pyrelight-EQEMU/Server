@@ -347,7 +347,7 @@ void Client::OPCombatAbility(const CombatAbility_Struct *ca_atk)
 				(ca_atk->m_skill == EQ::skills::SkillArchery) ? RangedAttack(GetTarget()) : ThrowingAttack(GetTarget());
 				if (CheckDoubleRangedAttack())
 					(ca_atk->m_skill == EQ::skills::SkillArchery) ? RangedAttack(GetTarget()) : ThrowingAttack(GetTarget());
-
+				/*
 				if (RuleR(Character, HeroicAgilityExtraAttackRate) > 0 && GetHeroicAGI() > 0) {
 					int chain = 0;
 					int effective_hagi = GetHeroicAGI();        
@@ -364,7 +364,7 @@ void Client::OPCombatAbility(const CombatAbility_Struct *ca_atk)
 						"You unleash a FLURRY of %d extra arrows." :
 						"You unleash a FLURRY of %d extra throws.", chain);
 					}
-				}
+				} */
 			} else {
 				Message(Chat::Red, "You must equip a ranged weapon to use this ability.");
 			}

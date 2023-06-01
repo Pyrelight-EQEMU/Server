@@ -345,7 +345,7 @@ bool Client::Process() {
 									RangedAttack(GetTarget());
 									if (CheckDoubleRangedAttack())
 										RangedAttack(GetTarget(), true);
-
+									/*
 									if (RuleR(Character, HeroicAgilityExtraAttackRate) > 0 && GetHeroicAGI() > 0) {
 										int chain = 0;
 										int effective_hagi = GetHeroicAGI();
@@ -362,7 +362,7 @@ bool Client::Process() {
 										if (chain > 0) {
 											Message(Chat::NPCFlurry, "You unleash a FLURRY of %d extra arrows.", chain);
 										}
-									}
+									}*/
 								}
 								else
 									ranged_timer.Start();

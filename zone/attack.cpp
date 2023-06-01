@@ -38,6 +38,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #include "npc.h"
 
 #include <stdlib.h>
+#include <set>
 
 #include "bot.h"
 
@@ -393,6 +394,10 @@ bool Mob::AvoidDamage(Mob *other, DamageHitInfo &hit)
 
 	bool InFront = !attacker->BehindMob(this, attacker->GetX(), attacker->GetY());
 
+	std::set<uint8> AllOneHanded = {EQ::item::ItemType1HBlunt, EQ::item::ItemType1HSlash, EQ::item::ItemType1HPiercing, EQ::item::ItemTypeMartial};
+	std::set<uint8> AllTwoHanded = {EQ::item::ItemType2HBlunt, EQ::item::ItemType2HSlash, EQ::item::ItemType2HPiercing};
+	std::set<uint8> NotH2H = {EQ::item::ItemType1HBlunt, EQ::item::ItemType1HSlash, EQ::item::ItemType1HPiercing};
+
 	/*
 	This special ability adds a negative modifer to the defenders riposte/block/parry/chance
 	therefore reducing the defenders chance to successfully avoid the melee attack. Works in tandem with Heroic Strikethrough. This may
@@ -493,7 +498,44 @@ bool Mob::AvoidDamage(Mob *other, DamageHitInfo &hit)
 			int slip = aabonuses.OffhandRiposteFail + itembonuses.OffhandRiposteFail + spellbonuses.OffhandRiposteFail;
 			chance += chance * slip / 100;
 		}
-		if (chance > 0 && zone->random.Roll(chance)) { // could be <0 from offhand stuff
+
+		int max_chance = chance;
+		if (chance < 10000) {
+			switch(GetClass()) {
+				case PALADIN:
+				case SHADOWKNIGHT:
+					max_chance = 10;
+					break;
+				case RANGER:
+					max_chance = 20;
+					break;
+				default:
+					max_chance = 5;
+					break;
+			}
+		}
+
+		// Weapon Style Bonuses
+		auto primaryItem = GetInv().GetItem(EQ::invslot::slotPrimary);
+		auto secondaryItem = GetInv().GetItem(EQ::invslot::slotSecondary);
+
+		if (primaryItem && secondaryItem && NotH2H.count(primaryItem->GetItemType()) && secondaryItem->GetItemType() == EQ::item::ItemTypeShield) {
+			chance += 10;
+			max_chance += 20;
+		}		
+
+		if (primaryItem && secondaryItem && AllOneHanded.count(primaryItem->GetItemType()) && AllOneHanded.count(secondaryItem->GetItemType())) {
+			if (NotH2H.count(primaryItem->GetItemType())) {
+				chance += 2;
+				max_chance += 5;
+			}
+			if (NotH2H.count(secondaryItem->GetItemType())) {
+				chance += 2;
+				max_chance += 5;
+			}
+		}
+
+		if (chance > 0 && zone->random.Roll(std::min(max_chance, chance))) { // could be <0 from offhand stuff
 			hit.damage_done = DMG_RIPOSTED;
 			return true;
 		}
@@ -531,7 +573,48 @@ bool Mob::AvoidDamage(Mob *other, DamageHitInfo &hit)
 			float npc_modifier = (modify_block + modify_all) / 100.0f;
 			chance += chance * npc_modifier;
 		}
-		if (zone->random.Roll(chance)) {
+
+				if(chance > 0 && isDesiredType(primaryItem) && isDesiredType(secondaryItem)) {
+			chance += 10;
+		}
+
+		int max_chance = chance;
+		if (chance < 10000) {
+			switch(GetClass()) {
+				case PALADIN:
+				case SHADOWKNIGHT:
+					max_chance = 15;
+					break;
+				case BEASTLORD:
+					max_chance = 20;
+					break;
+				default:
+					max_chance = 5;
+					break;
+			}
+		}
+
+		// Weapon Style Bonuses
+		auto primaryItem = GetInv().GetItem(EQ::invslot::slotPrimary);
+		auto secondaryItem = GetInv().GetItem(EQ::invslot::slotSecondary);
+
+		if (primaryItem && secondaryItem && NotH2H.count(primaryItem->GetItemType()) && secondaryItem->GetItemType() == EQ::item::ItemTypeShield) {
+			chance += 10;
+			max_chance += 20;
+		}		
+
+		if (primaryItem && secondaryItem && AllOneHanded.count(primaryItem->GetItemType()) && AllOneHanded.count(secondaryItem->GetItemType())) {
+			if (primaryItem->GetItemType() == EQ::item::ItemTypeMartial) {
+				chance += 2;
+				max_chance += 2;
+			}
+			if (NotH2H.count(secondaryItem->GetItemType()) == EQ::item::ItemTypeMartial) {
+				chance += 2;
+				max_chance += 2;
+			}
+		}
+
+		if (chance > 0 && zone->random.Roll(std::min(max_chance, chance))) {
 			hit.damage_done = DMG_BLOCKED;
 			return true;
 		}
@@ -558,7 +641,44 @@ bool Mob::AvoidDamage(Mob *other, DamageHitInfo &hit)
 			float npc_modifier = (modify_parry + modify_all) / 100.0f;
 			chance += chance * npc_modifier;
 		}
-		if (zone->random.Roll(chance)) {
+
+		int max_chance = chance;
+		if (chance < 10000) {
+			switch(GetClass()) {
+				case PALADIN:
+				case SHADOWKNIGHT:
+					max_chance = 10;
+					break;
+				case RANGER:
+					max_chance = 15;
+					break;
+				default:
+					max_chance = 5;
+					break;
+			}
+		}
+
+		// Weapon Style Bonuses
+		auto primaryItem = GetInv().GetItem(EQ::invslot::slotPrimary);
+		auto secondaryItem = GetInv().GetItem(EQ::invslot::slotSecondary);
+
+		if (primaryItem && secondaryItem && NotH2H.count(primaryItem->GetItemType()) && secondaryItem->GetItemType() == EQ::item::ItemTypeShield) {
+			chance += 10;
+			max_chance += 20;
+		}		
+
+		if (primaryItem && secondaryItem && AllOneHanded.count(primaryItem->GetItemType()) && AllOneHanded.count(secondaryItem->GetItemType())) {
+			if (NotH2H.count(primaryItem->GetItemType())) {
+				chance += 2;
+				max_chance += 5;
+			}
+			if (NotH2H.count(secondaryItem->GetItemType())) {
+				chance += 2;
+				max_chance += 5;
+			}
+		}
+
+		if (chance > 0 && zone->random.Roll(std::min(max_chance, chance))) {
 			hit.damage_done = DMG_PARRIED;
 			return true;
 		}
@@ -585,7 +705,36 @@ bool Mob::AvoidDamage(Mob *other, DamageHitInfo &hit)
 			float npc_modifier = (modify_dodge + modify_all) / 100.0f;
 			chance += chance * npc_modifier;
 		}
-		if (zone->random.Roll(chance)) {
+
+		int max_chance = chance;
+		if (chance < 10000) {
+			switch(GetClass()) {
+				case PALADIN:
+				case SHADOWKNIGHT:
+					max_chance = 5;
+					break;
+				default:
+					max_chance = 20;
+					break;
+			}
+		}
+
+		// Weapon Style Bonuses
+		auto primaryItem = GetInv().GetItem(EQ::invslot::slotPrimary);
+		auto secondaryItem = GetInv().GetItem(EQ::invslot::slotSecondary);
+
+		if (primaryItem && secondaryItem && AllOneHanded.count(primaryItem->GetItemType()) && AllOneHanded.count(secondaryItem->GetItemType())) {
+			if (primaryItem->GetItemType() == EQ::item::ItemTypeMartial) {
+				chance += 2;
+				max_chance += 5;
+			}
+			if (NotH2H.count(secondaryItem->GetItemType()) == EQ::item::ItemTypeMartial) {
+				chance += 2;
+				max_chance += 5;
+			}
+		}
+
+		if (chance > 0 && zone->random.Roll(std::min(max_chance, chance))) {
 			hit.damage_done = DMG_DODGED;
 			return true;
 		}
@@ -1412,23 +1561,60 @@ void Mob::DoAttack(Mob *other, DamageHitInfo &hit, ExtraAttackOptions *opts, boo
 		FromRiposte = false;
 	}
 
-	// check to see if we hit..
-	if (!FromRiposte && other->AvoidDamage(this, hit)) {
-		if (int strike_through = itembonuses.StrikeThrough + spellbonuses.StrikeThrough + aabonuses.StrikeThrough;
-				strike_through && zone->random.Roll(strike_through)) {
-			MessageString(Chat::StrikeThrough,
-				STRIKETHROUGH_STRING); // You strike through your opponents defenses!
-			hit.damage_done = 1;			// set to one, we will check this to continue
+	int effective_hdex = IsClient() ? GetHeroicDEX() : 0;
+	int effective_hagi = other->IsClient() ? GetHeroicAGI() : 0;
+
+	if (isClient()) {
+		auto primaryItem = GetInv().GetItem(EQ::invslot::slotPrimary);
+		auto secondaryItem = GetInv().GetItem(EQ::invslot::slotSecondary);
+
+		std::set<uint8> AllOneHanded = {EQ::item::ItemType1HBlunt, EQ::item::ItemType1HSlash, EQ::item::ItemType1HPiercing, EQ::item::ItemTypeMartial};
+
+		if (primaryItem && secondaryItem) {
+			if(AllOneHanded.count(primaryItem->GetItemType()) && secondaryItem->GetItemType() == EQ::item::ItemTypeShield) {
+				effective_hdex += GetLevel();
+			}
+		}	
+	}
+	
+	bool hit_avoid = other->AvoidDamage(this, hit);
+
+	while ((hit_avoid && effective_hagi > 0) || (!hit_avoid && effective_hdex > 0)) {
+		if (hit_avoid) {
+			effective_hagi -= zone->random.Int(1, 100);
+		} else {
+			effective_hdex -= zone->random.Int(1, 100);
 		}
-		if (hit.damage_done == DMG_RIPOSTED) {
-			DoRiposte(other);
-			return;
+
+		if (other->AvoidDamage(this, hit)) {
+			if (int strike_through = itembonuses.StrikeThrough + spellbonuses.StrikeThrough + aabonuses.StrikeThrough;
+					strike_through && zone->random.Roll(strike_through)) {
+				MessageString(Chat::StrikeThrough,
+					STRIKETHROUGH_STRING); // You strike through your opponents defenses!
+				hit.damage_done = 1;			// set to one, we will check this to continue
+			}
 		}
-		LogCombat("Avoided/strikethrough damage with code [{}]", hit.damage_done);
+
+		if ((hit_avoid && hit.damage_done <= 0) || (!hit_avoid && hit.damage_done >= 0)) {
+			break;
+		}
+	}
+	
+	if (hit.damage_done == DMG_RIPOSTED) {
+		DoRiposte(other);
+		return;
 	}
 
 	if (hit.damage_done >= 0) {
-		if (other->CheckHitChance(this, hit)) {
+		bool hit_outcome = other->CheckHitChance(this, hit);
+		while (!hit_outcome && effective_hdex > 0) {
+			effective_hdex -= zone->random.Int(1,100);
+			hit_outcome = other->CheckHitChance(this, hit);
+			if (hit_outcome) {
+				break;
+			}
+		}
+		if (hit_outcome) {
 			if (IsNPC() && other->IsClient() && other->animation > 0 && GetLevel() >= 5 && BehindMob(other, GetX(), GetY())) {
 				// ~ 12% chance
 				if (zone->random.Roll(12)) {
@@ -1443,7 +1629,12 @@ void Mob::DoAttack(Mob *other, DamageHitInfo &hit, ExtraAttackOptions *opts, boo
 					}
 				}
 			}
-			other->MeleeMitigation(this, hit, opts);
+			int64 hit_highdmg = other->MeleeMitigation(this, hit, opts);
+			while (effective_hdex > 0) {
+				effective_hdex -= zone->random.Int(1,100);
+				int64 hit_temp = other->MeleeMitigation(this, hit, opts);
+				hit_highdmg = hit_temp > hit_highdmg ? hit_temp : hit_highdmg;
+			}
 			if (hit.damage_done > 0) {
 				ApplyDamageTable(hit);				
 
@@ -1451,7 +1642,8 @@ void Mob::DoAttack(Mob *other, DamageHitInfo &hit, ExtraAttackOptions *opts, boo
 					auto damage_scalar = 1;
 					if (IsClient() && GetHeroicSTR() > 0) {
 						damage_scalar += std::ceil(RuleR(Character, HeroicStrengthDamageBonus) / 100 * GetHeroicSTR());
-					} else if (RuleB(Character, ExtraHeroicModifiersForPets) && IsPetOwnerClient() && GetOwner()->GetHeroicSTR() > 0) {
+					} 
+					else if (RuleB(Character, ExtraHeroicModifiersForPets) && IsPetOwnerClient() && GetOwner()->GetHeroicSTR() > 0) {
 						damage_scalar += std::ceil((1/3) * RuleR(Character, HeroicStrengthDamageBonus) / 100 * GetOwner()->GetHeroicSTR());
 					}
 					hit.damage_done = static_cast<int64>(hit.damage_done * damage_scalar);
@@ -1459,12 +1651,35 @@ void Mob::DoAttack(Mob *other, DamageHitInfo &hit, ExtraAttackOptions *opts, boo
 
 				if (RuleI(Character, HeroicStaminaDamageReduction) > 0) {
 					int64 damage_redunction_value = 0;
+					float damage_reduction_cap = RuleR(Character, HeroicStaminaDamageReductionCap);
+					// Calculate cap modifiers
+					if (GetInv().GetItem(EQ::invslot::slotSecondary)->GetItemType() == EQ::item::ItemTypeShield) {
+						damage_reduction_cap += 5.0 + (GetInv().GetItem(EQ::invslot::slotSecondary)->GetItemArmorClass() / 20);
+					}
+					// Class-based hard caps
+					float damage_reduction_hardcap;
+					case (GetClass()) {
+						case PALADIN:
+						case SHADOWKNIGHT:
+							damage_reduction_hardcap = 90;
+							break;
+						case BEASTLORD:
+						case RANGER:
+							damage_reduction_hardcap = 85;
+							break;
+						default:
+							damage_reduction_hardcap = 80;
+							break;
+						}
+
+					damage_redunction_value = std::min(damage_reduction_hardcap, damage_redunction_value);
+					}
 					if (other->IsClient() && other->GetHeroicSTA() > 0) {
 						damage_redunction_value = std::ceil(RuleI(Character, HeroicStaminaDamageReduction) * other->GetHeroicSTA());
 					} else if (RuleB(Character, ExtraHeroicModifiersForPets) && other->IsPetOwnerClient()) {
-						damage_redunction_value = RuleI(Character, HeroicStaminaDamageReduction) * std::max(other->GetOwner()->GetHeroicINT(), other->GetOwner()->GetHeroicWIS());
+						damage_redunction_value = std::ceil((1/3) * RuleI(Character, HeroicStaminaDamageReduction) * std::max(other->GetOwner()->GetHeroicINT(), other->GetOwner()->GetHeroicWIS()));
 					}
-					hit.damage_done = static_cast<int64>(std::max(static_cast<int64>(hit.damage_done * RuleR(Character, HeroicStaminaDamageReductionCap) / 100), // Capped Damage Reduction
+					hit.damage_done = static_cast<int64>(std::max(static_cast<int64>(hit.damage_done * damage_reduction_cap / 100), // Capped Damage Reduction
 																  					 hit.damage_done - damage_redunction_value)); // Reduced Damage
 				}
 
@@ -4947,10 +5162,6 @@ void Mob::TryPetCriticalHit(Mob *defender, DamageHitInfo &hit)
 		// For pets use PetCriticalHit for base chance, pets do not innately critical with without it
 		critChance += CritPetChance;
 
-	if (RuleR(Character, HeroicDexterityExtraCriticalDamage) > 0 && RuleB(Character, ExtraHeroicModifiersForPets) && IsPetOwnerClient()) {
-		critMod += GetHeroicDEX() * RuleR(Character, HeroicDexterityExtraCriticalDamage);
-	}
-
 	if (critChance > 0) {
 		if (zone->random.Roll(critChance)) {
 			critMod += GetCritDmgMod(hit.skill, owner);
@@ -5095,10 +5306,6 @@ void Mob::TryCriticalHit(Mob *defender, DamageHitInfo &hit, ExtraAttackOptions *
 			int crit_mod = 170 + GetCritDmgMod(hit.skill);
 			if (crit_mod < 100) {
 				crit_mod = 100;
-			}
-
-			if (RuleR(Character, HeroicDexterityExtraCriticalDamage) > 0 && IsClient()) {
-				crit_mod += GetHeroicDEX() * RuleR(Character, HeroicDexterityExtraCriticalDamage);
 			}
 
 			hit.damage_done = (hit.damage_done * crit_mod) / 100;
@@ -6289,6 +6496,7 @@ void Client::DoAttackRounds(Mob *target, int hand, bool IsFromSpell)
 	}
 
 	// Pyrelight Custom Code
+	/*
     if (IsClient() && RuleR(Character, HeroicAgilityExtraAttackRate) > 0 && GetHeroicAGI() > 0 && successful_hit) {
         int chain = 0;
         int effective_hagi = GetHeroicAGI();        
@@ -6303,7 +6511,7 @@ void Client::DoAttackRounds(Mob *target, int hand, bool IsFromSpell)
         if (chain > 0) {
             Message(Chat::NPCFlurry, "You unleash a FLURRY of %d extra attacks.", chain);
         }
-    }
+    }*/
 }
 
 bool Mob::CheckDualWield()
