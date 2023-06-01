@@ -574,10 +574,6 @@ bool Mob::AvoidDamage(Mob *other, DamageHitInfo &hit)
 			chance += chance * npc_modifier;
 		}
 
-				if(chance > 0 && isDesiredType(primaryItem) && isDesiredType(secondaryItem)) {
-			chance += 10;
-		}
-
 		int max_chance = chance;
 		if (chance < 10000) {
 			switch(GetClass()) {
