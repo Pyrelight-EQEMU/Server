@@ -1182,7 +1182,7 @@ int64 Mob::MeleeMitigation(Mob *attacker, DamageHitInfo &hit, ExtraAttackOptions
 #endif
 
 	if (hit.damage_done < 0 || hit.base_damage == 0)
-		return;
+		return 0;
 
 	Mob* defender = this;
 	auto mitigation = defender->GetMitigationAC();
