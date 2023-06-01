@@ -1670,7 +1670,7 @@ void Mob::DoAttack(Mob *other, DamageHitInfo &hit, ExtraAttackOptions *opts, boo
 						}
 
 					damage_reduction_cap = std::min(damage_reduction_hardcap, damage_reduction_cap);
-					}
+				
 					if (other->IsClient() && other->GetHeroicSTA() > 0) {
 						damage_reduction_value = std::ceil(RuleI(Character, HeroicStaminaDamageReduction) * other->GetHeroicSTA());
 					} else if (RuleB(Character, ExtraHeroicModifiersForPets) && other->IsPetOwnerClient()) {
