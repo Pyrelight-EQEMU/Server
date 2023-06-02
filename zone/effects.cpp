@@ -150,19 +150,6 @@ int64 Mob::GetActSpellDamage(uint16 spell_id, int64 value, Mob* target) {
 				this, true, 100, Chat::SpellCrit, FilterSpellCrits,
 				OTHER_CRIT_BLAST, nullptr, GetName(), itoa(-value));
 
-			if (RuleI(Character, HeroicWisdomDamageReduction) > 0) {
-				int64 damage_reduction_value = 0;
-				if (target->IsClient() && target->GetHeroicWIS() > 0) {
-					damage_reduction_value = std::ceil(RuleI(Character, HeroicWisdomDamageReduction) * target->GetHeroicWIS());
-				} else if (RuleB(Character, ExtraHeroicModifiersForPets) && target->IsPetOwnerClient() && target->GetOwner()->GetHeroicWIS() > 0) {
-					damage_reduction_value = std::ceil((2/3) * RuleI(Character, HeroicWisdomDamageReduction) * target->GetHeroicWIS());
-				}
-				if (damage_reduction_value > 0) {
-					value = (std::min(static_cast<int64>(value * RuleR(Character, HeroicWisdomDamageReductionCap) / 100), // Capped Damage Reduction
-                                                     	 value + damage_reduction_value)); // Reduced Damage
-				}
-			}
-
 			if (IsClient())
 				MessageString(Chat::SpellCrit, YOU_CRIT_BLAST, itoa(-value));
 			return value;
@@ -201,19 +188,6 @@ int64 Mob::GetActSpellDamage(uint16 spell_id, int64 value, Mob* target) {
 		spells[spell_id].classes[(GetClass() % 17) - 1] >= GetLevel() - 5
 	) {
 		value -= GetExtraSpellAmt(spell_id, GetSpellDmg(), base_value);
-	}
-
-	if (RuleI(Character, HeroicWisdomDamageReduction) > 0) {
-		int64 damage_reduction_value = 0;
-		if (target->IsClient() && target->GetHeroicWIS() > 0) {
-			damage_reduction_value = std::ceil(RuleI(Character, HeroicWisdomDamageReduction) * target->GetHeroicWIS());
-		} else if (RuleB(Character, ExtraHeroicModifiersForPets) && target->IsPetOwnerClient() && target->GetOwner()->GetHeroicWIS() > 0) {
-			damage_reduction_value = std::ceil((2/3) * RuleI(Character, HeroicWisdomDamageReduction) * target->GetHeroicWIS());
-		}
-		if (damage_reduction_value > 0) {
-			value = (std::min(static_cast<int64>(value * RuleR(Character, HeroicWisdomDamageReductionCap) / 100), // Capped Damage Reduction
-													value + damage_reduction_value)); // Reduced Damage
-		}
 	}
 
 	return value;
@@ -284,13 +258,7 @@ int64 Mob::GetActDoTDamage(uint16 spell_id, int64 value, Mob* target, bool from_
 
 	if (!spells[spell_id].good_effect && chance > 0 && (zone->random.Roll(chance))) {
 		int64 ratio = 200;
-		ratio += itembonuses.DotCritDmgIncrease + spellbonuses.DotCritDmgIncrease + aabonuses.DotCritDmgIncrease;
-
-		if (RuleR(Character, HeroicIntelligenceExtraCriticalDamage) > 0) {
-			if (IsClient()) {
-				ratio += GetHeroicINT() * RuleR(Character, HeroicIntelligenceExtraCriticalDamage);
-			}
-		}
+		ratio += itembonuses.DotCritDmgIncrease + spellbonuses.DotCritDmgIncrease + aabonuses.DotCritDmgIncrease;		
 
 		value = base_value*ratio/100;
 		value += int64(base_value*GetFocusEffect(focusImprovedDamage, spell_id, nullptr, from_buff_tic)/100)*ratio/100;
@@ -348,17 +316,6 @@ int64 Mob::GetActDoTDamage(uint16 spell_id, int64 value, Mob* target, bool from_
 	}
 
 	value -= extra_dmg;
-
-	if (RuleI(Character, HeroicWisdomDamageReduction) > 0) {
-		auto damage_reduction_value = 0;
-		if (target->IsClient() && target->GetHeroicWIS() > 0) {
-			damage_reduction_value = RuleI(Character, HeroicWisdomDamageReduction) * target->GetHeroicWIS();
-		} else if (RuleB(Character, ExtraHeroicModifiersForPets) && target->IsPetOwnerClient() && target->GetOwner()->GetHeroicWIS() > 0) {
-			damage_reduction_value = (2/3) * RuleI(Character, HeroicWisdomDamageReduction) * target->GetHeroicWIS();
-		}
-		value = (std::min(static_cast<int64>(value * RuleR(Character, HeroicWisdomDamageReductionCap) / 100), // Capped Damage Reduction
-                                             value + damage_reduction_value)); // Reduced Damage
-	}
 
 	return value;
 }
@@ -444,12 +401,6 @@ int64 Mob::GetActSpellHealing(uint16 spell_id, int64 value, Mob* target, bool fr
 
 		if (zone->random.Roll(critical_chance)) {
 			critical_modifier = 2; //At present time no critical heal amount modifier SPA exists.
-
-			if (RuleR(Character, HeroicIntelligenceExtraCriticalDamage) > 0) {
-				if (IsClient()) {
-					critical_modifier += GetHeroicINT() * RuleR(Character, HeroicIntelligenceExtraCriticalDamage);
-				}
-			}
 		}
 	}
 
