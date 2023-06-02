@@ -2197,6 +2197,7 @@ int Mob::TryHeadShot(Mob *defender, EQ::skills::SkillType skillInUse)
 			if (norm > 0)
 				chance = chance * norm / 100;
 			chance += aabonuses.HeadShot[SBIndex::FINISHING_EFFECT_PROC_CHANCE] + spellbonuses.HeadShot[SBIndex::FINISHING_EFFECT_PROC_CHANCE] + itembonuses.HeadShot[SBIndex::FINISHING_EFFECT_PROC_CHANCE];
+			chance = std::min(chance, 500); //cap at 50% chance of Headshot
 			if (zone->random.Int(1, 1000) <= chance) {
 				entity_list.MessageCloseString(
 					this, false, 200, Chat::MeleeCrit, FATAL_BOW_SHOT,

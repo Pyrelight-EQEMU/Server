@@ -1033,7 +1033,7 @@ int Mob::ACSum(bool skip_caps)
 				shield_ac = CalcRecommendedLevelBonus(GetLevel(), inst->GetItemRecommendedLevel(true), inst->GetItemArmorClass(true));
 			}
 		}
-		shield_ac += itembonuses.heroic_str_shield_ac;
+		shield_ac += IsPetOwnerClient() ? GetOwner()->itembonuses.heroic_str_shield_ac : itembonuses.heroic_str_shield_ac;
 	}
 	// EQ math
 	ac = (ac * 4) / 3;
@@ -1561,6 +1561,11 @@ void Mob::DoAttack(Mob *other, DamageHitInfo &hit, ExtraAttackOptions *opts, boo
 	int effective_hdex = IsClient() ? GetHeroicDEX() : 0;
 	int effective_hagi = other->IsClient() ? GetHeroicAGI() : 0;
 
+	if (RuleB(Character, ExtraHeroicModifiersForPets)) {
+		effective_hdex = (GetOwner() && IsPetOwnerClient()) ? std::ceil(GetOwner()->GetHeroicDEX() / 3.0) : 0;
+		effective_hagi = (other->GetOwner() && other->IsPetOwnerClient()) ? std::ceil(other->GetOwner()->GetHeroicAGI() / 3.0) : 0;
+	}
+
 	if (IsClient()) {
 		auto primaryItem = GetInv().GetItem(EQ::invslot::slotPrimary);
 		auto secondaryItem = GetInv().GetItem(EQ::invslot::slotSecondary);
@@ -1575,21 +1580,21 @@ void Mob::DoAttack(Mob *other, DamageHitInfo &hit, ExtraAttackOptions *opts, boo
 	}
 	
 	bool hit_avoid = other->AvoidDamage(this, hit);
-
-	while ((hit_avoid && effective_hagi > 0) || (!hit_avoid && effective_hdex > 0)) {
-		if (hit_avoid) {
-			effective_hagi -= zone->random.Int(1, 100);
+	while ((!hit_avoid && effective_hagi > 0) || (hit_avoid && effective_hdex > 0)) {
+		if (!hit_avoid) {
+			effective_hagi -= zone->random.Int(1, RuleI(Character, HeroicAgilityRerollDecayRate));
 		} else {
-			effective_hdex -= zone->random.Int(1, 100);
+			effective_hdex -= zone->random.Int(1, RuleI(Character, HeroicDexterityRerollDecayRate));
 		}
 
 		if (other->AvoidDamage(this, hit)) {
+			hit_avoid = true;
 			if (int strike_through = itembonuses.StrikeThrough + spellbonuses.StrikeThrough + aabonuses.StrikeThrough;
 					strike_through && zone->random.Roll(strike_through)) {
 				MessageString(Chat::StrikeThrough,
 					STRIKETHROUGH_STRING); // You strike through your opponents defenses!
 				hit.damage_done = 1;			// set to one, we will check this to continue
-			}
+			}			
 		}
 
 		if ((hit_avoid && hit.damage_done <= 0) || (!hit_avoid && hit.damage_done >= 0)) {
@@ -1605,7 +1610,7 @@ void Mob::DoAttack(Mob *other, DamageHitInfo &hit, ExtraAttackOptions *opts, boo
 	if (hit.damage_done >= 0) {
 		bool hit_outcome = other->CheckHitChance(this, hit);
 		while (!hit_outcome && effective_hdex > 0) {
-			effective_hdex -= zone->random.Int(1,100);
+			effective_hdex -= zone->random.Int(1, RuleI(Character, HeroicDexterityRerollDecayRate));
 			hit_outcome = other->CheckHitChance(this, hit);
 			if (hit_outcome) {
 				break;
@@ -1628,7 +1633,7 @@ void Mob::DoAttack(Mob *other, DamageHitInfo &hit, ExtraAttackOptions *opts, boo
 			}
 			int64 hit_highdmg = other->MeleeMitigation(this, hit, opts);
 			while (effective_hdex > 0) {
-				effective_hdex -= zone->random.Int(1,100);
+				effective_hdex -= zone->random.Int(1, RuleI(Character, HeroicDexterityRerollDecayRate));
 				int64 hit_temp = other->MeleeMitigation(this, hit, opts);
 				hit_highdmg = hit_temp > hit_highdmg ? hit_temp : hit_highdmg;
 			}
@@ -1636,48 +1641,50 @@ void Mob::DoAttack(Mob *other, DamageHitInfo &hit, ExtraAttackOptions *opts, boo
 				ApplyDamageTable(hit);				
 
 				if (RuleR(Character, HeroicStrengthDamageBonus) > 0) {
-					auto damage_scalar = 1;
+					float damage_scalar = 1.0;
 					if (IsClient() && GetHeroicSTR() > 0) {
-						damage_scalar += std::ceil(RuleR(Character, HeroicStrengthDamageBonus) / 100 * GetHeroicSTR());
+						damage_scalar += RuleR(Character, HeroicStrengthDamageBonus) / 100 * GetHeroicSTR();
 					} 
 					else if (RuleB(Character, ExtraHeroicModifiersForPets) && IsPetOwnerClient() && GetOwner()->GetHeroicSTR() > 0) {
-						damage_scalar += std::ceil((1/3) * RuleR(Character, HeroicStrengthDamageBonus) / 100 * GetOwner()->GetHeroicSTR());
+						damage_scalar += (1.0/3.0) * RuleR(Character, HeroicStrengthDamageBonus) / 100 * GetOwner()->GetHeroicSTR();
 					}
 					hit.damage_done = static_cast<int64>(hit.damage_done * damage_scalar);
 				}
 
-				if (RuleI(Character, HeroicStaminaDamageReduction) > 0) {
+				if (RuleI(Character, HeroicStaminaDamageReduction) > 0 && (other->IsClient() || other->IsPetOwnerClient())) {
 					int64 damage_reduction_value = 0;
 					float damage_reduction_cap = RuleR(Character, HeroicStaminaDamageReductionCap);
-					// Calculate cap modifiers
-					if (GetInv().GetItem(EQ::invslot::slotSecondary)->GetItemType() == EQ::item::ItemTypeShield) {
-						damage_reduction_cap += 5.0 + (GetInv().GetItem(EQ::invslot::slotSecondary)->GetItemArmorClass() / 20);
-					}
-					// Class-based hard caps
-					float damage_reduction_hardcap;
-					switch(GetClass()) {
-						case PALADIN:
-						case SHADOWKNIGHT:
-							damage_reduction_hardcap = 90;
-							break;
-						case BEASTLORD:
-						case RANGER:
-							damage_reduction_hardcap = 85;
-							break;
-						default:
-							damage_reduction_hardcap = 80;
-							break;
+
+					if (other->IsClient()) {
+						// Calculate cap modifiers
+						if (GetInv().GetItem(EQ::invslot::slotSecondary)->GetItemType() == EQ::item::ItemTypeShield) {
+							damage_reduction_cap += 5.0 + (GetInv().GetItem(EQ::invslot::slotSecondary)->GetItemArmorClass() / 20);
+						}
+						// Class-based hard caps
+						float damage_reduction_hardcap;
+						switch(GetClass()) {
+							case PALADIN:
+							case SHADOWKNIGHT:
+								damage_reduction_hardcap = 90;
+								break;
+							case BEASTLORD:
+							case RANGER:
+								damage_reduction_hardcap = 85;
+								break;
+							default:
+								damage_reduction_hardcap = 80;
+								break;
 						}
 
-					damage_reduction_cap = std::min(damage_reduction_hardcap, damage_reduction_cap);
-				
-					if (other->IsClient() && other->GetHeroicSTA() > 0) {
+						damage_reduction_cap = std::min(damage_reduction_hardcap, damage_reduction_cap);
 						damage_reduction_value = std::ceil(RuleI(Character, HeroicStaminaDamageReduction) * other->GetHeroicSTA());
+
 					} else if (RuleB(Character, ExtraHeroicModifiersForPets) && other->IsPetOwnerClient()) {
 						damage_reduction_value = std::ceil((1/3) * RuleI(Character, HeroicStaminaDamageReduction) * std::max(other->GetOwner()->GetHeroicINT(), other->GetOwner()->GetHeroicWIS()));
 					}
+
 					hit.damage_done = static_cast<int64>(std::max(static_cast<int64>(hit.damage_done * damage_reduction_cap / 100), // Capped Damage Reduction
-																  					 hit.damage_done - damage_reduction_value)); // Reduced Damage
+																					 hit.damage_done - damage_reduction_value)); // Reduced Damage
 				}
 
 				CommonOutgoingHitSuccess(other, hit, opts);

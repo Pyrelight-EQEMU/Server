@@ -65,7 +65,9 @@ int64 Mob::GetActSpellDamage(uint16 spell_id, int64 value, Mob* target) {
 	}
 
 	bool Critical = false;
-	int64 base_value = value;
+
+	
+	int64 base_value = value * (1 + ((GetHeroicINT() * 3) / 100));
 	int chance = 0;
 
 	// Need to scale HT damage differently after level 40! It no longer scales by the constant value in the spell file. It scales differently, instead of 10 more damage per level, it does 30 more damage per level. So we multiply the level minus 40 times 20 if they are over level 40.
@@ -96,13 +98,7 @@ int64 Mob::GetActSpellDamage(uint16 spell_id, int64 value, Mob* target) {
 		if (zone->random.Roll(chance)) {
 			Critical = true;
 			ratio += itembonuses.SpellCritDmgIncrease + spellbonuses.SpellCritDmgIncrease + aabonuses.SpellCritDmgIncrease;
-			ratio += itembonuses.SpellCritDmgIncNoStack + spellbonuses.SpellCritDmgIncNoStack + aabonuses.SpellCritDmgIncNoStack;
-
-			if (RuleR(Character, HeroicIntelligenceExtraCriticalDamage) > 0) {
-				if (IsClient()) {
-					ratio += GetHeroicINT() * RuleR(Character, HeroicIntelligenceExtraCriticalDamage);
-				}
-			}
+			ratio += itembonuses.SpellCritDmgIncNoStack + spellbonuses.SpellCritDmgIncNoStack + aabonuses.SpellCritDmgIncNoStack;			
 		}
 
 		else if ((IsOfClientBot() && GetClass() == WIZARD) || (IsMerc() && GetClass() == CASTERDPS)) {
@@ -275,7 +271,7 @@ int64 Mob::GetActDoTDamage(uint16 spell_id, int64 value, Mob* target, bool from_
 		value *= std::abs(GetSkillDmgAmt(spells[spell_id].skill) / 100);
 	}
 
-	int64 base_value = value;
+	int64 base_value = value * (1 + ((GetHeroicINT() * 6) / 100));
 	int64 extra_dmg = 0;
 	int16 chance = 0;
 	chance += itembonuses.CriticalDoTChance + spellbonuses.CriticalDoTChance + aabonuses.CriticalDoTChance;
@@ -400,12 +396,8 @@ int64 Mob::GetExtraSpellAmt(uint16 spell_id, int64 extra_spell_amt, int64 base_s
 			extra_spell_amt = std::abs(base_spell_dmg) * extra_spell_amt / 100;
 		}
 	}
-
-	if (base_spell_dmg < 0 && !(IsINTCasterClass(GetClass()) || IsWISCasterClass(GetClass()))) { // This is a DD
-		return static_cast<float>(extra_spell_amt) * RuleR(Spells, NonCasterSpellDmgPenalty);
-	} else { // This is a heal
-		return extra_spell_amt;
-	}
+	
+	return extra_spell_amt;
 }
 
 int64 Mob::GetActSpellHealing(uint16 spell_id, int64 value, Mob* target, bool from_buff_tic) {
