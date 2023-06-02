@@ -1033,7 +1033,7 @@ int Mob::ACSum(bool skip_caps)
 				shield_ac = CalcRecommendedLevelBonus(GetLevel(), inst->GetItemRecommendedLevel(true), inst->GetItemArmorClass(true));
 			}
 		}
-		shield_ac += IsPetOwnerClient() ? GetOwner()->itembonuses.heroic_str_shield_ac : itembonuses.heroic_str_shield_ac;
+		shield_ac += GetOwner() ? GetOwner()->itembonuses.heroic_str_shield_ac : itembonuses.heroic_str_shield_ac;
 	}
 	// EQ math
 	ac = (ac * 4) / 3;
