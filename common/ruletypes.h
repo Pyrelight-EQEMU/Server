@@ -105,7 +105,7 @@ RULE_REAL(Character, HeroicIntelligenceMultiplier, 1.00, "Multplier scales benef
 RULE_REAL(Character, HeroicStrengthDamageBonus, 3.0, "Percentage that each point of hSTR should add to melee damage.")
 RULE_INT(Character, HeroicStaminaDamageReduction, 10, "Number of points of damage that each point of hSTA should mitigate, up to the cap set in HeroicStaminaDamageReductionCap.")
 RULE_REAL(Character, HeroicStaminaDamageReductionCap, 50.0, "Maximum percentage of damage that hSTA should be able to mitigate, before any other modifiers.")
-RULE_INT(Character, HeroicDexerityRerollDecayRate, 100, "The number of effective hDEX points which are depleted by triggering an attack reroll.")
+RULE_INT(Character, HeroicDexterityRerollDecayRate, 100, "The number of effective hDEX points which are depleted by triggering an attack reroll.")
 RULE_INT(Character, HeroicAgilityRerollDecayRate, 100, "The number of effective hAGI points which are depleted by triggering an evasion reroll.")
 RULE_BOOL(Character, HeroicCharismaResistRerollEnabled, true, "Allow for Heroic Charisma to reroll spell resistance checks.")
 RULE_BOOL(Character, ExtraHeroicModifiersForPets, true, "Pets get a lesser version of heroic stat modifiers")
