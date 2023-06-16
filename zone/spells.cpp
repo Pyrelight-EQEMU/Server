@@ -2831,7 +2831,10 @@ int Mob::CalcBuffDuration(Mob *caster, Mob *target, uint16 spell_id, int32 caste
 	}
 
 	if (IsBeneficialSpell(spell_id)) {
-		std::min(res, 100); // Maximum base Buff Duration is 10 Minutes on Pyrelight
+		res = std::min(res, 100); // Maximum base Buff Duration is 10 Minutes on Pyrelight		
+		res *= (caster->IsClient()) ? = (1 + (GetHeroicINT() / 100)) : 1;
+	} else {
+		res *= (caster->IsClient()) ? = (1 + (GetHeroicWIS() / 100)) : 1;
 	}
 
 	LogSpells("Spell [{}]: Casting level [{}], formula [{}], base_duration [{}]: result [{}]",

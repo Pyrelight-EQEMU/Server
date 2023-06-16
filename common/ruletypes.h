@@ -107,6 +107,7 @@ RULE_INT(Character, HeroicStaminaDamageReduction, 10, "Number of points of damag
 RULE_REAL(Character, HeroicStaminaDamageReductionCap, 50.0, "Maximum percentage of damage that hSTA should be able to mitigate, before any other modifiers.")
 RULE_INT(Character, HeroicDexterityRerollDecayRate, 100, "The number of effective hDEX points which are depleted by triggering an attack reroll.")
 RULE_INT(Character, HeroicAgilityRerollDecayRate, 100, "The number of effective hAGI points which are depleted by triggering an evasion reroll.")
+RULE_INT(Character, HeroicIntelligenceSpellDamageScale, 3, "Percentage to increase direct damage spell per point of hINT. DOTS are increased by twice this per tick.")
 RULE_BOOL(Character, HeroicCharismaResistRerollEnabled, true, "Allow for Heroic Charisma to reroll spell resistance checks.")
 RULE_BOOL(Character, ExtraHeroicModifiersForPets, true, "Pets get a lesser version of heroic stat modifiers")
 RULE_INT(Character, SkillUpModifier, 100, "The probability for a skill-up is multiplied by value/100")

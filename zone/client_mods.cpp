@@ -1686,7 +1686,7 @@ int64 Client::CalcBaseEndurance()
 			stats = 2.5f * (stats - 100.0f) + 100.0f;
 		}
 		auto base_data = database.GetBaseData(GetLevel(), GetClass());
-		if (base_data) {
+		if (base_data) {			
 			base_end = base_data->base_end + itembonuses.heroic_max_end + (base_data->endurance_factor * static_cast<int>(stats));
 		}
 	}

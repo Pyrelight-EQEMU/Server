@@ -250,8 +250,8 @@ int Mob::compute_defense()
 {
 	int defense = GetSkill(EQ::skills::SkillDefense) * 400 / 225;
 	defense += (8000 * (GetAGI() - 40)) / 36000;
-	if (IsOfClientBot()) {
-		defense += itembonuses.heroic_agi_avoidance;
+	if (IsOfClientBot() || IsPetOwnerClient()) {
+		defense += (GetOwner() && RuleB(Character, ExtraHeroicModifiersForPets)) ? std::ceil(GetOwner()->itembonuses.heroic_agi_avoidance * 0.33) : itembonuses.heroic_agi_avoidance;
 	}
 
 	//516 SE_AC_Mitigation_Max_Percent
@@ -1639,6 +1639,7 @@ void Mob::DoAttack(Mob *other, DamageHitInfo &hit, ExtraAttackOptions *opts, boo
 			}
 			if (hit.damage_done > 0) {
 				ApplyDamageTable(hit);				
+				CommonOutgoingHitSuccess(other, hit, opts);
 
 				if (RuleR(Character, HeroicStrengthDamageBonus) > 0) {
 					float damage_scalar = 1.0;
@@ -1685,9 +1686,7 @@ void Mob::DoAttack(Mob *other, DamageHitInfo &hit, ExtraAttackOptions *opts, boo
 
 					hit.damage_done = static_cast<int64>(std::max(static_cast<int64>(hit.damage_done * damage_reduction_cap / 100), // Capped Damage Reduction
 																					 hit.damage_done - damage_reduction_value)); // Reduced Damage
-				}
-
-				CommonOutgoingHitSuccess(other, hit, opts);
+				}				
 			}
 			LogCombat("Final damage after all reductions: [{}]", hit.damage_done);
 		}
@@ -6151,15 +6150,15 @@ void Mob::CommonOutgoingHitSuccess(Mob* defender, DamageHitInfo &hit, ExtraAttac
 	TryCriticalHit(defender, hit, opts);
 
 	hit.damage_done += hit.min_damage;
-	if (IsOfClientBot()) {
+	if (IsOfClientBot() || IsPetOwnerClient()) {
 		int extra = 0;
 		switch (hit.skill) {
 			case EQ::skills::SkillThrowing:
 			case EQ::skills::SkillArchery:
-				extra = itembonuses.heroic_dex_ranged_damage;
+				extra = (GetOwner() && RuleB(Character, ExtraHeroicModifiersForPets)) ? std::ceil(GetOwner()->itembonuses.heroic_dex_ranged_damage * 0.33) : itembonuses.heroic_dex_ranged_damage;
 				break;
 			default:
-				extra = itembonuses.heroic_str_melee_damage;
+				extra = (GetOwner() && RuleB(Character, ExtraHeroicModifiersForPets)) ? std::ceil(GetOwner()->itembonuses.heroic_str_melee_damage * 0.33) : itembonuses.heroic_str_melee_damage;
 				break;
 		}
 		hit.damage_done += extra;

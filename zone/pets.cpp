@@ -246,7 +246,8 @@ void Mob::MakePoweredPet(uint16 spell_id, const char* pettype, int16 petpower,
 	int64 MaxHP = aabonuses.PetMaxHP + itembonuses.PetMaxHP + spellbonuses.PetMaxHP;
 
 	if (MaxHP){
-		npc_type->max_hp += (npc_type->max_hp*MaxHP)/100;
+		npc_type->max_hp += (npc_type->max_hp*MaxHP)/100 + std::ceil(itembonuses.heroic_max_hp * 0.33);
+		npc_type->hp_regen += std::ceil(itembonuses.heroic_hp_regen * 0.33)
 		npc_type->current_hp = npc_type->max_hp;
 	}
 
