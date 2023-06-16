@@ -427,6 +427,12 @@ bool Mob::AvoidDamage(Mob *other, DamageHitInfo &hit)
 		modify_dodge   = GetSpecialAbilityParam(MODIFY_AVOID_DAMAGE, 4);
 	}
 
+	// Pyrelight Custom Code. Minimum of (MobLevel - PlayerLevel + 5)% chance to bypass all evasion rolls.
+	if (this->IsClient() && zone->random.Roll0(99) <= (other->GetLevel() - GetLevel() + 5)) {
+		LogCombat("Auto-Failed Avoidance Check");
+		return false;
+	}
+
 	/* Heroic Strikethrough Implementation per Dev Quotes (2018):
 	* https://forums.daybreakgames.com/eq/index.php?threads/illusions-benefit-neza-10-dodge.246757/#post-3622670
 	* Step1 = HeroicStrikethrough(NPC)
@@ -1412,19 +1418,29 @@ void Mob::DoAttack(Mob *other, DamageHitInfo &hit, ExtraAttackOptions *opts, boo
 		FromRiposte = false;
 	}
 
-	// check to see if we hit..
-	if (!FromRiposte && other->AvoidDamage(this, hit)) {
+	// Pyrelight Custom Code - Repeat Evasion checks based on defender hAGI
+	int effective_hAGI = other->GetHeroicAGI();
+	bool avoided = other->AvoidDamage(this, hit);		
+	while (!avoided && RuleR(Character, Pyrelight_hAGI_EvasionReroll) && effective_hAGI > 0) {
+		if ( zone->random.Int(1,100) <= (effective_hAGI * RuleR(Character, Pyrelight_hAGI_EvasionReroll))) {
+			avoided = other->AvoidDamage(this, hit);
+			LogCombat("Avoidance Reroll, effective_hAGI = [{}]", effective_hAGI);
+		}		
+		effective_hAGI -= 100;		
+	}
+
+	// check to see if we hit..	
+	if (!FromRiposte && avoided) {
 		if (int strike_through = itembonuses.StrikeThrough + spellbonuses.StrikeThrough + aabonuses.StrikeThrough;
 				strike_through && zone->random.Roll(strike_through)) {
-			MessageString(Chat::StrikeThrough,
-				STRIKETHROUGH_STRING); // You strike through your opponents defenses!
-			hit.damage_done = 1;			// set to one, we will check this to continue
+			MessageString(Chat::StrikeThrough, STRIKETHROUGH_STRING); // You strike through your opponents defenses!
+			hit.damage_done = 1;									  // set to one, we will check this to continue
 		}
 		if (hit.damage_done == DMG_RIPOSTED) {
 			DoRiposte(other);
 			return;
 		}
-		LogCombat("Avoided/strikethrough damage with code [{}]", hit.damage_done);
+		LogCombat("Avoided/strikethrough damage with code [{}]", hit.damage_done);			
 	}
 
 	if (hit.damage_done >= 0) {
@@ -1445,30 +1461,32 @@ void Mob::DoAttack(Mob *other, DamageHitInfo &hit, ExtraAttackOptions *opts, boo
 			}
 			other->MeleeMitigation(this, hit, opts);
 			if (hit.damage_done > 0) {
-				ApplyDamageTable(hit);				
+				ApplyDamageTable(hit);
+				CommonOutgoingHitSuccess(other, hit, opts);			
 
-				if (RuleR(Character, HeroicStrengthDamageBonus) > 0) {
-					auto damage_scalar = 1;
+				// Pyrelight Custom Code - Heroic Strength
+				if (RuleR(Character, Pyrelight_hSTR_DmgBonus) > 0) {
+					float damage_scalar = 1;
 					if (IsClient() && GetHeroicSTR() > 0) {
-						damage_scalar += std::ceil(RuleR(Character, HeroicStrengthDamageBonus) / 100 * GetHeroicSTR());
-					} else if (RuleB(Character, ExtraHeroicModifiersForPets) && IsPetOwnerClient() && GetOwner()->GetHeroicSTR() > 0) {
-						damage_scalar += std::ceil((1/3) * RuleR(Character, HeroicStrengthDamageBonus) / 100 * GetOwner()->GetHeroicSTR());
+						damage_scalar += std::ceil(RuleR(Character, Pyrelight_hSTR_DmgBonus) / 100 * GetHeroicSTR());
+					} else if (IsPetOwnerClient() && GetOwner()->GetHeroicSTR() > 0) {
+						damage_scalar += std::ceil((1.0/3.0) * (RuleR(Character, Pyrelight_hSTR_DmgBonus) / 100) * GetOwner()->GetHeroicSTR());
 					}
-					hit.damage_done = static_cast<int64>(hit.damage_done * damage_scalar);
+					hit.damage_done = static_cast<int64>(std::floor(hit.damage_done * damage_scalar));
 				}
 
-				if (RuleI(Character, HeroicStaminaDamageReduction) > 0) {
-					int64 damage_redunction_value = 0;
+				// Pyrelight Custom Code - Heroic Stamina
+				// TODO - figure out how to dynamically calculate the cap here
+				if (RuleR(Character, Pyrelight_hSTA_DmgReduction) > 0) {
+					int64 damage_reduction_value = 0;
 					if (other->IsClient() && other->GetHeroicSTA() > 0) {
-						damage_redunction_value = std::ceil(RuleI(Character, HeroicStaminaDamageReduction) * other->GetHeroicSTA());
-					} else if (RuleB(Character, ExtraHeroicModifiersForPets) && other->IsPetOwnerClient()) {
-						damage_redunction_value = RuleI(Character, HeroicStaminaDamageReduction) * std::max(other->GetOwner()->GetHeroicINT(), other->GetOwner()->GetHeroicWIS());
+						damage_reduction_value = std::ceil(RuleR(Character, Pyrelight_hSTA_DmgReduction) * other->GetHeroicSTA());
+					} else if (other->IsPetOwnerClient() && other->GetOwner()->GetHeroicSTA() > 0) {
+						damage_reduction_value = std::ceil((1.0/3.0) * RuleR(Character, Pyrelight_hSTA_DmgReduction) * std::max({other->GetHeroicSTA(), other->GetHeroicINT(), other->GetHeroicWIS()}));
 					}
-					hit.damage_done = static_cast<int64>(std::max(static_cast<int64>(hit.damage_done * RuleR(Character, HeroicStaminaDamageReductionCap) / 100), // Capped Damage Reduction
-																  					 hit.damage_done - damage_redunction_value)); // Reduced Damage
-				}
-
-				CommonOutgoingHitSuccess(other, hit, opts);
+					hit.damage_done = static_cast<int64>(std::max(static_cast<int64>(hit.damage_done * GetDamageReductionCap() / 100), // Capped Damage Reduction
+																  					 hit.damage_done - damage_reduction_value)); // Reduced Damage
+				}				
 			}
 			LogCombat("Final damage after all reductions: [{}]", hit.damage_done);
 		}
@@ -1489,6 +1507,13 @@ void Mob::DoAttack(Mob *other, DamageHitInfo &hit, ExtraAttackOptions *opts, boo
 			}
 		}
 	}
+}
+
+int Mob::GetDamageReductionCap() {
+	if (!IsClient()) {
+		return 50;
+	}
+	return 50;
 }
 
 //note: throughout this method, setting `damage` to a negative is a way to
@@ -4947,10 +4972,6 @@ void Mob::TryPetCriticalHit(Mob *defender, DamageHitInfo &hit)
 		// For pets use PetCriticalHit for base chance, pets do not innately critical with without it
 		critChance += CritPetChance;
 
-	if (RuleR(Character, HeroicDexterityExtraCriticalDamage) > 0 && RuleB(Character, ExtraHeroicModifiersForPets) && IsPetOwnerClient()) {
-		critMod += GetHeroicDEX() * RuleR(Character, HeroicDexterityExtraCriticalDamage);
-	}
-
 	if (critChance > 0) {
 		if (zone->random.Roll(critChance)) {
 			critMod += GetCritDmgMod(hit.skill, owner);
@@ -5095,10 +5116,6 @@ void Mob::TryCriticalHit(Mob *defender, DamageHitInfo &hit, ExtraAttackOptions *
 			int crit_mod = 170 + GetCritDmgMod(hit.skill);
 			if (crit_mod < 100) {
 				crit_mod = 100;
-			}
-
-			if (RuleR(Character, HeroicDexterityExtraCriticalDamage) > 0 && IsClient()) {
-				crit_mod += GetHeroicDEX() * RuleR(Character, HeroicDexterityExtraCriticalDamage);
 			}
 
 			hit.damage_done = (hit.damage_done * crit_mod) / 100;
@@ -6287,23 +6304,6 @@ void Client::DoAttackRounds(Mob *target, int hand, bool IsFromSpell)
 			}
 		}
 	}
-
-	// Pyrelight Custom Code
-    if (IsClient() && RuleR(Character, HeroicAgilityExtraAttackRate) > 0 && GetHeroicAGI() > 0 && successful_hit) {
-        int chain = 0;
-        int effective_hagi = GetHeroicAGI();        
-        while (effective_hagi > 0) {        
-            if (zone->random.Roll(static_cast<int>(std::floor(effective_hagi * RuleR(Character, HeroicAgilityExtraAttackRate))))) {    
-                if (Attack(target, hand, false, false, IsFromSpell)) {
-                    chain++;
-                } else { break;    }
-            } else { break; }
-            effective_hagi -= zone->random.Int(1,100);
-        }
-        if (chain > 0) {
-            Message(Chat::NPCFlurry, "You unleash a FLURRY of %d extra attacks.", chain);
-        }
-    }
 }
 
 bool Mob::CheckDualWield()

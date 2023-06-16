@@ -347,24 +347,6 @@ void Client::OPCombatAbility(const CombatAbility_Struct *ca_atk)
 				(ca_atk->m_skill == EQ::skills::SkillArchery) ? RangedAttack(GetTarget()) : ThrowingAttack(GetTarget());
 				if (CheckDoubleRangedAttack())
 					(ca_atk->m_skill == EQ::skills::SkillArchery) ? RangedAttack(GetTarget()) : ThrowingAttack(GetTarget());
-
-				if (RuleR(Character, HeroicAgilityExtraAttackRate) > 0 && GetHeroicAGI() > 0) {
-					int chain = 0;
-					int effective_hagi = GetHeroicAGI();        
-					while (effective_hagi > 0) {
-						if (zone->random.Roll(static_cast<int>(std::floor(effective_hagi * RuleR(Character, HeroicAgilityExtraAttackRate))))) {
-							attack_timer.Disable();
-							(ca_atk->m_skill == EQ::skills::SkillArchery) ? RangedAttack(GetTarget(), true) : ThrowingAttack(GetTarget(), true);
-							chain++;                        
-						}
-						effective_hagi -= zone->random.Int(1,100);
-					}
-					if (chain > 0) {
-						Message(Chat::NPCFlurry, (ca_atk->m_skill == EQ::skills::SkillArchery) ?
-						"You unleash a FLURRY of %d extra arrows." :
-						"You unleash a FLURRY of %d extra throws.", chain);
-					}
-				}
 			} else {
 				Message(Chat::Red, "You must equip a ranged weapon to use this ability.");
 			}
@@ -1276,16 +1258,6 @@ void NPC::DoRangedAttackDmg(Mob* other, bool Launch, int16 damage_mod, int16 cha
 	my_hit.hand = EQ::invslot::slotRange;
 
 	DoAttack(other, my_hit);
-
-	if (RuleR(Character, HeroicStrengthDamageBonus) > 0) {
-		auto damage_scalar = 1;
-		if (IsClient() && GetHeroicSTR() > 0) {
-			damage_scalar += std::ceil(RuleR(Character, HeroicStrengthDamageBonus) / 100 * GetHeroicSTR());
-		} else if (RuleB(Character, ExtraHeroicModifiersForPets) && IsPetOwnerClient() && GetOwner()->GetHeroicSTR() > 0) {
-			damage_scalar += std::ceil((1/3) * RuleR(Character, HeroicStrengthDamageBonus) / 100 * GetOwner()->GetHeroicSTR());
-		}
-		my_hit.damage_done = static_cast<int64>(my_hit.damage_done * damage_scalar);
-	}
 
 	TotalDmg = my_hit.damage_done;
 

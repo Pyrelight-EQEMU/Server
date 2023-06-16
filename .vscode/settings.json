@@ -93,5 +93,6 @@
         "future": "cpp",
         "strstream": "cpp",
         "variant": "cpp"
-    }
+    },
+    "cmake.configureOnOpen": false
 }

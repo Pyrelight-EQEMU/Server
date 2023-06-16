@@ -4122,7 +4122,7 @@ bool Mob::SpellOnTarget(
 		}
 
 		// Pyrelight Custom Code		
-		if (IsClient() && RuleB(Character,HeroicCharismaResistRerollEnabled) && spell_effectiveness < 100) {			
+		if (IsClient() && RuleB(Character,Pyrelight_hCHA_ResistReroll) && spell_effectiveness < 100) {			
 			bool changed_result = false;
 			int new_result = spell_effectiveness;
 			int effective_hcha = spellOwner->GetHeroicCHA();			
@@ -4149,7 +4149,7 @@ bool Mob::SpellOnTarget(
 				effective_hcha =- zone->random.Int(1,100);
 			}	
 
-			if (spelltar->IsClient() && RuleB(Character,HeroicCharismaResistRerollEnabled) && spell_effectiveness == 100) {
+			if (spelltar->IsClient() && RuleB(Character, Pyrelight_hCHA_ResistReroll) && spell_effectiveness == 100) {
 				bool changed_result = false;
 				int effective_hcha = spelltar->GetHeroicCHA();
 

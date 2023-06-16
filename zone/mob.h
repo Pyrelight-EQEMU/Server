@@ -236,6 +236,7 @@ public:
 	void DoMainHandAttackRounds(Mob *target, ExtraAttackOptions *opts = nullptr);
 	void DoOffHandAttackRounds(Mob *target, ExtraAttackOptions *opts = nullptr);
 	virtual bool CheckDoubleAttack();
+	int GetDamageReductionCap();
 	// inline process for places where we need to do them outside of the AI_Process
 	void ProcessAttackRounds(Mob *target, ExtraAttackOptions *opts = nullptr)
 	{
