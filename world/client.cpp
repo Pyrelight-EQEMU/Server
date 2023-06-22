@@ -2348,8 +2348,7 @@ bool Client::StoreCharacter(
 				new_inventory_item->GetColor()
 			);
 
-
-			auto results = database.QueryDatabase(invquery);
+			LogDebug(invquery);
 		}
 
 		if (i == EQ::invslot::slotCursor) {
