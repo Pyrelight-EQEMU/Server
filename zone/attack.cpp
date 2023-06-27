@@ -1424,7 +1424,7 @@ void Mob::DoAttack(Mob *other, DamageHitInfo &hit, ExtraAttackOptions *opts, boo
 	}
 
 	// Pyrelight Custom Code - Repeat Evasion checks based on defender hAGI
-	int effective_hAGI = (IsPetOwnerClient() && GetOwner()) ? std::ceil((1.0/3.0) * other->GetOwner()->GetHeroicAGI()) : other->GetHeroicAGI();
+	int effective_hAGI = (other->IsPetOwnerClient() && other->GetOwner()) ? std::ceil((1.0/3.0) * other->GetOwner()->GetHeroicAGI()) : other->GetHeroicAGI();
 	bool avoided = other->AvoidDamage(this, hit);		
 	while (!avoided && RuleR(Character, Pyrelight_hAGI_EvasionReroll) && effective_hAGI > 0) {
 		if ( zone->random.Int(1,100) <= (effective_hAGI * RuleR(Character, Pyrelight_hAGI_EvasionReroll))) {
