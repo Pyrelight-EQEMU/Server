@@ -2361,9 +2361,9 @@ bool NPC::Attack(Mob* other, int Hand, bool bRiposte, bool IsStrikethrough, bool
 		
 		if (my_hit.damage_done > my_hit.original_damage && my_hit.damage_done > 0 && my_hit.original_damage > 0) {
 			int increase_percentage = ((static_cast<float>(my_hit.damage_done) / static_cast<float>(my_hit.original_damage)) - 1) * 100;
-			if (IsClient()) {			
+			//if (IsClient()) {			
 				Message(Chat::YouHitOther, "(Increased by %i%% to %i by your Heroic Strength)", increase_percentage, my_hit.damage_done);
-			}
+			//}
 			if (IsPetOwnerClient() && GetOwner()) {
 				GetOwner()->Message(Chat::OtherHitOther, "(Increased by %i%% to %i by owner's Heroic Strength)", increase_percentage, my_hit.damage_done);
 			}
