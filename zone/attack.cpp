@@ -1468,14 +1468,14 @@ void Mob::DoAttack(Mob *other, DamageHitInfo &hit, ExtraAttackOptions *opts, boo
 			if (hit.damage_done > 0) {
 				ApplyDamageTable(hit);
 				CommonOutgoingHitSuccess(other, hit, opts);
-
+				/*
 				// Pyrelight Custom Code - Heroic Strength
 				if (RuleR(Character, Pyrelight_hSTR_DmgBonus) > 0) {
 					float damage_scalar = 1 + std::ceil((RuleR(Character, Pyrelight_hSTR_DmgBonus) / 100) * (IsPetOwnerClient() && GetOwner()) ? (1.0/3.0) * GetOwner()->GetHeroicSTR() : GetHeroicSTR());
 
 					hit.original_damage = hit.damage_done;			
 					hit.damage_done = static_cast<int64>(std::floor(hit.damage_done * damage_scalar));
-				}
+				}*/
 
 				// Pyrelight Custom Code - Heroic Stamina
 				int64 damage_reduction_final = 0;
