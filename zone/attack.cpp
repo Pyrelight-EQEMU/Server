@@ -330,6 +330,11 @@ bool Mob::CheckHitChance(Mob* other, DamageHitInfo &hit)
 	auto accuracy = hit.tohit;
 	if (accuracy == -1)
 		return true;
+	
+	// Pyrelight Custom Code. Minimum of (MobLevel - PlayerLevel + 5)% chance to automatically hit.
+	if (this->IsClient() && zone->random.Roll0(99) <= (other->GetLevel() - GetLevel() + 5)) {
+		return true;
+	}
 
 	// so now we roll!
 	// relevant dev quote:
@@ -1055,10 +1060,17 @@ void Mob::MeleeMitigation(Mob *attacker, DamageHitInfo &hit, ExtraAttackOptions 
 		mitigation -= opts->armor_pen_flat;
 	}
 
-	auto roll = RollD20(hit.offense, mitigation);
+	int effective_hDEX = attacker->GetHeroicDEX();
+	int highest_damage_done = std::max(static_cast<int>(RollD20(hit.offense, mitigation) * static_cast<double>(hit.base_damage) + 0.5), 1);
 
-	// +0.5 for rounding, min to 1 dmg
-	hit.damage_done = std::max(static_cast<int>(roll * static_cast<double>(hit.base_damage) + 0.5), 1);
+	while (RuleR(Character, Pyrelight_hDEX_EvasionReroll) && zone->random.Int(1,100) <= (effective_hDEX * RuleR(Character, Pyrelight_hDEX_EvasionReroll))) {
+		int damage_done = std::max(static_cast<int>(RollD20(hit.offense, mitigation) * static_cast<double>(hit.base_damage) + 0.5), 1);
+		highest_damage_done = std::max(highest_damage_done, damage_done);
+
+		effective_hDEX -= 100;
+	}
+
+	hit.damage_done = highest_damage_done;
 
 	Log(Logs::Detail, Logs::Attack, "mitigation %d vs offense %d. base %d rolled %f damage %d", mitigation, hit.offense, hit.base_damage, roll, hit.damage_done);
 }
@@ -1419,7 +1431,7 @@ void Mob::DoAttack(Mob *other, DamageHitInfo &hit, ExtraAttackOptions *opts, boo
 	}
 
 	// Pyrelight Custom Code - Repeat Evasion checks based on defender hAGI
-	int effective_hAGI = other->GetHeroicAGI();
+	int effective_hAGI = (IsPetOwnerClient() && GetOwner()) ? std::ceil((1.0/3.0) * other->GetOwner()->GetHeroicAGI()) : other->GetHeroicAGI();
 	bool avoided = other->AvoidDamage(this, hit);		
 	while (!avoided && RuleR(Character, Pyrelight_hAGI_EvasionReroll) && effective_hAGI > 0) {
 		if ( zone->random.Int(1,100) <= (effective_hAGI * RuleR(Character, Pyrelight_hAGI_EvasionReroll))) {
@@ -1476,7 +1488,6 @@ void Mob::DoAttack(Mob *other, DamageHitInfo &hit, ExtraAttackOptions *opts, boo
 				}
 
 				// Pyrelight Custom Code - Heroic Stamina
-				// TODO - figure out how to dynamically calculate the cap here
 				if (RuleR(Character, Pyrelight_hSTA_DmgReduction) > 0) {
 					int64 damage_reduction_value = 0;
 					if (other->IsClient() && other->GetHeroicSTA() > 0) {
