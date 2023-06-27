@@ -1471,7 +1471,9 @@ void Mob::DoAttack(Mob *other, DamageHitInfo &hit, ExtraAttackOptions *opts, boo
 
 				// Pyrelight Custom Code - Heroic Strength
 				if (RuleR(Character, Pyrelight_hSTR_DmgBonus) > 0) {
-					float damage_scalar = 1 + std::ceil((RuleR(Character, Pyrelight_hSTR_DmgBonus) / 100) * (IsPetOwnerClient() && GetOwner()) ? (1.0/3.0) * GetOwner()->GetHeroicSTR() : GetHeroicSTR());			
+					float damage_scalar = 1 + std::ceil((RuleR(Character, Pyrelight_hSTR_DmgBonus) / 100) * (IsPetOwnerClient() && GetOwner()) ? (1.0/3.0) * GetOwner()->GetHeroicSTR() : GetHeroicSTR());
+
+					hit.original_damage = hit.damage_done;			
 					hit.damage_done = static_cast<int64>(std::floor(hit.damage_done * damage_scalar));
 				}
 
@@ -2347,9 +2349,14 @@ bool NPC::Attack(Mob* other, int Hand, bool bRiposte, bool IsStrikethrough, bool
 		other->Damage(this, my_hit.damage_done, SPELL_UNKNOWN, my_hit.skill, true, -1, false, m_specialattacks); // Not avoidable client already had thier chance to Avoid
 		
 		//Pyrelight Custom Code - Send info about the hSTA damage reduction to clients
-		if (other->IsClient() && my_hit.damage_done < my_hit.original_damage && my_hit.damage_done > 0) {
+		if (my_hit.damage_done < my_hit.original_damage && my_hit.damage_done > 0 && my_hit.original_damage > 0) {
 			int reduction_percentage = (1 - static_cast<float>(my_hit.damage_done) / static_cast<float>(my_hit.original_damage)) * 100;
-			other->Message(Chat::OtherHitYou, "(Reduced by %i%% from %i by your Heroic Stamina)", reduction_percentage, my_hit.original_damage);
+			if (other->IsClient()) {			
+				other->Message(Chat::OtherHitYou, "(Reduced by %i%% from %i by your Heroic Stamina)", reduction_percentage, my_hit.original_damage);
+			}
+			if (other->IsPetOwnerClient() && other->GetOwner()) {
+				other->GetOwner()->Message(Chat::OtherHitOther, "(Reduced by %i%% from %i by your Heroic Stamina)", reduction_percentage, my_hit.original_damage);
+			}
 		}
 	}
 	else
