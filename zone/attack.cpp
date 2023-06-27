@@ -1060,17 +1060,10 @@ void Mob::MeleeMitigation(Mob *attacker, DamageHitInfo &hit, ExtraAttackOptions 
 		mitigation -= opts->armor_pen_flat;
 	}
 
-	int effective_hDEX = attacker->GetHeroicDEX();
-	int highest_damage_done = std::max(static_cast<int>(RollD20(hit.offense, mitigation) * static_cast<double>(hit.base_damage) + 0.5), 1);
+	auto roll = RollD20(hit.offense, mitigation);
 
-	while (RuleR(Character, Pyrelight_hDEX_EvasionReroll) && zone->random.Int(1,100) <= (effective_hDEX * RuleR(Character, Pyrelight_hDEX_EvasionReroll))) {
-		int damage_done = std::max(static_cast<int>(RollD20(hit.offense, mitigation) * static_cast<double>(hit.base_damage) + 0.5), 1);
-		highest_damage_done = std::max(highest_damage_done, damage_done);
-
-		effective_hDEX -= 100;
-	}
-
-	hit.damage_done = highest_damage_done;
+	// +0.5 for rounding, min to 1 dmg
+	hit.damage_done = std::max(static_cast<int>(roll * static_cast<double>(hit.base_damage) + 0.5), 1);
 
 	Log(Logs::Detail, Logs::Attack, "mitigation %d vs offense %d. base %d rolled %f damage %d", mitigation, hit.offense, hit.base_damage, roll, hit.damage_done);
 }
