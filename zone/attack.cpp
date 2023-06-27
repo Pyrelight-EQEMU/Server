@@ -1474,28 +1474,17 @@ void Mob::DoAttack(Mob *other, DamageHitInfo &hit, ExtraAttackOptions *opts, boo
 			other->MeleeMitigation(this, hit, opts);
 			if (hit.damage_done > 0) {
 				ApplyDamageTable(hit);
-				CommonOutgoingHitSuccess(other, hit, opts);			
 
 				// Pyrelight Custom Code - Heroic Strength
 				if (RuleR(Character, Pyrelight_hSTR_DmgBonus) > 0) {
-					float damage_scalar = 1;
-					if (IsClient() && GetHeroicSTR() > 0) {
-						damage_scalar += std::ceil(RuleR(Character, Pyrelight_hSTR_DmgBonus) / 100 * GetHeroicSTR());
-					} else if (IsPetOwnerClient() && GetOwner()->GetHeroicSTR() > 0) {
-						damage_scalar += std::ceil((1.0/3.0) * (RuleR(Character, Pyrelight_hSTR_DmgBonus) / 100) * GetOwner()->GetHeroicSTR());
-					}
+					float damage_scalar = 1 + std::ceil((IsPetOwnerClient() && GetOwner()) ? (1.0/3.0) * (RuleR(Character, Pyrelight_hSTR_DmgBonus) / 100) * GetOwner()->GetHeroicSTR() : RuleR(Character, Pyrelight_hSTR_DmgBonus) / 100 * GetHeroicSTR());					
 					hit.damage_done = static_cast<int64>(std::floor(hit.damage_done * damage_scalar));
 				}
 
 				// Pyrelight Custom Code - Heroic Stamina
 				if (RuleR(Character, Pyrelight_hSTA_DmgReduction) > 0) {
-					int64 damage_reduction_value = 0;
-					if (other->IsClient() && other->GetHeroicSTA() > 0) {
-						damage_reduction_value = std::ceil(RuleR(Character, Pyrelight_hSTA_DmgReduction) * other->GetHeroicSTA());
-					} else if (other->IsPetOwnerClient() && other->GetOwner()->GetHeroicSTA() > 0) {
-						damage_reduction_value = std::ceil((1.0/3.0) * RuleR(Character, Pyrelight_hSTA_DmgReduction) * std::max({other->GetHeroicSTA(), other->GetHeroicINT(), other->GetHeroicWIS()}));
-					}
-					hit.damage_done = static_cast<int64>(std::max(static_cast<int64>(hit.damage_done * GetDamageReductionCap() / 100), // Capped Damage Reduction
+					int64 damage_reduction_value = std::ceil((IsPetOwnerClient() && GetOwner()) ? (1.0/3.0) * (RuleR(Character, Pyrelight_hSTA_DmgReduction) / 100) * GetOwner()->GetHeroicSTA() : RuleR(Character, Pyrelight_hSTA_DmgReduction) / 100 * GetHeroicSTA());
+					hit.damage_done = static_cast<int64>(std::min(static_cast<int64>(hit.damage_done * GetDamageReductionCap() / 100), // Capped Damage Reduction
 																  					 hit.damage_done - damage_reduction_value)); // Reduced Damage
 				}				
 			}
