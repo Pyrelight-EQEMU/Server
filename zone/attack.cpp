@@ -2366,10 +2366,7 @@ bool NPC::Attack(Mob* other, int Hand, bool bRiposte, bool IsStrikethrough, bool
 				GetOwner()->Message(Chat::OtherHitOther, "(Increased by %i%% to %i by owner's Heroic Strength)", increase_percentage, my_hit.damage_done);
 			}
 		}
-}
-
-	}
-	else
+	} else
 		return false;
 
 	if (HasDied()) //killed by damage shield ect
