@@ -1467,19 +1467,26 @@ void Mob::DoAttack(Mob *other, DamageHitInfo &hit, ExtraAttackOptions *opts, boo
 			other->MeleeMitigation(this, hit, opts);
 			if (hit.damage_done > 0) {
 				ApplyDamageTable(hit);
+				CommonOutgoingHitSuccess(other, hit, opts);
 
 				// Pyrelight Custom Code - Heroic Strength
 				if (RuleR(Character, Pyrelight_hSTR_DmgBonus) > 0) {
-					float damage_scalar = 1 + std::ceil((IsPetOwnerClient() && GetOwner()) ? (1.0/3.0) * (RuleR(Character, Pyrelight_hSTR_DmgBonus) / 100) * GetOwner()->GetHeroicSTR() : RuleR(Character, Pyrelight_hSTR_DmgBonus) / 100 * GetHeroicSTR());					
+					float damage_scalar = 1 + std::ceil((RuleR(Character, Pyrelight_hSTR_DmgBonus) / 100) * (IsPetOwnerClient() && GetOwner()) ? (1.0/3.0) * GetOwner()->GetHeroicSTR() : GetHeroicSTR());			
 					hit.damage_done = static_cast<int64>(std::floor(hit.damage_done * damage_scalar));
 				}
 
 				// Pyrelight Custom Code - Heroic Stamina
+				int64 damage_reduction_final = 0;
 				if (RuleR(Character, Pyrelight_hSTA_DmgReduction) > 0) {
-					int64 damage_reduction_value = std::ceil((IsPetOwnerClient() && GetOwner()) ? (1.0/3.0) * (RuleR(Character, Pyrelight_hSTA_DmgReduction) / 100) * GetOwner()->GetHeroicSTA() : RuleR(Character, Pyrelight_hSTA_DmgReduction) / 100 * GetHeroicSTA());
-					hit.damage_done = static_cast<int64>(std::min(static_cast<int64>(hit.damage_done * GetDamageReductionCap() / 100), // Capped Damage Reduction
-																  					 hit.damage_done - damage_reduction_value)); // Reduced Damage
-				}				
+					
+					int effective_hSTA = (other->IsPetOwnerClient() && other->GetOwner()) ? ((1.0/3.0) * other->GetOwner()->GetHeroicSTA()) : other->GetHeroicSTA();
+					int64 damage_reduction_value = static_cast<int64>(std::ceil(RuleR(Character, Pyrelight_hSTA_DmgReduction) * effective_hSTA));
+					int64 damage_value = static_cast<int64>(std::max(static_cast<int64>(hit.damage_done * GetDamageReductionCap() / 100), // Capped Damage Reduction
+																  					 	hit.damage_done - damage_reduction_value)); // Reduced Damage
+
+					hit.original_damage = hit.damage_done;
+					hit.damage_done = damage_value;
+				}	
 			}
 			LogCombat("Final damage after all reductions: [{}]", hit.damage_done);
 		}
@@ -2338,6 +2345,12 @@ bool NPC::Attack(Mob* other, int Hand, bool bRiposte, bool IsStrikethrough, bool
 
 	if (GetHP() > 0 && !other->HasDied()) {
 		other->Damage(this, my_hit.damage_done, SPELL_UNKNOWN, my_hit.skill, true, -1, false, m_specialattacks); // Not avoidable client already had thier chance to Avoid
+		
+		//Pyrelight Custom Code - Send info about the hSTA damage reduction to clients
+		if (other->IsClient() && my_hit.damage_done < my_hit.original_damage && my_hit.damage_done > 0) {
+			int reduction_percentage = (1 - static_cast<float>(my_hit.damage_done) / static_cast<float>(my_hit.original_damage)) * 100;
+			other->Message(Chat::OtherHitYou, "(Reduced by %i%% from %i by your Heroic Stamina)", reduction_percentage, my_hit.original_damage);
+		}
 	}
 	else
 		return false;
@@ -5944,6 +5957,9 @@ void Mob::CommonOutgoingHitSuccess(Mob* defender, DamageHitInfo &hit, ExtraAttac
 	min_mod = std::max(min_mod, extra_mincap);
 	if (min_mod && hit.damage_done < min_mod) // SPA 186
 		hit.damage_done = min_mod;
+
+	int effective_hDEX = std::ceil(((IsPetOwnerClient() && GetOwner()) ? std::ceil((1.0/3.0) * GetOwner()->GetHeroicDEX()) : GetHeroicDEX()) * RuleR(Character, Pyrelight_hDEX_CriticalReroll));
+
 
 	TryCriticalHit(defender, hit, opts);
 

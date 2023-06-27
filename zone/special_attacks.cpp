@@ -262,6 +262,12 @@ void Mob::DoSpecialAttackDamage(Mob *who, EQ::skills::SkillType skill, int32 bas
 	who->AddToHateList(this, hate, 0);
 	who->Damage(this, my_hit.damage_done, SPELL_UNKNOWN, skill, false);
 
+	//Pyrelight Custom Code - Send info about the hSTA damage reduction to clients
+	if (who->IsClient() && my_hit.damage_done < my_hit.original_damage && my_hit.damage_done > 0) {
+		int reduction_percentage = (1 - static_cast<float>(my_hit.damage_done) / static_cast<float>(my_hit.original_damage)) * 100;
+		who->Message(Chat::OtherHitYou, "(Reduced by %i%% from %i by your Heroic Stamina)", reduction_percentage, my_hit.original_damage);
+	}
+
 	// Make sure 'this' has not killed the target and 'this' is not dead (Damage shield ect).
 	if (!GetTarget())
 		return;
