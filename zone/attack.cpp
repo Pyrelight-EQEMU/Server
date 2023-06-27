@@ -1478,6 +1478,7 @@ void Mob::DoAttack(Mob *other, DamageHitInfo &hit, ExtraAttackOptions *opts, boo
 
 						hit.original_damage = hit.damage_done;			
 						hit.damage_done = static_cast<int64>(std::floor(hit.damage_done * damage_scalar));
+						LogDebug("[{}], [{}]", hit.original_damage, hit.damage_done);
 					}
 				}
 
@@ -1493,6 +1494,7 @@ void Mob::DoAttack(Mob *other, DamageHitInfo &hit, ExtraAttackOptions *opts, boo
 
 						hit.original_damage = hit.damage_done;
 						hit.damage_done = damage_value;
+						LogDebug("[{}], [{}]", hit.original_damage, hit.damage_done);
 					}
 				}	
 			}
