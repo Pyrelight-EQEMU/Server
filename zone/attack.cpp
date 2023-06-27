@@ -1471,10 +1471,14 @@ void Mob::DoAttack(Mob *other, DamageHitInfo &hit, ExtraAttackOptions *opts, boo
 				
 				// Pyrelight Custom Code - Heroic Strength
 				if (RuleR(Character, Pyrelight_hSTR_DmgBonus) > 0) {
-					float damage_scalar = 1 + std::ceil((RuleR(Character, Pyrelight_hSTR_DmgBonus) / 100) * (IsPetOwnerClient() && GetOwner()) ? (1.0/3.0) * GetOwner()->GetHeroicSTR() : GetHeroicSTR());
+					int effective_hSTR = (IsPetOwnerClient() && GetOwner()) ? (1.0/3.0) * GetOwner()->GetHeroicSTR() : GetHeroicSTR();					
+					
+					if (effective_hSTR > 0) {
+						float damage_scalar = 1 + std::ceil((RuleR(Character, Pyrelight_hSTR_DmgBonus) / 100) * effective_hSTR);
 
-					hit.original_damage = hit.damage_done;			
-					hit.damage_done = static_cast<int64>(std::floor(hit.damage_done * damage_scalar));
+						hit.original_damage = hit.damage_done;			
+						hit.damage_done = static_cast<int64>(std::floor(hit.damage_done * damage_scalar));
+					}
 				}
 
 				// Pyrelight Custom Code - Heroic Stamina
@@ -1482,12 +1486,14 @@ void Mob::DoAttack(Mob *other, DamageHitInfo &hit, ExtraAttackOptions *opts, boo
 				if (RuleR(Character, Pyrelight_hSTA_DmgReduction) > 0) {
 					
 					int effective_hSTA = (other->IsPetOwnerClient() && other->GetOwner()) ? ((1.0/3.0) * other->GetOwner()->GetHeroicSTA()) : other->GetHeroicSTA();
-					int64 damage_reduction_value = static_cast<int64>(std::ceil(RuleR(Character, Pyrelight_hSTA_DmgReduction) * effective_hSTA));
-					int64 damage_value = static_cast<int64>(std::max(static_cast<int64>(hit.damage_done * GetDamageReductionCap() / 100), // Capped Damage Reduction
-																  					 	hit.damage_done - damage_reduction_value)); // Reduced Damage
+					if (effective_hSTA > 0) {
+						int64 damage_reduction_value = static_cast<int64>(std::ceil(RuleR(Character, Pyrelight_hSTA_DmgReduction) * effective_hSTA));
+						int64 damage_value = static_cast<int64>(std::max(static_cast<int64>(hit.damage_done * GetDamageReductionCap() / 100), // Capped Damage Reduction
+																							hit.damage_done - damage_reduction_value)); // Reduced Damage
 
-					hit.original_damage = hit.damage_done;
-					hit.damage_done = damage_value;
+						hit.original_damage = hit.damage_done;
+						hit.damage_done = damage_value;
+					}
 				}	
 			}
 			LogCombat("Final damage after all reductions: [{}]", hit.damage_done);
