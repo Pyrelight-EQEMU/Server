@@ -1474,7 +1474,7 @@ void Mob::DoAttack(Mob *other, DamageHitInfo &hit, ExtraAttackOptions *opts, boo
 					int effective_hSTR = (IsPetOwnerClient() && GetOwner()) ? (1.0/3.0) * GetOwner()->GetHeroicSTR() : GetHeroicSTR();					
 					
 					if (effective_hSTR > 0) {
-						float damage_scalar = 1 + std::ceil((RuleR(Character, Pyrelight_hSTR_DmgBonus) / 100) * effective_hSTR);
+						float damage_scalar = 1 + ((RuleR(Character, Pyrelight_hSTR_DmgBonus) / 100) * effective_hSTR);
 
 						hit.original_damage = hit.damage_done;			
 						hit.damage_done = static_cast<int64>(std::floor(hit.damage_done * damage_scalar));
@@ -1728,10 +1728,10 @@ bool Mob::Attack(Mob* other, int Hand, bool bRiposte, bool IsStrikethrough, bool
 			LogDebug("Send a hSTR message to [{}] here", this->GetCleanName());
 			int increase_percentage = ((static_cast<float>(my_hit.damage_done) / static_cast<float>(my_hit.original_damage)) - 1) * 100;
 			if (IsClient()) {			
-				Message(Chat::YouHitOther, "(Increased by %i%% to %i by your Heroic Strength)", increase_percentage, my_hit.damage_done);
+				Message(Chat::YouHitOther, "(Increased by %i%% from %i by your Heroic Strength)", increase_percentage, my_hit.original_damage);
 			}
 			if (IsPetOwnerClient() && GetOwner()) {
-				GetOwner()->Message(Chat::OtherHitOther, "(Increased by %i%% to %i by owner's Heroic Strength)", increase_percentage, my_hit.damage_done);
+				GetOwner()->Message(Chat::OtherHitOther, "(Increased by %i%% from %i by owner's Heroic Strength)", increase_percentage, my_hit.original_damage);
 			}
 	}
 
@@ -2380,12 +2380,9 @@ bool NPC::Attack(Mob* other, int Hand, bool bRiposte, bool IsStrikethrough, bool
 
 		if (my_hit.damage_done > my_hit.original_damage && my_hit.original_damage > 0 && my_hit.damage_done > 0) {
 			LogDebug("Send a hSTR message to [{}] here", this->GetCleanName());
-			int increase_percentage = ((static_cast<float>(my_hit.damage_done) / static_cast<float>(my_hit.original_damage)) - 1) * 100;
-			if (IsClient()) {			
-				Message(Chat::YouHitOther, "(Increased by %i%% to %i by your Heroic Strength)", increase_percentage, my_hit.damage_done);
-			}
+			int increase_percentage = ((static_cast<float>(my_hit.damage_done) / static_cast<float>(my_hit.original_damage)) - 1) * 100;			
 			if (IsPetOwnerClient() && GetOwner()) {
-				GetOwner()->Message(Chat::OtherHitOther, "(Increased by %i%% to %i by owner's Heroic Strength)", increase_percentage, my_hit.damage_done);
+				GetOwner()->Message(Chat::OtherHitOther, "(Increased by %i%% from %i by owner's Heroic Strength)", increase_percentage, my_hit.original_damage);
 			}
 		}
 
