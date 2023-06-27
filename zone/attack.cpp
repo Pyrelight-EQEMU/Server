@@ -2355,6 +2355,8 @@ bool NPC::Attack(Mob* other, int Hand, bool bRiposte, bool IsStrikethrough, bool
 
 	if (GetHP() > 0 && !other->HasDied()) {
 		other->Damage(this, my_hit.damage_done, SPELL_UNKNOWN, my_hit.skill, true, -1, false, m_specialattacks); // Not avoidable client already had thier chance to Avoid
+
+		LogDebug("[{}], [{}]", my_hit.original_damage, my_hit.damage_done);
 		
 		//Pyrelight Custom Code - Send info about the hSTA damage reduction to clients
 		if (my_hit.damage_done < my_hit.original_damage && my_hit.damage_done > 0 && my_hit.original_damage > 0) {
