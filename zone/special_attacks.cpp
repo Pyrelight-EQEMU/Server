@@ -269,7 +269,7 @@ void Mob::DoSpecialAttackDamage(Mob *who, EQ::skills::SkillType skill, int32 bas
 				who->Message(Chat::OtherHitYou, "(Reduced by %i%% from %i by your Heroic Stamina)", reduction_percentage, my_hit.original_damage);
 			}
 			if (who->IsPetOwnerClient() && who->GetOwner()) {
-				who->GetOwner()->Message(Chat::OtherHitOther, "(Reduced by %i%% from %i by your Heroic Stamina)", reduction_percentage, my_hit.original_damage);
+				who->GetOwner()->Message(Chat::OtherHitOther, "(Reduced by %i%% from %i by owner's Heroic Stamina)", reduction_percentage, my_hit.original_damage);
 			}
 		}
 
