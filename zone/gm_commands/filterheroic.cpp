@@ -4,6 +4,7 @@
 
 void command_filterheroic(Client *c, const Seperator *sep)
 {
+	const auto arguments = sep->argnum;
     if (!arguments) {
         c->Message(Chat::White, "Command Syntax: #[filterheroic] - [str|sta|dex|agi|int|wis|cha] - Toggle the visibility of additional info about heroic stat effects.");
         return;
