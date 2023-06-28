@@ -1726,7 +1726,7 @@ bool Mob::Attack(Mob* other, int Hand, bool bRiposte, bool IsStrikethrough, bool
 
 	if (my_hit.damage_done > my_hit.original_damage && my_hit.original_damage > 0 && my_hit.damage_done > 0) {
 			int increase_percentage = ((static_cast<float>(my_hit.damage_done) / static_cast<float>(my_hit.original_damage)) - 1) * 100;
-			if (IsClient()) {			
+			if (IsClient() && CastToClient()->GetAccountFlag("filter_hSTR") == "true") {			
 				Message(Chat::YouHitOther, "(Increased by %i%% (%i) from %i by your Heroic Strength)", increase_percentage, my_hit.damage_done - my_hit.original_damage, my_hit.original_damage);
 			}
 	}
