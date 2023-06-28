@@ -766,7 +766,7 @@ void Client::RangedAttack(Mob* other, bool CanDoubleAttack) {
 			(ChanceAvoidConsume < 100 && zone->random.Int(0,99) > ChanceAvoidConsume)
 		)
 	) {
-		DeleteItemInInventory(ammo_slot, true);
+		DeleteItemInInventory(ammo_slot, 1, true);
 		LogCombat("Consumed Archery Ammo from slot {}.", ammo_slot);
 	} else if (!consumes_ammo) {
 		LogCombat("Archery Ammo Consumption is disabled.");
