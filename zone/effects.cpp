@@ -102,7 +102,7 @@ int64 Mob::GetActSpellDamage(uint16 spell_id, int64 value, Mob* target) {
 			auto random = zone->random.Int(1,100);
 			if (random <= (effective_hDEX * RuleR(Character, Pyrelight_hDEX_CriticalReroll))) {
 				Critical = zone->random.Roll(chance);
-				effective_hDEX -= random;
+				effective_hDEX -= random * 3;
 			} else {
 				break;
 			}

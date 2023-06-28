@@ -6035,7 +6035,7 @@ void Mob::CommonOutgoingHitSuccess(Mob* defender, DamageHitInfo &hit, ExtraAttac
 				Message(Chat::YouHitOther, "You failed to land a critical hit, but your Heroic Dexterity gives you another chance!");
 			}
 			crit = TryCriticalHit(defender, hit, opts);
-			effective_hDEX -= random;
+			effective_hDEX -= random * 3;
 		} else {
 			break;
 		}		
