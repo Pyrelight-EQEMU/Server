@@ -1729,9 +1729,6 @@ bool Mob::Attack(Mob* other, int Hand, bool bRiposte, bool IsStrikethrough, bool
 			if (IsClient()) {			
 				Message(Chat::YouHitOther, "(Increased by %i%% (%i) from %i by your Heroic Strength)", increase_percentage, my_hit.damage_done - my_hit.original_damage, my_hit.original_damage);
 			}
-			if (IsPetOwnerClient() && GetOwner()) {
-				GetOwner()->Message(Chat::OtherHitOther, "(Increased by %i%% (%i) from %i by owner's Heroic Strength)", my_hit.damage_done - my_hit.original_damage, increase_percentage, my_hit.original_damage);
-			}
 	}
 
 	if (CastToClient()->IsDead() || (IsBot() && GetAppearance() == eaDead)) {
@@ -2371,6 +2368,9 @@ bool NPC::Attack(Mob* other, int Hand, bool bRiposte, bool IsStrikethrough, bool
 			int reduction_percentage = (1 - static_cast<float>(my_hit.damage_done) / static_cast<float>(my_hit.original_damage)) * 100;			
 			if (other->IsPetOwnerClient() && other->GetOwner()) {
 				other->GetOwner()->Message(Chat::OtherHitOther, "(Reduced by %i%% (%i) from %i by owner's Heroic Stamina)", reduction_percentage, my_hit.original_damage - my_hit.damage_done, my_hit.original_damage);
+			}
+			if (other->IsClient()) {
+				Message(Chat::OtherHitOther, "(Reduced by %i%% (%i) from %i by your Heroic Stamina)", reduction_percentage, my_hit.original_damage - my_hit.damage_done, my_hit.original_damage);
 			}
 		} else if (my_hit.damage_done > my_hit.original_damage && my_hit.original_damage > 0 && my_hit.damage_done > 0) {
 			int increase_percentage = ((static_cast<float>(my_hit.damage_done) / static_cast<float>(my_hit.original_damage)) - 1) * 100;			

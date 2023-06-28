@@ -268,10 +268,16 @@ void Mob::DoSpecialAttackDamage(Mob *who, EQ::skills::SkillType skill, int32 bas
 		if (who->IsPetOwnerClient() && who->GetOwner()) {
 			who->GetOwner()->Message(Chat::OtherHitOther, "(Reduced by %i%% (%i) from %i by owner's Heroic Stamina)", reduction_percentage, my_hit.original_damage - my_hit.damage_done, my_hit.original_damage);
 		}
+		if (who->IsClient()) {
+			who->Message(Chat::OtherHitOther, "(Reduced by %i%% (%i) from %i by your Heroic Stamina)", reduction_percentage, my_hit.original_damage - my_hit.damage_done, my_hit.original_damage);
+		}
 	} else if (my_hit.damage_done > my_hit.original_damage && my_hit.original_damage > 0 && my_hit.damage_done > 0) {
 		int increase_percentage = ((static_cast<float>(my_hit.damage_done) / static_cast<float>(my_hit.original_damage)) - 1) * 100;			
 		if (IsPetOwnerClient() && GetOwner()) {
 			GetOwner()->Message(Chat::OtherHitOther, "(Increased by %i%% (%i) from %i by owner's Heroic Strength)", increase_percentage, my_hit.damage_done - my_hit.original_damage, my_hit.original_damage);
+		}
+		if (IsClient()) {
+			Message(Chat::OtherHitOther, "(Increased by %i%% (%i) from %i by your Heroic Strength)", increase_percentage, my_hit.damage_done - my_hit.original_damage, my_hit.original_damage);
 		}
 	}
 
