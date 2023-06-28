@@ -901,11 +901,11 @@ void Mob::DoArcheryAttackDmg(Mob *other, const EQ::ItemInstance *RangeWeapon, co
 	//Pyrelight Custom Code - Send info about the hSTA/hSTR damage modification to clients
 	if (my_hit.damage_done < my_hit.original_damage && my_hit.damage_done > 0 && my_hit.original_damage > 0) {
 		int reduction_percentage = (1 - static_cast<float>(my_hit.damage_done) / static_cast<float>(my_hit.original_damage)) * 100;			
-		if (other->->GetOwner()->IsClient() && other->->GetOwner()->CastToClient()->GetAccountFlag("filter_hSTA") != "off" && who->IsPetOwnerClient() && who->GetOwner()) {
-			other->->GetOwner()->Message(Chat::OtherHitOther, "(Reduced by %i%% (%i) from %i by owner's Heroic Stamina)", reduction_percentage, my_hit.original_damage - my_hit.damage_done, my_hit.original_damage);
+		if (other->GetOwner()->IsClient() && other->GetOwner()->CastToClient()->GetAccountFlag("filter_hSTA") != "off" && other->IsPetOwnerClient() && other->GetOwner()) {
+			other->GetOwner()->Message(Chat::OtherHitOther, "(Reduced by %i%% (%i) from %i by owner's Heroic Stamina)", reduction_percentage, my_hit.original_damage - my_hit.damage_done, my_hit.original_damage);
 		}
-		if (other->->IsClient() && other->->CastToClient()->GetAccountFlag("filter_hSTA") != "off") {
-			other->->Message(Chat::OtherHitYou, "(Reduced by %i%% (%i) from %i by your Heroic Stamina)", reduction_percentage, my_hit.original_damage - my_hit.damage_done, my_hit.original_damage);
+		if (other->IsClient() && other->CastToClient()->GetAccountFlag("filter_hSTA") != "off") {
+			other->Message(Chat::OtherHitYou, "(Reduced by %i%% (%i) from %i by your Heroic Stamina)", reduction_percentage, my_hit.original_damage - my_hit.damage_done, my_hit.original_damage);
 		}
 	} else if (my_hit.damage_done > my_hit.original_damage && my_hit.original_damage > 0 && my_hit.damage_done > 0) {
 		int increase_percentage = ((static_cast<float>(my_hit.damage_done) / static_cast<float>(my_hit.original_damage)) - 1) * 100;			
