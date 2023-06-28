@@ -887,9 +887,8 @@ void Mob::DoArcheryAttackDmg(Mob *other, const EQ::ItemInstance *RangeWeapon, co
 		my_hit.hand = EQ::invslot::slotRange;
 
 		DoAttack(other, my_hit);
-		TotalDmg = my_hit.damage_done;
 	} else {
-		TotalDmg = DMG_INVULNERABLE;
+		my_hit.damage_done = DMG_INVULNERABLE;
 	}
 
 	if (IsClient() && !CastToClient()->GetFeigned()) {
@@ -1287,14 +1286,22 @@ void NPC::DoRangedAttackDmg(Mob* other, bool Launch, int16 damage_mod, int16 cha
 
 	TotalDmg = my_hit.damage_done;
 
-	if (TotalDmg > 0) {
-		TotalDmg += TotalDmg * damage_mod / 100;
-		other->AddToHateList(this, TotalDmg, 0);
+	if (my_hit.damage_done > 0) {
+		my_hit.damage_done += my_hit.damage_done * damage_mod / 100;
+		other->AddToHateList(this, my_hit.damage_done, 0);
 	} else {
 		other->AddToHateList(this, 0, 0);
 	}
 
-	other->Damage(this, TotalDmg, SPELL_UNKNOWN, skillInUse);
+	other->Damage(this, my_hit.damage_done, SPELL_UNKNOWN, skillInUse);
+
+	//Pyrelight Custom Code - Send info about the hSTA/hSTR damage modification to clients
+	if (my_hit.damage_done > my_hit.original_damage && my_hit.original_damage > 0 && my_hit.damage_done > 0) {
+		int increase_percentage = ((static_cast<float>(my_hit.damage_done) / static_cast<float>(my_hit.original_damage)) - 1) * 100;		
+		if (IsClient() && CastToClient()->GetAccountFlag("filter_hSTR") != "off") {
+			Message(Chat::YouHitOther, "(Increased by %i%% (%i) from %i by your Heroic Strength)", increase_percentage, my_hit.damage_done - my_hit.original_damage, my_hit.original_damage);
+		}
+	}
 
 	//try proc on hits and misses
 	if (other && !other->HasDied()) {
