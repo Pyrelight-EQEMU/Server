@@ -281,16 +281,16 @@ void Mob::DoSpecialAttackDamage(Mob *who, EQ::skills::SkillType skill, int32 bas
 			}
 		}
 		
-		if ((other->IsClient() || other->IsPetOwnerClient()) && (my_hit.original_damage > my_hit.damage_done)) {				
+		if ((who->IsClient() || who->IsPetOwnerClient()) && (my_hit.original_damage > my_hit.damage_done)) {				
 			int reduction_percentage = (1 - static_cast<float>(my_hit.damage_done) / static_cast<float>(my_hit.original_damage)) * 100;
-			if (other->IsPetOwnerClient() && other->GetOwner()->CastToClient()->GetAccountFlag("filter_hSTR") != "off" &&  other->GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
-				other->GetOwner()->Message(Chat::OtherHitOther, 
+			if (who->IsPetOwnerClient() && who->GetOwner()->CastToClient()->GetAccountFlag("filter_hSTR") != "off" &&  who->GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
+				who->GetOwner()->Message(Chat::OtherHitOther, 
 											"The damage dealt to your pet was reduced by %i from %i (%i%%) by the influence of your Heroic Stamina.",
 											my_hit.original_damage - my_hit.damage_done,
 											my_hit.original_damage,
 											reduction_percentage);
-			} else if (other->CastToClient()->GetAccountFlag("filter_hSTA") != "off") {
-				other->Message(Chat::OtherHitYou, 
+			} else if (who->CastToClient()->GetAccountFlag("filter_hSTA") != "off") {
+				who->Message(Chat::OtherHitYou, 
 								"The damage dealt to you was reduced by %i from %i (%i%%) by the influence of your Heroic Stamina.", 
 								my_hit.damage_done - my_hit.original_damage,
 								my_hit.original_damage,
@@ -324,7 +324,7 @@ void Client::OPCombatAbility(const CombatAbility_Struct *ca_atk)
 	if ((spellend_timer.Enabled() && GetClass() != BARD) || IsFeared() || IsStunned() || IsMezzed() || DivineAura() || dead)
 		return;
 
-	// RoF2+ Tiger Claw is unlinked from other monk skills, if they ever do that for other classes there will need to be more checks here
+	// RoF2+ Tiger Claw is unlinked from who monk skills, if they ever do that for who classes there will need to be more checks here
 	pTimerType timer = (ClientVersion() >= EQ::versions::ClientVersion::RoF2 && ca_atk->m_skill == EQ::skills::SkillTigerClaw) ? pTimerCombatAbility2 : pTimerCombatAbility;
 
 	bool CanBypassSkillCheck = false;
@@ -462,9 +462,9 @@ void Client::OPCombatAbility(const CombatAbility_Struct *ca_atk)
 
 
 //returns the reuse time in sec for the special attack used.
-int Mob::MonkSpecialAttack(Mob *other, uint8 unchecked_type)
+int Mob::MonkSpecialAttack(Mob *who, uint8 unchecked_type)
 {
-	if (!other)
+	if (!who)
 		return 0;
 
 	int64 ndamage = 0;
@@ -525,11 +525,11 @@ int Mob::MonkSpecialAttack(Mob *other, uint8 unchecked_type)
 	}
 
 	if (IsClient()) {
-		if (GetWeaponDamage(other, CastToClient()->GetInv().GetItem(itemslot)) <= 0) {
+		if (GetWeaponDamage(who, CastToClient()->GetInv().GetItem(itemslot)) <= 0) {
 			max_dmg = DMG_INVULNERABLE;
 		}
 	} else {
-		if (GetWeaponDamage(other, (const EQ::ItemData *)nullptr) <= 0) {
+		if (GetWeaponDamage(who, (const EQ::ItemData *)nullptr) <= 0) {
 			max_dmg = DMG_INVULNERABLE;
 		}
 	}
@@ -538,13 +538,13 @@ int Mob::MonkSpecialAttack(Mob *other, uint8 unchecked_type)
 	if (max_dmg > 0)
 		ht = max_dmg;
 
-	DoSpecialAttackDamage(other, skill_type, max_dmg, min_dmg, ht, reuse);
+	DoSpecialAttackDamage(who, skill_type, max_dmg, min_dmg, ht, reuse);
 
 	return reuse;
 }
 
-void Mob::TryBackstab(Mob *other, int ReuseTime) {
-	if(!other)
+void Mob::TryBackstab(Mob *who, int ReuseTime) {
+	if(!who)
 		return;
 
 	bool bIsBehind = false;
@@ -562,7 +562,7 @@ void Mob::TryBackstab(Mob *other, int ReuseTime) {
 	//Live AA - Triple Backstab
 	int tripleChance = itembonuses.TripleBackstab + spellbonuses.TripleBackstab + aabonuses.TripleBackstab;
 
-	if (BehindMob(other, GetX(), GetY()))
+	if (BehindMob(who, GetX(), GetY()))
 		bIsBehind = true;
 
 	else {
@@ -573,25 +573,25 @@ void Mob::TryBackstab(Mob *other, int ReuseTime) {
 			bCanFrontalBS = true;
 	}
 
-	if (bIsBehind || bCanFrontalBS || (IsNPC() && CanFacestab())) { // Player is behind other OR can do Frontal Backstab
+	if (bIsBehind || bCanFrontalBS || (IsNPC() && CanFacestab())) { // Player is behind who OR can do Frontal Backstab
 		if (bCanFrontalBS && IsClient()) // I don't think there is any message ...
 			CastToClient()->Message(Chat::White,"Your fierce attack is executed with such grace, your target did not see it coming!");
 
-		RogueBackstab(other,false,ReuseTime);
+		RogueBackstab(who,false,ReuseTime);
 		if (level > 54) {
 			// TODO: 55-59 doesn't appear to match just checking double attack, 60+ does though
 			if(IsClient() && CastToClient()->CheckDoubleAttack())
 			{
-				if(other->GetHP() > 0)
-					RogueBackstab(other,false,ReuseTime);
+				if(who->GetHP() > 0)
+					RogueBackstab(who,false,ReuseTime);
 
-				if (tripleChance && other->GetHP() > 0 && zone->random.Roll(tripleChance))
-					RogueBackstab(other,false,ReuseTime);
+				if (tripleChance && who->GetHP() > 0 && zone->random.Roll(tripleChance))
+					RogueBackstab(who,false,ReuseTime);
 			}
 		}
 
 		if(IsClient())
-			CastToClient()->CheckIncreaseSkill(EQ::skills::SkillBackstab, other, 10);
+			CastToClient()->CheckIncreaseSkill(EQ::skills::SkillBackstab, who, 10);
 
 	}
 	//Live AA - Chaotic Backstab
@@ -601,24 +601,24 @@ void Mob::TryBackstab(Mob *other, int ReuseTime) {
 		//we can stab from any angle, we do min damage though.
 		// chaotic backstab can't double etc Seized can, but that's because it's a chance to do normal BS
 		// Live actually added SPA 473 which grants chance to double here when they revamped chaotic/seized
-		RogueBackstab(other, true, ReuseTime);
+		RogueBackstab(who, true, ReuseTime);
 		if(IsClient())
-			CastToClient()->CheckIncreaseSkill(EQ::skills::SkillBackstab, other, 10);
+			CastToClient()->CheckIncreaseSkill(EQ::skills::SkillBackstab, who, 10);
 		m_specialattacks = eSpecialAttacks::None;
 
 		int double_bs_front = aabonuses.Double_Backstab_Front + itembonuses.Double_Backstab_Front + spellbonuses.Double_Backstab_Front;
-		if (double_bs_front && other->GetHP() > 0 && zone->random.Roll(double_bs_front))
-			RogueBackstab(other, false, ReuseTime);
+		if (double_bs_front && who->GetHP() > 0 && zone->random.Roll(double_bs_front))
+			RogueBackstab(who, false, ReuseTime);
 	}
 	else { //We do a single regular attack if we attack from the front without chaotic stab
-		Attack(other, EQ::invslot::slotPrimary);
+		Attack(who, EQ::invslot::slotPrimary);
 	}
 }
 
 //heko: backstab
-void Mob::RogueBackstab(Mob* other, bool min_damage, int ReuseTime)
+void Mob::RogueBackstab(Mob* who, bool min_damage, int ReuseTime)
 {
-	if (!other)
+	if (!who)
 		return;
 
 	int64 hate = 0;
@@ -626,37 +626,37 @@ void Mob::RogueBackstab(Mob* other, bool min_damage, int ReuseTime)
 	// make sure we can hit (bane, magical, etc)
 	if (IsClient()) {
 		const EQ::ItemInstance *wpn = CastToClient()->GetInv().GetItem(EQ::invslot::slotPrimary);
-		if (!GetWeaponDamage(other, wpn))
+		if (!GetWeaponDamage(who, wpn))
 			return;
-	} else if (!GetWeaponDamage(other, (const EQ::ItemData*)nullptr)){
+	} else if (!GetWeaponDamage(who, (const EQ::ItemData*)nullptr)){
 		return;
 	}
 
-	int base_damage = GetBaseSkillDamage(EQ::skills::SkillBackstab, other);
+	int base_damage = GetBaseSkillDamage(EQ::skills::SkillBackstab, who);
 	hate = base_damage;
 
-	DoSpecialAttackDamage(other, EQ::skills::SkillBackstab, base_damage, 0, hate, ReuseTime);
+	DoSpecialAttackDamage(who, EQ::skills::SkillBackstab, base_damage, 0, hate, ReuseTime);
 	DoAnim(anim1HPiercing, 0, false);
 }
 
 // assassinate [No longer used for regular assassinate 6-29-14]
-void Mob::RogueAssassinate(Mob* other)
+void Mob::RogueAssassinate(Mob* who)
 {
 	//can you dodge, parry, etc.. an assassinate??
-	//if so, use DoSpecialAttackDamage(other, BACKSTAB, 32000); instead
-	if (GetWeaponDamage(other, IsClient() ? CastToClient()->GetInv().GetItem(EQ::invslot::slotPrimary) : (const EQ::ItemInstance*)nullptr) > 0){
-		other->Damage(this, 32000, SPELL_UNKNOWN, EQ::skills::SkillBackstab);
+	//if so, use DoSpecialAttackDamage(who, BACKSTAB, 32000); instead
+	if (GetWeaponDamage(who, IsClient() ? CastToClient()->GetInv().GetItem(EQ::invslot::slotPrimary) : (const EQ::ItemInstance*)nullptr) > 0){
+		who->Damage(this, 32000, SPELL_UNKNOWN, EQ::skills::SkillBackstab);
 	}else{
-		other->Damage(this, -5, SPELL_UNKNOWN, EQ::skills::SkillBackstab);
+		who->Damage(this, -5, SPELL_UNKNOWN, EQ::skills::SkillBackstab);
 	}
 	DoAnim(anim1HPiercing, 0, false);	//piercing animation
 }
 
-void Client::RangedAttack(Mob* other, bool CanDoubleAttack) {
+void Client::RangedAttack(Mob* who, bool CanDoubleAttack) {
 	//conditions to use an attack checked before we are called
-	if (!other)
+	if (!who)
 		return;
-	else if (other == this)
+	else if (who == this)
 		return;
 	//make sure the attack and ranged timers are up
 	//if the ranged timer is disabled, then they have no ranged weapon and shouldent be attacking anyhow
@@ -697,7 +697,7 @@ void Client::RangedAttack(Mob* other, bool CanDoubleAttack) {
 		return;
 	}
 
-	LogCombat("Shooting [{}] with bow [{}] ([{}]) and arrow [{}] ([{}])", other->GetName(), RangeItem->Name, RangeItem->ID, AmmoItem->Name, AmmoItem->ID);
+	LogCombat("Shooting [{}] with bow [{}] ([{}]) and arrow [{}] ([{}])", who->GetName(), RangeItem->Name, RangeItem->ID, AmmoItem->Name, AmmoItem->ID);
 
 	//look for ammo in inventory if we only have 1 left...
 	if (Ammo->GetCharges() == 1) {
@@ -747,7 +747,7 @@ void Client::RangedAttack(Mob* other, bool CanDoubleAttack) {
 	float range = RangeItem->Range + AmmoItem->Range + GetRangeDistTargetSizeMod(GetTarget());
 	LogCombat("Calculated bow range to be [{}]", range);
 	range *= range;
-	if (float dist = DistanceSquared(m_Position, other->GetPosition()); dist > range) {
+	if (float dist = DistanceSquared(m_Position, who->GetPosition()); dist > range) {
 		LogCombat("Ranged attack out of range client should catch this. ([{}] > [{}]).\n", dist, range);
 		MessageString(Chat::Red,TARGET_OUT_OF_RANGE);//Client enforces range and sends the message, this is a backup just incase.
 		return;
@@ -757,7 +757,7 @@ void Client::RangedAttack(Mob* other, bool CanDoubleAttack) {
 		return;
 	}
 
-	if (!IsAttackAllowed(other) ||
+	if (!IsAttackAllowed(who) ||
 		IsCasting() ||
 		IsSitting() ||
 		(DivineAura() && !GetGM()) ||
@@ -769,7 +769,7 @@ void Client::RangedAttack(Mob* other, bool CanDoubleAttack) {
 	}
 
 	//Shoots projectile and/or applies the archery damage
-	DoArcheryAttackDmg(other, RangeWeapon, Ammo,0,0,0,0,0,0, AmmoItem, ammo_slot);
+	DoArcheryAttackDmg(who, RangeWeapon, Ammo,0,0,0,0,0,0, AmmoItem, ammo_slot);
 
 	//EndlessQuiver AA base1 = 100% Chance to avoid consumption arrow.
 	int ChanceAvoidConsume = aabonuses.ConsumeProjectile + itembonuses.ConsumeProjectile + spellbonuses.ConsumeProjectile;
@@ -796,13 +796,13 @@ void Client::RangedAttack(Mob* other, bool CanDoubleAttack) {
 	CommonBreakInvisibleFromCombat();
 }
 
-void Mob::DoArcheryAttackDmg(Mob *other, const EQ::ItemInstance *RangeWeapon, const EQ::ItemInstance *Ammo,
+void Mob::DoArcheryAttackDmg(Mob *who, const EQ::ItemInstance *RangeWeapon, const EQ::ItemInstance *Ammo,
 							int32 weapon_damage, int16 chance_mod, int16 focus, int ReuseTime, uint32 range_id,
 							uint32 ammo_id, const EQ::ItemData *AmmoItem, int AmmoSlot, float speed, bool DisableProcs)
 {
-	if ((other == nullptr ||
-			((IsClient() && CastToClient()->dead) || (other->IsClient() && other->CastToClient()->dead)) ||
-			HasDied() || (!IsAttackAllowed(other)) || (other->GetInvul() || other->GetSpecialAbility(IMMUNE_MELEE)))) {
+	if ((who == nullptr ||
+			((IsClient() && CastToClient()->dead) || (who->IsClient() && who->CastToClient()->dead)) ||
+			HasDied() || (!IsAttackAllowed(who)) || (who->GetInvul() || who->GetSpecialAbility(IMMUNE_MELEE)))) {
 		return;
 	}
 
@@ -845,24 +845,24 @@ void Mob::DoArcheryAttackDmg(Mob *other, const EQ::ItemInstance *RangeWeapon, co
 			}
 		}
 	} else if (AmmoItem) {
-		SendItemAnimation(other, AmmoItem, EQ::skills::SkillArchery);
+		SendItemAnimation(who, AmmoItem, EQ::skills::SkillArchery);
 	}
 
-	LogCombat("Ranged attack hit [{}]", other->GetName());
+	LogCombat("Ranged attack hit [{}]", who->GetName());
 
 	int64 hate = 0;
 	int64 TotalDmg = 0;
 	int WDmg = 0;
 	int ADmg = 0;
 	if (!weapon_damage) {
-		WDmg = GetWeaponDamage(other, RangeWeapon);
-		ADmg = GetWeaponDamage(other, Ammo);
+		WDmg = GetWeaponDamage(who, RangeWeapon);
+		ADmg = GetWeaponDamage(who, Ammo);
 	} else {
 		WDmg = weapon_damage;
 	}
 
 	if (LaunchProjectile) { // 1: Shoot the Projectile once we calculate weapon damage.
-		TryProjectileAttack(other, AmmoItem, EQ::skills::SkillArchery, (WDmg + ADmg), RangeWeapon,
+		TryProjectileAttack(who, AmmoItem, EQ::skills::SkillArchery, (WDmg + ADmg), RangeWeapon,
 							Ammo, AmmoSlot, speed, DisableProcs);
 		return;
 	}
@@ -904,16 +904,16 @@ void Mob::DoArcheryAttackDmg(Mob *other, const EQ::ItemInstance *RangeWeapon, co
 		my_hit.tohit = GetTotalToHit(my_hit.skill, chance_mod);
 		my_hit.hand = EQ::invslot::slotRange;
 
-		DoAttack(other, my_hit);
+		DoAttack(who, my_hit);
 	} else {
 		my_hit.damage_done = DMG_INVULNERABLE;
 	}
 
 	if (IsClient() && !CastToClient()->GetFeigned()) {
-		other->AddToHateList(this, hate, 0);
+		who->AddToHateList(this, hate, 0);
 	}
 
-	other->Damage(this, my_hit.damage_done, SPELL_UNKNOWN, EQ::skills::SkillArchery);
+	who->Damage(this, my_hit.damage_done, SPELL_UNKNOWN, EQ::skills::SkillArchery);
 
 	//Pyrelight Custom Code - Send info about the hSTA/hSTR damage modification to clients
 	if (my_hit.damage_done > my_hit.original_damage && my_hit.original_damage > 0 && my_hit.damage_done > 0) {
@@ -925,8 +925,8 @@ void Mob::DoArcheryAttackDmg(Mob *other, const EQ::ItemInstance *RangeWeapon, co
 
 	if (!DisableProcs) {
 		// Weapon Proc
-		if (RangeWeapon && other && !other->HasDied()) {
-			TryCombatProcs(RangeWeapon, other, EQ::invslot::slotRange);
+		if (RangeWeapon && who && !who->HasDied()) {
+			TryCombatProcs(RangeWeapon, who, EQ::invslot::slotRange);
 		}
 		// Pri/Sec Procs
 		EQ::ItemInstance* primary = GetInv().GetItem(EQ::invslot::slotPrimary);
@@ -934,52 +934,52 @@ void Mob::DoArcheryAttackDmg(Mob *other, const EQ::ItemInstance *RangeWeapon, co
 
 		int which_wep = zone->random.Roll0(3);
 
-		if (primary && other && !other->HasDied() && which_wep <= 1) {
-			if (zone->random.Roll0(2)) TryCombatProcs(primary, other, EQ::invslot::slotRange);
+		if (primary && who && !who->HasDied() && which_wep <= 1) {
+			if (zone->random.Roll0(2)) TryCombatProcs(primary, who, EQ::invslot::slotRange);
 		}
-		if (secondary && other && !other->HasDied() && which_wep == 2) {
-			if (zone->random.Roll0(2)) TryCombatProcs(secondary, other, EQ::invslot::slotRange);
+		if (secondary && who && !who->HasDied() && which_wep == 2) {
+			if (zone->random.Roll0(2)) TryCombatProcs(secondary, who, EQ::invslot::slotRange);
 		}
 
 		// Ammo Proc, do not try spell procs if from ammo.
 		if (last_ammo_used) {
-			TryWeaponProc(nullptr, last_ammo_used, other, EQ::invslot::slotRange);
+			TryWeaponProc(nullptr, last_ammo_used, who, EQ::invslot::slotRange);
 		}
-		else if (Ammo && other && !other->HasDied()) {
-			TryWeaponProc(Ammo, Ammo->GetItem(), other, EQ::invslot::slotRange);
+		else if (Ammo && who && !who->HasDied()) {
+			TryWeaponProc(Ammo, Ammo->GetItem(), who, EQ::invslot::slotRange);
 		}
 	}
 
-	TryCastOnSkillUse(other, EQ::skills::SkillArchery);
+	TryCastOnSkillUse(who, EQ::skills::SkillArchery);
 
 	if (!DisableProcs) {
 		// Skill Proc Attempt
-		if (HasSkillProcs() && other && !other->HasDied()) {
+		if (HasSkillProcs() && who && !who->HasDied()) {
 			if (ReuseTime) {
-				TrySkillProc(other, EQ::skills::SkillArchery, ReuseTime);
+				TrySkillProc(who, EQ::skills::SkillArchery, ReuseTime);
 			}
 			else {
-				TrySkillProc(other, EQ::skills::SkillArchery, 0, false, EQ::invslot::slotRange);
+				TrySkillProc(who, EQ::skills::SkillArchery, 0, false, EQ::invslot::slotRange);
 			}
 		}
 
 		// Skill Proc Success ... can proc off hits OR misses
-		if (HasSkillProcSuccess() && other && !other->HasDied()) {
+		if (HasSkillProcSuccess() && who && !who->HasDied()) {
 			if (ReuseTime) {
-				TrySkillProc(other, EQ::skills::SkillArchery, ReuseTime, true);
+				TrySkillProc(who, EQ::skills::SkillArchery, ReuseTime, true);
 			}
 			else {
-				TrySkillProc(other, EQ::skills::SkillArchery, 0, true, EQ::invslot::slotRange);
+				TrySkillProc(who, EQ::skills::SkillArchery, 0, true, EQ::invslot::slotRange);
 			}
 		}
 	}
 }
 
-bool Mob::TryProjectileAttack(Mob *other, const EQ::ItemData *item, EQ::skills::SkillType skillInUse,
+bool Mob::TryProjectileAttack(Mob *who, const EQ::ItemData *item, EQ::skills::SkillType skillInUse,
 			      uint64 weapon_dmg, const EQ::ItemInstance *RangeWeapon,
 			      const EQ::ItemInstance *Ammo, int AmmoSlot, float speed, bool DisableProcs)
 {
-	if (!other)
+	if (!who)
 		return false;
 
 	int slot = -1;
@@ -996,7 +996,7 @@ bool Mob::TryProjectileAttack(Mob *other, const EQ::ItemData *item, EQ::skills::
 		return false;
 
 	float distance_mod = 0.0f;
-	float distance = other->CalculateDistance(GetX(), GetY(), GetZ());
+	float distance = who->CalculateDistance(GetX(), GetY(), GetZ());
 
 	/*
 	New Distance Mod constant (7/25/21 update), modifier is needed to adjust slower speeds to have correct impact times at short distances.
@@ -1023,7 +1023,7 @@ bool Mob::TryProjectileAttack(Mob *other, const EQ::ItemData *item, EQ::skills::
 
 	ProjectileAtk[slot].increment = 1;
 	ProjectileAtk[slot].hit_increment = static_cast<uint16>(hit); // This projected hit time if target does NOT MOVE
-	ProjectileAtk[slot].target_id = other->GetID();
+	ProjectileAtk[slot].target_id = who->GetID();
 	ProjectileAtk[slot].wpn_dmg = weapon_dmg;
 	ProjectileAtk[slot].origin_x = GetX();
 	ProjectileAtk[slot].origin_y = GetY();
@@ -1043,7 +1043,7 @@ bool Mob::TryProjectileAttack(Mob *other, const EQ::ItemData *item, EQ::skills::
 	SetProjectileAttack(true);
 
 	if (item)
-		SendItemAnimation(other, item, skillInUse, speed);
+		SendItemAnimation(who, item, skillInUse, speed);
 
 	return true;
 }
@@ -1149,17 +1149,17 @@ void Mob::ProjectileAttack()
 		SetProjectileAttack(false);
 }
 
-float Mob::GetRangeDistTargetSizeMod(Mob* other)
+float Mob::GetRangeDistTargetSizeMod(Mob* who)
 {
 	/*
 	Range is enforced client side, therefore these numbers do not need to be 100% accurate just close enough to
 	prevent any exploitation. The range mod changes in some situations depending on if size is from spawn or from SendIllusionPacket changes.
 	At present time only calculate from spawn (it is no consistent what happens to the calc when changing it after spawn).
 	*/
-	if (!other)
+	if (!who)
 		return 0.0f;
 
-	float tsize = other->GetSize();
+	float tsize = who->GetSize();
 
 	if (GetSize() > tsize)
 		tsize = GetSize();
@@ -1188,9 +1188,9 @@ float Mob::GetRangeDistTargetSizeMod(Mob* other)
 	return (mod + 2.0f); //Add 2.0f as buffer to prevent any chance of failures, client enforce range check regardless.
 }
 
-void NPC::RangedAttack(Mob *other)
+void NPC::RangedAttack(Mob *who)
 {
-	if (!other)
+	if (!who)
 		return;
 	// make sure the attack and ranged timers are up
 	// if the ranged timer is disabled, then they have no ranged weapon and shouldent be attacking anyhow
@@ -1204,7 +1204,7 @@ void NPC::RangedAttack(Mob *other)
 	if (!HasBowAndArrowEquipped() && !GetSpecialAbility(SPECATK_RANGED_ATK))
 		return;
 
-	if (!CheckLosFN(other))
+	if (!CheckLosFN(who))
 		return;
 
 	int attacks = 1;
@@ -1227,32 +1227,32 @@ void NPC::RangedAttack(Mob *other)
 	min_range *= min_range;
 
 	for (int i = 0; i < attacks; ++i) {
-		if (DistanceSquared(m_Position, other->GetPosition()) > max_range)
+		if (DistanceSquared(m_Position, who->GetPosition()) > max_range)
 			return;
-		else if (DistanceSquared(m_Position, other->GetPosition()) < min_range)
+		else if (DistanceSquared(m_Position, who->GetPosition()) < min_range)
 			return;
 
-		if (!other || !IsAttackAllowed(other) || IsCasting() || DivineAura() || IsStunned() || IsFeared() ||
+		if (!who || !IsAttackAllowed(who) || IsCasting() || DivineAura() || IsStunned() || IsFeared() ||
 		    IsMezzed() || (GetAppearance() == eaDead)) {
 			return;
 		}
 
-		FaceTarget(other);
+		FaceTarget(who);
 
-		DoRangedAttackDmg(other);
+		DoRangedAttackDmg(who);
 
 		CommonBreakInvisibleFromCombat();
 	}
 }
 
-void NPC::DoRangedAttackDmg(Mob* other, bool Launch, int16 damage_mod, int16 chance_mod, EQ::skills::SkillType skill, float speed, const char *IDFile)
+void NPC::DoRangedAttackDmg(Mob* who, bool Launch, int16 damage_mod, int16 chance_mod, EQ::skills::SkillType skill, float speed, const char *IDFile)
 {
-	if ((other == nullptr ||
-		(other->HasDied())) ||
+	if ((who == nullptr ||
+		(who->HasDied())) ||
 		HasDied() ||
-		(!IsAttackAllowed(other)) ||
-		(other->GetInvul() ||
-		other->GetSpecialAbility(IMMUNE_MELEE)))
+		(!IsAttackAllowed(who)) ||
+		(who->GetInvul() ||
+		who->GetSpecialAbility(IMMUNE_MELEE)))
 	{
 		return;
 	}
@@ -1271,11 +1271,11 @@ void NPC::DoRangedAttackDmg(Mob* other, bool Launch, int16 damage_mod, int16 cha
 		else if (GetAmmoIDfile())
 			ammo = GetAmmoIDfile();
 
-		ProjectileAnimation(other, 0,false,speed,0,0,0,ammo,skillInUse);
+		ProjectileAnimation(who, 0,false,speed,0,0,0,ammo,skillInUse);
 
 		if (RuleB(Combat, ProjectileDmgOnImpact))
 		{
-			TryProjectileAttack(other, nullptr, skillInUse, damage_mod, nullptr, nullptr, 0, speed);
+			TryProjectileAttack(who, nullptr, skillInUse, damage_mod, nullptr, nullptr, 0, speed);
 			return;
 		}
 	}
@@ -1300,18 +1300,18 @@ void NPC::DoRangedAttackDmg(Mob* other, bool Launch, int16 damage_mod, int16 cha
 	my_hit.tohit = GetTotalToHit(my_hit.skill, chance_mod);
 	my_hit.hand = EQ::invslot::slotRange;
 
-	DoAttack(other, my_hit);
+	DoAttack(who, my_hit);
 
 	TotalDmg = my_hit.damage_done;
 
 	if (my_hit.damage_done > 0) {
 		my_hit.damage_done += my_hit.damage_done * damage_mod / 100;
-		other->AddToHateList(this, my_hit.damage_done, 0);
+		who->AddToHateList(this, my_hit.damage_done, 0);
 	} else {
-		other->AddToHateList(this, 0, 0);
+		who->AddToHateList(this, 0, 0);
 	}
 
-	other->Damage(this, my_hit.damage_done, SPELL_UNKNOWN, skillInUse);
+	who->Damage(this, my_hit.damage_done, SPELL_UNKNOWN, skillInUse);
 
 	//Pyrelight Custom Code - Send info about the hSTA/hSTR damage modification to clients
 	if (my_hit.damage_done > my_hit.original_damage && my_hit.original_damage > 0 && my_hit.damage_done > 0) {
@@ -1322,24 +1322,24 @@ void NPC::DoRangedAttackDmg(Mob* other, bool Launch, int16 damage_mod, int16 cha
 	}
 
 	//try proc on hits and misses
-	if (other && !other->HasDied()) {
-		TrySpellProc(nullptr, (const EQ::ItemData*)nullptr, other, EQ::invslot::slotRange);
+	if (who && !who->HasDied()) {
+		TrySpellProc(nullptr, (const EQ::ItemData*)nullptr, who, EQ::invslot::slotRange);
 	}
 
-	TryCastOnSkillUse(other, skillInUse);
+	TryCastOnSkillUse(who, skillInUse);
 
-	if (HasSkillProcs() && other && !other->HasDied()) {
-		TrySkillProc(other, skillInUse, 0, false, EQ::invslot::slotRange);
+	if (HasSkillProcs() && who && !who->HasDied()) {
+		TrySkillProc(who, skillInUse, 0, false, EQ::invslot::slotRange);
 	}
 
-	if (HasSkillProcSuccess() && other && !other->HasDied()) {
-		TrySkillProc(other, skillInUse, 0, true, EQ::invslot::slotRange);
+	if (HasSkillProcSuccess() && who && !who->HasDied()) {
+		TrySkillProc(who, skillInUse, 0, true, EQ::invslot::slotRange);
 	}
 }
 
-void Client::ThrowingAttack(Mob* other, bool CanDoubleAttack) { //old was 51
+void Client::ThrowingAttack(Mob* who, bool CanDoubleAttack) { //old was 51
 	//conditions to use an attack checked before we are called
-	if (!other)
+	if (!who)
 		return;
 	//make sure the attack and ranged timers are up
 	//if the ranged timer is disabled, then they have no ranged weapon and shouldent be attacking anyhow
@@ -1366,7 +1366,7 @@ void Client::ThrowingAttack(Mob* other, bool CanDoubleAttack) { //old was 51
 		return;
 	}
 
-	LogCombat("Throwing [{}] ([{}]) at [{}]", item->Name, item->ID, other->GetName());
+	LogCombat("Throwing [{}] ([{}]) at [{}]", item->Name, item->ID, who->GetName());
 
 	if(RangeWeapon->GetCharges() == 1) {
 		//first check ammo
@@ -1388,10 +1388,10 @@ void Client::ThrowingAttack(Mob* other, bool CanDoubleAttack) { //old was 51
 		}
 	}
 
-	float range = item->Range + GetRangeDistTargetSizeMod(other);
+	float range = item->Range + GetRangeDistTargetSizeMod(who);
 	LogCombat("Calculated bow range to be [{}]", range);
 	range *= range;
-	float dist = DistanceSquared(m_Position, other->GetPosition());
+	float dist = DistanceSquared(m_Position, who->GetPosition());
 	if(dist > range) {
 		LogCombat("Throwing attack out of range client should catch this. ([{}] > [{}]).\n", dist, range);
 		MessageString(Chat::Red,TARGET_OUT_OF_RANGE);//Client enforces range and sends the message, this is a backup just incase.
@@ -1402,7 +1402,7 @@ void Client::ThrowingAttack(Mob* other, bool CanDoubleAttack) { //old was 51
 		return;
 	}
 
-	if(!IsAttackAllowed(other) ||
+	if(!IsAttackAllowed(who) ||
 		(IsCasting() && GetClass() != BARD) ||
 		IsSitting() ||
 		(DivineAura() && !GetGM()) ||
@@ -1413,7 +1413,7 @@ void Client::ThrowingAttack(Mob* other, bool CanDoubleAttack) { //old was 51
 		return;
 	}
 
-	DoThrowingAttackDmg(other, RangeWeapon, item, 0, 0, 0, 0, 0,ammo_slot);
+	DoThrowingAttackDmg(who, RangeWeapon, item, 0, 0, 0, 0, 0,ammo_slot);
 
 	// Consume Ammo, unless Ammo Consumption is disabled
 	if (RuleB(Combat, ThrowingConsumesAmmo)) {
@@ -1426,13 +1426,13 @@ void Client::ThrowingAttack(Mob* other, bool CanDoubleAttack) { //old was 51
 	CommonBreakInvisibleFromCombat();
 }
 
-void Mob::DoThrowingAttackDmg(Mob *other, const EQ::ItemInstance *RangeWeapon, const EQ::ItemData *AmmoItem,
+void Mob::DoThrowingAttackDmg(Mob *who, const EQ::ItemInstance *RangeWeapon, const EQ::ItemData *AmmoItem,
 	int32 weapon_damage, int16 chance_mod, int16 focus, int ReuseTime, uint32 range_id,
 	int AmmoSlot, float speed, bool DisableProcs)
 {
-	if ((other == nullptr ||
-		((IsClient() && CastToClient()->dead) || (other->IsClient() && other->CastToClient()->dead)) ||
-		HasDied() || (!IsAttackAllowed(other)) || (other->GetInvul() || other->GetSpecialAbility(IMMUNE_MELEE)))) {
+	if ((who == nullptr ||
+		((IsClient() && CastToClient()->dead) || (who->IsClient() && who->CastToClient()->dead)) ||
+		HasDied() || (!IsAttackAllowed(who)) || (who->GetInvul() || who->GetSpecialAbility(IMMUNE_MELEE)))) {
 		return;
 	}
 
@@ -1466,23 +1466,23 @@ void Mob::DoThrowingAttackDmg(Mob *other, const EQ::ItemInstance *RangeWeapon, c
 		}
 	}
 	else if (AmmoItem) {
-		SendItemAnimation(other, AmmoItem, EQ::skills::SkillThrowing);
+		SendItemAnimation(who, AmmoItem, EQ::skills::SkillThrowing);
 	}
 
-	LogCombat("Throwing attack hit [{}]", other->GetName());
+	LogCombat("Throwing attack hit [{}]", who->GetName());
 
 	int WDmg = 0;
 
 	if (!weapon_damage) {
 		if (IsOfClientBot() && RangeWeapon) {
-			WDmg = GetWeaponDamage(other, RangeWeapon);
+			WDmg = GetWeaponDamage(who, RangeWeapon);
 		}
 		else if (AmmoItem) {
-			WDmg = GetWeaponDamage(other, AmmoItem);
+			WDmg = GetWeaponDamage(who, AmmoItem);
 		}
 
 		if (LaunchProjectile) {
-			TryProjectileAttack(other, AmmoItem, EQ::skills::SkillThrowing, WDmg, RangeWeapon,
+			TryProjectileAttack(who, AmmoItem, EQ::skills::SkillThrowing, WDmg, RangeWeapon,
 				nullptr, AmmoSlot, speed);
 			return;
 		}
@@ -1508,7 +1508,7 @@ void Mob::DoThrowingAttackDmg(Mob *other, const EQ::ItemInstance *RangeWeapon, c
 		my_hit.tohit = GetTotalToHit(my_hit.skill, chance_mod);
 		my_hit.hand = EQ::invslot::slotRange;
 
-		DoAttack(other, my_hit);
+		DoAttack(who, my_hit);
 		TotalDmg = my_hit.damage_done;
 
 		LogCombat("Item DMG [{}]. Hit for damage [{}]", WDmg, TotalDmg);
@@ -1518,33 +1518,33 @@ void Mob::DoThrowingAttackDmg(Mob *other, const EQ::ItemInstance *RangeWeapon, c
 	}
 
 	if (IsClient() && !CastToClient()->GetFeigned()) {
-		other->AddToHateList(this, WDmg, 0);
+		who->AddToHateList(this, WDmg, 0);
 	}
 
-	other->Damage(this, TotalDmg, SPELL_UNKNOWN, EQ::skills::SkillThrowing);
+	who->Damage(this, TotalDmg, SPELL_UNKNOWN, EQ::skills::SkillThrowing);
 
-	if (!DisableProcs && other && !other->HasDied()) {
-		TryCombatProcs(RangeWeapon, other, EQ::invslot::slotRange, last_ammo_used);
+	if (!DisableProcs && who && !who->HasDied()) {
+		TryCombatProcs(RangeWeapon, who, EQ::invslot::slotRange, last_ammo_used);
 	}
 
-	TryCastOnSkillUse(other, EQ::skills::SkillThrowing);
+	TryCastOnSkillUse(who, EQ::skills::SkillThrowing);
 
 	if (!DisableProcs) {
-		if (HasSkillProcs() && other && !other->HasDied()) {
+		if (HasSkillProcs() && who && !who->HasDied()) {
 			if (ReuseTime) {
-				TrySkillProc(other, EQ::skills::SkillThrowing, ReuseTime);
+				TrySkillProc(who, EQ::skills::SkillThrowing, ReuseTime);
 			}
 			else {
-				TrySkillProc(other, EQ::skills::SkillThrowing, 0, false, EQ::invslot::slotRange);
+				TrySkillProc(who, EQ::skills::SkillThrowing, 0, false, EQ::invslot::slotRange);
 			}
 		}
 
-		if (HasSkillProcSuccess() && other && !other->HasDied()) {
+		if (HasSkillProcSuccess() && who && !who->HasDied()) {
 			if (ReuseTime) {
-				TrySkillProc(other, EQ::skills::SkillThrowing, ReuseTime, true);
+				TrySkillProc(who, EQ::skills::SkillThrowing, ReuseTime, true);
 			}
 			else {
-				TrySkillProc(other, EQ::skills::SkillThrowing, 0, true, EQ::invslot::slotRange);
+				TrySkillProc(who, EQ::skills::SkillThrowing, 0, true, EQ::invslot::slotRange);
 			}
 		}
 	}
@@ -2284,10 +2284,10 @@ int Mob::TryAssassinate(Mob *defender, EQ::skills::SkillType skillInUse)
 	return 0;
 }
 
-void Mob::DoMeleeSkillAttackDmg(Mob *other, int32 weapon_damage, EQ::skills::SkillType skillinuse, int16 chance_mod,
+void Mob::DoMeleeSkillAttackDmg(Mob *who, int32 weapon_damage, EQ::skills::SkillType skillinuse, int16 chance_mod,
 				int16 focus, bool CanRiposte, int ReuseTime)
 {
-	if (!CanDoSpecialAttack(other)) {
+	if (!CanDoSpecialAttack(who)) {
 		return;
 	}
 
@@ -2339,7 +2339,7 @@ void Mob::DoMeleeSkillAttackDmg(Mob *other, int32 weapon_damage, EQ::skills::Ski
 			my_hit.min_damage = CastToNPC()->GetMinDamage();
 		}
 
-		DoAttack(other, my_hit);
+		DoAttack(who, my_hit);
 		damage = my_hit.damage_done;
 	} else {
 		damage = DMG_INVULNERABLE;
@@ -2349,31 +2349,31 @@ void Mob::DoMeleeSkillAttackDmg(Mob *other, int32 weapon_damage, EQ::skills::Ski
 		skillinuse = EQ::skills::SkillTigerClaw; //'strike' your opponent - Arbitrary choice for message.
 	}
 
-	other->AddToHateList(this, hate, 0);
-	other->Damage(this, damage, SPELL_UNKNOWN, skillinuse);
+	who->AddToHateList(this, hate, 0);
+	who->Damage(this, damage, SPELL_UNKNOWN, skillinuse);
 
 	if (HasDied()) {
 		return;
 	}
 
-	TryCastOnSkillUse(other, skillinuse);
+	TryCastOnSkillUse(who, skillinuse);
 }
 
-bool Mob::CanDoSpecialAttack(Mob *other) {
+bool Mob::CanDoSpecialAttack(Mob *who) {
 	//Make sure everything is valid before doing any attacks.
-	if (!other) {
+	if (!who) {
 		SetTarget(nullptr);
 		return false;
 	}
 
 	if(!GetTarget())
-		SetTarget(other);
+		SetTarget(who);
 
-	if ((other == nullptr || ((IsClient() && CastToClient()->dead) || (other->IsClient() && other->CastToClient()->dead)) || HasDied() || (!IsAttackAllowed(other)))) {
+	if ((who == nullptr || ((IsClient() && CastToClient()->dead) || (who->IsClient() && who->CastToClient()->dead)) || HasDied() || (!IsAttackAllowed(who)))) {
 		return false;
 	}
 
-	if(other->GetInvul() || other->GetSpecialAbility(IMMUNE_MELEE))
+	if(who->GetInvul() || who->GetSpecialAbility(IMMUNE_MELEE))
 		return false;
 
 	return true;
