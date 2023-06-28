@@ -5041,7 +5041,7 @@ bool Mob::TryCriticalHit(Mob *defender, DamageHitInfo &hit, ExtraAttackOptions *
 	LuaParser::Instance()->TryCriticalHit(this, defender, hit, opts, ignoreDefault);
 
 	if (ignoreDefault) {
-		return;
+		return false;
 	}
 #endif
 
