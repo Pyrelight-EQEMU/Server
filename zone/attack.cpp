@@ -5059,6 +5059,7 @@ bool Mob::TryPetCriticalHit(Mob *defender, DamageHitInfo &hit)
 			critMod += GetCritDmgMod(hit.skill, owner);
 			hit.damage_done += 5;
 			hit.damage_done = (hit.damage_done * critMod) / 100;
+			hit.original_damage = (hit.original_damage * critMod) / 100;
 
 			entity_list.FilteredMessageCloseString(
 				this, /* Sender */
@@ -5115,7 +5116,9 @@ bool Mob::TryCriticalHit(Mob *defender, DamageHitInfo &hit, ExtraAttackOptions *
 				int SlayDmgBonus = std::max(
 				{aabonuses.SlayUndead[SBIndex::SLAYUNDEAD_DMG_MOD], itembonuses.SlayUndead[SBIndex::SLAYUNDEAD_DMG_MOD], spellbonuses.SlayUndead[SBIndex::SLAYUNDEAD_DMG_MOD] });
 				hit.damage_done = std::max(hit.damage_done, hit.base_damage) + 5;
+				hit.original_damage = std::max(hit.original_damage, hit.base_damage) + 5;
 				hit.damage_done = (hit.damage_done * SlayDmgBonus) / 100;
+				hit.original_damage = (hit.original_damage * SlayDmgBonus) / 100;
 
 				entity_list.FilteredMessageCloseString(
 					this, /* Sender */
@@ -5126,7 +5129,7 @@ bool Mob::TryCriticalHit(Mob *defender, DamageHitInfo &hit, ExtraAttackOptions *
 					(GetGender() == 1) ? FEMALE_SLAYUNDEAD : MALE_SLAYUNDEAD, /* MessageFormat: %1's holy blade cleanses his target!(%2)  */
 					0,
 					GetCleanName(), /* Message1 */
-					itoa(hit.damage_done + hit.min_damage) /* Message2 */
+					itoa(hit.damage_done) /* Message2 */
 				);
 
 				return true;
@@ -5178,13 +5181,16 @@ bool Mob::TryCriticalHit(Mob *defender, DamageHitInfo &hit, ExtraAttackOptions *
 
 			// step 2: calculate damage
 			hit.damage_done = std::max(hit.damage_done, hit.base_damage) + 5;
+			hit.original_damage = std::max(hit.original_damage, hit.base_damage) + 5;
 			int og_damage = hit.damage_done;
+			int og_damage2 = hit.original_damage;
 			int crit_mod = 170 + GetCritDmgMod(hit.skill);
 			if (crit_mod < 100) {
 				crit_mod = 100;
 			}
 
 			hit.damage_done = (hit.damage_done * crit_mod) / 100;
+			hit.original_damage = (hit.original_damage * crit_mod) / 100;
 			LogCombat("Crit success roll [{}] dex chance [{}] og dmg [{}] crit_mod [{}] new dmg [{}]", roll, dex_bonus, og_damage, crit_mod, hit.damage_done);
 
 			// step 3: check deadly strike
@@ -5199,6 +5205,7 @@ bool Mob::TryCriticalHit(Mob *defender, DamageHitInfo &hit, ExtraAttackOptions *
 							return true;
 						}
 						hit.damage_done = hit.damage_done * 200 / 100;
+						hit.original_damage = hit.original_damage * 200 / 100;
 
 						entity_list.FilteredMessageCloseString(
 							this, /* Sender */
@@ -5227,6 +5234,7 @@ bool Mob::TryCriticalHit(Mob *defender, DamageHitInfo &hit, ExtraAttackOptions *
 
 			if (IsBerserk() || berserk) {
 				hit.damage_done += og_damage * 119 / 100;
+				hit.original_damage += og_damage2 * 119 / 100;
 				LogCombat("Crip damage [{}]", hit.damage_done);
 
 				entity_list.FilteredMessageCloseString(
@@ -5238,7 +5246,7 @@ bool Mob::TryCriticalHit(Mob *defender, DamageHitInfo &hit, ExtraAttackOptions *
 					CRIPPLING_BLOW, /* MessageFormat: %1 lands a Crippling Blow!(%2) */
 					0,
 					GetCleanName(), /* Message1 */
-					itoa(hit.damage_done + hit.min_damage) /* Message2 */
+					itoa(hit.damage_done) /* Message2 */
 				);
 
 				// Crippling blows also have a chance to stun
