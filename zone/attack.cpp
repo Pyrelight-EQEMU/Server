@@ -5981,14 +5981,14 @@ void Mob::CommonOutgoingHitSuccess(Mob* defender, DamageHitInfo &hit, ExtraAttac
 
 	bool crit = TryCriticalHit(defender, hit, opts);
 
-	while (RuleR(Character, Pyrelight_hDEX_CriticalReroll) && effective_hDEX && !crit) {
+	while (RuleR(Character, Pyrelight_hDEX_CriticalReroll) && effective_hDEX > 0 && !crit) {
 		auto random = zone->random.Int(1,100);
 		if (random <= (effective_hDEX * RuleR(Character, Pyrelight_hDEX_CriticalReroll))) {
-			if (GetOwner() && GetOwner()->CastToClient()->GetAccountFlag("filter_hSTA") != "off") {
+			if (GetOwner() && GetOwner()->CastToClient()->GetAccountFlag("filter_hDEX") != "off") {
 				GetOwner()->Message(Chat::OtherHitOther, "Your pet failed to land a critical hit, but your Heroic Dexterity gives it another chance!");
 			}
-			else if (IsClient() && CastToClient()->GetAccountFlag("filter_hSTA") != "off") {
-				Message(Chat::OtherHitYou, "You failed to land a critical hit, but your Heroic Dexterity gives you another chance!");
+			else if (IsClient() && CastToClient()->GetAccountFlag("filter_hDEX") != "off") {
+				Message(Chat::YouHitOther, "You failed to land a critical hit, but your Heroic Dexterity gives you another chance!");
 			}
 		}
 		effective_hDEX -= random;
