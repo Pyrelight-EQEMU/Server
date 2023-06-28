@@ -5069,7 +5069,7 @@ bool Mob::TryPetCriticalHit(Mob *defender, DamageHitInfo &hit)
 				CRITICAL_HIT, /* MessageFormat: %1 scores a critical hit! (%2) */
 				0,
 				GetCleanName(), /* Message1 */
-				itoa(hit.damage_done + hit.min_damage) /* Message2 */
+				itoa(hit.damage_done) /* Message2 */
 			);
 			return true;
 		}
@@ -5209,7 +5209,7 @@ bool Mob::TryCriticalHit(Mob *defender, DamageHitInfo &hit, ExtraAttackOptions *
 							CRITICAL_HIT, /* MessageFormat: %1 scores a critical hit! (%2) */
 							0,
 							GetCleanName(), /* Message1 */
-							itoa(hit.damage_done + hit.min_damage) /* Message2 */
+							itoa(hit.damage_done) /* Message2 */
 						);
 						return true;
 					}
@@ -5261,7 +5261,7 @@ bool Mob::TryCriticalHit(Mob *defender, DamageHitInfo &hit, ExtraAttackOptions *
 				CRITICAL_HIT, /* MessageFormat: %1 scores a critical hit! (%2) */
 				0,
 				GetCleanName(), /* Message1 */
-				itoa(hit.damage_done + hit.min_damage) /* Message2 */
+				itoa(hit.damage_done) /* Message2 */
 			);
 
 			return true;
