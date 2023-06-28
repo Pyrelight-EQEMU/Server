@@ -4981,7 +4981,7 @@ void Mob::TrySpellProc(const EQ::ItemInstance *inst, const EQ::ItemData *weapon,
 bool Mob::TryPetCriticalHit(Mob *defender, DamageHitInfo &hit)
 {
 	if (hit.damage_done < 1)
-		return;
+		return false;
 
 	// Allows pets to perform critical hits.
 	// Each rank adds an additional 1% chance for any melee hit (primary, secondary, kick, bash, etc) to critical,
@@ -5983,11 +5983,11 @@ void Mob::CommonOutgoingHitSuccess(Mob* defender, DamageHitInfo &hit, ExtraAttac
 
 	while (RuleR(Character, Pyrelight_hDEX_CriticalReroll) && effective_hDEX && !crit) {
 		auto random = zone->random.Int(1,100);
-		if (random <= (effective_hAGI * RuleR(Character, Pyrelight_hDEX_CriticalReroll))) {
+		if (random <= (effective_hDEX * RuleR(Character, Pyrelight_hDEX_CriticalReroll))) {
 			if (GetOwner() && GetOwner()->CastToClient()->GetAccountFlag("filter_hSTA") != "off") {
 				GetOwner()->Message(Chat::OtherHitOther, "Your pet failed to land a critical hit, but your Heroic Dexterity gives it another chance!");
 			}
-			else if (GetAccountFlag("filter_hSTA") != "off") {
+			else if (IsClient() && CastToClient()->GetAccountFlag("filter_hSTA") != "off") {
 				Message(Chat::OtherHitYou, "You failed to land a critical hit, but your Heroic Dexterity gives you another chance!");
 			}
 		}
