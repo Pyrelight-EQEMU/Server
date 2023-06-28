@@ -2378,7 +2378,7 @@ bool NPC::Attack(Mob* other, int Hand, bool bRiposte, bool IsStrikethrough, bool
 										my_hit.damage_done - my_hit.original_damage, 
 										my_hit.original_damage, 
 										increase_percentage);
-				} else if (GetAccountFlag("filter_hSTR") != "off") {
+				} else if (CastToClient()->GetAccountFlag("filter_hSTR") != "off") {
 					Message(Chat::YouHitOther, 
 						    "The damage of your strike was increased by %i from %i (%i%%) by the influence of your Heroic Strength.", 
 							my_hit.damage_done - my_hit.original_damage,
@@ -2395,7 +2395,7 @@ bool NPC::Attack(Mob* other, int Hand, bool bRiposte, bool IsStrikethrough, bool
 											   my_hit.original_damage - my_hit.damage_done,
 											   my_hit.original_damage,
 											   reduction_percentage);
-				} else if (other->GetAccountFlag("filter_hSTA") != "off") {
+				} else if (other->CastToClient()->GetAccountFlag("filter_hSTA") != "off") {
 					other->Message(Chat::OtherHitYou, 
 						    	   "The damage dealt to you was reduced by %i from %i (%i%%) by the influence of your Heroic Stamina.", 
 									my_hit.damage_done - my_hit.original_damage,
