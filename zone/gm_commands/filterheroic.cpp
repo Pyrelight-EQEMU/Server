@@ -4,43 +4,38 @@
 
 void command_filterheroic(Client *c, const Seperator *sep)
 {
-	const auto arguments = sep->argnum;
+    const auto arguments = sep->argnum;
     if (!arguments) {
-        c->Message(Chat::White, "Command Syntax: #[filterheroic] - [str|sta|dex|agi|int|wis|cha] [on|off (optional)] - Set or toggle the visibility of additional info about heroic stat effects.");
+        c->Message(Chat::White, "Command Syntax: #[filterheroic] - [str|sta|dex|agi|int|wis|cha|all] [on|off] - Set the visibility of additional info about heroic stat effects.");
         return;
+    } 
+
+    std::map<std::string, std::string> statMap = {
+        {"str", "filter_hSTR"},
+        {"sta", "filter_hSTA"},
+        {"dex", "filter_hDEX"},
+        {"agi", "filter_hAGI"},
+        {"int", "filter_hINT"},
+        {"wis", "filter_hWIS"},
+        {"cha", "filter_hCHA"},
+    };
+	std::string flagSuffix = Strings::ToLower(sep->arg[2]);
+
+    if (Strings::ToLower(sep->arg[1]) == "all") {
+		if (flagSuffix != "on" && flagSuffix != "off") {
+			c->Message(Chat::White, "Error: You must specify [on|off] for [all] command.");
+			return;
+		}
+
+        for (auto& stat : statMap) {
+            c->SetAccountFlag(stat.second, flagSuffix);
+        }
     } else {
-		LogDebug("[{}] [{}] [{}]", sep->arg[0], sep->arg[1], sep->arg[2]);
-
-        std::map<std::string, std::function<void()>> statMap = {
-			{"str", [&](){ 
-				if (Strings::ToLower(sep->arg[2]) == "on") {
-					c->SetAccountFlag("filter_hSTR", "on");
-				} else if (Strings::ToLower(sep->arg[2]) == "off") {
-					c->SetAccountFlag("filter_hSTR", "off");
-				} else {
-					//toggle flag
-					std::string currentFlag = c->GetAccountFlag("filter_hSTR_" + c->GetID());
-					if (currentFlag == "off" || currentFlag.empty()) {
-						c->SetAccountFlag("filter_hSTR", "on");
-					} else {
-						c->SetAccountFlag("filter_hSTR", "off");
-					}
-				}
-			}},
-            {"sta", [](){ /* handle case STA */ }},
-            {"dex", [](){ /* handle case DEX */ }},
-            {"agi", [](){ /* handle case AGI */ }},
-            {"int", [](){ /* handle case INT */ }},
-            {"wis", [](){ /* handle case WIS */ }},
-            {"cha", [](){ /* handle case CHA */ }}
-        };
-
-        auto statFunction = statMap.find(Strings::ToLower(sep->arg[1]));
-
-        if (statFunction != statMap.end()) {
-            statFunction->second();
+        auto statIt = statMap.find(Strings::ToLower(sep->arg[1]));
+        if (statIt != statMap.end()) {
+            c->SetAccountFlag(statIt->second, flagSuffix);
         } else {
-            c->Message(Chat::White, "Command Syntax: #[filterheroic] - [str|sta|dex|agi|int|wis|cha] [on|off (optional)] - Set or toggle the visibility of additional info about heroic stat effects.");
+            c->Message(Chat::White, "Command Syntax: #[filterheroic] - [str|sta|dex|agi|int|wis|cha|all] [on|off] - Set the visibility of additional info about heroic stat effects.");
         }
     }
 }
