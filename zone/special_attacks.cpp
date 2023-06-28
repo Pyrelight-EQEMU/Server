@@ -276,7 +276,7 @@ void Mob::DoSpecialAttackDamage(Mob *who, EQ::skills::SkillType skill, int32 bas
 		if (GetOwner()->IsClient() && GetOwner()->CastToClient()->GetAccountFlag("filter_hSTR") != "off" && IsPetOwnerClient() && GetOwner()) {
 			GetOwner()->Message(Chat::OtherHitOther, "(Increased by %i%% (%i) from %i by owner's Heroic Strength)", increase_percentage, my_hit.damage_done - my_hit.original_damage, my_hit.original_damage);
 		}
-		if IsClient() && CastToClient()->GetAccountFlag("filter_hSTR") != "off") {
+		if (IsClient() && CastToClient()->GetAccountFlag("filter_hSTR") != "off") {
 			Message(Chat::YouHitOther, "(Increased by %i%% (%i) from %i by your Heroic Strength)", increase_percentage, my_hit.damage_done - my_hit.original_damage, my_hit.original_damage);
 		}
 	}
