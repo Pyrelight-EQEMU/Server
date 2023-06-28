@@ -268,10 +268,11 @@ int64 Mob::GetActDoTDamage(uint16 spell_id, int64 value, Mob* target, bool from_
 	if (spells[spell_id].override_crit_chance > 0 && chance > spells[spell_id].override_crit_chance)
 		chance = spells[spell_id].override_crit_chance;
 
+	bool Critical = false;
 	if (chance > 0) {
 		// Pyrelight Custom Code - Reroll the crit dots
 		int effective_hDEX = GetHeroicDEX();
-		bool Critical = zone->random.Roll(chance);
+		Critical = zone->random.Roll(chance);
 		while (RuleR(Character, Pyrelight_hDEX_CriticalReroll) && effective_hDEX > 0 && !Critical) {
 			if (IsClient() && CastToClient()->GetAccountFlag("filter_hDEX") != "off") {
 				Message(Chat::Spells, "Your DoT effect fails to be critically effective, but your Heroic Dexterity gives you another chance!");
@@ -436,14 +437,14 @@ int64 Mob::GetActSpellHealing(uint16 spell_id, int64 value, Mob* target, bool fr
 
 		// Pyrelight Custom Code - Reroll the crit dots
 		int effective_hDEX = GetHeroicDEX();
-		bool Critical = zone->random.Roll(chance);
+		bool Critical = zone->random.Roll(critical_chance);
 		while (RuleR(Character, Pyrelight_hDEX_CriticalReroll) && effective_hDEX > 0 && !Critical) {
 			if (IsClient() && CastToClient()->GetAccountFlag("filter_hDEX") != "off") {
 				Message(Chat::Spells, "Your heal fails to be critically effective, but your Heroic Dexterity gives you another chance!");
 			}
 			auto random = zone->random.Int(1,100);
 			if (random <= (effective_hDEX * RuleR(Character, Pyrelight_hDEX_CriticalReroll))) {
-				Critical = zone->random.Roll(chance);
+				Critical = zone->random.Roll(critical_chance);
 				effective_hDEX -= random * 3;
 			} else {
 				break;
