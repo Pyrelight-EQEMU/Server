@@ -4329,7 +4329,9 @@ void Mob::CommonDamage(Mob* attacker, int64 &damage, const uint16 spell_id, cons
 						filter = FilterPetMisses;
 
 					if (!FromDamageShield)
+						a->source = owner->GetID();
 						owner->CastToClient()->QueuePacket(outapp, true, CLIENT_CONNECTED, filter);
+						a->Source = attacker->GetID();
 				}
 			}
 
