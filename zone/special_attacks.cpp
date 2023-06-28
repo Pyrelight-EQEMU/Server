@@ -853,6 +853,7 @@ void Mob::DoArcheryAttackDmg(Mob *other, const EQ::ItemInstance *RangeWeapon, co
 		WDmg += WDmg * focus / 100;
 	}
 
+	DamageHitInfo my_hit {};
 	if (WDmg > 0 || ADmg > 0) {
 		if (WDmg < 0) {
 			WDmg = 0;
@@ -875,8 +876,7 @@ void Mob::DoArcheryAttackDmg(Mob *other, const EQ::ItemInstance *RangeWeapon, co
 		if (MaxDmg == 0) {
 			MaxDmg = 1;
 		}
-
-		DamageHitInfo my_hit {};
+		
 		my_hit.base_damage = MaxDmg;
 		my_hit.min_damage = 0;
 		my_hit.damage_done = 1;
