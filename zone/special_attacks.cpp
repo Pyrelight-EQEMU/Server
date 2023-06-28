@@ -1399,7 +1399,7 @@ void Client::ThrowingAttack(Mob* other, bool CanDoubleAttack) { //old was 51
 
 	// Consume Ammo, unless Ammo Consumption is disabled
 	if (RuleB(Combat, ThrowingConsumesAmmo)) {
-		DeleteItemInInventory(ammo_slot, true);
+		DeleteItemInInventory(ammo_slot, 1, true);
 		LogCombat("Consumed Throwing Ammo from slot {}.", ammo_slot);
 	} else {
 		LogCombat("Throwing Ammo Consumption is disabled.");
