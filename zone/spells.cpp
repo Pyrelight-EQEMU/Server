@@ -1643,7 +1643,7 @@ void Mob::CastedSpellFinished(uint16 spell_id, uint32 target_id, CastingSlot slo
 		return;
 	}
 
-	if(IsOfClientBotMerc()) {
+	if(IsOfClientBotMerc() && slot <= CastingSlot::Gem12) {
 		TrySympatheticProc(target, spell_id);
 		int16 slots[] = {EQ::invslot::slotPrimary, EQ::invslot::slotSecondary, EQ::invslot::slotRange};
 		for(int16 slot : slots) { TryCombatProcs(GetInv().GetItem(slot), target); }
