@@ -4978,7 +4978,7 @@ void Mob::TrySpellProc(const EQ::ItemInstance *inst, const EQ::ItemData *weapon,
 	return;
 }
 
-void Mob::TryPetCriticalHit(Mob *defender, DamageHitInfo &hit)
+bool Mob::TryPetCriticalHit(Mob *defender, DamageHitInfo &hit)
 {
 	if (hit.damage_done < 1)
 		return;
@@ -4998,10 +4998,10 @@ void Mob::TryPetCriticalHit(Mob *defender, DamageHitInfo &hit)
 	else if ((IsNPC() && CastToNPC()->GetSwarmOwner()))
 		owner = entity_list.GetMobID(CastToNPC()->GetSwarmOwner());
 	else
-		return;
+		return false;
 
 	if (!owner)
-		return;
+		return false;
 
 	int CritPetChance =
 		owner->aabonuses.PetCriticalHit + owner->itembonuses.PetCriticalHit + owner->spellbonuses.PetCriticalHit;
@@ -5027,12 +5027,14 @@ void Mob::TryPetCriticalHit(Mob *defender, DamageHitInfo &hit)
 				GetCleanName(), /* Message1 */
 				itoa(hit.damage_done + hit.min_damage) /* Message2 */
 			);
-
+			return true;
 		}
 	}
+
+	return false;
 }
 
-void Mob::TryCriticalHit(Mob *defender, DamageHitInfo &hit, ExtraAttackOptions *opts)
+bool Mob::TryCriticalHit(Mob *defender, DamageHitInfo &hit, ExtraAttackOptions *opts)
 {
 #ifdef LUA_EQEMU
 	bool ignoreDefault = false;
@@ -5044,22 +5046,20 @@ void Mob::TryCriticalHit(Mob *defender, DamageHitInfo &hit, ExtraAttackOptions *
 #endif
 
 	if (hit.damage_done < 1 || !defender)
-		return;
+		return false;
 
 	// decided to branch this into it's own function since it's going to be duplicating a lot of the
 	// code in here, but could lead to some confusion otherwise
-	if ((IsPet() && GetOwner()->IsClient()) || (IsNPC() && CastToNPC()->GetSwarmOwner())) {
-		TryPetCriticalHit(defender, hit);
-		return;
+	if ((IsPet() && GetOwner()->IsClient()) || (IsNPC() && CastToNPC()->GetSwarmOwner())) {		
+		return TryPetCriticalHit(defender, hit);
 	}
 
-	if (IsPet() && GetOwner() && GetOwner()->IsBot()) {
-		TryPetCriticalHit(defender, hit);
-		return;
+	if (IsPet() && GetOwner() && GetOwner()->IsBot()) {		
+		return TryPetCriticalHit(defender, hit);
 	}
 
 	if (IsNPC() && !RuleB(Combat, NPCCanCrit))
-		return;
+		return false;
 
 	// 1: Try Slay Undead
 	if (defender->GetBodyType() == BT_Undead || defender->GetBodyType() == BT_SummonedUndead ||
@@ -5073,35 +5073,19 @@ void Mob::TryCriticalHit(Mob *defender, DamageHitInfo &hit, ExtraAttackOptions *
 				hit.damage_done = std::max(hit.damage_done, hit.base_damage) + 5;
 				hit.damage_done = (hit.damage_done * SlayDmgBonus) / 100;
 
-				/* Female */
-				if (GetGender() == 1) {
-					entity_list.FilteredMessageCloseString(
-						this, /* Sender */
-						false, /* Skip Sender */
-						RuleI(Range, CriticalDamage),
-						Chat::MeleeCrit, /* Type: 301 */
-						FilterMeleeCrits, /* FilterType: 12 */
-						FEMALE_SLAYUNDEAD, /* MessageFormat: %1's holy blade cleanses her target!(%2) */
-						0,
-						GetCleanName(), /* Message1 */
-						itoa(hit.damage_done + hit.min_damage) /* Message2 */
-					);
-				}
-				/* Males and Neuter */
-				else {
-					entity_list.FilteredMessageCloseString(
-						this, /* Sender */
-						false, /* Skip Sender */
-						RuleI(Range, CriticalDamage),
-						Chat::MeleeCrit, /* Type: 301 */
-						FilterMeleeCrits, /* FilterType: 12 */
-						MALE_SLAYUNDEAD, /* MessageFormat: %1's holy blade cleanses his target!(%2)  */
-						0,
-						GetCleanName(), /* Message1 */
-						itoa(hit.damage_done + hit.min_damage) /* Message2 */
-					);
-				}
-				return;
+				entity_list.FilteredMessageCloseString(
+					this, /* Sender */
+					false, /* Skip Sender */
+					RuleI(Range, CriticalDamage),
+					Chat::MeleeCrit, /* Type: 301 */
+					FilterMeleeCrits, /* FilterType: 12 */
+					(GetGender() == 1) ? FEMALE_SLAYUNDEAD : MALE_SLAYUNDEAD, /* MessageFormat: %1's holy blade cleanses his target!(%2)  */
+					0,
+					GetCleanName(), /* Message1 */
+					itoa(hit.damage_done + hit.min_damage) /* Message2 */
+				);
+
+				return true;
 			}
 		}
 	}
@@ -5146,7 +5130,7 @@ void Mob::TryCriticalHit(Mob *defender, DamageHitInfo &hit, ExtraAttackOptions *
 		if (roll < dex_bonus) {
 			// step 1: check for finishing blow
 			if (TryFinishingBlow(defender, hit.damage_done))
-				return;
+				return true;
 
 			// step 2: calculate damage
 			hit.damage_done = std::max(hit.damage_done, hit.base_damage) + 5;
@@ -5168,7 +5152,7 @@ void Mob::TryCriticalHit(Mob *defender, DamageHitInfo &hit, ExtraAttackOptions *
 						int assdmg = TryAssassinate(defender, hit.skill); // I don't think this is right
 						if (assdmg) {
 							hit.damage_done = assdmg;
-							return;
+							return true;
 						}
 						hit.damage_done = hit.damage_done * 200 / 100;
 
@@ -5183,7 +5167,7 @@ void Mob::TryCriticalHit(Mob *defender, DamageHitInfo &hit, ExtraAttackOptions *
 							GetCleanName(), /* Message1 */
 							itoa(hit.damage_done + hit.min_damage) /* Message2 */
 						);
-						return;
+						return true;
 					}
 				}
 			}
@@ -5220,7 +5204,7 @@ void Mob::TryCriticalHit(Mob *defender, DamageHitInfo &hit, ExtraAttackOptions *
 					defender->Emote("staggers.");
 					defender->Stun(2000);
 				}
-				return;
+				return true;
 			}
 
 			/* Normal Critical hit message */
@@ -5235,8 +5219,11 @@ void Mob::TryCriticalHit(Mob *defender, DamageHitInfo &hit, ExtraAttackOptions *
 				GetCleanName(), /* Message1 */
 				itoa(hit.damage_done + hit.min_damage) /* Message2 */
 			);
+
+			return true;
 		}
 	}
+	return false;
 }
 
 bool Mob::TryFinishingBlow(Mob *defender, int64 &damage)
@@ -5992,8 +5979,20 @@ void Mob::CommonOutgoingHitSuccess(Mob* defender, DamageHitInfo &hit, ExtraAttac
 
 	int effective_hDEX = std::ceil(((IsPetOwnerClient() && GetOwner()) ? std::ceil((1.0/3.0) * GetOwner()->GetHeroicDEX()) : GetHeroicDEX()) * RuleR(Character, Pyrelight_hDEX_CriticalReroll));
 
+	bool crit = TryCriticalHit(defender, hit, opts);
 
-	TryCriticalHit(defender, hit, opts);
+	while (RuleR(Character, Pyrelight_hDEX_CriticalReroll) && effective_hDEX && !crit) {
+		auto random = zone->random.Int(1,100);
+		if (random <= (effective_hAGI * RuleR(Character, Pyrelight_hDEX_CriticalReroll))) {
+			if (GetOwner() && GetOwner()->CastToClient()->GetAccountFlag("filter_hSTA") != "off") {
+				GetOwner()->Message(Chat::OtherHitOther, "Your pet failed to land a critical hit, but your Heroic Dexterity gives it another chance!");
+			}
+			else if (GetAccountFlag("filter_hSTA") != "off") {
+				Message(Chat::OtherHitYou, "You failed to land a critical hit, but your Heroic Dexterity gives you another chance!");
+			}
+		}
+		effective_hDEX -= random;
+	}
 
 	hit.damage_done += hit.min_damage;
 	if (IsOfClientBot()) {
