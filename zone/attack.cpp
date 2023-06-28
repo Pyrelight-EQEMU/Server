@@ -1725,13 +1725,12 @@ bool Mob::Attack(Mob* other, int Hand, bool bRiposte, bool IsStrikethrough, bool
 	other->Damage(this, my_hit.damage_done, SPELL_UNKNOWN, my_hit.skill, true, -1, false, m_specialattacks);
 
 	if (my_hit.damage_done > my_hit.original_damage && my_hit.original_damage > 0 && my_hit.damage_done > 0) {
-			LogDebug("Send a hSTR message to [{}] here", this->GetCleanName());
 			int increase_percentage = ((static_cast<float>(my_hit.damage_done) / static_cast<float>(my_hit.original_damage)) - 1) * 100;
 			if (IsClient()) {			
-				Message(Chat::YouHitOther, "(Increased by %i%% from %i by your Heroic Strength)", increase_percentage, my_hit.original_damage);
+				Message(Chat::YouHitOther, "(Increased by %i%% (%i) from %i by your Heroic Strength)", increase_percentage, my_hit.damage_done - my_hit.original_damage, my_hit.original_damage);
 			}
 			if (IsPetOwnerClient() && GetOwner()) {
-				GetOwner()->Message(Chat::OtherHitOther, "(Increased by %i%% from %i by owner's Heroic Strength)", increase_percentage, my_hit.original_damage);
+				GetOwner()->Message(Chat::OtherHitOther, "(Increased by %i%% (%i) from %i by owner's Heroic Strength)", my_hit.damage_done - my_hit.original_damage, increase_percentage, my_hit.original_damage);
 			}
 	}
 
@@ -2367,22 +2366,16 @@ bool NPC::Attack(Mob* other, int Hand, bool bRiposte, bool IsStrikethrough, bool
 	if (GetHP() > 0 && !other->HasDied()) {
 		other->Damage(this, my_hit.damage_done, SPELL_UNKNOWN, my_hit.skill, true, -1, false, m_specialattacks); // Not avoidable client already had thier chance to Avoid
 
-		//Pyrelight Custom Code - Send info about the hSTA damage reduction to clients
+		//Pyrelight Custom Code - Send info about the hSTA/hSTR damage modification to clients
 		if (my_hit.damage_done < my_hit.original_damage && my_hit.damage_done > 0 && my_hit.original_damage > 0) {
-			int reduction_percentage = (1 - static_cast<float>(my_hit.damage_done) / static_cast<float>(my_hit.original_damage)) * 100;
-			if (other->IsClient()) {			
-				other->Message(Chat::OtherHitYou, "(Reduced by %i%% from %i by your Heroic Stamina)", reduction_percentage, my_hit.original_damage);
-			}
+			int reduction_percentage = (1 - static_cast<float>(my_hit.damage_done) / static_cast<float>(my_hit.original_damage)) * 100;			
 			if (other->IsPetOwnerClient() && other->GetOwner()) {
-				other->GetOwner()->Message(Chat::OtherHitOther, "(Reduced by %i%% from %i by owner's Heroic Stamina)", reduction_percentage, my_hit.original_damage);
+				other->GetOwner()->Message(Chat::OtherHitOther, "(Reduced by %i%% (%i) from %i by owner's Heroic Stamina)", reduction_percentage, my_hit.original_damage - my_hit.damage_done, my_hit.original_damage);
 			}
-		}
-
-		if (my_hit.damage_done > my_hit.original_damage && my_hit.original_damage > 0 && my_hit.damage_done > 0) {
-			LogDebug("Send a hSTR message to [{}] here", this->GetCleanName());
+		} else if (my_hit.damage_done > my_hit.original_damage && my_hit.original_damage > 0 && my_hit.damage_done > 0) {
 			int increase_percentage = ((static_cast<float>(my_hit.damage_done) / static_cast<float>(my_hit.original_damage)) - 1) * 100;			
 			if (IsPetOwnerClient() && GetOwner()) {
-				GetOwner()->Message(Chat::OtherHitOther, "(Increased by %i%% from %i by owner's Heroic Strength)", increase_percentage, my_hit.original_damage);
+				GetOwner()->Message(Chat::OtherHitOther, "(Increased by %i%% (%i) from %i by owner's Heroic Strength)", increase_percentage, my_hit.damage_done - my_hit.original_damage, my_hit.original_damage);
 			}
 		}
 

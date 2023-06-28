@@ -262,16 +262,18 @@ void Mob::DoSpecialAttackDamage(Mob *who, EQ::skills::SkillType skill, int32 bas
 	who->AddToHateList(this, hate, 0);
 	who->Damage(this, my_hit.damage_done, SPELL_UNKNOWN, skill, false);
 
-		//Pyrelight Custom Code - Send info about the hSTA damage reduction to clients
-		if (my_hit.damage_done < my_hit.original_damage && my_hit.damage_done > 0 && my_hit.original_damage > 0) {
-			int reduction_percentage = (1 - static_cast<float>(my_hit.damage_done) / static_cast<float>(my_hit.original_damage)) * 100;
-			if (who->IsClient()) {			
-				who->Message(Chat::OtherHitYou, "(Reduced by %i%% from %i by your Heroic Stamina)", reduction_percentage, my_hit.original_damage);
-			}
-			if (who->IsPetOwnerClient() && who->GetOwner()) {
-				who->GetOwner()->Message(Chat::OtherHitOther, "(Reduced by %i%% from %i by owner's Heroic Stamina)", reduction_percentage, my_hit.original_damage);
-			}
+	//Pyrelight Custom Code - Send info about the hSTA/hSTR damage modification to clients
+	if (my_hit.damage_done < my_hit.original_damage && my_hit.damage_done > 0 && my_hit.original_damage > 0) {
+		int reduction_percentage = (1 - static_cast<float>(my_hit.damage_done) / static_cast<float>(my_hit.original_damage)) * 100;			
+		if (who->IsPetOwnerClient() && who->GetOwner()) {
+			who->GetOwner()->Message(Chat::OtherHitOther, "(Reduced by %i%% (%i) from %i by owner's Heroic Stamina)", reduction_percentage, my_hit.original_damage - my_hit.damage_done, my_hit.original_damage);
 		}
+	} else if (my_hit.damage_done > my_hit.original_damage && my_hit.original_damage > 0 && my_hit.damage_done > 0) {
+		int increase_percentage = ((static_cast<float>(my_hit.damage_done) / static_cast<float>(my_hit.original_damage)) - 1) * 100;			
+		if (IsPetOwnerClient() && GetOwner()) {
+			GetOwner()->Message(Chat::OtherHitOther, "(Increased by %i%% (%i) from %i by owner's Heroic Strength)", increase_percentage, my_hit.damage_done - my_hit.original_damage, my_hit.original_damage);
+		}
+	}
 
 	// Make sure 'this' has not killed the target and 'this' is not dead (Damage shield ect).
 	if (!GetTarget())
