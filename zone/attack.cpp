@@ -4310,7 +4310,6 @@ void Mob::CommonDamage(Mob* attacker, int64 &damage, const uint16 spell_id, cons
 			//attacker is a pet, let pet owners see their pet's damage
 			Mob* owner = attacker->GetOwner();
 			if (owner && owner->IsClient()) {
-				LogDebug("Pet is doing damage");
 				if ((IsValidSpell(spell_id) || (FromDamageShield)) && damage > 0) {
 					//special crap for spell damage, looks hackish to me
 					char val1[20] = { 0 };
@@ -4330,8 +4329,7 @@ void Mob::CommonDamage(Mob* attacker, int64 &damage, const uint16 spell_id, cons
 						filter = FilterPetMisses;
 
 					if (!FromDamageShield)
-						LogDebug("Pet is sending packet!");
-						owner->CastToClient()->QueuePacket(outapp, true, CLIENT_CONNECTED, filter);
+						owner->CastToClient()->QueuePacket(outapp, false, CLIENT_CONNECTED, filter);
 				}
 			}
 
