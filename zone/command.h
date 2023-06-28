@@ -36,6 +36,7 @@ void SendGuildSubCommands(Client *c);
 void SendPeekInvSubCommands(Client *c);
 
 // Commands
+void command_filterheroic(Client *c, const Seperator *sep);
 void command_acceptrules(Client *c, const Seperator *sep);
 void command_advnpcspawn(Client *c, const Seperator *sep);
 void command_aggro(Client *c, const Seperator *sep);
