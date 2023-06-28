@@ -2371,10 +2371,10 @@ bool NPC::Attack(Mob* other, int Hand, bool bRiposte, bool IsStrikethrough, bool
 		//Pyrelight Custom Code - Send info about the hSTA/hSTR damage modification to clients
 		if (my_hit.damage_done < my_hit.original_damage && my_hit.damage_done > 0 && my_hit.original_damage > 0) {
 			int reduction_percentage = (1 - static_cast<float>(my_hit.damage_done) / static_cast<float>(my_hit.original_damage)) * 100;			
-			if (other->IsPetOwnerClient() && other->GetOwner()) {
+			if (other->GetOwner()->IsClient() && other->GetOwner()->CastToClient()->GetAccountFlag("filter_hSTA") != "off" && other->IsPetOwnerClient() && other->GetOwner()) {
 				other->GetOwner()->Message(Chat::OtherHitOther, "(Reduced by %i%% (%i) from %i by owner's Heroic Stamina)", reduction_percentage, my_hit.original_damage - my_hit.damage_done, my_hit.original_damage);
 			}
-			if (other->IsClient()) {
+			if (other->IsClient() && other->CastToClient()->GetAccountFlag("filter_hSTA") != "off") {
 				other->Message(Chat::OtherHitYou, "(Reduced by %i%% (%i) from %i by your Heroic Stamina)", reduction_percentage, my_hit.original_damage - my_hit.damage_done, my_hit.original_damage);
 			}
 		} else if (my_hit.damage_done > my_hit.original_damage && my_hit.original_damage > 0 && my_hit.damage_done > 0) {
@@ -4310,6 +4310,7 @@ void Mob::CommonDamage(Mob* attacker, int64 &damage, const uint16 spell_id, cons
 			//attacker is a pet, let pet owners see their pet's damage
 			Mob* owner = attacker->GetOwner();
 			if (owner && owner->IsClient()) {
+				LogDebug("Pet is doing damage");
 				if ((IsValidSpell(spell_id) || (FromDamageShield)) && damage > 0) {
 					//special crap for spell damage, looks hackish to me
 					char val1[20] = { 0 };

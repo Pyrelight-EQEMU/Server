@@ -265,10 +265,10 @@ void Mob::DoSpecialAttackDamage(Mob *who, EQ::skills::SkillType skill, int32 bas
 	//Pyrelight Custom Code - Send info about the hSTA/hSTR damage modification to clients
 	if (my_hit.damage_done < my_hit.original_damage && my_hit.damage_done > 0 && my_hit.original_damage > 0) {
 		int reduction_percentage = (1 - static_cast<float>(my_hit.damage_done) / static_cast<float>(my_hit.original_damage)) * 100;			
-		if (who->IsPetOwnerClient() && who->GetOwner()) {
+		if (who->GetOwner()->IsClient() && who->GetOwner()->CastToClient()->GetAccountFlag("filter_hSTA") != "off" && who->IsPetOwnerClient() && who->GetOwner()) {
 			who->GetOwner()->Message(Chat::OtherHitOther, "(Reduced by %i%% (%i) from %i by owner's Heroic Stamina)", reduction_percentage, my_hit.original_damage - my_hit.damage_done, my_hit.original_damage);
 		}
-		if (who->IsClient()) {
+		if (who->IsClient() && who->CastToClient()->GetAccountFlag("filter_hSTA") != "off") {
 			who->Message(Chat::OtherHitYou, "(Reduced by %i%% (%i) from %i by your Heroic Stamina)", reduction_percentage, my_hit.original_damage - my_hit.damage_done, my_hit.original_damage);
 		}
 	} else if (my_hit.damage_done > my_hit.original_damage && my_hit.original_damage > 0 && my_hit.damage_done > 0) {
