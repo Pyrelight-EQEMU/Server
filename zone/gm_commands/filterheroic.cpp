@@ -9,14 +9,14 @@ void command_filterheroic(Client *c, const Seperator *sep)
         c->Message(Chat::White, "Command Syntax: #[filterheroic] - [str|sta|dex|agi|int|wis|cha] [on|off (optional)] - Set or toggle the visibility of additional info about heroic stat effects.");
         return;
     } else {
-        auto arg = Strings::ToLower(sep->arg[1]);
+		LogDebug("[{}] [{}] [{}]", sep->argplus[0], sep->argplus[1], sep->argplus[2]);
 
         std::map<std::string, std::function<void()>> statMap = {
             {"str", [&](){ 
-				if (sep->arg[2] == "on") {
+				if (Strings::ToLower(sep->argplus[2]) == "on") {
 					c->SetAccountFlag("filter_hSTR", "true");
 				} 
-				if (sep->arg[2] == "off") {
+				if (Strings::ToLower(sep->argplus[2]) == "off") {
 					c->SetAccountFlag("filter_hSTR", "false");
 				}
             }},
@@ -28,7 +28,7 @@ void command_filterheroic(Client *c, const Seperator *sep)
             {"cha", [](){ /* handle case CHA */ }}
         };
 
-        auto statFunction = statMap.find(arg);
+        auto statFunction = statMap.find(Strings::ToLower(sep->arg[1]));
 
         if (statFunction != statMap.end()) {
             statFunction->second();
