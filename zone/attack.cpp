@@ -4332,7 +4332,7 @@ void Mob::CommonDamage(Mob* attacker, int64 &damage, const uint16 spell_id, cons
 						// Holy crap this is such a hack to make pet spam visible to owner no matter the distance
 						a->source = owner->GetID();
 						owner->CastToClient()->QueuePacket(outapp, true, CLIENT_CONNECTED, filter);
-						a->Source = attacker->GetID();
+						a->source = attacker->GetID();
 				}
 			}
 
