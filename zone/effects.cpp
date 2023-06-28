@@ -97,10 +97,10 @@ int64 Mob::GetActSpellDamage(uint16 spell_id, int64 value, Mob* target) {
 		bool Critical = zone->random.Roll(chance);
 		while (RuleR(Character, Pyrelight_hDEX_CriticalReroll) && effective_hDEX > 0 && !Critical) {
 			if (IsClient() && CastToClient()->GetAccountFlag("filter_hDEX") != "off") {
-				Message(Chat::YouHitOther, "You fail to deliver a critical blast, but your Heroic Dexterity gives you another chance!");
+				Message(Chat::Spells, "You fail to deliver a critical blast, but your Heroic Dexterity gives you another chance!");
 			}
-			bool random = zone->random.Roll(effective_hDEX);
-			if (random) {
+			auto random = zone->random.Int(1,100);
+			if (random <= (effective_hDEX * RuleR(Character, Pyrelight_hDEX_CriticalReroll))) {
 				Critical = zone->random.Roll(chance);
 				effective_hDEX -= random;
 			} else {
