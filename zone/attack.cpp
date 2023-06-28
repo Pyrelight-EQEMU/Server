@@ -6034,6 +6034,7 @@ void Mob::CommonOutgoingHitSuccess(Mob* defender, DamageHitInfo &hit, ExtraAttac
 			else if (IsClient() && CastToClient()->GetAccountFlag("filter_hDEX") != "off") {
 				Message(Chat::YouHitOther, "You failed to land a critical hit, but your Heroic Dexterity gives you another chance!");
 			}
+			crit = TryCriticalHit(defender, hit, opts);
 			effective_hDEX -= random;
 		} else {
 			break;

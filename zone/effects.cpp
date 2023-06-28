@@ -93,8 +93,22 @@ int64 Mob::GetActSpellDamage(uint16 spell_id, int64 value, Mob* target) {
 		if (spells[spell_id].override_crit_chance > 0 && chance > spells[spell_id].override_crit_chance)
 			chance = spells[spell_id].override_crit_chance;
 
-		if (zone->random.Roll(chance)) {
-			Critical = true;
+		int effective_hDEX = GetHeroicDEX();
+		bool Critical = zone->random.Roll(chance);
+		while (RuleR(Character, Pyrelight_hDEX_CriticalReroll) && effective_hDEX > 0 && !Critical) {
+			if (IsClient() && CastToClient()->GetAccountFlag("filter_hDEX") != "off") {
+				Message(Chat::YouHitOther, "You fail to deliver a critical blast, but your Heroic Dexterity gives you another chance!");
+			}
+			bool random = zone->random.Roll(effective_hDEX);
+			if (random) {
+				Critical = zone->random.Roll(chance);
+				effective_hDEX -= random;
+			} else {
+				break;
+			}
+		}
+
+		if (Critical) {
 			ratio += itembonuses.SpellCritDmgIncrease + spellbonuses.SpellCritDmgIncrease + aabonuses.SpellCritDmgIncrease;
 			ratio += itembonuses.SpellCritDmgIncNoStack + spellbonuses.SpellCritDmgIncNoStack + aabonuses.SpellCritDmgIncNoStack;
 		}
