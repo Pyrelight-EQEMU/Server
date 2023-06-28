@@ -1466,8 +1466,7 @@ void Mob::DoAttack(Mob *other, DamageHitInfo &hit, ExtraAttackOptions *opts, boo
 			}
 			other->MeleeMitigation(this, hit, opts);
 			if (hit.damage_done > 0) {
-				ApplyDamageTable(hit);
-				CommonOutgoingHitSuccess(other, hit, opts);
+				ApplyDamageTable(hit);			
 				
 				// Pyrelight Custom Code - Heroic Strength
 				if (RuleR(Character, Pyrelight_hSTR_DmgBonus) > 0) {
@@ -1496,7 +1495,9 @@ void Mob::DoAttack(Mob *other, DamageHitInfo &hit, ExtraAttackOptions *opts, boo
 						hit.damage_done = damage_value;
 						LogDebug("[{}], [{}]", hit.original_damage, hit.damage_done);
 					}
-				}	
+				}
+
+				CommonOutgoingHitSuccess(other, hit, opts);	
 			}
 			LogCombat("Final damage after all reductions: [{}]", hit.damage_done);
 		}
@@ -6033,8 +6034,10 @@ void Mob::CommonOutgoingHitSuccess(Mob* defender, DamageHitInfo &hit, ExtraAttac
 			else if (IsClient() && CastToClient()->GetAccountFlag("filter_hDEX") != "off") {
 				Message(Chat::YouHitOther, "You failed to land a critical hit, but your Heroic Dexterity gives you another chance!");
 			}
-		}
-		effective_hDEX -= random;
+			effective_hDEX -= random;
+		} else {
+			break;
+		}		
 	}
 
 	hit.damage_done += hit.min_damage;

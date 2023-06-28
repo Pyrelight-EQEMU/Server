@@ -919,11 +919,20 @@ void Mob::DoArcheryAttackDmg(Mob *who, const EQ::ItemInstance *RangeWeapon, cons
 	who->Damage(this, my_hit.damage_done, SPELL_UNKNOWN, EQ::skills::SkillArchery);
 
 	//Pyrelight Custom Code - Send info about the hSTA/hSTR damage modification to clients
-	if (my_hit.damage_done > my_hit.original_damage && my_hit.original_damage > 0 && my_hit.damage_done > 0) {
-		int increase_percentage = ((static_cast<float>(my_hit.damage_done) / static_cast<float>(my_hit.original_damage)) - 1) * 100;		
-		if (IsClient() && CastToClient()->GetAccountFlag("filter_hSTR") != "off") {
-			Message(Chat::YouHitOther, "(Increased by %i%% (%i) from %i by your Heroic Strength)", increase_percentage, my_hit.damage_done - my_hit.original_damage, my_hit.original_damage);
+	if (my_hit.damage_done > 0 && my_hit.original_damage > 0) {
+		if (IsClient()) {
+			CastToClient()->LoadAccountFlags();
 		}
+		if (IsClient() && (my_hit.damage_done > my_hit.original_damage)) {				
+			int increase_percentage = ((static_cast<float>(my_hit.damage_done) / static_cast<float>(my_hit.original_damage)) - 1) * 100;
+			if (CastToClient()->GetAccountFlag("filter_hSTR") != "off") {
+				Message(Chat::YouHitOther, 
+						"The damage of your strike was increased by %i from %i (%i%%) by the influence of your Heroic Strength.", 
+						my_hit.damage_done - my_hit.original_damage,
+						my_hit.original_damage,
+						increase_percentage);
+			}
+		}	
 	}
 
 	if (!DisableProcs) {
