@@ -268,7 +268,26 @@ int64 Mob::GetActDoTDamage(uint16 spell_id, int64 value, Mob* target, bool from_
 	if (spells[spell_id].override_crit_chance > 0 && chance > spells[spell_id].override_crit_chance)
 		chance = spells[spell_id].override_crit_chance;
 
-	if (!spells[spell_id].good_effect && chance > 0 && (zone->random.Roll(chance))) {
+	if (chance > 0) {
+		// Pyrelight Custom Code - Reroll the crit dots
+		int effective_hDEX = GetHeroicDEX();
+		bool Critical = zone->random.Roll(chance);
+		while (RuleR(Character, Pyrelight_hDEX_CriticalReroll) && effective_hDEX > 0 && !Critical) {
+			if (IsClient() && CastToClient()->GetAccountFlag("filter_hDEX") != "off") {
+				Message(Chat::Spells, "Your DoT effect fails to be critically effective, but your Heroic Dexterity gives you another chance!");
+			}
+			auto random = zone->random.Int(1,100);
+			if (random <= (effective_hDEX * RuleR(Character, Pyrelight_hDEX_CriticalReroll))) {
+				Critical = zone->random.Roll(chance);
+				effective_hDEX -= random * 3;
+			} else {
+				break;
+			}
+		}
+		// End Pyrelight Custom Code
+	}
+
+	if (!spells[spell_id].good_effect && chance > 0 && Critical) {
 		int64 ratio = 200;
 		ratio += itembonuses.DotCritDmgIncrease + spellbonuses.DotCritDmgIncrease + aabonuses.DotCritDmgIncrease;
 
@@ -415,7 +434,24 @@ int64 Mob::GetActSpellHealing(uint16 spell_id, int64 value, Mob* target, bool fr
 			critical_chance = spells[spell_id].override_crit_chance;
 		}
 
-		if (zone->random.Roll(critical_chance)) {
+		// Pyrelight Custom Code - Reroll the crit dots
+		int effective_hDEX = GetHeroicDEX();
+		bool Critical = zone->random.Roll(chance);
+		while (RuleR(Character, Pyrelight_hDEX_CriticalReroll) && effective_hDEX > 0 && !Critical) {
+			if (IsClient() && CastToClient()->GetAccountFlag("filter_hDEX") != "off") {
+				Message(Chat::Spells, "Your heal fails to be critically effective, but your Heroic Dexterity gives you another chance!");
+			}
+			auto random = zone->random.Int(1,100);
+			if (random <= (effective_hDEX * RuleR(Character, Pyrelight_hDEX_CriticalReroll))) {
+				Critical = zone->random.Roll(chance);
+				effective_hDEX -= random * 3;
+			} else {
+				break;
+			}
+		}
+		// End Pyrelight Custom Code
+
+		if (Critical) {
 			critical_modifier = 2; //At present time no critical heal amount modifier SPA exists.
 		}
 	}
