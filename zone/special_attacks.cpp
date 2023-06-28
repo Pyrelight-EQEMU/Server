@@ -263,22 +263,40 @@ void Mob::DoSpecialAttackDamage(Mob *who, EQ::skills::SkillType skill, int32 bas
 	who->Damage(this, my_hit.damage_done, SPELL_UNKNOWN, skill, false);
 
 	//Pyrelight Custom Code - Send info about the hSTA/hSTR damage modification to clients
-	if (my_hit.damage_done < my_hit.original_damage && my_hit.damage_done > 0 && my_hit.original_damage > 0) {
-		int reduction_percentage = (1 - static_cast<float>(my_hit.damage_done) / static_cast<float>(my_hit.original_damage)) * 100;			
-		if (who->GetOwner()->IsClient() && who->GetOwner()->CastToClient()->GetAccountFlag("filter_hSTA") != "off" && who->IsPetOwnerClient() && who->GetOwner()) {
-			who->GetOwner()->Message(Chat::OtherHitOther, "(Reduced by %i%% (%i) from %i by owner's Heroic Stamina)", reduction_percentage, my_hit.original_damage - my_hit.damage_done, my_hit.original_damage);
+	if (my_hit.damage_done > 0 && my_hit.original_damage > 0) {
+		if ((IsClient() || IsPetOwnerClient()) && (my_hit.damage_done > my_hit.original_damage)) {				
+			int increase_percentage = ((static_cast<float>(my_hit.damage_done) / static_cast<float>(my_hit.original_damage)) - 1) * 100;
+			if (IsPetOwnerClient() && GetOwner()->CastToClient()->GetAccountFlag("filter_hSTR") != "off" && GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
+				GetOwner()->Message(Chat::OtherHitOther, 
+									"The damage of your pet's strike was increased by %i from %i (%i%%) by the influence of your Heroic Strength", 
+									my_hit.damage_done - my_hit.original_damage, 
+									my_hit.original_damage, 
+									increase_percentage);
+			} else if (CastToClient()->GetAccountFlag("filter_hSTR") != "off") {
+				Message(Chat::YouHitOther, 
+						"The damage of your strike was increased by %i from %i (%i%%) by the influence of your Heroic Strength.", 
+						my_hit.damage_done - my_hit.original_damage,
+						my_hit.original_damage,
+						increase_percentage);
+			}
 		}
-		if (who->IsClient() && who->CastToClient()->GetAccountFlag("filter_hSTA") != "off") {
-			who->Message(Chat::OtherHitYou, "(Reduced by %i%% (%i) from %i by your Heroic Stamina)", reduction_percentage, my_hit.original_damage - my_hit.damage_done, my_hit.original_damage);
-		}
-	} else if (my_hit.damage_done > my_hit.original_damage && my_hit.original_damage > 0 && my_hit.damage_done > 0) {
-		int increase_percentage = ((static_cast<float>(my_hit.damage_done) / static_cast<float>(my_hit.original_damage)) - 1) * 100;			
-		if (GetOwner()->IsClient() && GetOwner()->CastToClient()->GetAccountFlag("filter_hSTR") != "off" && IsPetOwnerClient() && GetOwner()) {
-			GetOwner()->Message(Chat::OtherHitOther, "(Increased by %i%% (%i) from %i by owner's Heroic Strength)", increase_percentage, my_hit.damage_done - my_hit.original_damage, my_hit.original_damage);
-		}
-		if (IsClient() && CastToClient()->GetAccountFlag("filter_hSTR") != "off") {
-			Message(Chat::YouHitOther, "(Increased by %i%% (%i) from %i by your Heroic Strength)", increase_percentage, my_hit.damage_done - my_hit.original_damage, my_hit.original_damage);
-		}
+		
+		if ((other->IsClient() || other->IsPetOwnerClient()) && (my_hit.original_damage > my_hit.damage_done)) {				
+			int reduction_percentage = (1 - static_cast<float>(my_hit.damage_done) / static_cast<float>(my_hit.original_damage)) * 100;
+			if (other->IsPetOwnerClient() && other->GetOwner()->CastToClient()->GetAccountFlag("filter_hSTR") != "off" &&  other->GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
+				other->GetOwner()->Message(Chat::OtherHitOther, 
+											"The damage dealt to your pet was reduced by %i from %i (%i%%) by the influence of your Heroic Stamina.",
+											my_hit.original_damage - my_hit.damage_done,
+											my_hit.original_damage,
+											reduction_percentage);
+			} else if (other->CastToClient()->GetAccountFlag("filter_hSTA") != "off") {
+				other->Message(Chat::OtherHitYou, 
+								"The damage dealt to you was reduced by %i from %i (%i%%) by the influence of your Heroic Stamina.", 
+								my_hit.damage_done - my_hit.original_damage,
+								my_hit.original_damage,
+								reduction_percentage);
+			}
+		}			
 	}
 
 	// Make sure 'this' has not killed the target and 'this' is not dead (Damage shield ect).

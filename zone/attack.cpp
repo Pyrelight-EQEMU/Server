@@ -2370,20 +2370,14 @@ bool NPC::Attack(Mob* other, int Hand, bool bRiposte, bool IsStrikethrough, bool
 
 		//Pyrelight Custom Code - Send info about the hSTA/hSTR damage modification to clients
 		if (my_hit.damage_done > 0 && my_hit.original_damage > 0) {
-			if ((IsClient() || IsPetOwnerClient()) && (my_hit.damage_done > my_hit.original_damage)) {				
+			if ((IsPetOwnerClient()) && (my_hit.damage_done > my_hit.original_damage)) {				
 				int increase_percentage = ((static_cast<float>(my_hit.damage_done) / static_cast<float>(my_hit.original_damage)) - 1) * 100;
-				if (IsPetOwnerClient() && GetOwner()->CastToClient()->GetAccountFlag("filter_hSTR") != "off" && GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
+				if (GetOwner()->CastToClient()->GetAccountFlag("filter_hSTR") != "off" && GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
 					GetOwner()->Message(Chat::OtherHitOther, 
 									    "The damage of your pet's strike was increased by %i from %i (%i%%) by the influence of your Heroic Strength", 
 										my_hit.damage_done - my_hit.original_damage, 
 										my_hit.original_damage, 
 										increase_percentage);
-				} else if (CastToClient()->GetAccountFlag("filter_hSTR") != "off") {
-					Message(Chat::YouHitOther, 
-						    "The damage of your strike was increased by %i from %i (%i%%) by the influence of your Heroic Strength.", 
-							my_hit.damage_done - my_hit.original_damage,
-							my_hit.original_damage,
-							increase_percentage);
 				}
 			}
 			
@@ -2404,6 +2398,7 @@ bool NPC::Attack(Mob* other, int Hand, bool bRiposte, bool IsStrikethrough, bool
 				}
 			}			
 		}
+		
 	} else
 		return false;
 

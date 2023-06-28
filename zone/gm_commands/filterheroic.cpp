@@ -18,6 +18,7 @@ void command_filterheroic(Client *c, const Seperator *sep)
         {"int", "filter_hINT"},
         {"wis", "filter_hWIS"},
         {"cha", "filter_hCHA"},
+        {"pet", "filter_hPets"},
     };
 	std::string flagSuffix = Strings::ToLower(sep->arg[2]);
 
@@ -28,7 +29,9 @@ void command_filterheroic(Client *c, const Seperator *sep)
 		}
 
         for (auto& stat : statMap) {
-            c->SetAccountFlag(stat.second, flagSuffix);
+            if (stat.second != "filter_hPets") {
+                c->SetAccountFlag(stat.second, flagSuffix);
+            }
         }
     } else {
         auto statIt = statMap.find(Strings::ToLower(sep->arg[1]));
