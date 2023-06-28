@@ -4329,7 +4329,7 @@ void Mob::CommonDamage(Mob* attacker, int64 &damage, const uint16 spell_id, cons
 						filter = FilterPetMisses;
 
 					if (!FromDamageShield)
-						owner->CastToClient()->QueuePacket(outapp, false, CLIENT_CONNECTED, filter);
+						owner->CastToClient()->QueuePacket(outapp, true, CLIENT_CONNECTED, filter);
 				}
 			}
 

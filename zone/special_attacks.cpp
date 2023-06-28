@@ -367,7 +367,7 @@ void Client::OPCombatAbility(const CombatAbility_Struct *ca_atk)
 				if (CheckDoubleRangedAttack())
 					(ca_atk->m_skill == EQ::skills::SkillArchery) ? RangedAttack(GetTarget()) : ThrowingAttack(GetTarget());
 			} else {
-				Message(Chat::Red, "You must equip a ranged weapon to use this ability.");
+				Message(Chat::Red, "You must equip an appropriate weapon to use this ability.");
 			}
 			return; // These don't care about the remainder of this function
 			case EQ::skills::SkillBash: {
@@ -898,6 +898,24 @@ void Mob::DoArcheryAttackDmg(Mob *other, const EQ::ItemInstance *RangeWeapon, co
 
 	other->Damage(this, TotalDmg, SPELL_UNKNOWN, EQ::skills::SkillArchery);
 
+	//Pyrelight Custom Code - Send info about the hSTA/hSTR damage modification to clients
+	if (my_hit.damage_done < my_hit.original_damage && my_hit.damage_done > 0 && my_hit.original_damage > 0) {
+		int reduction_percentage = (1 - static_cast<float>(my_hit.damage_done) / static_cast<float>(my_hit.original_damage)) * 100;			
+		if (other->->GetOwner()->IsClient() && other->->GetOwner()->CastToClient()->GetAccountFlag("filter_hSTA") != "off" && who->IsPetOwnerClient() && who->GetOwner()) {
+			other->->GetOwner()->Message(Chat::OtherHitOther, "(Reduced by %i%% (%i) from %i by owner's Heroic Stamina)", reduction_percentage, my_hit.original_damage - my_hit.damage_done, my_hit.original_damage);
+		}
+		if (other->->IsClient() && other->->CastToClient()->GetAccountFlag("filter_hSTA") != "off") {
+			other->->Message(Chat::OtherHitYou, "(Reduced by %i%% (%i) from %i by your Heroic Stamina)", reduction_percentage, my_hit.original_damage - my_hit.damage_done, my_hit.original_damage);
+		}
+	} else if (my_hit.damage_done > my_hit.original_damage && my_hit.original_damage > 0 && my_hit.damage_done > 0) {
+		int increase_percentage = ((static_cast<float>(my_hit.damage_done) / static_cast<float>(my_hit.original_damage)) - 1) * 100;			
+		if (GetOwner()->IsClient() && GetOwner()->CastToClient()->GetAccountFlag("filter_hSTR") != "off" && IsPetOwnerClient() && GetOwner()) {
+			GetOwner()->Message(Chat::OtherHitOther, "(Increased by %i%% (%i) from %i by owner's Heroic Strength)", increase_percentage, my_hit.damage_done - my_hit.original_damage, my_hit.original_damage);
+		}
+		if (IsClient() && CastToClient()->GetAccountFlag("filter_hSTR") != "off") {
+			Message(Chat::YouHitOther, "(Increased by %i%% (%i) from %i by your Heroic Strength)", increase_percentage, my_hit.damage_done - my_hit.original_damage, my_hit.original_damage);
+		}
+	}
 
 	if (!DisableProcs) {
 		// Weapon Proc
