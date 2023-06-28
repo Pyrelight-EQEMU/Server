@@ -14,16 +14,16 @@ void command_filterheroic(Client *c, const Seperator *sep)
         std::map<std::string, std::function<void()>> statMap = {
 			{"str", [&](){ 
 				if (Strings::ToLower(sep->arg[2]) == "on") {
-					c->SetAccountFlag("filter_hSTR_" + c->GetID(), "on");
+					c->SetAccountFlag("filter_hSTR", "on");
 				} else if (Strings::ToLower(sep->arg[2]) == "off") {
-					c->SetAccountFlag("filter_hSTR_" + c->GetID(), "off");
+					c->SetAccountFlag("filter_hSTR", "off");
 				} else {
 					//toggle flag
 					std::string currentFlag = c->GetAccountFlag("filter_hSTR_" + c->GetID());
 					if (currentFlag == "off" || currentFlag.empty()) {
-						c->SetAccountFlag("filter_hSTR_" + c->GetID(), "on");
+						c->SetAccountFlag("filter_hSTR", "on");
 					} else {
-						c->SetAccountFlag("filter_hSTR_" + c->GetID(), "off");
+						c->SetAccountFlag("filter_hSTR", "off");
 					}
 				}
 			}},
