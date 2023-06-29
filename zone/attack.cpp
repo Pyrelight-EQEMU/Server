@@ -1423,38 +1423,39 @@ void Mob::DoAttack(Mob *other, DamageHitInfo &hit, ExtraAttackOptions *opts, boo
 		FromRiposte = false;
 	}
 
-	// Pyrelight Custom Code - Repeat Evasion checks based on defender hAGI
-	int effective_hAGI = (other->IsPetOwnerClient() && other->GetOwner()) ? std::ceil((1.0/3.0) * other->GetOwner()->GetHeroicAGI()) : other->GetHeroicAGI();
-	bool avoided = other->AvoidDamage(this, hit);		
-	while (!avoided && RuleR(Character, Pyrelight_hAGI_EvasionReroll) && effective_hAGI > 0) {
-		auto random = zone->random.Int(1,100);
-		if (random <= (effective_hAGI * RuleR(Character, Pyrelight_hAGI_EvasionReroll))) {
-			avoided = other->AvoidDamage(this, hit);
-			if (other->IsClient() && other->CastToClient()->GetAccountFlag("filter_hAGI") != "off") {
-				other->Message(Chat::OtherMissYou, "You failed to avoid the attack, but your Heroic Agility allows to you have a chance to try again!");
-			} else if (other->IsPetOwnerClient() && other->GetOwner()->CastToClient()->GetAccountFlag("filter_hAGI") != "off" && other->GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
-				other->GetOwner()->Message(Chat::OtherMissOther, "Your pet failed to avoid the attack, but your Heroic Agility allows it to have a chance to try again!");
+	if (other->CheckHitChance(this, hit)) {						
+		// Pyrelight Custom Code - Repeat Evasion checks based on defender hAGI
+		int effective_hAGI = (other->IsPetOwnerClient() && other->GetOwner()) ? std::ceil((1.0/3.0) * other->GetOwner()->GetHeroicAGI()) : other->GetHeroicAGI();
+		bool avoided = other->AvoidDamage(this, hit);		
+		while (!avoided && RuleR(Character, Pyrelight_hAGI_EvasionReroll) && effective_hAGI > 0) {
+			auto random = zone->random.Int(1,100);
+			if (random <= (effective_hAGI * RuleR(Character, Pyrelight_hAGI_EvasionReroll))) {			
+				if (other->IsClient() && other->CastToClient()->GetAccountFlag("filter_hAGI") != "off") {
+					other->Message(Chat::OtherMissYou, "You failed to avoid the attack, but your Heroic Agility allows to you have a chance to try again!");
+				} else if (other->IsPetOwnerClient() && other->GetOwner()->CastToClient()->GetAccountFlag("filter_hAGI") != "off" && other->GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
+					other->GetOwner()->Message(Chat::OtherMissOther, "Your pet failed to avoid the attack, but your Heroic Agility allows it to have a chance to try again!");
+				}
+				avoided = other->AvoidDamage(this, hit);
+			}		
+			effective_hAGI -= random * 5;		
+		}
+
+		// check to see if we hit..	
+		if (!FromRiposte && avoided) {
+			if (int strike_through = itembonuses.StrikeThrough + spellbonuses.StrikeThrough + aabonuses.StrikeThrough;
+					strike_through && zone->random.Roll(strike_through)) {
+				MessageString(Chat::StrikeThrough, STRIKETHROUGH_STRING); // You strike through your opponents defenses!
+				hit.damage_done = 1;									  // set to one, we will check this to continue
 			}
-		}		
-		effective_hAGI -= random * 5;		
-	}
-
-	// check to see if we hit..	
-	if (!FromRiposte && avoided) {
-		if (int strike_through = itembonuses.StrikeThrough + spellbonuses.StrikeThrough + aabonuses.StrikeThrough;
-				strike_through && zone->random.Roll(strike_through)) {
-			MessageString(Chat::StrikeThrough, STRIKETHROUGH_STRING); // You strike through your opponents defenses!
-			hit.damage_done = 1;									  // set to one, we will check this to continue
+			if (hit.damage_done == DMG_RIPOSTED) {
+				DoRiposte(other);
+				return;
+			}
+			LogCombat("Avoided/strikethrough damage with code [{}]", hit.damage_done);			
 		}
-		if (hit.damage_done == DMG_RIPOSTED) {
-			DoRiposte(other);
-			return;
-		}
-		LogCombat("Avoided/strikethrough damage with code [{}]", hit.damage_done);			
-	}
 
-	if (hit.damage_done >= 0) {
-		if (other->CheckHitChance(this, hit)) {
+		if (hit.damage_done >= 0) {
+
 			if (IsNPC() && other->IsClient() && other->animation > 0 && GetLevel() >= 5 && BehindMob(other, GetX(), GetY())) {
 				// ~ 12% chance
 				if (zone->random.Roll(12)) {
@@ -1476,22 +1477,9 @@ void Mob::DoAttack(Mob *other, DamageHitInfo &hit, ExtraAttackOptions *opts, boo
 			}
 			LogCombat("Final damage after all reductions: [{}]", hit.damage_done);
 		}
-		else {
-			LogCombat("Attack missed. Damage set to 0");
-			hit.damage_done = 0;
-		}
-
-		if (IsBot()) {
-			if (parse->BotHasQuestSub(EVENT_USE_SKILL)) {
-				const auto& export_string = fmt::format(
-					"{} {}",
-					hit.skill,
-					GetSkill(hit.skill)
-				);
-
-				parse->EventBot(EVENT_USE_SKILL, CastToBot(), nullptr, export_string, 0);
-			}
-		}
+	} else {
+		LogCombat("Attack missed. Damage set to 0");
+		hit.damage_done = 0;
 	}
 }
 
