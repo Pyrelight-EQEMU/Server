@@ -286,7 +286,7 @@ void Mob::DoSpecialAttackDamage(Mob *who, EQ::skills::SkillType skill, int32 bas
 		
 		if ((who->IsClient() || who->IsPetOwnerClient()) && (my_hit.original_damage > my_hit.damage_done)) {				
 			int reduction_percentage = (1 - static_cast<float>(my_hit.damage_done) / static_cast<float>(my_hit.original_damage)) * 100;
-			if (who->IsPetOwnerClient() && who->GetOwner()->CastToClient()->GetAccountFlag("filter_hSTR") != "off" &&  who->GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
+			if (who->IsPetOwnerClient() && who->GetOwner()->CastToClient()->GetAccountFlag("filter_hSTA") != "off" &&  who->GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
 				who->GetOwner()->Message(Chat::OtherHitOther, 
 											"The damage dealt to your pet was reduced by %i from %i (%i%%) by the influence of your Heroic Stamina.",
 											my_hit.original_damage - my_hit.damage_done,

@@ -1749,7 +1749,7 @@ bool Mob::Attack(Mob* other, int Hand, bool bRiposte, bool IsStrikethrough, bool
 		
 		if ((other->IsClient() || other->IsPetOwnerClient()) && (my_hit.original_damage > my_hit.damage_done)) {				
 			int reduction_percentage = (1 - static_cast<float>(my_hit.damage_done) / static_cast<float>(my_hit.original_damage)) * 100;
-			if (other->IsPetOwnerClient() && other->GetOwner()->CastToClient()->GetAccountFlag("filter_hSTR") != "off" &&  other->GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
+			if (other->IsPetOwnerClient() && other->GetOwner()->CastToClient()->GetAccountFlag("filter_hSTA") != "off" &&  other->GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
 				other->GetOwner()->Message(Chat::OtherHitOther, 
 											"The damage dealt to your pet was reduced by %i from %i (%i%%) by the influence of your Heroic Stamina.",
 											my_hit.original_damage - my_hit.damage_done,
