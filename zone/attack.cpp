@@ -1807,7 +1807,7 @@ bool Client::Death(Mob* killerMob, int64 damage, uint16 spell, EQ::skills::Skill
 	}
 
 	this->DepopAllCorpses();
-	std::string query = StringFormat("DELETE FROM corpses WHERE charid = %i", CharacterID());
+	std::string query = StringFormat("DELETE FROM character_corpses WHERE charid = %i", CharacterID());
 	database.QueryDatabase(query);	
 
 	if (parse->PlayerHasQuestSub(EVENT_DEATH)) {
