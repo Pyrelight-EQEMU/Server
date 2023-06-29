@@ -289,15 +289,16 @@ int64 Mob::GetActDoTDamage(uint16 spell_id, int64 value, Mob* target, bool from_
 	}
 
 	if (!spells[spell_id].good_effect && chance > 0 && Critical) {
-		int64 ratio = 200;
+		int64 ratio = 500;
 		ratio += itembonuses.DotCritDmgIncrease + spellbonuses.DotCritDmgIncrease + aabonuses.DotCritDmgIncrease;
 
-		value = base_value*ratio/100;
 		value += int64(base_value*GetFocusEffect(focusImprovedDamage, spell_id, nullptr, from_buff_tic)/100)*ratio/100;
 		value += int64(base_value*GetFocusEffect(focusImprovedDamage2, spell_id, nullptr, from_buff_tic)/100)*ratio/100;
 		value += int64(base_value*GetFocusEffect(focusFcDamagePctCrit, spell_id, nullptr, from_buff_tic)/100)*ratio/100;
 		value += int64(base_value*GetFocusEffect(focusFcAmplifyMod, spell_id, nullptr, from_buff_tic) / 100)*ratio/100;
 		value += int64(base_value*target->GetVulnerability(this, spell_id, 0, from_buff_tic)/100)*ratio/100;
+		value = base_value*ratio/100;
+
 		extra_dmg = target->GetFcDamageAmtIncoming(this, spell_id, from_buff_tic) +
 					int64(GetFocusEffect(focusFcDamageAmtCrit, spell_id, nullptr, from_buff_tic)*ratio/100) +
 					GetFocusEffect(focusFcDamageAmt, spell_id, nullptr, from_buff_tic) +
@@ -348,6 +349,15 @@ int64 Mob::GetActDoTDamage(uint16 spell_id, int64 value, Mob* target, bool from_
 	}
 
 	value -= extra_dmg;
+
+	if (Critical) {
+		entity_list.MessageClose(this, true, 100, Chat::SpellCrit,
+								"%s invokes a critical affliction! (%i)",
+								GetName(), itoa(value));
+		if (IsClient()) {
+			Message(Chat::SpellCrit, "You invoke a critical affliction! (%i)", itoa(value));
+		}
+	}
 
 	return value;
 }
