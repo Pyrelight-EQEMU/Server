@@ -433,7 +433,7 @@ bool Mob::AvoidDamage(Mob *other, DamageHitInfo &hit)
 	}
 
 	// Pyrelight Custom Code. Minimum of (MobLevel - PlayerLevel + 5)% chance to bypass all evasion rolls.
-	if (this->IsClient() && zone->random.Roll0(99) <= (other->GetLevel() - GetLevel() + 5) && other->GetLevelCon() != CON_GRAY) {
+	if (this->IsClient() && zone->random.Roll0(99) <= (other->GetLevel() - GetLevel() + 5) && GetLevelCon(other->GetLevel()) != CON_GRAY) {
 		LogCombat("Auto-Failed Avoidance Check");
 		return false;
 	}
