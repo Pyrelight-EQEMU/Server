@@ -353,9 +353,9 @@ int64 Mob::GetActDoTDamage(uint16 spell_id, int64 value, Mob* target, bool from_
 	if (Critical) {
 		entity_list.MessageClose(this, true, 100, Chat::SpellCrit,
 								"%s invokes a critical affliction! (%i)",
-								GetName(), value);
+								GetName(), -1 * value);
 		if (IsClient()) {
-			Message(Chat::SpellCrit, "You invoke a critical affliction! (%i)", value);
+			Message(Chat::SpellCrit, "You invoke a critical affliction! (%i)", -1 * value);
 		}
 	}
 
