@@ -433,7 +433,7 @@ bool Mob::AvoidDamage(Mob *other, DamageHitInfo &hit)
 	}
 
 	// Pyrelight Custom Code. Minimum of (MobLevel - PlayerLevel + 5)% chance to bypass all evasion rolls.
-	if (this->IsClient() && zone->random.Roll0(99) <= (other->GetLevel() - GetLevel() + 5)) {
+	if (this->IsClient() && zone->random.Roll0(99) <= (other->GetLevel() - GetLevel() + 5) && other->GetLevelCon() != CON_GRAY) {
 		LogCombat("Auto-Failed Avoidance Check");
 		return false;
 	}
@@ -1427,11 +1427,16 @@ void Mob::DoAttack(Mob *other, DamageHitInfo &hit, ExtraAttackOptions *opts, boo
 	int effective_hAGI = (other->IsPetOwnerClient() && other->GetOwner()) ? std::ceil((1.0/3.0) * other->GetOwner()->GetHeroicAGI()) : other->GetHeroicAGI();
 	bool avoided = other->AvoidDamage(this, hit);		
 	while (!avoided && RuleR(Character, Pyrelight_hAGI_EvasionReroll) && effective_hAGI > 0) {
-		if ( zone->random.Int(1,100) <= (effective_hAGI * RuleR(Character, Pyrelight_hAGI_EvasionReroll))) {
+		auto random = zone->random.Int(1,100);
+		if (random <= (effective_hAGI * RuleR(Character, Pyrelight_hAGI_EvasionReroll))) {
 			avoided = other->AvoidDamage(this, hit);
-			LogCombat("Avoidance Reroll, effective_hAGI = [{}]", effective_hAGI);
+			if (other->IsClient() && other->CastToClient()->GetAccountFlag("filter_hAGI") != "off") {
+				other->Message(Chat::OtherMissYou, "You failed to avoid the attack, but your Heroic Agility allows to you have a chance to try again!");
+			} else if (other->IsPetOwnerClient() && other->GetOwner()->CastToClient()->GetAccountFlag("filter_hAGI") != "off" && other->GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
+				other->GetOwner()->Message(Chat::OtherMissOther, "Your pet failed to avoid the attack, but your Heroic Agility allows it to have a chance to try again!");
+			}
 		}		
-		effective_hAGI -= 100;		
+		effective_hAGI -= random * 5;		
 	}
 
 	// check to see if we hit..	

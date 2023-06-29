@@ -6,7 +6,7 @@ void command_filterheroic(Client *c, const Seperator *sep)
 {
     const auto arguments = sep->argnum;
     if (!arguments) {
-        c->Message(Chat::White, "Command Syntax: #[filterheroic] - [str|sta|dex|agi|int|wis|cha|all|pets] [on|off] - Set the visibility of additional info about heroic stat effects.");
+        c->Message(Chat::White, "Command Syntax: #[filterheroic] - [str|sta|dex|agi|int|wis|cha|all|pet] [on|off] - Set the visibility of additional info about heroic stat effects.");
         return;
     } 
 
@@ -38,7 +38,7 @@ void command_filterheroic(Client *c, const Seperator *sep)
         if (statIt != statMap.end()) {
             c->SetAccountFlag(statIt->second, flagSuffix);
         } else {
-            c->Message(Chat::White, "Command Syntax: #[filterheroic] - [str|sta|dex|agi|int|wis|cha|all|pets] [on|off] - Set the visibility of additional info about heroic stat effects.");
+            c->Message(Chat::White, "Command Syntax: #[filterheroic] - [str|sta|dex|agi|int|wis|cha|all|pet] [on|off] - Set the visibility of additional info about heroic stat effects.");
         }
     }
 }
