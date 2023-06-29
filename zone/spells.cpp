@@ -4149,6 +4149,7 @@ bool Mob::SpellOnTarget(
 							} else {
 								hchaSource->Message(Chat::Spells, "Your magic breaks through under the influence of your Heroic Charisma!");
 							}
+							spell_effectiveness = new_result;
 							break;
 						}
 					} else {
