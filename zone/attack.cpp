@@ -1466,37 +1466,7 @@ void Mob::DoAttack(Mob *other, DamageHitInfo &hit, ExtraAttackOptions *opts, boo
 			}
 			other->MeleeMitigation(this, hit, opts);
 			if (hit.damage_done > 0) {
-				ApplyDamageTable(hit);			
-				
-				// Pyrelight Custom Code - Heroic Strength
-				if (RuleR(Character, Pyrelight_hSTR_DmgBonus) > 0) {
-					int effective_hSTR = (IsPetOwnerClient() && GetOwner()) ? (1.0/3.0) * GetOwner()->GetHeroicSTR() : GetHeroicSTR();					
-					
-					if (effective_hSTR > 0) {
-						float damage_scalar = 1 + ((RuleR(Character, Pyrelight_hSTR_DmgBonus) / 100) * effective_hSTR);
-
-						hit.original_damage = hit.damage_done;			
-						hit.damage_done = static_cast<int64>(std::floor(hit.damage_done * damage_scalar));
-						LogDebug("[{}], [{}]", hit.original_damage, hit.damage_done);
-					}
-				}
-
-				// Pyrelight Custom Code - Heroic Stamina
-				int64 damage_reduction_final = 0;
-				if (RuleR(Character, Pyrelight_hSTA_DmgReduction) > 0) {
-					
-					int effective_hSTA = (other->IsPetOwnerClient() && other->GetOwner()) ? ((1.0/3.0) * other->GetOwner()->GetHeroicSTA()) : other->GetHeroicSTA();
-					if (effective_hSTA > 0) {
-						int64 damage_reduction_value = static_cast<int64>(std::ceil(RuleR(Character, Pyrelight_hSTA_DmgReduction) * effective_hSTA));
-						int64 damage_value = static_cast<int64>(std::max(static_cast<int64>(hit.damage_done * GetDamageReductionCap() / 100), // Capped Damage Reduction
-																							hit.damage_done - damage_reduction_value)); // Reduced Damage
-
-						hit.original_damage = hit.damage_done;
-						hit.damage_done = damage_value;
-						LogDebug("[{}], [{}]", hit.original_damage, hit.damage_done);
-					}
-				}
-
+				ApplyDamageTable(hit);
 				CommonOutgoingHitSuccess(other, hit, opts);	
 			}
 			LogCombat("Final damage after all reductions: [{}]", hit.damage_done);
@@ -5060,6 +5030,7 @@ bool Mob::TryPetCriticalHit(Mob *defender, DamageHitInfo &hit)
 			critMod += GetCritDmgMod(hit.skill, owner);
 			hit.damage_done += 5;
 			hit.damage_done = (hit.damage_done * critMod) / 100;
+			hit.original_damage = (hit.original_damage * critMod) / 100;
 
 			entity_list.FilteredMessageCloseString(
 				this, /* Sender */
@@ -5116,7 +5087,9 @@ bool Mob::TryCriticalHit(Mob *defender, DamageHitInfo &hit, ExtraAttackOptions *
 				int SlayDmgBonus = std::max(
 				{aabonuses.SlayUndead[SBIndex::SLAYUNDEAD_DMG_MOD], itembonuses.SlayUndead[SBIndex::SLAYUNDEAD_DMG_MOD], spellbonuses.SlayUndead[SBIndex::SLAYUNDEAD_DMG_MOD] });
 				hit.damage_done = std::max(hit.damage_done, hit.base_damage) + 5;
+				hit.original_damage = std::max(hit.original_damage, hit.base_damage) + 5;
 				hit.damage_done = (hit.damage_done * SlayDmgBonus) / 100;
+				hit.original_damage = (hit.original_damage * SlayDmgBonus) / 100;
 
 				entity_list.FilteredMessageCloseString(
 					this, /* Sender */
@@ -5179,6 +5152,7 @@ bool Mob::TryCriticalHit(Mob *defender, DamageHitInfo &hit, ExtraAttackOptions *
 
 			// step 2: calculate damage
 			hit.damage_done = std::max(hit.damage_done, hit.base_damage) + 5;
+			hit.original_damage = std::max(hit.original_damage, hit.base_damage) + 5;
 			int og_damage = hit.damage_done;
 			int og_damage2 = hit.original_damage;
 			int crit_mod = 170 + GetCritDmgMod(hit.skill);
@@ -5187,6 +5161,7 @@ bool Mob::TryCriticalHit(Mob *defender, DamageHitInfo &hit, ExtraAttackOptions *
 			}
 
 			hit.damage_done = (hit.damage_done * crit_mod) / 100;
+			hit.original_damage = (hit.original_damage * crit_mod) / 100;
 			LogCombat("Crit success roll [{}] dex chance [{}] og dmg [{}] crit_mod [{}] new dmg [{}]", roll, dex_bonus, og_damage, crit_mod, hit.damage_done);
 
 			// step 3: check deadly strike
@@ -5201,6 +5176,7 @@ bool Mob::TryCriticalHit(Mob *defender, DamageHitInfo &hit, ExtraAttackOptions *
 							return true;
 						}
 						hit.damage_done = hit.damage_done * 200 / 100;
+						hit.original_damage = hit.original_damage * 200 / 100;
 
 						entity_list.FilteredMessageCloseString(
 							this, /* Sender */
@@ -6024,25 +6000,31 @@ void Mob::CommonOutgoingHitSuccess(Mob* defender, DamageHitInfo &hit, ExtraAttac
 	if (min_mod && hit.damage_done < min_mod) // SPA 186
 		hit.damage_done = min_mod;
 
-	int effective_hDEX = std::ceil(((IsPetOwnerClient() && GetOwner()) ? std::ceil((1.0/3.0) * GetOwner()->GetHeroicDEX()) : GetHeroicDEX()) * RuleR(Character, Pyrelight_hDEX_CriticalReroll));
+	// Pyrelight Custom Code - Heroic Strength
+	if (RuleR(Character, Pyrelight_hSTR_DmgBonus) > 0) {
+		int effective_hSTR = (IsPetOwnerClient() && GetOwner()) ? (1.0/3.0) * GetOwner()->GetHeroicSTR() : GetHeroicSTR();
+		if (effective_hSTR > 0) {
+			float damage_scalar = 1 + ((RuleR(Character, Pyrelight_hSTR_DmgBonus) / 100) * effective_hSTR);
 
-	bool crit = TryCriticalHit(defender, hit, opts);
-
-	while (RuleR(Character, Pyrelight_hDEX_CriticalReroll) && effective_hDEX > 0 && !crit) {
-		auto random = zone->random.Int(1,100);
-		if (random <= (effective_hDEX * RuleR(Character, Pyrelight_hDEX_CriticalReroll))) {
-			if (GetOwner() && GetOwner()->CastToClient()->GetAccountFlag("filter_hDEX") != "off") {
-				GetOwner()->Message(Chat::OtherHitOther, "Your pet failed to land a critical hit, but your Heroic Dexterity gives it another chance!");
-			}
-			else if (IsClient() && CastToClient()->GetAccountFlag("filter_hDEX") != "off") {
-				Message(Chat::YouHitOther, "You failed to land a critical hit, but your Heroic Dexterity gives you another chance!");
-			}
-			crit = TryCriticalHit(defender, hit, opts);
-			effective_hDEX -= random * 5;
-		} else {
-			break;
-		}		
+			hit.original_damage = hit.damage_done;			
+			hit.damage_done = static_cast<int64>(std::floor(hit.damage_done * damage_scalar));
+			LogDebug("[{}], [{}]", hit.original_damage, hit.damage_done);
+		}
 	}
+
+	// Pyrelight Custom Code - Heroic Stamina
+	int64 damage_reduction_final = 0;
+	if (RuleR(Character, Pyrelight_hSTA_DmgReduction) > 0) {		
+		int effective_hSTA = (other->IsPetOwnerClient() && other->GetOwner()) ? ((1.0/3.0) * other->GetOwner()->GetHeroicSTA()) : other->GetHeroicSTA();
+		if (effective_hSTA > 0) {
+			int64 damage_reduction_value = static_cast<int64>(std::ceil(RuleR(Character, Pyrelight_hSTA_DmgReduction) * effective_hSTA));
+			int64 damage_value = static_cast<int64>(std::max(static_cast<int64>(hit.damage_done * GetDamageReductionCap() / 100), // Capped Damage Reduction
+																				hit.damage_done - damage_reduction_value)); // Reduced Damage
+
+			hit.original_damage = hit.damage_done;
+			hit.damage_done = damage_value;
+		}
+	}	
 
 	hit.damage_done += hit.min_damage;
 	if (IsOfClientBot()) {
@@ -6093,6 +6075,26 @@ void Mob::CommonOutgoingHitSuccess(Mob* defender, DamageHitInfo &hit, ExtraAttac
 	if (defender->GetShielderID()) {
 		DoShieldDamageOnShielder(defender, hit.damage_done, hit.skill);
 		hit.damage_done -= hit.damage_done * defender->GetShieldTargetMitigation() / 100; //Default shielded takes 50 pct damage
+	}
+
+	int effective_hDEX = std::ceil(((IsPetOwnerClient() && GetOwner()) ? std::ceil((1.0/3.0) * GetOwner()->GetHeroicDEX()) : GetHeroicDEX()) * RuleR(Character, Pyrelight_hDEX_CriticalReroll));
+
+	bool crit = TryCriticalHit(defender, hit, opts);
+
+	while (RuleR(Character, Pyrelight_hDEX_CriticalReroll) && effective_hDEX > 0 && !crit) {
+		auto random = zone->random.Int(1,100);
+		if (random <= (effective_hDEX * RuleR(Character, Pyrelight_hDEX_CriticalReroll))) {
+			if (GetOwner() && GetOwner()->CastToClient()->GetAccountFlag("filter_hDEX") != "off") {
+				GetOwner()->Message(Chat::OtherHitOther, "Your pet failed to land a critical hit, but your Heroic Dexterity gives it another chance!");
+			}
+			else if (IsClient() && CastToClient()->GetAccountFlag("filter_hDEX") != "off") {
+				Message(Chat::YouHitOther, "You failed to land a critical hit, but your Heroic Dexterity gives you another chance!");
+			}
+			crit = TryCriticalHit(defender, hit, opts);
+			effective_hDEX -= random * 5;
+		} else {
+			break;
+		}		
 	}
 
 	CheckNumHitsRemaining(NumHit::OutgoingHitSuccess);
