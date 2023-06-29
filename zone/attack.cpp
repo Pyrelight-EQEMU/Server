@@ -1805,8 +1805,8 @@ bool Client::Death(Mob* killerMob, int64 damage, uint16 spell, EQ::skills::Skill
 	if (!spell) {
 		spell = SPELL_UNKNOWN;
 	}
-	
-	this->DepopAllCorpses();
+
+	this->BuryPlayerCorpses();
 
 	if (parse->PlayerHasQuestSub(EVENT_DEATH)) {
 		const auto& export_string = fmt::format(
