@@ -4132,7 +4132,7 @@ bool Mob::SpellOnTarget(
 			//filter_flag_source->LoadAccountFlags();
 			//bool filter_flag = filter_flag_source->GetAccountFlag("filter_hCHA") == "off";
 
-			LogDebug("[{}] [{}]", effective_hCHA, hchaSource->GetName());
+			LogDebug("[{}] [{}]", effective_hCHA, filter_flag_source->GetName());
 
 			while (effective_hCHA > 0) {
 				int random = zone->random.Int(1,100);
