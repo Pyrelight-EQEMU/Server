@@ -4146,6 +4146,8 @@ bool Mob::SpellOnTarget(
 										false,
 										false,
 										level_override);
+
+						LogDebug("Reroll Result... [{}]", new_result);
 								
 						if (new_result == 100) {
 							spell_effectiveness = new_result;
