@@ -4151,10 +4151,10 @@ bool Mob::SpellOnTarget(
 								
 						if (new_result == 100) {	
 							if (hCHA_source->GetAccountFlag("filter_hCHA") != "off" && hCHA_source->GetAccountFlag("filter_hPets") != "off") {					
-								if (hchaSource->IsPet()) {
-									hchaSource->GetOwner()->Message(Chat::PetSpell, "Your pet's magic breaks through under the influence of your Heroic Charisma!");
+								if (hCHA_source->IsPet()) {
+									hCHA_source->GetOwner()->Message(Chat::PetSpell, "Your pet's magic breaks through under the influence of your Heroic Charisma!");
 								} else {
-									hchaSource->Message(Chat::Spells, "Your magic breaks through under the influence of your Heroic Charisma!");
+									hCHA_source->Message(Chat::Spells, "Your magic breaks through under the influence of your Heroic Charisma!");
 								}
 							}
 							spell_effectiveness = new_result;
@@ -4185,10 +4185,10 @@ bool Mob::SpellOnTarget(
 						
 						if (new_result < spell_effectiveness) {	
 							if (hCHA_source->GetAccountFlag("filter_hCHA") != "off") {					
-								if (hchaSource->IsPet() && hCHA_source->GetAccountFlag("filter_hPets") != "off") {
-									hchaSource->GetOwner()->Message(Chat::SpellFailure, "Your pet's resistence to the magic grows under the influence of your Heroic Charisma!");
+								if (hCHA_source->IsPet() && hCHA_source->GetAccountFlag("filter_hPets") != "off") {
+									hCHA_source->GetOwner()->Message(Chat::SpellFailure, "Your pet's resistence to the magic grows under the influence of your Heroic Charisma!");
 								} else {
-									hchaSource->Message(Chat::SpellFailure, "Your resistence to the magic grows under the influence of your Heroic Charisma!");
+									hCHA_source->Message(Chat::SpellFailure, "Your resistence to the magic grows under the influence of your Heroic Charisma!");
 								}
 							}
 							spell_effectiveness = new_result;
