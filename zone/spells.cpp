@@ -4128,7 +4128,7 @@ bool Mob::SpellOnTarget(
 			Mob* hchaSource = spell_effectiveness < 100 ? spellOwner : spelltar;
 			int effective_hCHA = (hchaSource->IsPet() && hchaSource->GetOwner()) ? std::ceil(1.0/3.0 * hchaSource->GetOwner()->GetHeroicCHA()) : hchaSource->GetHeroicCHA();
 
-			Client* filter_flag_source = (hchaSource->IsPet() && hchaSource->GetOwner()) ? hchaSource->GetOwner() : hchaSource;
+			Mob* filter_flag_source = (hchaSource->IsPet() && hchaSource->GetOwner()) ? hchaSource->GetOwner() : hchaSource;
 			if (filter_flag_source->IsClient()) {
 				filter_flag_source->CastToClient()->LoadAccountFlags();
 				bool filter_flag = filter_flag_source->CastToClient()->GetAccountFlag("filter_hCHA") == "off";
