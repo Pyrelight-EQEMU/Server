@@ -4170,7 +4170,7 @@ bool Mob::SpellOnTarget(
 				effective_hCHA = hCHA_source->GetHeroicCHA();
 				hCHA_source->LoadAccountFlags();				
 
-				while (effective_hCHA > 0) {					
+				while (effective_hCHA > 0 && spell_effectiveness > 0) {					
 					int random = zone->random.Int(1,100);
 					LogDebug("Re-Rolling Defensive resist check for [{}], hCHA: [{}], target: [{}], owner: [{}], random: [{}]", hCHA_source->GetName(), effective_hCHA, spelltar->GetName(), spellOwner->GetName(), random);			
 
