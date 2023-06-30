@@ -4148,7 +4148,7 @@ bool Mob::SpellOnTarget(
 
 					if (spell_effectiveness < 100) {		
 						if (new_result == 100) {	
-							if (!filter_flag) {					
+							if (true) {					
 								if (hchaSource->IsPet()) {
 									hchaSource->GetOwner()->Message(Chat::PetSpell, "Your pet's magic breaks through under the influence of your Heroic Charisma!");
 								} else {
