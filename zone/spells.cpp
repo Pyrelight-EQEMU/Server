@@ -4135,8 +4135,7 @@ bool Mob::SpellOnTarget(
 					int random = zone->random.Int(1,100);
 					LogDebug("Re-Rolling Offensive resist check for [{}], hCHA: [{}], target: [{}], owner: [{}], random: [{}]", hCHA_source->GetName(), effective_hCHA, spelltar->GetName(), spellOwner->GetName(), random);				
 
-					if ((effective_hCHA * RuleR(Character,Pyrelight_hCHA_ResistReroll)) >= random) {
-						effective_hCHA -= random * 5;
+					if ((effective_hCHA * RuleR(Character,Pyrelight_hCHA_ResistReroll)) >= random) {						
 						new_result = spelltar->ResistSpell(
 										spells[spell_id].resist_type,
 										spell_id,
@@ -4160,6 +4159,7 @@ bool Mob::SpellOnTarget(
 							break;
 						}
 					}
+					effective_hCHA -= random * 5;
 				}
 			} else if (spelltar->IsClient() || spelltar->IsPetOwnerClient() && spell_effectiveness > 0) {
 				hCHA_source = spelltar->GetOwner() ? spelltar->GetOwner()->CastToClient() : spelltar->CastToClient();
@@ -4194,6 +4194,7 @@ bool Mob::SpellOnTarget(
 							break;
 						}
 					}
+					effective_hCHA -= random * 5;
 				}
 			}
 		}
