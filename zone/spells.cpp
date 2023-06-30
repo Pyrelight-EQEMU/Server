@@ -4161,8 +4161,8 @@ bool Mob::SpellOnTarget(
 						}
 					}
 				}
-			} else if (spellTar->IsClient() || spellTar->IsPetOwnerClient()) {
-				hCHA_source = spellTar->GetOwner() ? spellTar->GetOwner()->CastToClient() : spellTar->CastToClient();
+			} else if (spelltar->IsClient() || spelltar->IsPetOwnerClient()) {
+				hCHA_source = spelltar->GetOwner() ? spelltar->GetOwner()->CastToClient() : spelltar->CastToClient();
 				effective_hCHA = hCHA_source->GetHeroicCHA();
 				hCHA_source->LoadAccountFlags();
 
