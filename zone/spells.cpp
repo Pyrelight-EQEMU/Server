@@ -4151,7 +4151,7 @@ bool Mob::SpellOnTarget(
 								
 						if (new_result == 100) {
 							spell_effectiveness = new_result;
-							LogDebug("Reroll succeeded!")	
+							LogDebug("Reroll succeeded!");	
 							if (hCHA_source->GetAccountFlag("filter_hCHA") != "off") {					
 								if (hCHA_source->IsPet()) {
 									hCHA_source->GetOwner()->Message(Chat::PetSpell, "Your pet's magic breaks through under the influence of your Heroic Charisma!");
