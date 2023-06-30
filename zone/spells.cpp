@@ -4121,37 +4121,36 @@ bool Mob::SpellOnTarget(
 			);
 		}
 
-		// Pyrelight Custom Code
-		if (RuleB(Character,Pyrelight_hCHA_ResistReroll)) {
-			bool changed_result = false;
+		// Pyrelight Custom Code		
+		if (RuleR(Character,Pyrelight_hCHA_ResistReroll) > 0) {
+			int effective_hCHA = 0;
 			int new_result = spell_effectiveness;
-			Mob* hchaSource = spell_effectiveness < 100 ? spellOwner : spelltar;
-			int effective_hCHA = (hchaSource->IsPet() && hchaSource->GetOwner()) ? std::ceil(1.0/3.0 * hchaSource->GetOwner()->GetHeroicCHA()) : hchaSource->GetHeroicCHA();
+			Client* hCHA_source = nullptr;
+			if (spellOwner->IsClient() || spellOwner->IsPetOwnerClient()) {
+				hCHA_source = spellOwner->GetOwner() ? spellOwner->GetOwner()->CastToClient() : spellOwner->CastToClient();
+				effective_hCHA = hCHA_source->GetHeroicCHA();
+				hCHA_source->LoadAccountFlags();
 
-			Mob* filter_flag_source = (hchaSource->IsPet() && hchaSource->GetOwner()) ? hchaSource->GetOwner() : hchaSource;
-			if (filter_flag_source->IsClient()) {
-				filter_flag_source->CastToClient()->LoadAccountFlags();
-				bool filter_flag = filter_flag_source->CastToClient()->GetAccountFlag("filter_hCHA") == "off";
-			}
+				LogDebug("Re-Rolling Offensive resist check for [{}], hCHA: [{}], target: [{}], owner: [{}]", hCHA_source->GetName(), effective_hCHA, spelltar->GetName(), spellOwner->GetName());
 
-			while (effective_hCHA > 0) {
-				int random = zone->random.Int(1,100);
-				LogDebug("Re-Rolling Resist check for [{}], hCHA: [{}], random: [{}]", hchaSource->GetName(), effective_hCHA, random);
-				if (effective_hCHA >= random) {
-					new_result = spelltar->ResistSpell(
-									spells[spell_id].resist_type,
-									spell_id,
-									this,
-									use_resist_adjust,
-									resist_adjust,
-									false,
-									false,
-									false,
-									level_override);
+				while (effective_hCHA > 0) {
+					int random = zone->random.Int(1,100);				
 
-					if (spell_effectiveness < 100) {		
+					if ((effective_hCHA * RuleR(Character,Pyrelight_hCHA_ResistReroll)) >= random) {
+						effective_hCHA -= random * 5;
+						new_result = spelltar->ResistSpell(
+										spells[spell_id].resist_type,
+										spell_id,
+										this,
+										use_resist_adjust,
+										resist_adjust,
+										false,
+										false,
+										false,
+										level_override);
+								
 						if (new_result == 100) {	
-							if (true) {					
+							if (hCHA_source->GetAccountFlag("filter_hCHA") != "off" && hCHA_source->GetAccountFlag("filter_hPets") != "off") {					
 								if (hchaSource->IsPet()) {
 									hchaSource->GetOwner()->Message(Chat::PetSpell, "Your pet's magic breaks through under the influence of your Heroic Charisma!");
 								} else {
@@ -4159,23 +4158,44 @@ bool Mob::SpellOnTarget(
 								}
 							}
 							spell_effectiveness = new_result;
-							break;
 						}
-					} else {
+					}
+				}
+			} else if (spellTar->IsClient() || spellTar->IsPetOwnerClient()) {
+				hCHA_source = spellTar->GetOwner() ? spellTar->GetOwner()->CastToClient() : spellTar->CastToClient();
+				effective_hCHA = hCHA_source->GetHeroicCHA();
+				hCHA_source->LoadAccountFlags();
+
+				LogDebug("Re-Rolling Defensive resist check for [{}], hCHA: [{}], target: [{}], owner: [{}]", hCHA_source->GetName(), effective_hCHA, spelltar->GetName(), spellOwner->GetName());
+
+				while (effective_hCHA > 0) {
+					int random = zone->random.Int(1,100);				
+
+					if ((effective_hCHA * RuleR(Character,Pyrelight_hCHA_ResistReroll)) >= random) {
+						new_result = spelltar->ResistSpell(
+										spells[spell_id].resist_type,
+										spell_id,
+										this,
+										use_resist_adjust,
+										resist_adjust,
+										false,
+										false,
+										false,
+										level_override);
+						
 						if (new_result < spell_effectiveness) {	
-							if (true) {					
-								if (hchaSource->IsPet()) {
-									hchaSource->GetOwner()->Message(Chat::PetSpell, "Your pet resists the spell under the influence of your Heroic Charisma!");
+							if (hCHA_source->GetAccountFlag("filter_hCHA") != "off") {					
+								if (hchaSource->IsPet() && hCHA_source->GetAccountFlag("filter_hPets") != "off") {
+									hchaSource->GetOwner()->Message(Chat::SpellFailure, "Your pet's resistence to the magic grows under the influence of your Heroic Charisma!");
 								} else {
-									hchaSource->Message(Chat::Spells, "You resist the spell under the influence of your Heroic Charisma!");
+									hchaSource->Message(Chat::SpellFailure, "Your resistence to the magic grows under the influence of your Heroic Charisma!");
 								}
 							}
 							spell_effectiveness = new_result;
 						}
 					}
-					effective_hCHA -= random * 5;
 				}
-			}			
+			}
 		}
 
 		if (spell_effectiveness < 100) {
