@@ -4149,7 +4149,7 @@ bool Mob::SpellOnTarget(
 
 						LogDebug("Reroll Result... [{}]", new_result);
 								
-						if (new_result == 100) {
+						if (new_result > spell_effectiveness) {
 							spell_effectiveness = new_result;
 							LogDebug("Reroll succeeded!");	
 							if (hCHA_source->GetAccountFlag("filter_hCHA") != "off") {					
@@ -4159,9 +4159,11 @@ bool Mob::SpellOnTarget(
 									hCHA_source->Message(Chat::Spells, "Your magic breaks through under the influence of your Heroic Charisma!");
 								}
 							}							
+						} else {
+							LogDebug("Reroll failed!");
 						}
 					}
-					effective_hCHA -= random * 5;
+					effective_hCHA -= random * 3;
 				}
 			} else if (spelltar->IsClient() || spelltar->IsPetOwnerClient() && spell_effectiveness > 0) {
 				hCHA_source = spelltar->GetOwner() ? spelltar->GetOwner()->CastToClient() : spelltar->CastToClient();
@@ -4183,9 +4185,12 @@ bool Mob::SpellOnTarget(
 										false,
 										false,
 										level_override);
+
+						LogDebug("Reroll Result... [{}]", new_result);
 						
 						if (new_result < spell_effectiveness) {	
 							spell_effectiveness = new_result;
+							LogDebug("Reroll succeeded!");
 							if (hCHA_source->GetAccountFlag("filter_hCHA") != "off") {					
 								if (hCHA_source->IsPet()) {
 									hCHA_source->GetOwner()->Message(Chat::SpellFailure, "Your pet's resistence to the magic grows under the influence of your Heroic Charisma!");
@@ -4193,9 +4198,11 @@ bool Mob::SpellOnTarget(
 									hCHA_source->Message(Chat::SpellFailure, "Your resistence to the magic grows under the influence of your Heroic Charisma!");
 								}								
 							}
+						} else {
+							LogDebug("Reroll failed!");
 						}
 					}
-					effective_hCHA -= random * 5;
+					effective_hCHA -= random * 3;
 				}
 			}
 		}		
