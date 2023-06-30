@@ -4136,6 +4136,7 @@ bool Mob::SpellOnTarget(
 
 			while (effective_hCHA > 0) {
 				int random = zone->random.Int(1,100);
+				LogDebug("Re-Rolling Resist check for [{}], hCHA: [{}], random: [{}]", hchaSource->GetName(), effective_hCHA, random);
 				if (effective_hCHA >= random) {
 					new_result = spelltar->ResistSpell(
 									spells[spell_id].resist_type,

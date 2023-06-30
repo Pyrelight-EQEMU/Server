@@ -2363,7 +2363,7 @@ bool NPC::Attack(Mob* other, int Hand, bool bRiposte, bool IsStrikethrough, bool
 
 	if (GetHP() > 0 && !other->HasDied()) {
 		other->Damage(this, my_hit.damage_done, SPELL_UNKNOWN, my_hit.skill, true, -1, false, m_specialattacks); // Not avoidable client already had thier chance to Avoid
-		LogDebug("Preparing to trigger STA\\STR message... [{}] [{}]", my_hit.damage_done, my_hit.original_damage);	
+		
 		//Pyrelight Custom Code - Send info about the hSTA/hSTR damage modification to clients
 		if (my_hit.damage_done > 0 && my_hit.original_damage > 0) {
 			if ((IsPetOwnerClient()) && (my_hit.damage_done > my_hit.original_damage)) {				
@@ -2378,7 +2378,6 @@ bool NPC::Attack(Mob* other, int Hand, bool bRiposte, bool IsStrikethrough, bool
 			}
 			
 			if ((other->IsClient() || other->IsPetOwnerClient()) && (my_hit.original_damage > my_hit.damage_done)) {
-				LogDebug("Stamina message should trigger here");			
 				int reduction_percentage = (1 - static_cast<float>(my_hit.damage_done) / static_cast<float>(my_hit.original_damage)) * 100;
 				if (other->IsPetOwnerClient() && other->GetOwner()->CastToClient()->GetAccountFlag("filter_hSTA") != "off" &&  other->GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
 					other->GetOwner()->Message(Chat::OtherHitOther, 
