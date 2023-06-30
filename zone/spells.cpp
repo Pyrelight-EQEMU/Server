@@ -4131,9 +4131,9 @@ bool Mob::SpellOnTarget(
 				effective_hCHA = hCHA_source->GetHeroicCHA();
 				hCHA_source->LoadAccountFlags();
 
-				while (effective_hCHA > 0 && spell_effectiveness < 100) {
-					LogDebug("Re-Rolling Offensive resist check for [{}], hCHA: [{}], target: [{}], owner: [{}]", hCHA_source->GetName(), effective_hCHA, spelltar->GetName(), spellOwner->GetName());
-					int random = zone->random.Int(1,100);				
+				while (effective_hCHA > 0 && spell_effectiveness < 100) {					
+					int random = zone->random.Int(1,100);
+					LogDebug("Re-Rolling Offensive resist check for [{}], hCHA: [{}], target: [{}], owner: [{}], random: [{}]", hCHA_source->GetName(), effective_hCHA, spelltar->GetName(), spellOwner->GetName(), random);				
 
 					if ((effective_hCHA * RuleR(Character,Pyrelight_hCHA_ResistReroll)) >= random) {
 						effective_hCHA -= random * 5;
@@ -4155,8 +4155,9 @@ bool Mob::SpellOnTarget(
 								} else {
 									hCHA_source->Message(Chat::Spells, "Your magic breaks through under the influence of your Heroic Charisma!");
 								}
-							}
+							}							
 							spell_effectiveness = new_result;
+							break;
 						}
 					}
 				}
@@ -4165,9 +4166,9 @@ bool Mob::SpellOnTarget(
 				effective_hCHA = hCHA_source->GetHeroicCHA();
 				hCHA_source->LoadAccountFlags();				
 
-				while (effective_hCHA > 0) {
-					LogDebug("Re-Rolling Defensive resist check for [{}], hCHA: [{}], target: [{}], owner: [{}]", hCHA_source->GetName(), effective_hCHA, spelltar->GetName(), spellOwner->GetName());
-					int random = zone->random.Int(1,100);				
+				while (effective_hCHA > 0) {					
+					int random = zone->random.Int(1,100);
+					LogDebug("Re-Rolling Defensive resist check for [{}], hCHA: [{}], target: [{}], owner: [{}], random: [{}]", hCHA_source->GetName(), effective_hCHA, spelltar->GetName(), spellOwner->GetName(), random);			
 
 					if ((effective_hCHA * RuleR(Character,Pyrelight_hCHA_ResistReroll)) >= random) {
 						new_result = spelltar->ResistSpell(
@@ -4187,9 +4188,10 @@ bool Mob::SpellOnTarget(
 									hCHA_source->GetOwner()->Message(Chat::SpellFailure, "Your pet's resistence to the magic grows under the influence of your Heroic Charisma!");
 								} else {
 									hCHA_source->Message(Chat::SpellFailure, "Your resistence to the magic grows under the influence of your Heroic Charisma!");
-								}
+								}								
 							}
 							spell_effectiveness = new_result;
+							break;
 						}
 					}
 				}
