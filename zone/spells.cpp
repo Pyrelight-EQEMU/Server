@@ -4129,8 +4129,8 @@ bool Mob::SpellOnTarget(
 			int effective_hCHA = (hchaSource->IsPet() && hchaSource->GetOwner()) ? std::ceil(1.0/3.0 * hchaSource->GetOwner()->GetHeroicCHA()) : hchaSource->GetHeroicCHA();
 
 			Client* filter_flag_source = (hchaSource->IsPet() && hchaSource->GetOwner()) ? hchaSource->GetOwner()->CastToClient() : hchaSource->CastToClient();
-			filter_flag_source->LoadAccountFlags();
-			bool filter_flag = filter_flag_source->GetAccountFlag("filter_hCHA") == "off";
+			//filter_flag_source->LoadAccountFlags();
+			//bool filter_flag = filter_flag_source->GetAccountFlag("filter_hCHA") == "off";
 
 			while (effective_hCHA > 0) {
 				int random = zone->random.Int(1,100);
@@ -4160,7 +4160,7 @@ bool Mob::SpellOnTarget(
 						}
 					} else {
 						if (new_result < spell_effectiveness) {	
-							if (!filter_flag) {					
+							if (true) {					
 								if (hchaSource->IsPet()) {
 									hchaSource->GetOwner()->Message(Chat::PetSpell, "Your pet resists the spell under the influence of your Heroic Charisma!");
 								} else {
