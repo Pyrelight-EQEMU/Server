@@ -269,10 +269,10 @@ void Mob::DoSpecialAttackDamage(Mob *who, EQ::skills::SkillType skill, int32 bas
 		} else if (GetOwner() && GetOwner()->IsClient()) {
 			GetOwner()->CastToClient()->LoadAccountFlags();
 		} 
-		if (other->IsClient()) {
-			other->CastToClient()->LoadAccountFlags();
-		} else if (other->GetOwner() && other->GetOwner()->IsClient()) {
-			other->GetOwner()->CastToClient()->LoadAccountFlags();
+		if (who->IsClient()) {
+			who->CastToClient()->LoadAccountFlags();
+		} else if (who->GetOwner() && who->GetOwner()->IsClient()) {
+			who->GetOwner()->CastToClient()->LoadAccountFlags();
 		}
 		if ((IsClient() || IsPetOwnerClient()) && (my_hit.damage_done > my_hit.original_damage)) {				
 			int increase_percentage = ((static_cast<float>(my_hit.damage_done) / static_cast<float>(my_hit.original_damage)) - 1) * 100;
@@ -936,10 +936,10 @@ void Mob::DoArcheryAttackDmg(Mob *who, const EQ::ItemInstance *RangeWeapon, cons
 		} else if (GetOwner() && GetOwner()->IsClient()) {
 			GetOwner()->CastToClient()->LoadAccountFlags();
 		} 
-		if (other->IsClient()) {
-			other->CastToClient()->LoadAccountFlags();
-		} else if (other->GetOwner() && other->GetOwner()->IsClient()) {
-			other->GetOwner()->CastToClient()->LoadAccountFlags();
+		if (who->IsClient()) {
+			who->CastToClient()->LoadAccountFlags();
+		} else if (who->GetOwner() && who->GetOwner()->IsClient()) {
+			who->GetOwner()->CastToClient()->LoadAccountFlags();
 		} 
 		if ((IsClient() || IsPetOwnerClient()) && (my_hit.damage_done > my_hit.original_damage)) {				
 			int increase_percentage = ((static_cast<float>(my_hit.damage_done) / static_cast<float>(my_hit.original_damage)) - 1) * 100;
@@ -1358,10 +1358,10 @@ void NPC::DoRangedAttackDmg(Mob* who, bool Launch, int16 damage_mod, int16 chanc
 		} else if (GetOwner() && GetOwner()->IsClient()) {
 			GetOwner()->CastToClient()->LoadAccountFlags();
 		} 
-		if (other->IsClient()) {
-			other->CastToClient()->LoadAccountFlags();
-		} else if (other->GetOwner() && other->GetOwner()->IsClient()) {
-			other->GetOwner()->CastToClient()->LoadAccountFlags();
+		if (who->IsClient()) {
+			who->CastToClient()->LoadAccountFlags();
+		} else if (who->GetOwner() && who->GetOwner()->IsClient()) {
+			who->GetOwner()->CastToClient()->LoadAccountFlags();
 		} 
 		if ((IsClient() || IsPetOwnerClient()) && (my_hit.damage_done > my_hit.original_damage)) {				
 			int increase_percentage = ((static_cast<float>(my_hit.damage_done) / static_cast<float>(my_hit.original_damage)) - 1) * 100;
