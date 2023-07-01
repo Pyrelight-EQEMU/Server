@@ -92,19 +92,32 @@ int64 Mob::GetActSpellDamage(uint16 spell_id, int64 value, Mob* target) {
 
 		if (spells[spell_id].override_crit_chance > 0 && chance > spells[spell_id].override_crit_chance)
 			chance = spells[spell_id].override_crit_chance;
-
-		int effective_hDEX = GetHeroicDEX();
+		
 		bool Critical = zone->random.Roll(chance);
-		while (RuleR(Character, Pyrelight_hDEX_CriticalReroll) && effective_hDEX > 0 && !Critical) {
-			if (IsClient() && CastToClient()->GetAccountFlag("filter_hDEX") != "off") {
-				Message(Chat::Spells, "You fail to deliver a critical blast, but your Heroic Dexterity gives you another chance!");
+
+		// Pyrelight Custom Code
+		if (RuleR(Character, Pyrelight_hDEX_CriticalReroll) > 0)
+			if (IsClient()) {
+				CastToClient()->LoadAccountFlags();
+			} else if (GetOwner() && GetOwner()->IsClient()) {
+				GetOwner()->CastToClient()->LoadAccountFlags();
 			}
-			auto random = zone->random.Int(1,100);
-			if (random <= (effective_hDEX * RuleR(Character, Pyrelight_hDEX_CriticalReroll))) {
-				Critical = zone->random.Roll(chance);
-				effective_hDEX -= random * 5;
-			} else {
-				break;
+			int effective_hDEX = (IsPetOwnerClient() && GetOwner()) ? std::ceil(RuleR(Character, ) * GetOwner()->GetHeroicDEX()) : GetHeroicDEX();
+			while (effective_hDEX > 0 && !Critical) {
+				auto random = zone->random.Int(1,100);
+				if (random <= (effective_hDEX * RuleR(Character, Pyrelight_hDEX_CriticalReroll))) {
+					Critical = zone->random.Roll(chance);
+					if (Critical) {
+						if (IsClient() && CastToClient()->GetAccountFlag("filter_hDEX") != "off") {
+							Message(Chat::Spells, "Your Heroic Dexterity allows you to deliver a critical blast!");
+						} else if (GetOwner() && GetOwner()->IsClient() && 
+							   GetOwner()->CastToClient()->GetAccountFlag("filter_hDEX") != "off" && 
+							   GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
+							GetOwner()->Message(Chat::PetSpell, "Your Heroic Dexterity allows your pet to deliver a critical blast!");
+						}
+					}
+				}
+				effective_hDEX -= random * RuleI(Character, Pyrelight_HeroicRerollDecayRate);
 			}
 		}
 
@@ -269,23 +282,31 @@ int64 Mob::GetActDoTDamage(uint16 spell_id, int64 value, Mob* target, bool from_
 		chance = spells[spell_id].override_crit_chance;
 
 	bool Critical = false;
-	if (chance > 0) {
-		// Pyrelight Custom Code - Reroll the crit dots
-		int effective_hDEX = GetHeroicDEX();
-		Critical = zone->random.Roll(chance);
-		while (RuleR(Character, Pyrelight_hDEX_CriticalReroll) && effective_hDEX > 0 && !Critical) {
-			if (IsClient() && CastToClient()->GetAccountFlag("filter_hDEX") != "off") {
-				Message(Chat::DotDamage, "Your DoT fails to be critically effective, but your Heroic Dexterity gives you another chance!");
-			}
+	
+	// Pyrelight Custom Code
+	if (RuleR(Character, Pyrelight_hDEX_CriticalReroll) > 0)
+		if (IsClient()) {
+			CastToClient()->LoadAccountFlags();
+		} else if (GetOwner() && GetOwner()->IsClient()) {
+			GetOwner()->CastToClient()->LoadAccountFlags();
+		}
+		int effective_hDEX = (IsPetOwnerClient() && GetOwner()) ? std::ceil(RuleR(Character, Pyrelight_HeroicPetMod) * GetOwner()->GetHeroicDEX()) : GetHeroicDEX();
+		while (effective_hDEX > 0 && !Critical) {
 			auto random = zone->random.Int(1,100);
 			if (random <= (effective_hDEX * RuleR(Character, Pyrelight_hDEX_CriticalReroll))) {
 				Critical = zone->random.Roll(chance);
-				effective_hDEX -= random * 5;
-			} else {
-				break;
+				if (Critical) {
+					if (IsClient() && CastToClient()->GetAccountFlag("filter_hDEX") != "off") {
+						Message(Chat::Spells, "Your Heroic Dexterity allows you to deliver a critical blast!");
+					} else if (GetOwner() && GetOwner()->IsClient() && 
+							GetOwner()->CastToClient()->GetAccountFlag("filter_hDEX") != "off" && 
+							GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
+						GetOwner()->Message(Chat::PetSpell, "Your Heroic Dexterity allows your pet to deliver a critical blast!");
+					}
+				}
 			}
+			effective_hDEX -= random * RuleR(Character, Pyrelight_HeroicRerollDecayRate);
 		}
-		// End Pyrelight Custom Code
 	}
 
 	if (!spells[spell_id].good_effect && chance > 0 && Critical) {
