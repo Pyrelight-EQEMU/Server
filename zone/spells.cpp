@@ -1647,7 +1647,7 @@ void Mob::CastedSpellFinished(uint16 spell_id, uint32 target_id, CastingSlot slo
 		TrySympatheticProc(target, spell_id);		
 
 		EQ::ItemInstance* ranged = GetInv().GetItem(EQ::invslot::slotRange);	
-		if (primary && who && !who->HasDied()) {
+		if (ranged && who && !who->HasDied()) {
 			TryCombatProcs(ranged, target, EQ::invslot::slotRange);
 		}
 
