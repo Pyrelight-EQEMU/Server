@@ -971,16 +971,15 @@ void Mob::DoArcheryAttackDmg(Mob *who, const EQ::ItemInstance *RangeWeapon, cons
 		if (RangeWeapon && who && !who->HasDied()) {
 			TryCombatProcs(RangeWeapon, who, EQ::invslot::slotRange);
 		}
-		
-		// Pri/Sec Procs
-		EQ::ItemInstance* primary = GetInv().GetItem(EQ::invslot::slotPrimary);
-		EQ::ItemInstance* secondary = GetInv().GetItem(EQ::invslot::slotSecondary);
 
+		EQ::ItemInstance* primary = GetInv().GetItem(EQ::invslot::slotPrimary);	
 		if (primary && who && !who->HasDied()) {
-			TryCombatProcs(primary, who, EQ::invslot::slotRange);
+			TryWeaponProc(primary, primary->GetItem(), who, EQ::invslot::slotPrimary);
 		}
+
+		EQ::ItemInstance* secondary = GetInv().GetItem(EQ::invslot::slotSecondary);
 		if (secondary && who && !who->HasDied()) {
-			TryCombatProcs(secondary, who, EQ::invslot::slotRange);
+			TryWeaponProc(secondary, secondary->GetItem(), who, EQ::invslot::slotSecondary);
 		}
 
 		// Ammo Proc, do not try spell procs if from ammo.
@@ -1656,15 +1655,14 @@ void Mob::DoThrowingAttackDmg(Mob *who, const EQ::ItemInstance *RangeWeapon, con
 			TryCombatProcs(RangeWeapon, who, EQ::invslot::slotRange);
 		}
 		
-		// Pri/Sec Procs
-		EQ::ItemInstance* primary = GetInv().GetItem(EQ::invslot::slotPrimary);
-		EQ::ItemInstance* secondary = GetInv().GetItem(EQ::invslot::slotSecondary);
-
+		EQ::ItemInstance* primary = GetInv().GetItem(EQ::invslot::slotPrimary);	
 		if (primary && who && !who->HasDied()) {
-			TryCombatProcs(primary, who, EQ::invslot::slotRange);
+			TryWeaponProc(primary, primary->GetItem(), who, EQ::invslot::slotPrimary);
 		}
+
+		EQ::ItemInstance* secondary = GetInv().GetItem(EQ::invslot::slotSecondary);
 		if (secondary && who && !who->HasDied()) {
-			TryCombatProcs(secondary, who, EQ::invslot::slotRange);
+			TryWeaponProc(secondary, secondary->GetItem(), who, EQ::invslot::slotSecondary);
 		}
 	}
 

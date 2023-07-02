@@ -82,6 +82,10 @@ int64 Mob::GetActSpellDamage(uint16 spell_id, int64 value, Mob* target) {
 
 	//Crtical Hit Calculation pathway
 	bool Critical = false;
+
+	if (spells[spell_id].override_crit_chance > 0 && chance > spells[spell_id].override_crit_chance)
+		chance = spells[spell_id].override_crit_chance;
+
 	if (chance > 0 || (IsOfClientBot() && GetClass() == WIZARD && GetLevel() >= RuleI(Spells, WizCritLevel))) {
 		
 		int32 ratio = RuleI(Spells, BaseCritRatio); //Critical modifier is applied from spell effects only. Keep at 100 for live like criticals.
@@ -89,9 +93,6 @@ int64 Mob::GetActSpellDamage(uint16 spell_id, int64 value, Mob* target) {
 		//Improved Harm Touch is a guaranteed crit if you have at least one level of SCF.
 		if (spell_id == SPELL_IMP_HARM_TOUCH && IsOfClientBot() && (GetAA(aaSpellCastingFury) > 0) && (GetAA(aaUnholyTouch) > 0))
 			 chance = 100;
-
-		if (spells[spell_id].override_crit_chance > 0 && chance > spells[spell_id].override_crit_chance)
-			chance = spells[spell_id].override_crit_chance;
 
 		Critical = zone->random.Roll(chance);
 
@@ -107,12 +108,14 @@ int64 Mob::GetActSpellDamage(uint16 spell_id, int64 value, Mob* target) {
 				auto random = zone->random.Int(1,100);
 				if (random <= (effective_hDEX * RuleR(Character, Pyrelight_hDEX_CriticalReroll))) {
 					Critical = zone->random.Roll(chance);
-					if (IsClient() && CastToClient()->GetAccountFlag("filter_hDEX") != "off") {
-						Message(Chat::SpellCrit, "Your Heroic Dexterity allows you to deliver a critical blast!");
-					} else if (GetOwner() && GetOwner()->IsClient() && 
-							GetOwner()->CastToClient()->GetAccountFlag("filter_hDEX") != "off" && 
-							GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
-						GetOwner()->Message(Chat::PetCritical, "Your Heroic Dexterity allows your pet to deliver a critical blast!");
+					if (Critical) {
+						if (IsClient() && CastToClient()->GetAccountFlag("filter_hDEX") != "off") {
+							Message(Chat::SpellCrit, "Your Heroic Dexterity allows you to deliver a critical blast!");
+						} else if (GetOwner() && GetOwner()->IsClient() && 
+								   GetOwner()->CastToClient()->GetAccountFlag("filter_hDEX") != "off" && 
+								   GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
+								   GetOwner()->Message(Chat::PetCritical, "Your Heroic Dexterity allows your pet to deliver a critical blast!");
+						}
 					}
 				}	
 				effective_hDEX -= random * RuleR(Character, Pyrelight_HeroicRerollDecayRate);	
@@ -280,8 +283,11 @@ int64 Mob::GetActDoTDamage(uint16 spell_id, int64 value, Mob* target, bool from_
 		chance = spells[spell_id].override_crit_chance;
 
 	bool Critical = false;
+
 	if (chance > 0) {
+
 		Critical = zone->random.Roll(chance);
+		
 		// Pyrelight Custom Code
 		if (RuleR(Character, Pyrelight_hDEX_CriticalReroll) > 0) {			
 			if (IsClient()) {
@@ -293,13 +299,15 @@ int64 Mob::GetActDoTDamage(uint16 spell_id, int64 value, Mob* target, bool from_
 			while (effective_hDEX > 0 && !Critical) {	
 				auto random = zone->random.Int(1,100);
 				if (random <= (effective_hDEX * RuleR(Character, Pyrelight_hDEX_CriticalReroll))) {
-					Critical = zone->random.Roll(chance);					
-					if (IsClient() && CastToClient()->GetAccountFlag("filter_hDEX") != "off") {
-						Message(Chat::SpellCrit, "Your Heroic Dexterity allows you to deliver a critical affliction!");
-					} else if (GetOwner() && GetOwner()->IsClient() && 
-								GetOwner()->CastToClient()->GetAccountFlag("filter_hDEX") != "off" && 
-								GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
-						GetOwner()->Message(Chat::PetCritical, "Your Heroic Dexterity allows your pet to deliver a affliction");
+					Critical = zone->random.Roll(chance);
+					if (Critical) {			
+						if (IsClient() && CastToClient()->GetAccountFlag("filter_hDEX") != "off") {
+							Message(Chat::SpellCrit, "Your Heroic Dexterity allows you to deliver a critical affliction!");
+						} else if (GetOwner() && GetOwner()->IsClient() && 
+								   GetOwner()->CastToClient()->GetAccountFlag("filter_hDEX") != "off" && 
+								   GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
+								   GetOwner()->Message(Chat::PetCritical, "Your Heroic Dexterity allows your pet to deliver a affliction");
+						}
 					}
 				}	
 				effective_hDEX -= random * RuleR(Character, Pyrelight_HeroicRerollDecayRate);	
@@ -440,6 +448,7 @@ int64 Mob::GetActSpellHealing(uint16 spell_id, int64 value, Mob* target, bool fr
 		value *= std::abs(GetSkillDmgAmt(spells[spell_id].skill) / 100);
 	}
 
+	bool Critical = false;
 	int64 base_value = value;
 	int16 critical_chance = 0;
 	int8  critical_modifier = 1;
@@ -459,11 +468,13 @@ int64 Mob::GetActSpellHealing(uint16 spell_id, int64 value, Mob* target, bool fr
 		}
 	}
 
-	if (critical_chance) {
+	
+	if (spells[spell_id].override_crit_chance > 0 && critical_chance > spells[spell_id].override_crit_chance) {
+		critical_chance = spells[spell_id].override_crit_chance;
+	}
 
-		if (spells[spell_id].override_crit_chance > 0 && critical_chance > spells[spell_id].override_crit_chance) {
-			critical_chance = spells[spell_id].override_crit_chance;
-		}
+	if (critical_chance) {
+		Critical = zone->random.Roll(critical_chance);
 
 		// Pyrelight Custom Code
 		if (RuleR(Character, Pyrelight_hDEX_CriticalReroll) > 0) {	
@@ -476,13 +487,15 @@ int64 Mob::GetActSpellHealing(uint16 spell_id, int64 value, Mob* target, bool fr
 			while (effective_hDEX > 0 && !Critical) {	
 				auto random = zone->random.Int(1,100);
 				if (random <= (effective_hDEX * RuleR(Character, Pyrelight_hDEX_CriticalReroll))) {
-					Critical = zone->random.Roll(chance);
-					if (IsClient() && CastToClient()->GetAccountFlag("filter_hDEX") != "off") {
-						Message(Chat::SpellCrit, "Your Heroic Dexterity allows you to deliver an exceptional heal!");
-					} else if (GetOwner() && GetOwner()->IsClient() && 
-							GetOwner()->CastToClient()->GetAccountFlag("filter_hDEX") != "off" && 
-							GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
-						GetOwner()->Message(Chat::PetCritical, "Your Heroic Dexterity allows your pet to deliver an exceptional heal!");
+					Critical = zone->random.Roll(critical_chance);
+					if (Critical) {
+						if (IsClient() && CastToClient()->GetAccountFlag("filter_hDEX") != "off") {
+							Message(Chat::SpellCrit, "Your Heroic Dexterity allows you to deliver an exceptional heal!");
+						} else if (GetOwner() && GetOwner()->IsClient() && 
+								   GetOwner()->CastToClient()->GetAccountFlag("filter_hDEX") != "off" && 
+								   GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
+								   GetOwner()->Message(Chat::PetCritical, "Your Heroic Dexterity allows your pet to deliver an exceptional heal!");
+						}
 					}
 				}	
 				effective_hDEX -= random * RuleR(Character, Pyrelight_HeroicRerollDecayRate);	

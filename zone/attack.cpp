@@ -1495,10 +1495,9 @@ void Mob::DoAttack(Mob *other, DamageHitInfo &hit, ExtraAttackOptions *opts, boo
 }
 
 int Mob::GetDamageReductionCap() {
-	if (!IsClient()) {
-		return 50;
-	}
-	return 50;
+	int cap = 50;
+
+	return std::min(90, cap);
 }
 
 //note: throughout this method, setting `damage` to a negative is a way to
@@ -6079,6 +6078,7 @@ void Mob::CommonOutgoingHitSuccess(Mob* defender, DamageHitInfo &hit, ExtraAttac
 	// Pyrelight Custom Code - Heroic Strength
 	if (RuleR(Character, Pyrelight_hSTR_DmgBonus) > 0) {
 		int effective_hSTR = (IsPetOwnerClient() && GetOwner()) ? RuleR(Character, Pyrelight_HeroicPetMod) * GetOwner()->GetHeroicSTR() : GetHeroicSTR();
+		effective_hSTR = zone->random.Int(std::ceil(effective_hSTR) * 0.5 , std::ceil(effective_hSTR * 1.5));
 		if (effective_hSTR > 0) {
 			float damage_scalar = 1 + ((RuleR(Character, Pyrelight_hSTR_DmgBonus) / 100) * effective_hSTR);
 
@@ -6091,6 +6091,7 @@ void Mob::CommonOutgoingHitSuccess(Mob* defender, DamageHitInfo &hit, ExtraAttac
 	int64 damage_reduction_final = 0;
 	if (RuleR(Character, Pyrelight_hSTA_DmgReduction) > 0) {		
 		int effective_hSTA = (defender->IsPetOwnerClient() && defender->GetOwner()) ? (RuleR(Character, Pyrelight_HeroicPetMod) * defender->GetOwner()->GetHeroicSTA()) : defender->GetHeroicSTA();
+		effective_hSTA = zone->random.Int(std::ceil(effective_hSTA) * 0.5 , std::ceil(effective_hSTA * 1.5));
 		if (effective_hSTA > 0) {
 			int64 damage_reduction_value = static_cast<int64>(std::ceil(RuleR(Character, Pyrelight_hSTA_DmgReduction) * effective_hSTA));
 			int64 damage_value = static_cast<int64>(std::max(static_cast<int64>(hit.damage_done * GetDamageReductionCap() / 100), // Capped Damage Reduction

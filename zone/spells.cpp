@@ -1644,9 +1644,22 @@ void Mob::CastedSpellFinished(uint16 spell_id, uint32 target_id, CastingSlot slo
 	}
 
 	if(IsOfClientBotMerc() && slot <= CastingSlot::Gem12) {
-		TrySympatheticProc(target, spell_id);
-		int16 slots[] = {EQ::invslot::slotPrimary, EQ::invslot::slotSecondary, EQ::invslot::slotRange};
-		for(int16 slot : slots) { TryCombatProcs(GetInv().GetItem(slot), target); }
+		TrySympatheticProc(target, spell_id);		
+
+		EQ::ItemInstance* ranged = GetInv().GetItem(EQ::invslot::slotRange);	
+		if (primary && who && !who->HasDied()) {
+			TryCombatProcs(ranged, target, EQ::invslot::slotRange);
+		}
+
+		EQ::ItemInstance* primary = GetInv().GetItem(EQ::invslot::slotPrimary);	
+		if (primary && who && !who->HasDied()) {
+			TryWeaponProc(primary, primary->GetItem(), target, EQ::invslot::slotPrimary);
+		}
+
+		EQ::ItemInstance* secondary = GetInv().GetItem(EQ::invslot::slotSecondary);
+		if (secondary && who && !who->HasDied()) {
+			TryWeaponProc(secondary, secondary->GetItem(), target, EQ::invslot::slotSecondary);
+		}
 	}
 
 	TryTwincast(this, target, spell_id);
