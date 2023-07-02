@@ -301,21 +301,21 @@ int Mob::GetTotalDefense()
 }
 
 // called when a mob is attacked, does the checks to see if it's a hit
-// and does defender mitigation checks. 'this' is the mob being attacked.
+// and does other mitigation checks. 'this' is the mob being attacked.
 // SYNC WITH : tune.cpp, mob.h TuneCheckHitChance()
 bool Mob::CheckHitChance(Mob* other, DamageHitInfo &hit)
 {
 #ifdef LUA_EQEMU
 	bool lua_ret = false;
 	bool ignoreDefault = false;
-	lua_ret = LuaParser::Instance()->CheckHitChance(this, defender, hit, ignoreDefault);
+	lua_ret = LuaParser::Instance()->CheckHitChance(this, other, hit, ignoreDefault);
 
 	if(ignoreDefault) {
 		return lua_ret;
 	}
 #endif
 
-	Mob *attacker = defender;
+	Mob *attacker = other;
 	Mob *defender = this;
 	Log(Logs::Detail, Logs::Attack, "CheckHitChance(%s) attacked by %s", defender->GetName(), attacker->GetName());
 
@@ -332,7 +332,7 @@ bool Mob::CheckHitChance(Mob* other, DamageHitInfo &hit)
 		return true;
 	
 	// Pyrelight Custom Code. Minimum of (MobLevel - PlayerLevel + 5)% chance to automatically hit.
-	if (this->IsClient() && zone->random.Roll0(99) <= (defender->GetLevel() - GetLevel() + 5)) {
+	if (this->IsClient() && zone->random.Roll0(99) <= (other->GetLevel() - GetLevel() + 5)) {
 		return true;
 	}
 
@@ -349,12 +349,12 @@ bool Mob::CheckHitChance(Mob* other, DamageHitInfo &hit)
 	return tohit_roll > avoid_roll;
 }
 
-bool Mob::AvoidDamage(Mob *defender, DamageHitInfo &hit)
+bool Mob::AvoidDamage(Mob *other, DamageHitInfo &hit)
 {
 #ifdef LUA_EQEMU
 	bool lua_ret = false;
 	bool ignoreDefault = false;
-	lua_ret = LuaParser::Instance()->AvoidDamage(this, defender, hit, ignoreDefault);
+	lua_ret = LuaParser::Instance()->AvoidDamage(this, other, hit, ignoreDefault);
 
 	if (ignoreDefault) {
 		return lua_ret;
@@ -362,7 +362,7 @@ bool Mob::AvoidDamage(Mob *defender, DamageHitInfo &hit)
 #endif
 
 	/* called when a mob is attacked, does the checks to see if it's a hit
-	* and does defender mitigation checks. 'this' is the mob being attacked.
+	* and does other mitigation checks. 'this' is the mob being attacked.
 	*
 	* special return values:
 	* -1 - block
@@ -393,7 +393,7 @@ bool Mob::AvoidDamage(Mob *defender, DamageHitInfo &hit)
 	*
 	* Things with 10k accuracy mods can be avoided with these skills qq
 	*/
-	Mob *attacker = defender;
+	Mob *attacker = other;
 	Mob *defender = this;
 
 	bool InFront = !attacker->BehindMob(this, attacker->GetX(), attacker->GetY());
@@ -433,7 +433,7 @@ bool Mob::AvoidDamage(Mob *defender, DamageHitInfo &hit)
 	}
 
 	// Pyrelight Custom Code. Minimum of (MobLevel - PlayerLevel + 5)% chance to bypass all evasion rolls.
-	if (this->IsClient() && zone->random.Roll0(99) <= (defender->GetLevel() - GetLevel() + 5) && GetLevelCon(defender->GetLevel()) != CON_GRAY) {
+	if (this->IsClient() && zone->random.Roll0(99) <= (other->GetLevel() - GetLevel() + 5) && GetLevelCon(other->GetLevel()) != CON_GRAY) {
 		LogCombat("Auto-Failed Avoidance Check");
 		return false;
 	}
@@ -481,7 +481,7 @@ bool Mob::AvoidDamage(Mob *defender, DamageHitInfo &hit)
 			return true;
 		}
 		if (IsClient())
-			CastToClient()->CheckIncreaseSkill(EQ::skills::SkillRiposte, defender, -10);
+			CastToClient()->CheckIncreaseSkill(EQ::skills::SkillRiposte, other, -10);
 		// check auto discs ... I guess aa/items too :P
 		if (spellbonuses.RiposteChance == 10000 || aabonuses.RiposteChance == 10000 || itembonuses.RiposteChance == 10000) {
 			hit.damage_done = DMG_RIPOSTED;
@@ -514,7 +514,7 @@ bool Mob::AvoidDamage(Mob *defender, DamageHitInfo &hit)
 	bool bBlockFromRear = false;
 
 	// a successful roll on this does not mean a successful block is forthcoming. only that a chance to block
-	// from a direction defender than the rear is granted.
+	// from a direction other than the rear is granted.
 
 	int BlockBehindChance = aabonuses.BlockBehind + spellbonuses.BlockBehind + itembonuses.BlockBehind;
 
@@ -523,7 +523,7 @@ bool Mob::AvoidDamage(Mob *defender, DamageHitInfo &hit)
 
 	if (CanThisClassBlock() && (InFront || bBlockFromRear)) {
 		if (IsClient())
-			CastToClient()->CheckIncreaseSkill(EQ::skills::SkillBlock, defender, -10);
+			CastToClient()->CheckIncreaseSkill(EQ::skills::SkillBlock, other, -10);
 		// check auto discs ... I guess aa/items too :P
 		if (spellbonuses.IncreaseBlockChance == 10000 || aabonuses.IncreaseBlockChance == 10000 ||
 			itembonuses.IncreaseBlockChance == 10000) {
@@ -551,7 +551,7 @@ bool Mob::AvoidDamage(Mob *defender, DamageHitInfo &hit)
 	// parry
 	if (CanThisClassParry() && InFront && hit.hand != EQ::invslot::slotRange) {
 		if (IsClient())
-			CastToClient()->CheckIncreaseSkill(EQ::skills::SkillParry, defender, -10);
+			CastToClient()->CheckIncreaseSkill(EQ::skills::SkillParry, other, -10);
 		// check auto discs ... I guess aa/items too :P
 		if (spellbonuses.ParryChance == 10000 || aabonuses.ParryChance == 10000 || itembonuses.ParryChance == 10000) {
 			hit.damage_done = DMG_PARRIED;
@@ -578,7 +578,7 @@ bool Mob::AvoidDamage(Mob *defender, DamageHitInfo &hit)
 	// dodge
 	if (CanThisClassDodge() && (InFront || GetClass() == MONK || GetClass() == BEASTLORD)) {
 		if (IsClient())
-			CastToClient()->CheckIncreaseSkill(EQ::skills::SkillDodge, defender, -10);
+			CastToClient()->CheckIncreaseSkill(EQ::skills::SkillDodge, other, -10);
 		// check auto discs ... I guess aa/items too :P
 		if (spellbonuses.DodgeChance == 10000 || aabonuses.DodgeChance == 10000 || itembonuses.DodgeChance == 10000) {
 			hit.damage_done = DMG_DODGED;
@@ -1071,7 +1071,7 @@ void Mob::MeleeMitigation(Mob *attacker, DamageHitInfo &hit, ExtraAttackOptions 
 //Returns the weapon damage against the input mob
 //if we cannot hit the mob with the current weapon we will get a value less than or equal to zero
 //Else we know we can hit.
-//GetWeaponDamage(mob*, const EQ::ItemData*) is intended to be used for mobs or any defender situation where we do not have a client inventory item
+//GetWeaponDamage(mob*, const EQ::ItemData*) is intended to be used for mobs or any other situation where we do not have a client inventory item
 //GetWeaponDamage(mob*, const EQ::ItemInstance*) is intended to be used for situations where we have a client inventory item
 int64 Mob::GetWeaponDamage(Mob *against, const EQ::ItemData *weapon_item) {
 	int64 dmg = 0;
@@ -1410,45 +1410,34 @@ int64 Mob::DoDamageCaps(int64 base_damage)
 	return std::min((int64)cap, base_damage);
 }
 
-// defender is the defender, this is the attacker
+// other is the defender, this is the attacker
 //SYNC WITH: tune.cpp, mob.h TuneDoAttack
-void Mob::DoAttack(Mob *defender, DamageHitInfo &hit, ExtraAttackOptions *opts, bool FromRiposte)
+void Mob::DoAttack(Mob *other, DamageHitInfo &hit, ExtraAttackOptions *opts, bool FromRiposte)
 {
-	if (!defender)
+	if (!other)
 		return;
 	LogCombat("[{}]::DoAttack vs [{}] base [{}] min [{}] offense [{}] tohit [{}] skill [{}]", GetName(),
-		defender->GetName(), hit.base_damage, hit.min_damage, hit.offense, hit.tohit, hit.skill);
+		other->GetName(), hit.base_damage, hit.min_damage, hit.offense, hit.tohit, hit.skill);
 
 	if (!RuleB(Combat, UseLiveRiposteMechanics)) {
 		FromRiposte = false;
 	}
 
-	if (defender->CheckHitChance(this, hit)) {						
+	if (other->CheckHitChance(this, hit)) {						
 		// Pyrelight Custom Code - Repeat Evasion checks based on defender hAGI
-		if (RuleR(Character, Pyrelight_hAGI_EvasionReroll) > 0) { 
-			if (defender->IsClient()) {
-				defender->CastToClient()->LoadAccountFlags();
-			} else if (defender->GetOwner() && defender->GetOwner()->IsClient()) {
-				defender->GetOwner()->CastToClient()->LoadAccountFlags();
-			}
-			int effective_hAGI = (defender->IsPetOwnerClient() && defender->GetOwner()) ? std::ceil(RuleR(Character, Pyrelight_HeroicPetMod) * defender->GetOwner()->GetHeroicAGI()) : defender->GetHeroicAGI();		
-			bool avoided = defender->AvoidDamage(this, hit);		
-			while (!avoided && effective_hAGI > 0) {
-				auto random = zone->random.Int(1,100);
-				if (random <= (effective_hAGI * RuleR(Character, Pyrelight_hAGI_EvasionReroll))) {
-					avoided = defender->AvoidDamage(this, hit);
-					if (avoided) {
-						if (defender->IsClient() && defender->CastToClient()->GetAccountFlag("filter_hAGI") != "off") {
-							defender->Message(Chat::OtherMissYou, "Your Heroic Agility allows you to evade the attack!");
-						} else if (defender->GetOwner() && defender->GetOwner()->IsClient() && 
-								   defender->GetOwner()->CastToClient()->GetAccountFlag("filter_hAGI") != "off" && 
-								   defender->GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
-							defender->GetOwner()->Message(Chat::OtherMissOther, "Your Heroic Agility allows your pet to evade the attack!");
-						}
-					}
-				}				
-				effective_hAGI -= random * RuleR(Character, Pyrelight_HeroicRerollDecayRate);	
-			}
+		int effective_hAGI = (other->IsPetOwnerClient() && other->GetOwner()) ? std::ceil((1.0/3.0) * other->GetOwner()->GetHeroicAGI()) : other->GetHeroicAGI();
+		bool avoided = other->AvoidDamage(this, hit);		
+		while (!avoided && RuleR(Character, Pyrelight_hAGI_EvasionReroll) && effective_hAGI > 0) {
+			auto random = zone->random.Int(1,100);
+			if (random <= (effective_hAGI * RuleR(Character, Pyrelight_hAGI_EvasionReroll))) {			
+				if (other->IsClient() && other->CastToClient()->GetAccountFlag("filter_hAGI") != "off") {
+					other->Message(Chat::OtherMissYou, "You failed to avoid the attack, but your Heroic Agility allows to you have a chance to try again!");
+				} else if (other->IsPetOwnerClient() && other->GetOwner()->CastToClient()->GetAccountFlag("filter_hAGI") != "off" && other->GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
+					other->GetOwner()->Message(Chat::OtherMissOther, "Your pet failed to avoid the attack, but your Heroic Agility allows it to have a chance to try again!");
+				}
+				avoided = other->AvoidDamage(this, hit);
+			}		
+			effective_hAGI -= random * 5;		
 		}
 
 		// check to see if we hit..	
@@ -1459,7 +1448,7 @@ void Mob::DoAttack(Mob *defender, DamageHitInfo &hit, ExtraAttackOptions *opts, 
 				hit.damage_done = 1;									  // set to one, we will check this to continue
 			}
 			if (hit.damage_done == DMG_RIPOSTED) {
-				DoRiposte(defender);
+				DoRiposte(other);
 				return;
 			}
 			LogCombat("Avoided/strikethrough damage with code [{}]", hit.damage_done);			
@@ -1467,24 +1456,24 @@ void Mob::DoAttack(Mob *defender, DamageHitInfo &hit, ExtraAttackOptions *opts, 
 
 		if (hit.damage_done >= 0) {
 
-			if (IsNPC() && defender->IsClient() && defender->animation > 0 && GetLevel() >= 5 && BehindMob(defender, GetX(), GetY())) {
+			if (IsNPC() && other->IsClient() && other->animation > 0 && GetLevel() >= 5 && BehindMob(other, GetX(), GetY())) {
 				// ~ 12% chance
 				if (zone->random.Roll(12)) {
-					int stun_resist2 = defender->spellbonuses.FrontalStunResist + defender->itembonuses.FrontalStunResist + defender->aabonuses.FrontalStunResist;
-					int stun_resist = defender->spellbonuses.StunResist + defender->itembonuses.StunResist + defender->aabonuses.StunResist;
+					int stun_resist2 = other->spellbonuses.FrontalStunResist + other->itembonuses.FrontalStunResist + other->aabonuses.FrontalStunResist;
+					int stun_resist = other->spellbonuses.StunResist + other->itembonuses.StunResist + other->aabonuses.StunResist;
 					if (zone->random.Roll(stun_resist2)) {
-						defender->MessageString(Chat::Stun, AVOID_STUNNING_BLOW);
+						other->MessageString(Chat::Stun, AVOID_STUNNING_BLOW);
 					} else if (zone->random.Roll(stun_resist)) {
-						defender->MessageString(Chat::Stun, SHAKE_OFF_STUN);
+						other->MessageString(Chat::Stun, SHAKE_OFF_STUN);
 					} else {
-						defender->Stun(3000); // yuck -- 3 seconds
+						other->Stun(3000); // yuck -- 3 seconds
 					}
 				}
 			}
-			defender->MeleeMitigation(this, hit, opts);
+			other->MeleeMitigation(this, hit, opts);
 			if (hit.damage_done > 0) {
 				ApplyDamageTable(hit);
-				CommonOutgoingHitSuccess(defender, hit, opts);	
+				CommonOutgoingHitSuccess(other, hit, opts);	
 			}
 			LogCombat("Final damage after all reductions: [{}]", hit.damage_done);
 		}
@@ -1505,26 +1494,26 @@ int Mob::GetDamageReductionCap() {
 //stop the attack calculations
 // IsFromSpell added to allow spell effects to use Attack. (Mainly for the Rampage AA right now.)
 //SYNC WITH: tune.cpp, mob.h TuneClientAttack
-bool Mob::Attack(Mob* defender, int Hand, bool bRiposte, bool IsStrikethrough, bool IsFromSpell, ExtraAttackOptions *opts)
+bool Mob::Attack(Mob* other, int Hand, bool bRiposte, bool IsStrikethrough, bool IsFromSpell, ExtraAttackOptions *opts)
 {
-	if (!defender) {
+	if (!other) {
 		SetTarget(nullptr);
 		LogError("A null Mob object was passed for evaluation!");
 		return false;
 	}
 
 	if (!GetTarget()) {
-		SetTarget(defender);
+		SetTarget(other);
 	}
 
-	LogCombatDetail("Attacking [{}] with hand [{}] [{}]", defender ? defender->GetName() : "nullptr", Hand, bRiposte ? "this is a riposte" : "");
+	LogCombatDetail("Attacking [{}] with hand [{}] [{}]", other ? other->GetName() : "nullptr", Hand, bRiposte ? "this is a riposte" : "");
 
 	if (
 		(IsCasting() && GetClass() != BARD && !IsFromSpell)
-		|| defender == nullptr
-		|| ((IsClient() && CastToClient()->dead) || (defender->IsClient() && defender->CastToClient()->dead))
+		|| other == nullptr
+		|| ((IsClient() && CastToClient()->dead) || (other->IsClient() && other->CastToClient()->dead))
 		|| (GetHP() < 0)
-		|| (!IsAttackAllowed(defender))
+		|| (!IsAttackAllowed(other))
 		|| (IsBot() && GetAppearance() == eaDead)
 		) {
 		LogCombat("Attack cancelled, invalid circumstances");
@@ -1580,7 +1569,7 @@ bool Mob::Attack(Mob* defender, int Hand, bool bRiposte, bool IsStrikethrough, b
 	if (weapon)
 		hate = (weapon->GetItem()->Damage + weapon->GetItem()->ElemDmgAmt);
 
-	my_hit.base_damage = GetWeaponDamage(defender, weapon, &hate);
+	my_hit.base_damage = GetWeaponDamage(other, weapon, &hate);
 	if (hate == 0 && my_hit.base_damage > 1)
 		hate = my_hit.base_damage;
 
@@ -1598,8 +1587,8 @@ bool Mob::Attack(Mob* defender, int Hand, bool bRiposte, bool IsStrikethrough, b
 		}
 
 		if (IsClient()) {
-			CastToClient()->CheckIncreaseSkill(my_hit.skill, defender, -15);
-			CastToClient()->CheckIncreaseSkill(EQ::skills::SkillOffense, defender, -15);
+			CastToClient()->CheckIncreaseSkill(my_hit.skill, other, -15);
+			CastToClient()->CheckIncreaseSkill(EQ::skills::SkillOffense, other, -15);
 		}
 
 		// ***************************************************************
@@ -1619,7 +1608,7 @@ bool Mob::Attack(Mob* defender, int Hand, bool bRiposte, bool IsStrikethrough, b
 		if (Hand == EQ::invslot::slotPrimary && GetLevel() >= 28 && IsWarriorClass())
 		{
 			// Damage bonuses apply only to hits from the main hand (Hand == MainPrimary) by characters level 28 and above
-			// defender belong to a melee class. If we're here, then all of these conditions apply.
+			// who belong to a melee class. If we're here, then all of these conditions apply.
 
 			ucDamageBonus = GetWeaponDamageBonus(weapon ? weapon->GetItem() : (const EQ::ItemData*) nullptr);
 
@@ -1657,7 +1646,7 @@ bool Mob::Attack(Mob* defender, int Hand, bool bRiposte, bool IsStrikethrough, b
 
 		my_hit.tohit = GetTotalToHit(my_hit.skill, hit_chance_bonus);
 
-		DoAttack(defender, my_hit, opts, bRiposte);
+		DoAttack(other, my_hit, opts, bRiposte);
 
 		LogCombatDetail("Final damage after all reductions [{}]", my_hit.damage_done);
 	}
@@ -1668,25 +1657,25 @@ bool Mob::Attack(Mob* defender, int Hand, bool bRiposte, bool IsStrikethrough, b
 	// Hate Generation is on a per swing basis, regardless of a hit, miss, or block, its always the same.
 	// If we are this far, this means we are atleast making a swing.
 
-	defender->AddToHateList(this, hate);
+	other->AddToHateList(this, hate);
 
 	//Guard Assist Code
 	if (RuleB(Character, PVPEnableGuardFactionAssist) &&
 		(
-			(IsClient() && defender->IsClient()) ||
-			(HasOwner() && GetOwner()->IsClient() && defender->IsClient())
+			(IsClient() && other->IsClient()) ||
+			(HasOwner() && GetOwner()->IsClient() && other->IsClient())
 		)
 	) {
-		for (auto const& [id, mob] : entity_list.GetCloseMobList(defender)) {
+		for (auto const& [id, mob] : entity_list.GetCloseMobList(other)) {
 			if (!mob) {
 				continue;
 			}
 
 			if (mob->IsNPC() && mob->CastToNPC()->IsGuard()) {
-				float distance = Distance(defender->CastToClient()->m_Position, mob->GetPosition());
-				if ((mob->CheckLosFN(defender) || mob->CheckLosFN(this)) && distance <= 70) {
+				float distance = Distance(other->CastToClient()->m_Position, mob->GetPosition());
+				if ((mob->CheckLosFN(other) || mob->CheckLosFN(this)) && distance <= 70) {
 					auto petorowner = GetOwnerOrSelf();
-					if (defender->GetReverseFactionCon(mob) <= petorowner->GetReverseFactionCon(mob)) {
+					if (other->GetReverseFactionCon(mob) <= petorowner->GetReverseFactionCon(mob)) {
 						mob->AddToHateList(this);
 					}
 				}
@@ -1697,7 +1686,7 @@ bool Mob::Attack(Mob* defender, int Hand, bool bRiposte, bool IsStrikethrough, b
 	///////////////////////////////////////////////////////////
 	////// Send Attack Damage
 	///////////////////////////////////////////////////////////
-	defender->Damage(this, my_hit.damage_done, SPELL_UNKNOWN, my_hit.skill, true, -1, false, m_specialattacks);
+	other->Damage(this, my_hit.damage_done, SPELL_UNKNOWN, my_hit.skill, true, -1, false, m_specialattacks);
 
 	//Pyrelight Custom Code - Send info about the hSTA/hSTR damage modification to clients
 	if (my_hit.damage_done > 0 && my_hit.original_damage > 0) {
@@ -1706,10 +1695,10 @@ bool Mob::Attack(Mob* defender, int Hand, bool bRiposte, bool IsStrikethrough, b
 		} else if (GetOwner() && GetOwner()->IsClient()) {
 			GetOwner()->CastToClient()->LoadAccountFlags();
 		} 
-		if (defender->IsClient()) {
-			defender->CastToClient()->LoadAccountFlags();
-		} else if (defender->GetOwner() && defender->GetOwner()->IsClient()) {
-			defender->GetOwner()->CastToClient()->LoadAccountFlags();
+		if (other->IsClient()) {
+			other->CastToClient()->LoadAccountFlags();
+		} else if (other->GetOwner() && other->GetOwner()->IsClient()) {
+			other->GetOwner()->CastToClient()->LoadAccountFlags();
 		} 
 		if ((IsClient() || IsPetOwnerClient()) && (my_hit.damage_done > my_hit.original_damage)) {				
 			int increase_percentage = ((static_cast<float>(my_hit.damage_done) / static_cast<float>(my_hit.original_damage)) - 1) * 100;
@@ -1730,18 +1719,18 @@ bool Mob::Attack(Mob* defender, int Hand, bool bRiposte, bool IsStrikethrough, b
 			}
 		}
 		
-		if ((defender->IsClient() || defender->IsPetOwnerClient()) && (my_hit.original_damage > my_hit.damage_done)) {				
+		if ((other->IsClient() || other->IsPetOwnerClient()) && (my_hit.original_damage > my_hit.damage_done)) {				
 			int reduction_percentage = (1 - static_cast<float>(my_hit.damage_done) / static_cast<float>(my_hit.original_damage)) * 100;
-			if (defender->GetOwner() && defender->GetOwner()->IsClient()  && defender->GetOwner()->CastToClient()->GetAccountFlag("filter_hSTA") != "off") {
-				if (defender->GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
-					defender->GetOwner()->Message(Chat::OtherHitOther, 
+			if (other->GetOwner() && other->GetOwner()->IsClient()  && other->GetOwner()->CastToClient()->GetAccountFlag("filter_hSTA") != "off") {
+				if (other->GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
+					other->GetOwner()->Message(Chat::OtherHitOther, 
 												"The damage dealt to your pet was reduced by %i from %i (%i%%) by the influence of your Heroic Stamina.",
 												my_hit.original_damage - my_hit.damage_done,
 												my_hit.original_damage,
 												reduction_percentage);
 				}
-			} else if (defender->IsClient() && defender->CastToClient()->GetAccountFlag("filter_hSTA") != "off") {
-				defender->Message(Chat::OtherHitYou, 
+			} else if (other->IsClient() && other->CastToClient()->GetAccountFlag("filter_hSTA") != "off") {
+				other->Message(Chat::OtherHitYou, 
 								"The damage dealt to you was reduced by %i from %i (%i%%) by the influence of your Heroic Stamina.", 
 								my_hit.original_damage - my_hit.damage_done,
 								my_hit.original_damage,
@@ -1759,7 +1748,7 @@ bool Mob::Attack(Mob* defender, int Hand, bool bRiposte, bool IsStrikethrough, b
 	CommonBreakInvisibleFromCombat();
 
 	if (GetTarget()) {
-		TriggerDefensiveProcs(defender, Hand, true, my_hit.damage_done);
+		TriggerDefensiveProcs(other, Hand, true, my_hit.damage_done);
 	}
 
 	if (my_hit.damage_done > 0) {
@@ -1777,7 +1766,7 @@ void Mob::Heal()
 	SendHPUpdate();
 }
 
-void Client::Damage(Mob* defender, int64 damage, uint16 spell_id, EQ::skills::SkillType attack_skill, bool avoidable, int8 buffslot, bool iBuffTic, eSpecialAttacks special)
+void Client::Damage(Mob* other, int64 damage, uint16 spell_id, EQ::skills::SkillType attack_skill, bool avoidable, int8 buffslot, bool iBuffTic, eSpecialAttacks special)
 {
 	if (dead || IsCorpse())
 		return;
@@ -1791,7 +1780,7 @@ void Client::Damage(Mob* defender, int64 damage, uint16 spell_id, EQ::skills::Sk
 	//Don't do PvP mitigation if the caster is damaging himself
 	//should this be applied to all damage? comments sound like some is for spell DMG
 	//patch notes on PVP reductions only mention archery/throwing ... not normal dmg
-	if (defender && defender->IsClient() && (defender != this) && damage > 0) {
+	if (other && other->IsClient() && (other != this) && damage > 0) {
 		int PvPMitigation = 100;
 		if (attack_skill == EQ::skills::SkillArchery || attack_skill == EQ::skills::SkillThrowing)
 			PvPMitigation = 80;
@@ -1804,12 +1793,12 @@ void Client::Damage(Mob* defender, int64 damage, uint16 spell_id, EQ::skills::Sk
 		damage = -5;
 
 	//do a majority of the work...
-	CommonDamage(defender, damage, spell_id, attack_skill, avoidable, buffslot, iBuffTic, special);
+	CommonDamage(other, damage, spell_id, attack_skill, avoidable, buffslot, iBuffTic, special);
 
 	if (damage > 0) {
 
 		if (!IsValidSpell(spell_id)) {
-			CheckIncreaseSkill(EQ::skills::SkillDefense, defender, -15);
+			CheckIncreaseSkill(EQ::skills::SkillDefense, other, -15);
 		}
 	}
 }
@@ -1950,10 +1939,10 @@ bool Client::Death(Mob* killerMob, int64 damage, uint16 spell, EQ::skills::Skill
 			}
 			else {
 				//otherwise, we just died, end the duel.
-				Mob* defender = entity_list.GetMob(GetDuelTarget());
-				if (defender && defender->IsClient()) {
-					defender->CastToClient()->SetDueling(false);
-					defender->CastToClient()->SetDuelTarget(0);
+				Mob* who = entity_list.GetMob(GetDuelTarget());
+				if (who && who->IsClient()) {
+					who->CastToClient()->SetDueling(false);
+					who->CastToClient()->SetDuelTarget(0);
 				}
 			}
 		}
@@ -2194,9 +2183,9 @@ bool Client::Death(Mob* killerMob, int64 damage, uint16 spell, EQ::skills::Skill
 	return true;
 }
 //SYNC WITH: tune.cpp, mob.h TuneNPCAttack
-bool NPC::Attack(Mob* defender, int Hand, bool bRiposte, bool IsStrikethrough, bool IsFromSpell, ExtraAttackOptions *opts)
+bool NPC::Attack(Mob* other, int Hand, bool bRiposte, bool IsStrikethrough, bool IsFromSpell, ExtraAttackOptions *opts)
 {
-	if (!defender) {
+	if (!other) {
 		SetTarget(nullptr);
 		LogError("A null Mob object was passed to NPC::Attack() for evaluation!");
 		return false;
@@ -2206,17 +2195,17 @@ bool NPC::Attack(Mob* defender, int Hand, bool bRiposte, bool IsStrikethrough, b
 		return(false);
 
 	if (!GetTarget())
-		SetTarget(defender);
+		SetTarget(other);
 
 	//Check that we can attack before we calc heading and face our target
-	if (!IsAttackAllowed(defender)) {
+	if (!IsAttackAllowed(other)) {
 		if (GetOwnerID())
 			SayString(NOT_LEGAL_TARGET);
-		if (defender) {
-			if (defender->IsClient())
-				defender->CastToClient()->RemoveXTarget(this, false);
-			RemoveFromHateList(defender);
-			LogCombat("I am not allowed to attack [{}]", defender->GetName());
+		if (other) {
+			if (other->IsClient())
+				other->CastToClient()->RemoveXTarget(this, false);
+			RemoveFromHateList(other);
+			LogCombat("I am not allowed to attack [{}]", other->GetName());
 		}
 		return false;
 	}
@@ -2287,17 +2276,17 @@ bool NPC::Attack(Mob* defender, int Hand, bool bRiposte, bool IsStrikethrough, b
 
 	//Guard Assist Code
 	if (RuleB(Character, PVPEnableGuardFactionAssist)) {
-		if (IsClient() && defender->IsClient() || (HasOwner() && GetOwner()->IsClient() && defender->IsClient())) {
-			auto& mob_list = entity_list.GetCloseMobList(defender);
+		if (IsClient() && other->IsClient() || (HasOwner() && GetOwner()->IsClient() && other->IsClient())) {
+			auto& mob_list = entity_list.GetCloseMobList(other);
 			for (auto& e : mob_list) {
 				auto mob = e.second;
 				if (!mob) {
 					continue;
 				}
 				if (mob->IsNPC() && mob->CastToNPC()->IsGuard()) {
-					float distance = Distance(defender->GetPosition(), mob->GetPosition());
-					if ((mob->CheckLosFN(defender) || mob->CheckLosFN(this)) && distance <= 70) {
-						if (defender->GetReverseFactionCon(mob) <= GetOwner()->GetReverseFactionCon(mob)) {
+					float distance = Distance(other->GetPosition(), mob->GetPosition());
+					if ((mob->CheckLosFN(other) || mob->CheckLosFN(this)) && distance <= 70) {
+						if (other->GetReverseFactionCon(mob) <= GetOwner()->GetReverseFactionCon(mob)) {
 							mob->AddToHateList(this);
 						}
 					}
@@ -2306,7 +2295,7 @@ bool NPC::Attack(Mob* defender, int Hand, bool bRiposte, bool IsStrikethrough, b
 		}
 	}
 
-	int64 weapon_damage = GetWeaponDamage(defender, weapon);
+	int64 weapon_damage = GetWeaponDamage(other, weapon);
 
 	//do attack animation regardless of whether or not we can hit below
 	int16 charges = 0;
@@ -2322,18 +2311,18 @@ bool NPC::Attack(Mob* defender, int Hand, bool bRiposte, bool IsStrikethrough, b
 		int eleBane = 0;
 		if (weapon) {
 			if (RuleB(NPC, UseBaneDamage)) {
-				if (weapon->BaneDmgBody == defender->GetBodyType()) {
+				if (weapon->BaneDmgBody == other->GetBodyType()) {
 					eleBane += weapon->BaneDmgAmt;
 				}
 
-				if (weapon->BaneDmgRace == defender->GetRace()) {
+				if (weapon->BaneDmgRace == other->GetRace()) {
 					eleBane += weapon->BaneDmgRaceAmt;
 				}
 			}
 
 			// I don't think NPCs use this either ....
 			if (weapon->ElemDmgAmt) {
-				eleBane += (weapon->ElemDmgAmt * defender->ResistSpell(weapon->ElemDmgType, 0, this) / 100);
+				eleBane += (weapon->ElemDmgAmt * other->ResistSpell(weapon->ElemDmgType, 0, this) / 100);
 			}
 		}
 
@@ -2343,7 +2332,7 @@ bool NPC::Attack(Mob* defender, int Hand, bool bRiposte, bool IsStrikethrough, b
 			}
 		}
 
-		uint8 otherlevel = defender->GetLevel();
+		uint8 otherlevel = other->GetLevel();
 		uint8 mylevel = GetLevel();
 
 		otherlevel = otherlevel ? otherlevel : 1;
@@ -2366,13 +2355,13 @@ bool NPC::Attack(Mob* defender, int Hand, bool bRiposte, bool IsStrikethrough, b
 		my_hit.offense = offense(my_hit.skill);
 		my_hit.tohit = GetTotalToHit(my_hit.skill, hit_chance_bonus);
 
-		DoAttack(defender, my_hit, opts, bRiposte);
+		DoAttack(other, my_hit, opts, bRiposte);
 
-		defender->AddToHateList(this, hate);
+		other->AddToHateList(this, hate);
 
-		LogCombat("Final damage against [{}]: [{}]", defender->GetName(), my_hit.damage_done);
+		LogCombat("Final damage against [{}]: [{}]", other->GetName(), my_hit.damage_done);
 
-		if (defender->IsClient() && IsPet() && GetOwner()->IsClient()) {
+		if (other->IsClient() && IsPet() && GetOwner()->IsClient()) {
 			//pets do half damage to clients in pvp
 			my_hit.damage_done /= 2;
 			if (my_hit.damage_done < 1)
@@ -2383,8 +2372,8 @@ bool NPC::Attack(Mob* defender, int Hand, bool bRiposte, bool IsStrikethrough, b
 		my_hit.damage_done = DMG_INVULNERABLE;
 	}
 
-	if (GetHP() > 0 && !defender->HasDied()) {
-		defender->Damage(this, my_hit.damage_done, SPELL_UNKNOWN, my_hit.skill, true, -1, false, m_specialattacks); // Not avoidable client already had thier chance to Avoid
+	if (GetHP() > 0 && !other->HasDied()) {
+		other->Damage(this, my_hit.damage_done, SPELL_UNKNOWN, my_hit.skill, true, -1, false, m_specialattacks); // Not avoidable client already had thier chance to Avoid
 		
 		//Pyrelight Custom Code - Send info about the hSTA/hSTR damage modification to clients
 		if (IsClient()) {
@@ -2392,10 +2381,10 @@ bool NPC::Attack(Mob* defender, int Hand, bool bRiposte, bool IsStrikethrough, b
 		} else if (GetOwner() && GetOwner()->IsClient()) {
 			GetOwner()->CastToClient()->LoadAccountFlags();
 		} 
-		if (defender->IsClient()) {
-			defender->CastToClient()->LoadAccountFlags();
-		} else if (defender->GetOwner() && defender->GetOwner()->IsClient()) {
-			defender->GetOwner()->CastToClient()->LoadAccountFlags();
+		if (other->IsClient()) {
+			other->CastToClient()->LoadAccountFlags();
+		} else if (other->GetOwner() && other->GetOwner()->IsClient()) {
+			other->GetOwner()->CastToClient()->LoadAccountFlags();
 		} 
 		if (my_hit.damage_done > 0 && my_hit.original_damage > 0) {
 			if ((IsPetOwnerClient()) && (my_hit.damage_done > my_hit.original_damage)) {				
@@ -2411,20 +2400,20 @@ bool NPC::Attack(Mob* defender, int Hand, bool bRiposte, bool IsStrikethrough, b
 				}
 			}
 			
-			if ((defender->IsClient() || defender->IsPetOwnerClient()) && (my_hit.original_damage > my_hit.damage_done)) {
+			if ((other->IsClient() || other->IsPetOwnerClient()) && (my_hit.original_damage > my_hit.damage_done)) {
 				int reduction_percentage = (1 - static_cast<float>(my_hit.damage_done) / static_cast<float>(my_hit.original_damage)) * 100;
-				if (defender->GetOwner() && defender->GetOwner()->IsClient() && defender->GetOwner()->CastToClient()->GetAccountFlag("filter_hSTA") != "off") {
-					if (defender->GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
-						if (defender->GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
-							defender->GetOwner()->Message(Chat::OtherHitOther, 
+				if (other->GetOwner() && other->GetOwner()->IsClient() && other->GetOwner()->CastToClient()->GetAccountFlag("filter_hSTA") != "off") {
+					if (other->GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
+						if (other->GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
+							other->GetOwner()->Message(Chat::OtherHitOther, 
 													"The damage dealt to your pet was reduced by %i from %i (%i%%) by the influence of your Heroic Stamina.",
 													my_hit.original_damage - my_hit.damage_done,
 													my_hit.original_damage,
 													reduction_percentage);
 						}
 					}
-				} else if (defender->IsClient() && defender->CastToClient()->GetAccountFlag("filter_hSTA") != "off") {
-					defender->Message(Chat::OtherHitYou, 
+				} else if (other->IsClient() && other->CastToClient()->GetAccountFlag("filter_hSTA") != "off") {
+					other->Message(Chat::OtherHitYou, 
 						    	   "The damage dealt to you was reduced by %i from %i (%i%%) by the influence of your Heroic Stamina.", 
 									my_hit.original_damage - my_hit.damage_done,
 									my_hit.original_damage,
@@ -2447,18 +2436,18 @@ bool NPC::Attack(Mob* defender, int Hand, bool bRiposte, bool IsStrikethrough, b
 	if (!GetTarget())
 		return true; //We killed them
 
-	if (!bRiposte && !defender->HasDied()) {
-		TryWeaponProc(nullptr, weapon, defender, Hand);	//no weapon
+	if (!bRiposte && !other->HasDied()) {
+		TryWeaponProc(nullptr, weapon, other, Hand);	//no weapon
 
-		if (!defender->HasDied())
-			TrySpellProc(nullptr, weapon, defender, Hand);
+		if (!other->HasDied())
+			TrySpellProc(nullptr, weapon, other, Hand);
 
-		if (my_hit.damage_done > 0 && HasSkillProcSuccess() && !defender->HasDied())
-			TrySkillProc(defender, my_hit.skill, 0, true, Hand);
+		if (my_hit.damage_done > 0 && HasSkillProcSuccess() && !other->HasDied())
+			TrySkillProc(other, my_hit.skill, 0, true, Hand);
 	}
 
-	if (GetHP() > 0 && !defender->HasDied())
-		TriggerDefensiveProcs(defender, Hand, true, my_hit.damage_done);
+	if (GetHP() > 0 && !other->HasDied())
+		TriggerDefensiveProcs(other, Hand, true, my_hit.damage_done);
 
 	if (my_hit.damage_done > 0)
 		return true;
@@ -2467,7 +2456,7 @@ bool NPC::Attack(Mob* defender, int Hand, bool bRiposte, bool IsStrikethrough, b
 		return false;
 }
 
-void NPC::Damage(Mob* defender, int64 damage, uint16 spell_id, EQ::skills::SkillType attack_skill, bool avoidable, int8 buffslot, bool iBuffTic, eSpecialAttacks special) {
+void NPC::Damage(Mob* other, int64 damage, uint16 spell_id, EQ::skills::SkillType attack_skill, bool avoidable, int8 buffslot, bool iBuffTic, eSpecialAttacks special) {
 	if (spell_id == 0)
 		spell_id = SPELL_UNKNOWN;
 
@@ -2475,9 +2464,9 @@ void NPC::Damage(Mob* defender, int64 damage, uint16 spell_id, EQ::skills::Skill
 	if (attacked_timer.Check())
 	{
 		if (parse->HasQuestSub(GetNPCTypeID(), EVENT_ATTACK)) {
-			LogCombat("Triggering EVENT_ATTACK due to attack by [{}]", defender ? defender->GetName() : "nullptr");
+			LogCombat("Triggering EVENT_ATTACK due to attack by [{}]", other ? other->GetName() : "nullptr");
 
-			parse->EventNPC(EVENT_ATTACK, this, defender, "", 0);
+			parse->EventNPC(EVENT_ATTACK, this, other, "", 0);
 		}
 	}
 	attacked_timer.Start(CombatEventTimer_expire);
@@ -2496,7 +2485,7 @@ void NPC::Damage(Mob* defender, int64 damage, uint16 spell_id, EQ::skills::Skill
 			if (IsLDoNTrapped())
 			{
 				MessageString(Chat::Red, LDON_ACCIDENT_SETOFF2);
-				SpellFinished(GetLDoNTrapSpellID(), defender, EQ::spells::CastingSlot::Item, 0, -1, spells[GetLDoNTrapSpellID()].resist_difficulty, false);
+				SpellFinished(GetLDoNTrapSpellID(), other, EQ::spells::CastingSlot::Item, 0, -1, spells[GetLDoNTrapSpellID()].resist_difficulty, false);
 				SetLDoNTrapSpellID(0);
 				SetLDoNTrapped(false);
 				SetLDoNTrapDetected(false);
@@ -2505,7 +2494,7 @@ void NPC::Damage(Mob* defender, int64 damage, uint16 spell_id, EQ::skills::Skill
 	}
 
 	//do a majority of the work...
-	CommonDamage(defender, damage, spell_id, attack_skill, avoidable, buffslot, iBuffTic, special);
+	CommonDamage(other, damage, spell_id, attack_skill, avoidable, buffslot, iBuffTic, special);
 
 	if (damage > 0) {
 		//see if we are gunna start fleeing
@@ -3029,15 +3018,15 @@ bool NPC::Death(Mob* killer_mob, int64 damage, uint16 spell, EQ::skills::SkillTy
 	return true;
 }
 
-void Mob::AddToHateList(Mob* defender, int64 hate /*= 0*/, int64 damage /*= 0*/, bool iYellForHelp /*= true*/, bool bFrenzy /*= false*/, bool iBuffTic /*= false*/, uint16 spell_id, bool pet_command)
+void Mob::AddToHateList(Mob* other, int64 hate /*= 0*/, int64 damage /*= 0*/, bool iYellForHelp /*= true*/, bool bFrenzy /*= false*/, bool iBuffTic /*= false*/, uint16 spell_id, bool pet_command)
 {
-	if (!defender)
+	if (!other)
 		return;
 
-	if (defender == this)
+	if (other == this)
 		return;
 
-	if (defender->IsTrap())
+	if (other->IsTrap())
 		return;
 
 	if (damage < 0) {
@@ -3050,17 +3039,17 @@ void Mob::AddToHateList(Mob* defender, int64 hate /*= 0*/, int64 damage /*= 0*/,
 		SetAssistAggro(true);
 
 	bool wasengaged = IsEngaged();
-	Mob* owner = defender->GetOwner();
+	Mob* owner = other->GetOwner();
 	Mob* mypet = GetPet();
 	Mob* myowner = GetOwner();
 	Mob* targetmob = GetTarget();
-	bool on_hatelist = CheckAggro(defender);
+	bool on_hatelist = CheckAggro(other);
 
-	if (defender) {
-		AddRampage(defender);
+	if (other) {
+		AddRampage(other);
 		if (on_hatelist) { // odd reason, if you're not on the hate list, subtlety etc don't apply!
 						   // Spell Casting Subtlety etc
-			int64 hatemod = 100 + defender->spellbonuses.hatemod + defender->itembonuses.hatemod + defender->aabonuses.hatemod;
+			int64 hatemod = 100 + other->spellbonuses.hatemod + other->itembonuses.hatemod + other->aabonuses.hatemod;
 
 			if (hatemod < 1)
 				hatemod = 1;
@@ -3085,7 +3074,7 @@ void Mob::AddToHateList(Mob* defender, int64 hate /*= 0*/, int64 damage /*= 0*/,
 		}
 	}
 
-	if (defender->IsNPC() && (defender->IsPet() || defender->CastToNPC()->GetSwarmOwner() > 0)) {
+	if (other->IsNPC() && (other->IsPet() || other->CastToNPC()->GetSwarmOwner() > 0)) {
 		TryTriggerOnCastRequirement();
 	}
 
@@ -3095,26 +3084,26 @@ void Mob::AddToHateList(Mob* defender, int64 hate /*= 0*/, int64 damage /*= 0*/,
 	if (IsFamiliar() || GetSpecialAbility(IMMUNE_AGGRO))
 		return;
 
-	if (GetSpecialAbility(IMMUNE_AGGRO_NPC) && defender->IsNPC())
+	if (GetSpecialAbility(IMMUNE_AGGRO_NPC) && other->IsNPC())
 		return;
 
-	if (GetSpecialAbility(IMMUNE_AGGRO_CLIENT) && defender->IsClient())
+	if (GetSpecialAbility(IMMUNE_AGGRO_CLIENT) && other->IsClient())
 		return;
 
 	if (IsValidSpell(spell_id) && NoDetrimentalSpellAggro(spell_id))
 		return;
 
-	if (defender == myowner)
+	if (other == myowner)
 		return;
 
-	if (defender->GetSpecialAbility(IMMUNE_AGGRO_ON))
+	if (other->GetSpecialAbility(IMMUNE_AGGRO_ON))
 		return;
 
 	if (GetSpecialAbility(NPC_TUNNELVISION)) {
 		int tv_mod = GetSpecialAbilityParam(NPC_TUNNELVISION, 0);
 
 		Mob *top = GetTarget();
-		if (top && top != defender) {
+		if (top && top != other) {
 			if (tv_mod) {
 				float tv = tv_mod / 100.0f;
 				hate *= tv;
@@ -3135,19 +3124,19 @@ void Mob::AddToHateList(Mob* defender, int64 hate /*= 0*/, int64 damage /*= 0*/,
 		damage = GetHP();
 
 	if (spellbonuses.ImprovedTaunt[SBIndex::IMPROVED_TAUNT_AGGRO_MOD] && (GetLevel() < spellbonuses.ImprovedTaunt[SBIndex::IMPROVED_TAUNT_MAX_LVL])
-		&& defender && (buffs[spellbonuses.ImprovedTaunt[SBIndex::IMPROVED_TAUNT_BUFFSLOT]].casterid != defender->GetID()))
+		&& other && (buffs[spellbonuses.ImprovedTaunt[SBIndex::IMPROVED_TAUNT_BUFFSLOT]].casterid != other->GetID()))
 		hate = (hate*spellbonuses.ImprovedTaunt[SBIndex::IMPROVED_TAUNT_AGGRO_MOD]) / 100;
 
-	hate_list.AddEntToHateList(defender, hate, damage, bFrenzy, !iBuffTic);
+	hate_list.AddEntToHateList(other, hate, damage, bFrenzy, !iBuffTic);
 
-	if (defender->IsClient() && !on_hatelist && !IsOnFeignMemory(defender))
-		defender->CastToClient()->AddAutoXTarget(this);
+	if (other->IsClient() && !on_hatelist && !IsOnFeignMemory(other))
+		other->CastToClient()->AddAutoXTarget(this);
 
-	// if defender is a bot, add the bots client to the hate list
+	// if other is a bot, add the bots client to the hate list
 	if (RuleB(Bots, Enabled)) {
-		while (defender->IsBot()) {
+		while (other->IsBot()) {
 
-			auto other_ = defender->CastToBot();
+			auto other_ = other->CastToBot();
 			if (!other_ || !other_->GetBotOwner()) {
 				break;
 			}
@@ -3171,14 +3160,14 @@ void Mob::AddToHateList(Mob* defender, int64 hate /*= 0*/, int64 damage /*= 0*/,
 		}
 	}
 
-	// if defender is a merc, add the merc client to the hate list
-	if (defender->IsMerc()) {
-		if (defender->CastToMerc()->GetMercOwner() && defender->CastToMerc()->GetMercOwner()->CastToClient()->GetFeigned()) {
-			AddFeignMemory(defender->CastToMerc()->GetMercOwner()->CastToClient());
+	// if other is a merc, add the merc client to the hate list
+	if (other->IsMerc()) {
+		if (other->CastToMerc()->GetMercOwner() && other->CastToMerc()->GetMercOwner()->CastToClient()->GetFeigned()) {
+			AddFeignMemory(other->CastToMerc()->GetMercOwner()->CastToClient());
 		}
 		else {
-			if (!hate_list.IsEntOnHateList(defender->CastToMerc()->GetMercOwner()))
-				hate_list.AddEntToHateList(defender->CastToMerc()->GetMercOwner(), 0, 0, false, true);
+			if (!hate_list.IsEntOnHateList(other->CastToMerc()->GetMercOwner()))
+				hate_list.AddEntToHateList(other->CastToMerc()->GetMercOwner(), 0, 0, false, true);
 			// if mercs are reworked to include adding 'this' to owner's xtarget list, this should reflect bots code above
 		}
 	} //MERC
@@ -3206,46 +3195,46 @@ void Mob::AddToHateList(Mob* defender, int64 hate /*= 0*/, int64 damage /*= 0*/,
 		}
 	}
 
-	if (mypet && !mypet->IsHeld() && !mypet->IsPetStop()) { // I have a pet, add defender to it
+	if (mypet && !mypet->IsHeld() && !mypet->IsPetStop()) { // I have a pet, add other to it
 		if (
 			!mypet->IsFamiliar() &&
 			!mypet->GetSpecialAbility(IMMUNE_AGGRO) &&
 			!(mypet->GetSpecialAbility(IMMUNE_AGGRO_CLIENT) && IsClient()) &&
 			!(mypet->GetSpecialAbility(IMMUNE_AGGRO_NPC) && IsNPC())
 		) {
-			mypet->hate_list.AddEntToHateList(defender, 0, 0, bFrenzy);
+			mypet->hate_list.AddEntToHateList(other, 0, 0, bFrenzy);
 		}
 	}
-	else if (myowner) { // I am a pet, add defender to owner if it's NPC/LD
+	else if (myowner) { // I am a pet, add other to owner if it's NPC/LD
 		if (
 			myowner->IsAIControlled() &&
 			!myowner->GetSpecialAbility(IMMUNE_AGGRO) &&
 			!(GetSpecialAbility(IMMUNE_AGGRO_CLIENT) && myowner->IsClient()) &&
 			!(GetSpecialAbility(IMMUNE_AGGRO_NPC) && myowner->IsNPC())
 		) {
-			myowner->hate_list.AddEntToHateList(defender, 0, 0, bFrenzy);
+			myowner->hate_list.AddEntToHateList(other, 0, 0, bFrenzy);
 		}
 	}
 
-	//I have a swarm pet, add defender to it.
+	//I have a swarm pet, add other to it.
 	if (GetTempPetCount()) {
-		entity_list.AddTempPetsToHateList(this, defender, bFrenzy);
+		entity_list.AddTempPetsToHateList(this, other, bFrenzy);
 	}
 
 	if (!wasengaged) {
-		if (IsNPC() && defender->IsClient() && defender->CastToClient()) {
+		if (IsNPC() && other->IsClient() && other->CastToClient()) {
 			if (parse->HasQuestSub(GetNPCTypeID(), EVENT_AGGRO)) {
-				parse->EventNPC(EVENT_AGGRO, CastToNPC(), defender, "", 0);
+				parse->EventNPC(EVENT_AGGRO, CastToNPC(), other, "", 0);
 			}
 		}
 
-		AI_Event_Engaged(defender, iYellForHelp);
+		AI_Event_Engaged(other, iYellForHelp);
 	}
 }
 
-// this is called from Damage() when 'this' is attacked by 'defender.
+// this is called from Damage() when 'this' is attacked by 'other.
 // 'this' is the one being attacked
-// 'defender' is the attacker
+// 'other' is the attacker
 // a damage shield causes damage (or healing) to whoever attacks the wearer
 // a reverse ds causes damage to the wearer whenever it attack someone
 // given this, a reverse ds must be checked each time the wearer is attacking
@@ -3277,7 +3266,7 @@ void Mob::DamageShield(Mob* attacker, bool spell_ds) {
 		/*
 			Live Message - not yet used on emu
 			Feedback onto you "YOUR mind burns from TARGETS NAME's feedback for %i points of non-melee damage."
-			Feedback onto defender "TARGETS NAME's mind burns from YOUR feedback for %i points of non-melee damage."
+			Feedback onto other "TARGETS NAME's mind burns from YOUR feedback for %i points of non-melee damage."
 		*/
 	}
 
@@ -3903,7 +3892,7 @@ void Mob::CommonDamage(Mob* attacker, int64 &damage, const uint16 spell_id, cons
 	if (attacker) {
 		if (attacker->IsClient()) {
 			if (!RuleB(Combat, EXPFromDmgShield)) {
-				// Damage shield damage shouldn't count towards defender gets EXP
+				// Damage shield damage shouldn't count towards who gets EXP
 				if (!attacker->CastToClient()->GetFeigned() && !FromDamageShield)
 					AddToHateList(attacker, 0, damage, true, false, iBuffTic, spell_id);
 			}
@@ -4257,7 +4246,7 @@ void Mob::CommonDamage(Mob* attacker, int64 &damage, const uint16 spell_id, cons
 		if (can_stun) {
 			int bashsave_roll = zone->random.Int(0, 100);
 			if (bashsave_roll > 98 || bashsave_roll > (55 - stunbash_chance)) {
-				// did stun -- roll defender resists
+				// did stun -- roll other resists
 				// SE_FrontalStunResist description says any angle now a days
 				int stun_resist2 = spellbonuses.FrontalStunResist + itembonuses.FrontalStunResist +
 					aabonuses.FrontalStunResist;
@@ -4450,7 +4439,7 @@ void Mob::CommonDamage(Mob* attacker, int64 &damage, const uint16 spell_id, cons
 		// we don't send them here.
 		if (!FromDamageShield) {
 
-			// Determine message range based on spell/defender-damage
+			// Determine message range based on spell/other-damage
 			int range;
 			if (IsValidSpell(spell_id)) {
 				range = RuleI(Range, SpellMessages);
@@ -6088,7 +6077,7 @@ void Mob::CommonOutgoingHitSuccess(Mob* defender, DamageHitInfo &hit, ExtraAttac
 
 	// Pyrelight Custom Code - Heroic Strength
 	if (RuleR(Character, Pyrelight_hSTR_DmgBonus) > 0) {
-		int effective_hSTR = (IsPetOwnerClient() && GetOwner()) ? RuleR(Character, Pyrelight_HeroicPetMod) * GetOwner()->GetHeroicSTR() : GetHeroicSTR();
+		int effective_hSTR = (IsPetOwnerClient() && GetOwner()) ? (1.0/3.0) * GetOwner()->GetHeroicSTR() : GetHeroicSTR();
 		if (effective_hSTR > 0) {
 			float damage_scalar = 1 + ((RuleR(Character, Pyrelight_hSTR_DmgBonus) / 100) * effective_hSTR);
 
@@ -6100,7 +6089,7 @@ void Mob::CommonOutgoingHitSuccess(Mob* defender, DamageHitInfo &hit, ExtraAttac
 	// Pyrelight Custom Code - Heroic Stamina
 	int64 damage_reduction_final = 0;
 	if (RuleR(Character, Pyrelight_hSTA_DmgReduction) > 0) {		
-		int effective_hSTA = (defender->IsPetOwnerClient() && defender->GetOwner()) ? (RuleR(Character, Pyrelight_HeroicPetMod) * defender->GetOwner()->GetHeroicSTA()) : defender->GetHeroicSTA();
+		int effective_hSTA = (defender->IsPetOwnerClient() && defender->GetOwner()) ? ((1.0/3.0) * defender->GetOwner()->GetHeroicSTA()) : defender->GetHeroicSTA();
 		if (effective_hSTA > 0) {
 			int64 damage_reduction_value = static_cast<int64>(std::ceil(RuleR(Character, Pyrelight_hSTA_DmgReduction) * effective_hSTA));
 			int64 damage_value = static_cast<int64>(std::max(static_cast<int64>(hit.damage_done * GetDamageReductionCap() / 100), // Capped Damage Reduction
@@ -6109,34 +6098,25 @@ void Mob::CommonOutgoingHitSuccess(Mob* defender, DamageHitInfo &hit, ExtraAttac
 			hit.original_damage = hit.damage_done;
 			hit.damage_done = damage_value;
 		}
-	}
+	}	
 
+	int effective_hDEX = std::ceil(((IsPetOwnerClient() && GetOwner()) ? std::ceil((1.0/3.0) * GetOwner()->GetHeroicDEX()) : GetHeroicDEX()) * RuleR(Character, Pyrelight_hDEX_CriticalReroll));
 	bool crit = TryCriticalHit(defender, hit, opts);
-	
-	// Pyrelight Custom Code
-	if (RuleR(Character, Pyrelight_hDEX_CriticalReroll) > 0) {
-		if (IsClient()) {
-			CastToClient()->LoadAccountFlags();
-		} else if (GetOwner() && GetOwner()->IsClient()) {
-			GetOwner()->CastToClient()->LoadAccountFlags();
-		}
-		int effective_hDEX = (IsPetOwnerClient() && GetOwner()) ? std::ceil(RuleR(Character, Pyrelight_HeroicPetMod) * GetOwner()->GetHeroicDEX()) : GetHeroicDEX();	
-		while (effective_hDEX > 0 && !crit) {	
-			auto random = zone->random.Int(1,100);
-			if (random <= (effective_hDEX * RuleR(Character, Pyrelight_hDEX_CriticalReroll))) {
-				crit = TryCriticalHit(defender, hit, opts);				
-				if (crit) {
-					if (IsClient() && CastToClient()->GetAccountFlag("filter_hDEX") != "off") {
-						Message(Chat::MeleeCrit, "Your Heroic Dexterity allows you to execute a critical hit!");
-					} else if (GetOwner() && GetOwner()->IsClient() && 
-							   GetOwner()->CastToClient()->GetAccountFlag("filter_hDEX") != "off" && 
-							   GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
-						GetOwner()->Message(Chat::PetCritical, "Your Heroic Dexterity allows your pet to execute a critical hit!");
-					}
-				}
-			}	
-			effective_hDEX -= random * RuleR(Character, Pyrelight_HeroicRerollDecayRate);	
-		}
+
+	while (RuleR(Character, Pyrelight_hDEX_CriticalReroll) && effective_hDEX > 0 && !crit) {
+		auto random = zone->random.Int(1,100);
+		if (random <= (effective_hDEX * RuleR(Character, Pyrelight_hDEX_CriticalReroll))) {
+			if (GetOwner() && GetOwner()->CastToClient()->GetAccountFlag("filter_hDEX") != "off") {
+				GetOwner()->Message(Chat::OtherHitOther, "Your pet failed to land a critical hit, but your Heroic Dexterity gives it another chance!");
+			}
+			else if (IsClient() && CastToClient()->GetAccountFlag("filter_hDEX") != "off") {
+				Message(Chat::YouHitOther, "You failed to land a critical hit, but your Heroic Dexterity gives you another chance!");
+			}
+			crit = TryCriticalHit(defender, hit, opts);
+			effective_hDEX -= random * 5;
+		} else {
+			break;
+		}		
 	}
 
 	CheckNumHitsRemaining(NumHit::OutgoingHitSuccess);
