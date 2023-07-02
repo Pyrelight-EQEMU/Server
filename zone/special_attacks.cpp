@@ -971,17 +971,16 @@ void Mob::DoArcheryAttackDmg(Mob *who, const EQ::ItemInstance *RangeWeapon, cons
 		if (RangeWeapon && who && !who->HasDied()) {
 			TryCombatProcs(RangeWeapon, who, EQ::invslot::slotRange);
 		}
+		
 		// Pri/Sec Procs
 		EQ::ItemInstance* primary = GetInv().GetItem(EQ::invslot::slotPrimary);
 		EQ::ItemInstance* secondary = GetInv().GetItem(EQ::invslot::slotSecondary);
 
-		int which_wep = zone->random.Roll0(3);
-
-		if (primary && who && !who->HasDied() && which_wep <= 1) {
-			if (zone->random.Roll0(2)) TryCombatProcs(primary, who, EQ::invslot::slotRange);
+		if (primary && who && !who->HasDied()) {
+			TryCombatProcs(primary, who, EQ::invslot::slotRange);
 		}
-		if (secondary && who && !who->HasDied() && which_wep == 2) {
-			if (zone->random.Roll0(2)) TryCombatProcs(secondary, who, EQ::invslot::slotRange);
+		if (secondary && who && !who->HasDied()) {
+			TryCombatProcs(secondary, who, EQ::invslot::slotRange);
 		}
 
 		// Ammo Proc, do not try spell procs if from ammo.
@@ -1467,7 +1466,7 @@ void Client::ThrowingAttack(Mob* who, bool CanDoubleAttack) { //old was 51
 		}
 	}
 
-	float range = item->Range + GetRangeDistTargetSizeMod(who);
+	float range = std::max(item->Range, static_cast<uint8>(50)) + GetRangeDistTargetSizeMod(who);
 	LogCombat("Calculated bow range to be [{}]", range);
 	range *= range;
 	float dist = DistanceSquared(m_Position, who->GetPosition());
@@ -1495,7 +1494,7 @@ void Client::ThrowingAttack(Mob* who, bool CanDoubleAttack) { //old was 51
 	DoThrowingAttackDmg(who, RangeWeapon, item, 0, 0, 0, 0, 0,ammo_slot);
 
 	// Consume Ammo, unless Ammo Consumption is disabled
-	if (RuleB(Combat, ThrowingConsumesAmmo)) {
+	if (RuleB(Combat, ThrowingConsumesAmmo) && RangeWeapon->IsStackable() && !RangeWeapon->GetItemMagical(false)) {		
 		DeleteItemInInventory(ammo_slot, 1, true);
 		LogCombat("Consumed Throwing Ammo from slot {}.", ammo_slot);
 	} else {
@@ -1651,8 +1650,22 @@ void Mob::DoThrowingAttackDmg(Mob *who, const EQ::ItemInstance *RangeWeapon, con
 		}			
 	}
 
-	if (!DisableProcs && who && !who->HasDied()) {
-		TryCombatProcs(RangeWeapon, who, EQ::invslot::slotRange, last_ammo_used);
+	if (!DisableProcs) {
+		// Weapon Proc
+		if (RangeWeapon && who && !who->HasDied()) {
+			TryCombatProcs(RangeWeapon, who, EQ::invslot::slotRange);
+		}
+		
+		// Pri/Sec Procs
+		EQ::ItemInstance* primary = GetInv().GetItem(EQ::invslot::slotPrimary);
+		EQ::ItemInstance* secondary = GetInv().GetItem(EQ::invslot::slotSecondary);
+
+		if (primary && who && !who->HasDied()) {
+			TryCombatProcs(primary, who, EQ::invslot::slotRange);
+		}
+		if (secondary && who && !who->HasDied()) {
+			TryCombatProcs(secondary, who, EQ::invslot::slotRange);
+		}
 	}
 
 	TryCastOnSkillUse(who, EQ::skills::SkillThrowing);
