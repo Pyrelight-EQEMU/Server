@@ -2852,7 +2852,7 @@ int Mob::CalcBuffDuration(Mob *caster, Mob *target, uint16 spell_id, int32 caste
 		int effective_hINT = caster->GetOwner() ? std::ceil(RuleR(Character, Pyrelight_HeroicPetMod) * caster->GetOwner()->GetHeroicINT()) : caster->GetHeroicINT();
 
 		int new_res = res * (RuleR(Character, Pyrelight_hINT_DetDurIncrease) * effective_hINT) / 100;
-		int increase = round(((static_cast<float>(new_res) / res) - 1) * 100);
+		int increase = round(((static_cast<float>(new_res) / res)) * 100);
 
 		Client* msgTarget = (caster->GetOwner() && caster->GetOwner()->IsClient()) ? caster->GetOwner()->CastToClient() :caster->CastToClient();
 
@@ -2868,7 +2868,7 @@ int Mob::CalcBuffDuration(Mob *caster, Mob *target, uint16 spell_id, int32 caste
 			}
 		}
 
-		res = new_res;
+		res += new_res;
 
 	}
 
