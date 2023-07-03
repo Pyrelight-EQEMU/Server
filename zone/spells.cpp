@@ -2851,7 +2851,7 @@ int Mob::CalcBuffDuration(Mob *caster, Mob *target, uint16 spell_id, int32 caste
 	if (RuleR(Character, Pyrelight_hINT_DetDurIncrease) > 0 && IsDetrimentalSpell(spell_id)) {
 		int effective_hINT = caster->GetOwner() ? std::ceil(RuleR(Character, Pyrelight_HeroicPetMod) * caster->GetOwner()->GetHeroicINT()) : caster->GetHeroicINT();
 
-		int new_res *= RuleR(Character, Pyrelight_hINT_DetDurIncrease) * effective_hINT;
+		int new_res = RuleR(Character, Pyrelight_hINT_DetDurIncrease) * effective_hINT;
 		int increase = round(((static_cast<float>(new_res) / res) - 1) * 100);
 
 		Client* msgTarget = (caster->GetOwner() && caster->GetOwner()->IsClient()) ? caster->GetOwner()->CastToClient() :caster->CastToClient();
