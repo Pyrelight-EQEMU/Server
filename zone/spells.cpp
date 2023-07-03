@@ -2848,7 +2848,7 @@ int Mob::CalcBuffDuration(Mob *caster, Mob *target, uint16 spell_id, int32 caste
 		if (RuleR(Character, Pyrelight_hINT_DetDurIncrease) > 0 && IsDetrimentalSpell(spell_id)) {
 			int effective_hINT = caster->GetOwner() ? std::ceil(RuleR(Character, Pyrelight_HeroicPetMod) * caster->GetOwner()->GetHeroicINT()) : caster->GetHeroicINT();
 
-			int res_add = res * (RuleR(Character, Pyrelight_hINT_DetDurIncrease) * effective_hINT) / 100;
+			int res_add = round(res * (RuleR(Character, Pyrelight_hINT_DetDurIncrease) * effective_hINT / 100));
 			int increase = round(((static_cast<float>(res_add) / res)) * 100);
 
 			Client* msgTarget = (caster->GetOwner() && caster->GetOwner()->IsClient()) ? caster->GetOwner()->CastToClient() :caster->CastToClient();
@@ -2873,8 +2873,8 @@ int Mob::CalcBuffDuration(Mob *caster, Mob *target, uint16 spell_id, int32 caste
 		if (RuleR(Character, Pyrelight_hWIS_ShortBuff) > 0 && IsShortDurationBuff(spell_id)) {
 			int effective_hWIS = caster->GetOwner() ? std::ceil(RuleR(Character, Pyrelight_HeroicPetMod) * caster->GetOwner()->GetHeroicWIS()) : caster->GetHeroicWIS();
 
-			int res_add = res * ceil((RuleR(Character, Pyrelight_hWIS_ShortBuff) * effective_hWIS) / 100);
-			int increase = ceil(((static_cast<float>(res_add) / res)) * 100);
+			int res_add = round(res * (RuleR(Character, Pyrelight_hWIS_ShortBuff) * effective_hWIS / 100));
+			int increase = round(((static_cast<float>(res_add) / res)) * 100);
 
 			Client* msgTarget = (caster->GetOwner() && caster->GetOwner()->IsClient()) ? caster->GetOwner()->CastToClient() :caster->CastToClient();
 
