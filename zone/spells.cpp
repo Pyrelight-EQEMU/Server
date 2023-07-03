@@ -2869,7 +2869,31 @@ int Mob::CalcBuffDuration(Mob *caster, Mob *target, uint16 spell_id, int32 caste
 		}
 
 		res += res_add;
+	}
 
+	// Pyrelight Custom Code
+	// Increase Short Duration Buff Durations based on Heroic Wisdom
+	if (RuleR(Character, Pyrelight_hWIS_ShortBuff) > 0 && IsShortDurationBuff(spell_id)) {
+		int effective_hWIS = caster->GetOwner() ? std::ceil(RuleR(Character, Pyrelight_HeroicPetMod) * caster->GetOwner()->GetHeroicWIS()) : caster->GetHeroicWIS();
+
+		int res_add = res * (RuleR(Character, Pyrelight_hWIS_ShortBuff) * effective_hWIS) / 100;
+		int increase = round(((static_cast<float>(res_add) / res)) * 100);
+
+		Client* msgTarget = (caster->GetOwner() && caster->GetOwner()->IsClient()) ? caster->GetOwner()->CastToClient() :caster->CastToClient();
+
+		if (msgTarget) {
+			msgTarget->LoadAccountFlags();
+		}
+
+		if (msgTarget->GetAccountFlag("filter_hWIS") != "off") {
+			if (caster->IsPet() && !caster->IsClient() && msgTarget->GetAccountFlag("filter_hPets") != "off") {
+				msgTarget->Message(Chat::Spells, "Your Heroic Wisdom has increased the duration of your pet's spell effect by %i%% (%i ticks)!", increase, res_add);
+			} else if (caster->IsClient()) {
+				msgTarget->Message(Chat::Spells, "Your Heroic Wisdom has increased the duration of your spell effect by %i%% (%i ticks)!", increase, res_add);
+			}
+		}
+
+		res += res_add;
 	}
 
 	return res;

@@ -107,6 +107,7 @@ RULE_REAL(Character, Pyrelight_hSTA_DmgReduction, 10, "Number of points of damag
 RULE_REAL(Character, Pyrelight_hAGI_EvasionReroll, 0.5, "Percentage chance of a reroll for evasion skills which each point of Heroic AGI should add.")
 RULE_REAL(Character, Pyrelight_hDEX_CriticalReroll, 0.5, "Percentage chance of a reroll for melee, ranged, and spell criticals that each point of Heroic DEX should add")
 RULE_REAL(Character, Pyrelight_hINT_DetDurIncrease, 1, "Percentage duration increase of detrimental spells based on Heroic Intelligence")
+RULE_REAL(Character, Pyrelight_hWIS_ShortBuff, 0.5, "Percentage duration increase of detrimental spells based on Heroic Wisdom")
 RULE_REAL(Character, Pyrelight_hCHA_ResistReroll, 0.5, "Percentage chance of a reroll for spell resist checks.")
 RULE_REAL(Character, Pyrelight_HeroicPetMod, 0.33, "Fraction of heroic modifiers to assign to player pets")
 RULE_REAL(Character, Pyrelight_HeroicRerollDecayRate, 3, "Scalar to apply to heroic reroll modifiers")
