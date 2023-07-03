@@ -2851,6 +2851,8 @@ int Mob::CalcBuffDuration(Mob *caster, Mob *target, uint16 spell_id, int32 caste
 			int res_add = round(res * (RuleR(Character, Pyrelight_hINT_DetDurIncrease) * effective_hINT / 100));
 			int increase = round(((static_cast<float>(res_add) / res)) * 100);
 
+			LogDebug("res_add: [{}], increase: [{}]", res_add, increase);
+
 			Client* msgTarget = (caster->GetOwner() && caster->GetOwner()->IsClient()) ? caster->GetOwner()->CastToClient() :caster->CastToClient();
 
 			if (msgTarget) {
@@ -2875,6 +2877,8 @@ int Mob::CalcBuffDuration(Mob *caster, Mob *target, uint16 spell_id, int32 caste
 
 			int res_add = round(res * (RuleR(Character, Pyrelight_hWIS_ShortBuff) * effective_hWIS / 100));
 			int increase = round(((static_cast<float>(res_add) / res)) * 100);
+
+			LogDebug("res_add: [{}], increase: [{}]", res_add, increase);
 
 			Client* msgTarget = (caster->GetOwner() && caster->GetOwner()->IsClient()) ? caster->GetOwner()->CastToClient() :caster->CastToClient();
 
