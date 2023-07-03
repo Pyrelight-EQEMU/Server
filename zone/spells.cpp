@@ -4166,10 +4166,10 @@ bool Mob::SpellOnTarget(
 							spell_effectiveness = new_result;
 							LogDebug("Reroll succeeded!");	
 							if (hCHA_source->GetAccountFlag("filter_hCHA") != "off") {					
-								if (hCHA_source->IsPet()) {
-									hCHA_source->GetOwner()->Message(Chat::PetSpell, "Your pet's magic breaks through under the influence of your Heroic Charisma!");
+								if (hCHA_source->IsPet() && hCHA_source->GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
+									hCHA_source->GetOwner()->Message(Chat::PetSpell, "Your Heroic Charisma allows your pet's magic to bypass your target's resistences!");
 								} else {
-									hCHA_source->Message(Chat::Spells, "Your magic breaks through under the influence of your Heroic Charisma!");
+									hCHA_source->Message(Chat::Spells, "Your Heroic Charisma allows your magic to bypass your target's resistences!");
 								}
 							}							
 						} else {
@@ -4205,10 +4205,10 @@ bool Mob::SpellOnTarget(
 							spell_effectiveness = new_result;
 							LogDebug("Reroll succeeded!");
 							if (hCHA_source->GetAccountFlag("filter_hCHA") != "off") {					
-								if (hCHA_source->IsPet()) {
-									hCHA_source->GetOwner()->Message(Chat::SpellFailure, "Your pet's resistence to the magic grows under the influence of your Heroic Charisma!");
+								if (hCHA_source->IsPet() && hCHA_source->GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
+									hCHA_source->GetOwner()->Message(Chat::SpellFailure, "Your Heroic Charisma allows your pet to resist the magic!");
 								} else {
-									hCHA_source->Message(Chat::SpellFailure, "Your resistence to the magic grows under the influence of your Heroic Charisma!");
+									hCHA_source->Message(Chat::SpellFailure, "Your Heroic Charisma allows you to resist the magic!");
 								}								
 							}
 						} else {
