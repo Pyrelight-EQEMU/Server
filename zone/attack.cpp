@@ -5924,7 +5924,7 @@ int32 Mob::RuneAbsorb(int64 damage, uint16 type)
 						buffs[slot].melee_rune = 0;
 
 						Client* client = GetOwnerOrSelf()->CastToClient();
-						Client* caster = entity_list.GetClientByName(buffs[buffs_i].caster_name);
+						Client* caster = entity_list.GetClientByName(buffs[slot].caster_name);
 
 						if (!(caster == client || (client->GetGroup() && client->GetGroup()->IsGroupMember(caster)))) {
 							if (!(caster->FindSpellBookSlotBySpellID(buffs[slot].spellid) >= 0 || caster->GetInv().IsClickEffectEquipped(buffs[slot].spellid))) {
@@ -5961,7 +5961,7 @@ int32 Mob::RuneAbsorb(int64 damage, uint16 type)
 						buffs[slot].magic_rune = 0;
 
 						Client* client = GetOwnerOrSelf()->CastToClient();
-						Client* caster = entity_list.GetClientByName(buffs[buffs_i].caster_name);
+						Client* caster = entity_list.GetClientByName(buffs[slot].caster_name);
 
 						if (!(caster == client || (client->GetGroup() && client->GetGroup()->IsGroupMember(caster)))) {
 							if (!(caster->FindSpellBookSlotBySpellID(buffs[slot].spellid) >= 0 || caster->GetInv().IsClickEffectEquipped(buffs[slot].spellid))) {
