@@ -3903,10 +3903,9 @@ void Mob::BuffProcess()
 							}
 						}
 						// Clean up expired runes
-						if (IsEffectInSpell(buffs[buffs_i].spellid, SE_Rune) && buffs[buffs_i].melee_rune == 0) {
-							if (!TryFadeEffect(buffs_i)) {
-								BuffFadeBySlot(buffs_i);
-							}
+						if (IsEffectInSpell(buffs[buffs_i].spellid, SE_Rune) && buffs[buffs_i].melee_rune == 0 && !suspended) {
+							BuffFadeBySlot(buffs_i);
+							buffs[buffs_i].UpdateClient = true;
 						}							
 					}
 
