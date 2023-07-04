@@ -4198,7 +4198,7 @@ bool Mob::SpellOnTarget(
 			if (spellOwner->IsClient() || spellOwner->IsPetOwnerClient()) {
 				hCHA_source = spellOwner->GetOwner() ? spellOwner->GetOwner()->CastToClient() : spellOwner->CastToClient();
 				effective_hCHA = hCHA_source->GetHeroicCHA();
-				hCHA_source->LoadAccountFlags();				
+				hCHA_source->LoadAccountFlags();	
 
 				while (effective_hCHA > 0 && spell_effectiveness < 100) {					
 					int random = zone->random.Int(1,100);
