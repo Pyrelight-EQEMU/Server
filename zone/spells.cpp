@@ -3389,7 +3389,7 @@ int Mob::AddBuff(Mob *caster, uint16 spell_id, int duration, int32 level_overrid
 		caster_level = caster ? caster->GetCasterLevel(spell_id) : GetCasterLevel(spell_id);
 
 	if (duration == 0) {
-		duration = CalcBuffDuration(caster, this, spell_id);
+		duration = CalcBuffDuration(caster, this, spell_id, -1, true);
 
 		if (caster && duration > 0) // negatives are perma buffs
 			duration = caster->GetActSpellDuration(spell_id, duration);
