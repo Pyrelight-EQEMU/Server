@@ -3095,14 +3095,14 @@ void ZoneDatabase::SaveBuffs(Client *client) {
 		query = StringFormat("INSERT INTO `character_buffs` (character_id, slot_id, spell_id, "
                             "caster_level, caster_name, ticsremaining, counters, numhits, melee_rune, "
                             "magic_rune, persistent, dot_rune, caston_x, caston_y, caston_z, ExtraDIChance, "
-							"instrument_mod) "
+							"instrument_mod, scale) "
                             "VALUES('%u', '%u', '%u', '%u', '%s', '%d', '%u', '%u', '%u', '%u', '%u', '%u', "
                             "'%i', '%i', '%i', '%i', '%i')", client->CharacterID(), index, buffs[index].spellid,
                             buffs[index].casterlevel, buffs[index].caster_name, buffs[index].ticsremaining,
                             buffs[index].counters, buffs[index].hit_number, buffs[index].melee_rune,
                             buffs[index].magic_rune, buffs[index].persistant_buff, buffs[index].dot_rune,
                             buffs[index].caston_x, buffs[index].caston_y, buffs[index].caston_z,
-                            buffs[index].ExtraDIChance, buffs[index].instrument_mod);
+                            buffs[index].ExtraDIChance, buffs[index].instrument_mod, buffs[index].scale);
        QueryDatabase(query);
 	}
 }
@@ -3118,7 +3118,7 @@ void ZoneDatabase::LoadBuffs(Client *client)
 
 	std::string query = StringFormat("SELECT spell_id, slot_id, caster_level, caster_name, ticsremaining, "
 					 "counters, numhits, melee_rune, magic_rune, persistent, dot_rune, "
-					 "caston_x, caston_y, caston_z, ExtraDIChance, instrument_mod "
+					 "caston_x, caston_y, caston_z, ExtraDIChance, instrument_mod, scale "
 					 "FROM `character_buffs` WHERE `character_id` = '%u'",
 					 client->CharacterID());
 	auto results = QueryDatabase(query);
@@ -3149,6 +3149,7 @@ void ZoneDatabase::LoadBuffs(Client *client)
 		int32 caston_z = Strings::ToUnsignedInt(row[13]);
 		int32 ExtraDIChance = Strings::ToUnsignedInt(row[14]);
 		uint32 instrument_mod = Strings::ToUnsignedInt(row[15]);
+		float scale = Strings::ToUnsignedInt(row[16]);
 
 		buffs[slot_id].spellid = spell_id;
 		buffs[slot_id].casterlevel = caster_level;
@@ -3178,6 +3179,7 @@ void ZoneDatabase::LoadBuffs(Client *client)
 		buffs[slot_id].virus_spread_time = 0;
 		buffs[slot_id].UpdateClient = false;
 		buffs[slot_id].instrument_mod = instrument_mod;
+		buffs[slot_id].scale = scale;
 	}
 
 	// We load up to the most our client supports

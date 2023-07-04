@@ -3510,6 +3510,7 @@ int Mob::AddBuff(Mob *caster, uint16 spell_id, int duration, int32 level_overrid
 	buffs[emptyslot].RootBreakChance = 0;
 	buffs[emptyslot].virus_spread_time = 0;
 	buffs[emptyslot].instrument_mod = caster ? caster->GetInstrumentMod(spell_id) : 10;
+	buffs[emptyslot].scale = 1 + (caster.getHeroicWis() / 100);
 
 	if (level_override > 0 || buffs[emptyslot].hit_number > 0) {
 		buffs[emptyslot].UpdateClient = true;
@@ -4198,7 +4199,9 @@ bool Mob::SpellOnTarget(
 			if (spellOwner->IsClient() || spellOwner->IsPetOwnerClient()) {
 				hCHA_source = spellOwner->GetOwner() ? spellOwner->GetOwner()->CastToClient() : spellOwner->CastToClient();
 				effective_hCHA = hCHA_source->GetHeroicCHA();
-				hCHA_source->LoadAccountFlags();	
+				hCHA_source->LoadAccountFlags();
+
+				hCHA_source->buffs[1]
 
 				while (effective_hCHA > 0 && spell_effectiveness < 100) {					
 					int random = zone->random.Int(1,100);
