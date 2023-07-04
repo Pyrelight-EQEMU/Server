@@ -2798,7 +2798,7 @@ bool Mob::ApplyBardPulse(int32 spell_id, Mob *spell_target, CastingSlot slot) {
 // even be created depending on the types of mobs involved
 //
 // right now this is just an outline, working on this..
-int Mob::CalcBuffDuration(Mob *caster, Mob *target, uint16 spell_id, int32 caster_level_override)
+int Mob::CalcBuffDuration(Mob *caster, Mob *target, uint16 spell_id, int32 caster_level_override, bool inform_client)
 {
 	int formula, duration;
 
@@ -2841,7 +2841,7 @@ int Mob::CalcBuffDuration(Mob *caster, Mob *target, uint16 spell_id, int32 caste
 		IsEffectInSpell(spell_id, SE_Illusion)
 	) {
 		res = 10000; // ~16h override
-	} else {
+	} else if (inform_client) {
 
 		// Pyrelight Custom Code
 		// Increase Detrimental Durations based on Heroic Intelligence
