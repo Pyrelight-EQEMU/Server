@@ -3553,11 +3553,8 @@ int64 Mob::ReduceDamage(int64 damage)
 		}
 	}
 
-	if (damage < 1)
-		return DMG_RUNE;
-
 	if (spellbonuses.MeleeRune[SBIndex::RUNE_AMOUNT] && spellbonuses.MeleeRune[SBIndex::RUNE_BUFFSLOT] >= 0)
-		damage = RuneAbsorb(damage, SE_Rune);
+		damage = RuneAbsorb(damage, SE_Rune);	
 
 	if (damage < 1)
 		return DMG_RUNE;
@@ -5902,30 +5899,39 @@ bool Mob::TryRootFadeByDamage(int buffslot, Mob* attacker) {
 
 int32 Mob::RuneAbsorb(int64 damage, uint16 type)
 {
-	uint32 buff_max = GetMaxTotalSlots();
+	uint32 buff_max = GetMaxTotalSlots();	
+
+	int original_damage = damage;
+
 	if (type == SE_Rune) {
 		for (uint32 slot = 0; slot < buff_max; slot++) {
 			if (slot == spellbonuses.MeleeRune[SBIndex::RUNE_BUFFSLOT] && spellbonuses.MeleeRune[SBIndex::RUNE_AMOUNT] && buffs[slot].melee_rune && IsValidSpell(buffs[slot].spellid)) {
 				int melee_rune_left = buffs[slot].melee_rune;
+				
 
 				if (melee_rune_left > damage)
 				{
 					melee_rune_left -= damage;
 					buffs[slot].melee_rune = melee_rune_left;
-					return DMG_RUNE;
+					damage = DMG_RUNE;	
 				}
 
 				else
 				{
 					if (melee_rune_left > 0)
 						damage -= melee_rune_left;
+						melee_rune_left = 0;
 
 					if (!TryFadeEffect(slot))
 						BuffFadeBySlot(slot);
 				}
+
+				if (original_damage > 0 && damage < original_damage) {
+					Message(Chat::Spells, "Your rune has absorbed %i points of damage (%i points of protection remain)!", damage < 1 ? original_damage : original_damage - damage, melee_rune_left);
+				}
 			}
 		}
-	}
+	}	
 
 	else {
 		for (uint32 slot = 0; slot < buff_max; slot++) {
@@ -5935,18 +5941,23 @@ int32 Mob::RuneAbsorb(int64 damage, uint16 type)
 				{
 					magic_rune_left -= damage;
 					buffs[slot].magic_rune = magic_rune_left;
-					return 0;
+					damage = DMG_RUNE;
 				}
 
 				else
 				{
 					if (magic_rune_left > 0)
 						damage -= magic_rune_left;
+						magic_rune_left = 0;
 
 					if (!TryFadeEffect(slot))
 						BuffFadeBySlot(slot);
 				}
-			}
+
+				if (original_damage > 0 && damage < original_damage) {
+					Message(Chat::Spells, "Your spell rune has absorbed %i points of damage (%i points of protection remain)!", damage < 1 ? original_damage : original_damage - damage, magic_rune_left);
+				}
+			}			
 		}
 	}
 

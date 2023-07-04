@@ -7222,79 +7222,32 @@ void Mob::DrawDebugCoordinateNode(std::string node_name, const glm::vec4 vec)
 	}
 }
 
-Mob* Mob::GetImpliedTarget(Mob* otarget, uint32 spell_id, int depth, Mob* original_otarget) {
-    // 'this' is the caster
-    // 'otarget' is the original target
-    // 'spell_id' is the spell being used	
-
-    if (depth == 0) {
-		if (IsClient()) {			
-			original_otarget = otarget;
-		} else {
-			return otarget;
-		}
-
-		// Shortcut naive cases
-		if (!otarget || otarget == this) {
-			if (IsBeneficialSpell(spell_id)) {
-				return this;
-			} else {
-				return GetPet() ? GetPet()->GetTarget() : nullptr;
+Mob* Mob::GetImpliedTarget(Mob* target, uint32 spell_id) {
+    if (IsClient()) {
+		if (IsBeneficialSpell(spell_id)) {
+			if (target->IsClient() || target->IsPetOwnerClient()) {
+				return target;
 			}
-		}     
+			else if (target->GetTarget()->IsClient() || target->GetTarget()->IsPetOwnerClient()) {
+				return target->GetTarget();
+			}
+			else {
+				return this;
+			}
+		} else {
+			if (!target->IsClient() && !target->IsPetOwnerClient()) {
+				return target;
+			} 
+			else if (!target->GetTarget()->IsClient() && !target->GetTarget()->IsPetOwnerClient()) {
+				return target->GetTarget();
+			} else {
+				Message(Chat::SpellFailure, "Unable to find a valid target for this spell.");
+				return nullptr;
+			}
+		}
+	} else {
+		return target;
 	}
-
-    if (depth > 5) {
-        // We've reached the maximum recursion depth
-        return IsBeneficialSpell(spell_id) ? this : original_otarget;
-    }
-
-    Mob* ntarget = nullptr;
-
-    SpellTargetType tt = spells[spell_id].target_type;
-    // Stuff we can shortcut based on target type
-    switch (tt) {
-        case SpellTargetType::ST_Pet:
-            return this->IsPet() ? this : GetPet();
-        case SpellTargetType::ST_PetMaster:
-            return GetOwner();
-        case SpellTargetType::ST_TargetsTarget:
-            return otarget->GetTarget() ? otarget->GetTarget() : otarget;
-        case SpellTargetType::ST_TargetAENoPlayersPets:
-        case SpellTargetType::ST_Group:
-        case SpellTargetType::ST_AEBard:
-        case SpellTargetType::ST_AECaster:
-        case SpellTargetType::ST_Beam:
-        case SpellTargetType::ST_Ring:
-        case SpellTargetType::ST_GroupTeleport:
-            return this;       
-        default:            
-            break;
-    }
-
-    if (otarget) {
-        if (!IsBeneficialSpell(spell_id)) {
-            if (otarget->IsClient() || otarget->IsPetOwnerClient()) {
-                ntarget = otarget->GetImpliedTarget(otarget->GetTarget(), spell_id, depth + 1, original_otarget);
-            } else {
-                return otarget;
-            }		
-        } else {
-            if (!(otarget->IsClient() || otarget->IsPetOwnerClient())) {
-				if (!otarget->GetTarget()) {
-					return this;
-				}
-                ntarget = otarget->GetImpliedTarget(otarget->GetTarget(), spell_id, depth + 1, original_otarget);
-            } else {
-                return otarget;
-            }
-        }
-    }
-
-    if (ntarget == nullptr && IsBeneficialSpell(spell_id)) {
-        ntarget = this;
-    }
-    return ntarget;
 }
 
 const CombatRecord &Mob::GetCombatRecord() const
