@@ -452,6 +452,8 @@ int64 Mob::GetActSpellHealing(uint16 spell_id, int64 value, Mob* target, bool fr
 	if (RuleR(Character, Pyrelight_hWIS_HealPower) > 0) {
 		int effective_hWIS = GetOwner() ? round(RuleR(Character, Pyrelight_HeroicPetMod) * GetOwner()->GetHeroicWIS()) : GetHeroicWIS();
 		base_value *= round(effective_hWIS * RuleR(Character, Pyrelight_hWIS_HealPower) / 100);
+
+		LogDebug("base_value: [{}], effective_hWis: [{}]");
 	}
 
 	if (spells[spell_id].buff_duration < 1) {
