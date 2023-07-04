@@ -3510,7 +3510,7 @@ int Mob::AddBuff(Mob *caster, uint16 spell_id, int duration, int32 level_overrid
 	buffs[emptyslot].RootBreakChance = 0;
 	buffs[emptyslot].virus_spread_time = 0;
 	buffs[emptyslot].instrument_mod = caster ? caster->GetInstrumentMod(spell_id) : 10;
-	buffs[emptyslot].scale = 1 + (caster.getHeroicWis() / 100);
+	buffs[emptyslot].scale = 1 + (caster.GetHeroicWIS() / 100);
 
 	if (level_override > 0 || buffs[emptyslot].hit_number > 0) {
 		buffs[emptyslot].UpdateClient = true;
