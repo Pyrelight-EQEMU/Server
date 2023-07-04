@@ -2897,6 +2897,12 @@ int Mob::CalcBuffDuration(Mob *caster, Mob *target, uint16 spell_id, int32 caste
 			res += res_add;
 		}
 
+
+		// Max Buff Duration is 10 minutes.
+		if (!IsShortDurationBuff(spell_id) && IsBeneficialSpell(spell_id) && res > 100) {
+			res = 100;
+		}
+
 	}
 
 	LogSpells("Spell [{}]: Casting level [{}], formula [{}], base_duration [{}]: result [{}]", spell_id, castlevel, formula, duration, res);
