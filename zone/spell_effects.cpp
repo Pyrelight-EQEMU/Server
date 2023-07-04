@@ -1375,18 +1375,20 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 
 					effect_value += bonus_amount;
 
-					if (caster->IsClient()) {
-						caster->CastToClient()->LoadAccountFlags(); 
-					} else if (caster->GetOwner() && caster->GetOwner()->IsClient()) {
-						caster->GetOwner()->CastToClient()->LoadAccountFlags();
-					}
+					if (effective_hINT > 0) {
+						if (caster->IsClient()) {
+							caster->CastToClient()->LoadAccountFlags(); 
+						} else if (caster->GetOwner() && caster->GetOwner()->IsClient()) {
+							caster->GetOwner()->CastToClient()->LoadAccountFlags();
+						}
 
-					if (caster->IsClient() && caster->CastToClient()->GetAccountFlag("filter_hINT") != "off") {
-						caster->Message(Chat::Spells, "Your Heroic Intelligence has increased the power of your rune by %i (%i%%)!", abs(bonus_amount), static_cast<int>(bonus_ratio * 100));
-					} else if (caster->GetOwner() && caster->GetOwner()->IsClient() && 
-						caster->GetOwner()->CastToClient()->GetAccountFlag("filter_hINT") != "off" && 
-						caster->GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
-						caster->GetOwner()->Message(Chat::Spells, "Your Heroic Intelligence has increased the power of your pet's rune by %i (%i%%)!", abs(bonus_amount), static_cast<int>(bonus_ratio * 100));
+						if (caster->IsClient() && caster->CastToClient()->GetAccountFlag("filter_hINT") != "off") {
+							caster->Message(Chat::Spells, "Your Heroic Intelligence has increased the power of your rune by %i (%i%%)!", abs(bonus_amount), static_cast<int>(bonus_ratio * 100));
+						} else if (caster->GetOwner() && caster->GetOwner()->IsClient() && 
+							caster->GetOwner()->CastToClient()->GetAccountFlag("filter_hINT") != "off" && 
+							caster->GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
+							caster->GetOwner()->Message(Chat::Spells, "Your Heroic Intelligence has increased the power of your pet's rune by %i (%i%%)!", abs(bonus_amount), static_cast<int>(bonus_ratio * 100));
+						}
 					}
 				}
 
@@ -3867,7 +3869,7 @@ void Mob::BuffProcess()
 							// Regenerate Runes
 							if (suspended && IsEffectInSpell(buffs[buffs_i].spellid, SE_Rune)) {
 								int max_rune = CalcSpellEffectValue(buffs[buffs_i].spellid, GetSpellEffectIndex(buffs[buffs_i].spellid, SE_Rune), caster->GetLevel(), 10, caster);
-								
+
 								LogDebug("base max_rune: [{}]", max_rune);
 								int regen_amount = 0;								
 

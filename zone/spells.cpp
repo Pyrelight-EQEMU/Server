@@ -2858,12 +2858,14 @@ int Mob::CalcBuffDuration(Mob *caster, Mob *target, uint16 spell_id, int32 caste
 			if (msgTarget) {
 				msgTarget->LoadAccountFlags();
 			}
-
-			if (msgTarget->GetAccountFlag("filter_hINT") != "off") {
-				if (caster->IsPet() && !caster->IsClient() && msgTarget->GetAccountFlag("filter_hPets") != "off") {
-					msgTarget->Message(Chat::Spells, "Your Heroic Intelligence has increased the duration of your pet's spell effect by %i%% (%i ticks)!", increase, res_add);
-				} else if (caster->IsClient()) {
-					msgTarget->Message(Chat::Spells, "Your Heroic Intelligence has increased the duration of your spell effect by %i%% (%i ticks)!", increase, res_add);
+			
+			if (effective_hINT > 0) {
+				if (msgTarget->GetAccountFlag("filter_hINT") != "off") {
+					if (caster->IsPet() && !caster->IsClient() && msgTarget->GetAccountFlag("filter_hPets") != "off") {
+						msgTarget->Message(Chat::Spells, "Your Heroic Intelligence has increased the duration of your pet's spell effect by %i%% (%i ticks)!", increase, res_add);
+					} else if (caster->IsClient()) {
+						msgTarget->Message(Chat::Spells, "Your Heroic Intelligence has increased the duration of your spell effect by %i%% (%i ticks)!", increase, res_add);
+					}
 				}
 			}
 
@@ -2886,11 +2888,13 @@ int Mob::CalcBuffDuration(Mob *caster, Mob *target, uint16 spell_id, int32 caste
 				msgTarget->LoadAccountFlags();
 			}
 
-			if (msgTarget->GetAccountFlag("filter_hWIS") != "off") {
-				if (caster->IsPet() && !caster->IsClient() && msgTarget->GetAccountFlag("filter_hPets") != "off") {
-					msgTarget->Message(Chat::Spells, "Your Heroic Wisdom has increased the duration of your pet's spell effect by %i%% (%i ticks)!", increase, res_add);
-				} else if (caster->IsClient()) {
-					msgTarget->Message(Chat::Spells, "Your Heroic Wisdom has increased the duration of your spell effect by %i%% (%i ticks)!", increase, res_add);
+			if (effective_hWIS > 0) {
+				if (msgTarget->GetAccountFlag("filter_hWIS") != "off") {
+					if (caster->IsPet() && !caster->IsClient() && msgTarget->GetAccountFlag("filter_hPets") != "off") {
+						msgTarget->Message(Chat::Spells, "Your Heroic Wisdom has increased the duration of your pet's spell effect by %i%% (%i ticks)!", increase, res_add);
+					} else if (caster->IsClient()) {
+						msgTarget->Message(Chat::Spells, "Your Heroic Wisdom has increased the duration of your spell effect by %i%% (%i ticks)!", increase, res_add);
+					}
 				}
 			}
 
