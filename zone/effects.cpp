@@ -75,22 +75,22 @@ int64 Mob::GetActSpellDamage(uint16 spell_id, int64 value, Mob* target) {
 			bonus_ratio *= zone->random.Real(1 - RuleR(Character, Pyrelight_hStat_RandomizationFactor), 1 + RuleR(Character, Pyrelight_hStat_RandomizationFactor));
 		}
 
-		int64 bonus_amount = round(base_value * bonus_ratio);
+		int bonus_amount = round(base_value * bonus_ratio);
 
 		LogDebug("effective_hINT: [{}], bonus_ratio: [{}], bonus_amount: [{}]", effective_hINT, bonus_ratio, bonus_amount);
 
 		if (IsClient()) {
-			CastToClient()->LoadAccountFlags();
+			CastToClient()->LoadAccountFlags(); 
 		} else if (GetOwner() && GetOwner()->IsClient()) {
 			GetOwner()->CastToClient()->LoadAccountFlags();
 		}
 
 		if (IsClient() && CastToClient()->GetAccountFlag("filter_hINT") != "off") {
-			Message(Chat::Spells, "Your Heroic Intelligence has increased the power of your magic2 by %i%% (%i)!", bonus_ratio, bonus_amount);
+			Message(Chat::Spells, "Your Heroic Intelligence has increased the power of your magic by %i%% (%i)!", static_cast<int>(bonus_ratio * 100), bonus_amount);
 		} else if (GetOwner() && GetOwner()->IsClient() && 
 					GetOwner()->CastToClient()->GetAccountFlag("filter_hINT") != "off" && 
 					GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
-			GetOwner()->Message(Chat::Spells, "Your Heroic Intelligence has increased the power of your pet's magic by %i%% (%i)!", bonus_ratio, bonus_amount);
+			GetOwner()->Message(Chat::Spells, "Your Heroic Intelligence has increased the power of your pet's magic by %i%% (%i)!", static_cast<int>(bonus_ratio * 100), bonus_amount);
 		}
 
 		base_value += bonus_amount;
