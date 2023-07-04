@@ -6081,9 +6081,12 @@ void Mob::CommonOutgoingHitSuccess(Mob* defender, DamageHitInfo &hit, ExtraAttac
 	// Pyrelight Custom Code - Heroic Strength
 	if (RuleR(Character, Pyrelight_hSTR_DmgBonus) > 0) {
 		int effective_hSTR = (IsPetOwnerClient() && GetOwner()) ? RuleR(Character, Pyrelight_HeroicPetMod) * GetOwner()->GetHeroicSTR() : GetHeroicSTR();
-		effective_hSTR = zone->random.Int(std::ceil(effective_hSTR) * 0.5 , std::ceil(effective_hSTR * 1.5));
 		if (effective_hSTR > 0) {
 			float damage_scalar = 1 + ((RuleR(Character, Pyrelight_hSTR_DmgBonus) / 100) * effective_hSTR);
+
+			if (RuleB(Character, Pyrelight_hStat_Randomize)) {
+				damage_scalar *= zone->random.Real(1 - RuleR(Character, Pyrelight_hStat_RandomizationFactor), 1 + RuleR(Character, Pyrelight_hStat_RandomizationFactor));
+			}
 
 			hit.original_damage = hit.damage_done;			
 			hit.damage_done = static_cast<int64>(std::floor(hit.damage_done * damage_scalar));

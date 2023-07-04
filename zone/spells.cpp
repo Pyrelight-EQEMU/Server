@@ -4199,10 +4199,12 @@ bool Mob::SpellOnTarget(
 				effective_hCHA = hCHA_source->GetHeroicCHA();
 				hCHA_source->LoadAccountFlags();
 
+				int loop_count = 0;
+
 				while (effective_hCHA > 0 && spell_effectiveness < 100) {					
 					int random = zone->random.Int(1,100);
 					LogDebug("Re-Rolling Offensive resist check for [{}], hCHA: [{}], target: [{}], owner: [{}], random: [{}]", hCHA_source->GetName(), effective_hCHA, spelltar->GetName(), spellOwner->GetName(), random);				
-
+					LogDebug("resist_adjust: [{}], [{}]", resist_adjust, use_resist_adjust);
 					if ((effective_hCHA * RuleR(Character,Pyrelight_hCHA_ResistReroll)) >= random) {						
 						new_result = spelltar->ResistSpell(
 										spells[spell_id].resist_type,
@@ -4231,7 +4233,8 @@ bool Mob::SpellOnTarget(
 							LogDebug("Reroll failed!");
 						}
 					}
-					effective_hCHA -= random * 3;
+					effective_hCHA -= random * RuleR(Character, Pyrelight_HeroicRerollDecayRate);
+					loop_count++;
 				}
 			} else if (spelltar->IsClient() || spelltar->IsPetOwnerClient() && spell_effectiveness > 0) {
 				hCHA_source = spelltar->GetOwner() ? spelltar->GetOwner()->CastToClient() : spelltar->CastToClient();
@@ -4241,7 +4244,7 @@ bool Mob::SpellOnTarget(
 				while (effective_hCHA > 0 && spell_effectiveness > 0) {					
 					int random = zone->random.Int(1,100);
 					LogDebug("Re-Rolling Defensive resist check for [{}], hCHA: [{}], target: [{}], owner: [{}], random: [{}]", hCHA_source->GetName(), effective_hCHA, spelltar->GetName(), spellOwner->GetName(), random);			
-
+					LogDebug("resist_adjust: [{}], [{}]", resist_adjust, use_resist_adjust);
 					if ((effective_hCHA * RuleR(Character,Pyrelight_hCHA_ResistReroll)) >= random) {
 						new_result = spelltar->ResistSpell(
 										spells[spell_id].resist_type,
@@ -4270,7 +4273,8 @@ bool Mob::SpellOnTarget(
 							LogDebug("Reroll failed!");
 						}
 					}
-					effective_hCHA -= random * 3;
+					effective_hCHA -= random * RuleR(Character, Pyrelight_HeroicRerollDecayRate);
+					loop_count++;				
 				}
 			}
 		}		
