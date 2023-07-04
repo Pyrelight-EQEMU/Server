@@ -5922,8 +5922,8 @@ int32 Mob::RuneAbsorb(int64 damage, uint16 type)
 						damage -= melee_rune_left;
 						melee_rune_left = 0;
 
-					if (!TryFadeEffect(slot))
-						BuffFadeBySlot(slot);
+					//if (!TryFadeEffect(slot))
+					//	BuffFadeBySlot(slot);
 				}
 
 				if (original_damage > 0 && damage < original_damage) {
@@ -5950,8 +5950,8 @@ int32 Mob::RuneAbsorb(int64 damage, uint16 type)
 						damage -= magic_rune_left;
 						magic_rune_left = 0;
 
-					if (!TryFadeEffect(slot))
-						BuffFadeBySlot(slot);
+					//if (!TryFadeEffect(slot))
+					//	BuffFadeBySlot(slot);
 				}
 
 				if (original_damage > 0 && damage < original_damage) {
