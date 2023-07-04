@@ -4521,11 +4521,6 @@ void Mob::CommonDamage(Mob* attacker, int64 &damage, const uint16 spell_id, cons
 			);
 		}
 	}
-
-	if (damage = DMG_RUNE) {
-		LogDebug("We can put rune information here");
-	}
-
 }
 
 void Mob::HealDamage(uint64 amount, Mob* caster, uint16 spell_id)
