@@ -4193,7 +4193,7 @@ bool Mob::SpellOnTarget(
 		if (RuleR(Character,Pyrelight_hCHA_ResistReroll) > 0) {
 			int effective_hCHA = 0;
 			int new_result = spell_effectiveness;
-			int loop_count = 0;
+			int loop_count = 1;
 			Client* hCHA_source = nullptr;
 			if (spellOwner->IsClient() || spellOwner->IsPetOwnerClient()) {
 				hCHA_source = spellOwner->GetOwner() ? spellOwner->GetOwner()->CastToClient() : spellOwner->CastToClient();
