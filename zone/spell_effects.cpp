@@ -3901,6 +3901,12 @@ void Mob::BuffProcess()
 							if (IsPet() && GetOwner()) {
 								SendPetBuffsToClient();
 							}
+						}
+						// Clean up expired runes
+						if (HasSpellEffect(buffs[buffs_i].spellid, SE_Rune) && buffs[buffs_i].melee_rune == 0) {
+							if (!TryFadeEffect(buffs_i)) {
+								BuffFadeBySlot(buffs_i);
+							}
 						}							
 					}
 
