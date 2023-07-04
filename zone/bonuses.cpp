@@ -2238,12 +2238,8 @@ void Mob::ApplySpellsBonuses(uint16 spell_id, uint8 casterlevel, StatBonuses *ne
 			}
 
 			case SE_TotalHP:
-			{	
-				if (RuleR(Character, Pyrelight_hWIS_BuffPower) > 0) {
-					new_bonus->HP += effect_value * (buffs[buffslot].scale * 1); 
-				} else {
-					new_bonus->HP += effect_value;
-				}
+			{				
+				new_bonus->HP += effect_value;
 				break;
 			}
 

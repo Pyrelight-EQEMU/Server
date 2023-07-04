@@ -3104,8 +3104,6 @@ void ZoneDatabase::SaveBuffs(Client *client) {
                             buffs[index].caston_x, buffs[index].caston_y, buffs[index].caston_z,
                             buffs[index].ExtraDIChance, buffs[index].instrument_mod, buffs[index].scale);
        QueryDatabase(query);
-
-	   LogDebug("Trying to save buffs: [{}]", query);
 	}
 }
 
