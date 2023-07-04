@@ -64,9 +64,7 @@ int64 Mob::GetActSpellDamage(uint16 spell_id, int64 value, Mob* target) {
 		value *= std::abs(GetSkillDmgAmt(spells[spell_id].skill) / 100);
 	}
 
-	int64 base_value = value;
-	int chance = 0;
-
+	// Pyrelight Custom Code
 	if (RuleR(Character, Pyrelight_hINT_SpellDamage) > 0) {
 		int effective_hINT = GetOwner() ? round(RuleR(Character, Pyrelight_HeroicPetMod) * GetOwner()->GetHeroicINT()) : GetHeroicINT();
 		float bonus_ratio = effective_hINT * RuleR(Character, Pyrelight_hINT_SpellDamage) / 100;		
@@ -75,7 +73,7 @@ int64 Mob::GetActSpellDamage(uint16 spell_id, int64 value, Mob* target) {
 			bonus_ratio *= zone->random.Real(1 - RuleR(Character, Pyrelight_hStat_RandomizationFactor), 1 + RuleR(Character, Pyrelight_hStat_RandomizationFactor));
 		}
 
-		int bonus_amount = round(base_value * bonus_ratio);
+		int bonus_amount = round(value * bonus_ratio);
 
 		LogDebug("effective_hINT: [{}], bonus_ratio: [{}], bonus_amount: [{}]", effective_hINT, bonus_ratio, bonus_amount);
 
@@ -93,8 +91,12 @@ int64 Mob::GetActSpellDamage(uint16 spell_id, int64 value, Mob* target) {
 			GetOwner()->Message(Chat::Spells, "Your Heroic Intelligence has increased the power of your pet's magic by %i%% (%i)!", static_cast<int>(bonus_ratio * 100), abs(bonus_amount));
 		}
 
-		base_value += bonus_amount;
+		value += bonus_amount;
 	}
+	// End Pyrelight Custom Code
+
+	int64 base_value = value;
+	int chance = 0;	
 
 	// Need to scale HT damage differently after level 40! It no longer scales by the constant value in the spell file. It scales differently, instead of 10 more damage per level, it does 30 more damage per level. So we multiply the level minus 40 times 20 if they are over level 40.
 	if ((spell_id == SPELL_HARM_TOUCH || spell_id == SPELL_HARM_TOUCH2 || spell_id == SPELL_IMP_HARM_TOUCH ) && GetLevel() > 40)
@@ -300,13 +302,7 @@ int64 Mob::GetActDoTDamage(uint16 spell_id, int64 value, Mob* target, bool from_
 		value *= std::abs(GetSkillDmgAmt(spells[spell_id].skill) / 100);
 	}
 
-	int64 base_value = value;
-	int64 extra_dmg = 0;
-	int16 chance = 0;
-	
-	chance += itembonuses.CriticalDoTChance + spellbonuses.CriticalDoTChance + aabonuses.CriticalDoTChance;
-
-
+	// Pyrelight Custom Code
 	if (RuleR(Character, Pyrelight_hINT_SpellDamage) > 0) {
 		int effective_hINT = GetOwner() ? round(RuleR(Character, Pyrelight_HeroicPetMod) * GetOwner()->GetHeroicINT()) : GetHeroicINT();
 		float bonus_ratio = effective_hINT * RuleR(Character, Pyrelight_hINT_SpellDamage) / 100;		
@@ -315,7 +311,7 @@ int64 Mob::GetActDoTDamage(uint16 spell_id, int64 value, Mob* target, bool from_
 			bonus_ratio *= zone->random.Real(1 - RuleR(Character, Pyrelight_hStat_RandomizationFactor), 1 + RuleR(Character, Pyrelight_hStat_RandomizationFactor));
 		}
 
-		int bonus_amount = round(base_value * bonus_ratio);
+		int bonus_amount = round(value * bonus_ratio);
 
 		LogDebug("effective_hINT: [{}], bonus_ratio: [{}], bonus_amount: [{}]", effective_hINT, bonus_ratio, bonus_amount);
 
@@ -333,8 +329,15 @@ int64 Mob::GetActDoTDamage(uint16 spell_id, int64 value, Mob* target, bool from_
 			GetOwner()->Message(Chat::Spells, "Your Heroic Intelligence has increased the power of your pet's magic by %i%% (%i)!", static_cast<int>(bonus_ratio * 100), abs(bonus_amount));
 		}
 
-		base_value += bonus_amount;
+		value += bonus_amount;
 	}
+	// End Pyrelight Custom Code
+
+	int64 base_value = value;
+	int64 extra_dmg = 0;
+	int16 chance = 0;
+	
+	chance += itembonuses.CriticalDoTChance + spellbonuses.CriticalDoTChance + aabonuses.CriticalDoTChance;	
 
 	if (spellbonuses.CriticalDotDecay)
 		chance += GetDecayEffectValue(spell_id, SE_CriticalDotDecay);
@@ -503,12 +506,8 @@ int64 Mob::GetActSpellHealing(uint16 spell_id, int64 value, Mob* target, bool fr
 	if (RuleB(Spells, AllowExtraDmgSkill) && RuleB(Character, ItemExtraSkillDamageCalcAsPercent) && GetSkillDmgAmt(spells[spell_id].skill) > 0) {
 		value *= std::abs(GetSkillDmgAmt(spells[spell_id].skill) / 100);
 	}
-
-	bool Critical = false;
-	int64 base_value = value;
-	int16 critical_chance = 0;
-	int8  critical_modifier = 1;
-
+	
+	// Pyrelight Custom Code
 	if (RuleR(Character, Pyrelight_hWIS_HealPower) > 0) {
 		int effective_hWIS = GetOwner() ? round(RuleR(Character, Pyrelight_HeroicPetMod) * GetOwner()->GetHeroicWIS()) : GetHeroicWIS();
 		float bonus_ratio = effective_hWIS * RuleR(Character, Pyrelight_hWIS_HealPower) / 100;		
@@ -517,7 +516,7 @@ int64 Mob::GetActSpellHealing(uint16 spell_id, int64 value, Mob* target, bool fr
 			bonus_ratio *= zone->random.Real(1 - RuleR(Character, Pyrelight_hStat_RandomizationFactor), 1 + RuleR(Character, Pyrelight_hStat_RandomizationFactor));
 		}
 
-		int bonus_amount = round(base_value * bonus_ratio);
+		int bonus_amount = round(value * bonus_ratio);
 
 		LogDebug("effective_hWIS: [{}], bonus_ratio: [{}], bonus_amount: [{}]", effective_hWIS, bonus_ratio, bonus_amount);
 
@@ -535,8 +534,14 @@ int64 Mob::GetActSpellHealing(uint16 spell_id, int64 value, Mob* target, bool fr
 			GetOwner()->Message(Chat::Spells, "Your Heroic Wisdom has increased the power of your pet's magic by %i%% (%i)!", static_cast<int>(bonus_ratio * 100), abs(bonus_amount));
 		}
 
-		base_value += bonus_amount;
+		value += bonus_amount;
 	}
+	// End Pyrelight Custom Code
+
+	bool Critical = false;
+	int64 base_value = value;
+	int16 critical_chance = 0;
+	int8  critical_modifier = 1;
 
 	if (spells[spell_id].buff_duration < 1) {
 		critical_chance += itembonuses.CriticalHealChance + spellbonuses.CriticalHealChance + aabonuses.CriticalHealChance;
