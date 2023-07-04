@@ -1698,6 +1698,9 @@ bool Mob::Attack(Mob* other, int Hand, bool bRiposte, bool IsStrikethrough, bool
 	///////////////////////////////////////////////////////////
 	other->Damage(this, my_hit.damage_done, SPELL_UNKNOWN, my_hit.skill, true, -1, false, m_specialattacks);
 
+	//Pyrelight Custom Code - Send info about damage absorbed by runes.
+
+
 	//Pyrelight Custom Code - Send info about the hSTA/hSTR damage modification to clients
 	// This is a boilerplate with dead code paths.
 	if (my_hit.damage_done > 0 && my_hit.original_damage > 0) {
@@ -4518,6 +4521,11 @@ void Mob::CommonDamage(Mob* attacker, int64 &damage, const uint16 spell_id, cons
 			);
 		}
 	}
+
+	if (damage = DMG_RUNE) {
+		LogDebug("We can put rune information here");
+	}
+
 }
 
 void Mob::HealDamage(uint64 amount, Mob* caster, uint16 spell_id)
@@ -5909,7 +5917,7 @@ int32 Mob::RuneAbsorb(int64 damage, uint16 type)
 				{
 					melee_rune_left -= damage;
 					buffs[slot].melee_rune = melee_rune_left;
-					return -6;
+					return DMG_RUNE;
 				}
 
 				else
