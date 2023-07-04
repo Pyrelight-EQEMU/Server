@@ -5923,14 +5923,20 @@ int32 Mob::RuneAbsorb(int64 damage, uint16 type)
 						melee_rune_left = 0;
 						buffs[slot].melee_rune = 0;
 
-						Client* client = GetOwnerOrSelf()->CastToClient();
-						Client* caster = entity_list.GetClientByName(buffs[slot].caster_name);
+						if ((IsClient() || (IsPet() && IsPetOwnerClient()))) {
+							Client* client = GetOwnerOrSelf()->CastToClient();
+							Client* caster = entity_list.GetClientByName(buffs[slot].caster_name);
 
-						if (!(caster == client || (client->GetGroup() && client->GetGroup()->IsGroupMember(caster)))) {
-							if (!(caster->FindSpellBookSlotBySpellID(buffs[slot].spellid) >= 0 || caster->GetInv().IsClickEffectEquipped(buffs[slot].spellid))) {
-								if (!TryFadeEffect(slot)) {
-									BuffFadeBySlot(slot);
+							if (!(caster == client || (client->GetGroup() && client->GetGroup()->IsGroupMember(caster)))) {
+								if (!(caster->FindSpellBookSlotBySpellID(buffs[slot].spellid) >= 0 || caster->GetInv().IsClickEffectEquipped(buffs[slot].spellid))) {
+									if (!TryFadeEffect(slot)) {
+										BuffFadeBySlot(slot);
+									}
 								}
+							}
+						} else {
+							if (!TryFadeEffect(slot)) {
+								BuffFadeBySlot(slot);
 							}
 						}
 				}
@@ -5960,14 +5966,20 @@ int32 Mob::RuneAbsorb(int64 damage, uint16 type)
 						magic_rune_left = 0;
 						buffs[slot].magic_rune = 0;
 
-						Client* client = GetOwnerOrSelf()->CastToClient();
-						Client* caster = entity_list.GetClientByName(buffs[slot].caster_name);
+						if ((IsClient() || (IsPet() && IsPetOwnerClient()))) {
+							Client* client = GetOwnerOrSelf()->CastToClient();
+							Client* caster = entity_list.GetClientByName(buffs[slot].caster_name);
 
-						if (!(caster == client || (client->GetGroup() && client->GetGroup()->IsGroupMember(caster)))) {
-							if (!(caster->FindSpellBookSlotBySpellID(buffs[slot].spellid) >= 0 || caster->GetInv().IsClickEffectEquipped(buffs[slot].spellid))) {
-								if (!TryFadeEffect(slot)) {
-									BuffFadeBySlot(slot);
+							if (!(caster == client || (client->GetGroup() && client->GetGroup()->IsGroupMember(caster)))) {
+								if (!(caster->FindSpellBookSlotBySpellID(buffs[slot].spellid) >= 0 || caster->GetInv().IsClickEffectEquipped(buffs[slot].spellid))) {
+									if (!TryFadeEffect(slot)) {
+										BuffFadeBySlot(slot);
+									}
 								}
+							}
+						} else {
+							if (!TryFadeEffect(slot)) {
+								BuffFadeBySlot(slot);
 							}
 						}
 				}
