@@ -7225,20 +7225,20 @@ void Mob::DrawDebugCoordinateNode(std::string node_name, const glm::vec4 vec)
 Mob* Mob::GetImpliedTarget(Mob* target, uint32 spell_id) {
     if (IsClient()) {
 		if (IsBeneficialSpell(spell_id)) {
-			if (target->IsClient() || target->IsPetOwnerClient()) {
+			if (target && target->IsClient() || target->IsPetOwnerClient()) {
 				return target;
 			}
-			else if (target->GetTarget()->IsClient() || target->GetTarget()->IsPetOwnerClient()) {
+			else if (target && target->GetTarget() && target->GetTarget()->IsClient() || target->GetTarget()->IsPetOwnerClient()) {
 				return target->GetTarget();
 			}
 			else {
 				return this;
 			}
 		} else {
-			if (!target->IsClient() && !target->IsPetOwnerClient()) {
+			if (target && (!target->IsClient() && !target->IsPetOwnerClient())) {
 				return target;
 			} 
-			else if (!target->GetTarget()->IsClient() && !target->GetTarget()->IsPetOwnerClient()) {
+			else if (target && target->GetTarget() && !target->GetTarget()->IsClient() && !target->GetTarget()->IsPetOwnerClient()) {
 				return target->GetTarget();
 			} else {
 				Message(Chat::SpellFailure, "Unable to find a valid target for this spell.");

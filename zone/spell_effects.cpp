@@ -3866,7 +3866,8 @@ void Mob::BuffProcess()
 
 							// Regenerate Runes
 							if (suspended && IsEffectInSpell(buffs[buffs_i].spellid, SE_Rune)) {
-								int max_rune = CalcSpellEffectValue(buffs[buffs_i].spellid,GetSpellEffectIndex(buffs[buffs_i].spellid, SE_Rune),caster->GetLevel(), 10, caster);
+								int max_rune = CalcSpellEffectValue(buffs[buffs_i].spellid, GetSpellEffectIndex(buffs[buffs_i].spellid, SE_Rune), caster->GetLevel(), 10, caster);
+								
 								LogDebug("base max_rune: [{}]", max_rune);
 								int regen_amount = 0;								
 
