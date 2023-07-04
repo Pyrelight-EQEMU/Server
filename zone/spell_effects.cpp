@@ -3882,7 +3882,7 @@ void Mob::BuffProcess()
 								}
 
 								if (buffs[buffs_i].melee_rune < max_rune) {
-									regen_amount = zone->random.Roll(10) ? round(max_rune/4.0) : round(max_rune/100.0);
+									regen_amount = round(max_rune/20.0);
 								}
 
 								if (regen_amount > 0 && buffs[buffs_i].melee_rune < max_rune) {
