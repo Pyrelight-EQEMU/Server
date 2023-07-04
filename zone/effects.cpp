@@ -305,12 +305,12 @@ int64 Mob::GetActDoTDamage(uint16 spell_id, int64 value, Mob* target, bool from_
 	// Pyrelight Custom Code
 	if (RuleR(Character, Pyrelight_hINT_SpellDamage) > 0) {
 		int effective_hINT = GetOwner() ? round(RuleR(Character, Pyrelight_HeroicPetMod) * GetOwner()->GetHeroicINT()) : GetHeroicINT();
-		float bonus_ratio = effective_hINT * RuleR(Character, Pyrelight_hINT_SpellDamage) / 100;		
 
 		if (RuleB(Character, Pyrelight_hStat_Randomize)) {
-			bonus_ratio *= zone->random.Real(1 - RuleR(Character, Pyrelight_hStat_RandomizationFactor), 1 + RuleR(Character, Pyrelight_hStat_RandomizationFactor));
+			effective_hINT *= zone->random.Real(1 - RuleR(Character, Pyrelight_hStat_RandomizationFactor), 1 + RuleR(Character, Pyrelight_hStat_RandomizationFactor));
 		}
 
+		float bonus_ratio = effective_hINT * RuleR(Character, Pyrelight_hINT_SpellDamage) / 100;
 		int bonus_amount = round(value * bonus_ratio);
 
 		LogDebug("effective_hINT: [{}], bonus_ratio: [{}], bonus_amount: [{}]", effective_hINT, bonus_ratio, bonus_amount);
@@ -512,12 +512,12 @@ int64 Mob::GetActSpellHealing(uint16 spell_id, int64 value, Mob* target, bool fr
 	// Pyrelight Custom Code
 	if (RuleR(Character, Pyrelight_hWIS_HealPower) > 0) {
 		int effective_hWIS = GetOwner() ? round(RuleR(Character, Pyrelight_HeroicPetMod) * GetOwner()->GetHeroicWIS()) : GetHeroicWIS();
-		float bonus_ratio = effective_hWIS * RuleR(Character, Pyrelight_hWIS_HealPower) / 100;		
 
 		if (RuleB(Character, Pyrelight_hStat_Randomize)) {
-			bonus_ratio *= zone->random.Real(1 - RuleR(Character, Pyrelight_hStat_RandomizationFactor), 1 + RuleR(Character, Pyrelight_hStat_RandomizationFactor));
+			effective_hWIS *= zone->random.Real(1 - RuleR(Character, Pyrelight_hStat_RandomizationFactor), 1 + RuleR(Character, Pyrelight_hStat_RandomizationFactor));
 		}
 
+		float bonus_ratio = effective_hWIS * RuleR(Character, Pyrelight_hWIS_HealPower) / 100;
 		int bonus_amount = round(value * bonus_ratio);
 
 		LogDebug("effective_hWIS: [{}], bonus_ratio: [{}], bonus_amount: [{}]", effective_hWIS, bonus_ratio, bonus_amount);
