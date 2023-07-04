@@ -84,11 +84,11 @@ int64 Mob::GetActSpellDamage(uint16 spell_id, int64 value, Mob* target) {
 		}
 
 		if (IsClient() && CastToClient()->GetAccountFlag("filter_hINT") != "off") {
-			Message(Chat::Spells, "Your Heroic Intelligence has increased the power of your magic by %i%% (%i)!", static_cast<int>(bonus_ratio * 100), abs(bonus_amount));
+			Message(Chat::Spells, "Your Heroic Intelligence has increased the power of your magic by %i (%i%%)!", abs(bonus_amount), static_cast<int>(bonus_ratio * 100));
 		} else if (GetOwner() && GetOwner()->IsClient() && 
 					GetOwner()->CastToClient()->GetAccountFlag("filter_hINT") != "off" && 
 					GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
-			GetOwner()->Message(Chat::Spells, "Your Heroic Intelligence has increased the power of your pet's magic by %i%% (%i)!", static_cast<int>(bonus_ratio * 100), abs(bonus_amount));
+			GetOwner()->Message(Chat::Spells, "Your Heroic Intelligence has increased the power of your pet's magic by %i (%i%%)!", abs(bonus_amount), static_cast<int>(bonus_ratio * 100));
 		}
 
 		value += bonus_amount;
@@ -315,18 +315,20 @@ int64 Mob::GetActDoTDamage(uint16 spell_id, int64 value, Mob* target, bool from_
 
 		LogDebug("effective_hINT: [{}], bonus_ratio: [{}], bonus_amount: [{}]", effective_hINT, bonus_ratio, bonus_amount);
 
-		if (IsClient()) {
-			CastToClient()->LoadAccountFlags(); 
-		} else if (GetOwner() && GetOwner()->IsClient()) {
-			GetOwner()->CastToClient()->LoadAccountFlags();
-		}
+		if (from_buff_tic) {
+			if (IsClient()) {
+				CastToClient()->LoadAccountFlags(); 
+			} else if (GetOwner() && GetOwner()->IsClient()) {
+				GetOwner()->CastToClient()->LoadAccountFlags();
+			}
 
-		if (IsClient() && CastToClient()->GetAccountFlag("filter_hINT") != "off") {
-			Message(Chat::Spells, "Your Heroic Intelligence has increased the power of your magic by %i%% (%i)!", static_cast<int>(bonus_ratio * 100), abs(bonus_amount));
-		} else if (GetOwner() && GetOwner()->IsClient() && 
-					GetOwner()->CastToClient()->GetAccountFlag("filter_hINT") != "off" && 
-					GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
-			GetOwner()->Message(Chat::Spells, "Your Heroic Intelligence has increased the power of your pet's magic by %i%% (%i)!", static_cast<int>(bonus_ratio * 100), abs(bonus_amount));
+			if (IsClient() && CastToClient()->GetAccountFlag("filter_hINT") != "off") {
+				Message(Chat::Spells, "Your Heroic Intelligence has increased the power of your magic by %i (%i%%)!", abs(bonus_amount), static_cast<int>(bonus_ratio * 100));
+			} else if (GetOwner() && GetOwner()->IsClient() && 
+						GetOwner()->CastToClient()->GetAccountFlag("filter_hINT") != "off" && 
+						GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
+				GetOwner()->Message(Chat::Spells, "Your Heroic Intelligence has increased the power of your pet's magic by %i (%i%%)!", abs(bonus_amount), static_cast<int>(bonus_ratio * 100));
+			}
 		}
 
 		value += bonus_amount;
@@ -527,11 +529,11 @@ int64 Mob::GetActSpellHealing(uint16 spell_id, int64 value, Mob* target, bool fr
 		}
 
 		if (IsClient() && CastToClient()->GetAccountFlag("filter_hWIS") != "off") {
-			Message(Chat::Spells, "Your Heroic Wisdom has increased the power of your magic by %i%% (%i)!", static_cast<int>(bonus_ratio * 100), abs(bonus_amount));
+			Message(Chat::Spells, "Your Heroic Wisdom has increased the power of your magic by %i (%i%%)!", abs(bonus_amount), static_cast<int>(bonus_ratio * 100));
 		} else if (GetOwner() && GetOwner()->IsClient() && 
 					GetOwner()->CastToClient()->GetAccountFlag("filter_hWIS") != "off" && 
 					GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
-			GetOwner()->Message(Chat::Spells, "Your Heroic Wisdom has increased the power of your pet's magic by %i%% (%i)!", static_cast<int>(bonus_ratio * 100), abs(bonus_amount));
+			GetOwner()->Message(Chat::Spells, "Your Heroic Wisdom has increased the power of your pet's magic by %i (%i%%)!", abs(bonus_amount), static_cast<int>(bonus_ratio * 100));
 		}
 
 		value += bonus_amount;
