@@ -69,13 +69,14 @@ int64 Mob::GetActSpellDamage(uint16 spell_id, int64 value, Mob* target) {
 
 	if (RuleR(Character, Pyrelight_hINT_SpellDamage) > 0) {
 		int effective_hINT = GetOwner() ? round(RuleR(Character, Pyrelight_HeroicPetMod) * GetOwner()->GetHeroicWIS()) : GetHeroicWIS();
-		int64 bonus_amount = round(base_value * effective_hINT * RuleR(Character, Pyrelight_hINT_SpellDamage) / 100);
+		float bonus_ratio = effective_hINT * RuleR(Character, Pyrelight_hINT_SpellDamage) / 100;
+		int64 bonus_amount = round(base_value * bonus_ratio);
 
 		if (RuleB(Character, Pyrelight_hStat_Randomize)) {
 			bonus_amount *= zone->random.Real(1 - RuleR(Character, Pyrelight_hStat_RandomizationFactor), 1 + RuleR(Character, Pyrelight_hStat_RandomizationFactor));
 		}
 
-		LogDebug("effective_hINT: [{}], bonus_amount: [{}]", effective_hINT, abs(bonus_amount));
+		LogDebug("effective_hINT: [{}], bonus_ratio: [{}], bonus_amount: [{}]", effective_hINT, bonus_ratio, bonus_amount);
 
 		if (IsClient()) {
 			CastToClient()->LoadAccountFlags();
@@ -84,11 +85,11 @@ int64 Mob::GetActSpellDamage(uint16 spell_id, int64 value, Mob* target) {
 		}
 
 		if (IsClient() && CastToClient()->GetAccountFlag("filter_hINT") != "off") {
-			Message(Chat::Spells, "Your Heroic Intelligence has increased the power of your magic by %i%% (%i)!", abs(effective_hINT * RuleR(Character, Pyrelight_hINT_SpellDamage) / 100), abs(bonus_amount));
+			Message(Chat::Spells, "Your Heroic Intelligence has increased the power of your magic by %i%% (%i)!", abs(bonus_ratio), abs(bonus_amount);
 		} else if (GetOwner() && GetOwner()->IsClient() && 
 					GetOwner()->CastToClient()->GetAccountFlag("filter_hINT") != "off" && 
 					GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
-			GetOwner()->Message(Chat::Spells, "Your Heroic Intelligence has increased the power of your pet's magic by %i%% (%i)!", abs(effective_hINT * RuleR(Character, Pyrelight_hINT_SpellDamage) / 100), abs(bonus_amount));
+			GetOwner()->Message(Chat::Spells, "Your Heroic Intelligence has increased the power of your pet's magic by %i%% (%i)!", abs(bonus_ratio), abs(bonus_amount));
 		}
 
 		base_value += bonus_amount;
