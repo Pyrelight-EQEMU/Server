@@ -68,7 +68,7 @@ int64 Mob::GetActSpellDamage(uint16 spell_id, int64 value, Mob* target) {
 	int chance = 0;
 
 	if (RuleR(Character, Pyrelight_hINT_SpellDamage) > 0) {
-		int effective_hINT = GetOwner() ? round(RuleR(Character, Pyrelight_HeroicPetMod) * GetOwner()->GetHeroicWIS()) : GetHeroicWIS();
+		int effective_hINT = GetOwner() ? round(RuleR(Character, Pyrelight_HeroicPetMod) * GetOwner()->GetHeroicINT()) : GetHeroicINT();
 		float bonus_ratio = effective_hINT * RuleR(Character, Pyrelight_hINT_SpellDamage) / 100;
 		int64 bonus_amount = round(base_value * bonus_ratio);
 
@@ -85,7 +85,7 @@ int64 Mob::GetActSpellDamage(uint16 spell_id, int64 value, Mob* target) {
 		}
 
 		if (IsClient() && CastToClient()->GetAccountFlag("filter_hINT") != "off") {
-			Message(Chat::Spells, "Your Heroic Intelligence has increased the power of your magic by %i%% (%i)!", abs(bonus_ratio), abs(bonus_amount);
+			Message(Chat::Spells, "Your Heroic Intelligence has increased the power of your magic by %i%% (%i)!", abs(bonus_ratio), abs(bonus_amount));
 		} else if (GetOwner() && GetOwner()->IsClient() && 
 					GetOwner()->CastToClient()->GetAccountFlag("filter_hINT") != "off" && 
 					GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
