@@ -3149,7 +3149,7 @@ void ZoneDatabase::LoadBuffs(Client *client)
 		int32 caston_z = Strings::ToUnsignedInt(row[13]);
 		int32 ExtraDIChance = Strings::ToUnsignedInt(row[14]);
 		uint32 instrument_mod = Strings::ToUnsignedInt(row[15]);
-		float scale = Strings::ToUnsignedInt(row[16]);
+		float scale = Strings::ToFloat(row[16]);
 
 		buffs[slot_id].spellid = spell_id;
 		buffs[slot_id].casterlevel = caster_level;
