@@ -4193,13 +4193,12 @@ bool Mob::SpellOnTarget(
 		if (RuleR(Character,Pyrelight_hCHA_ResistReroll) > 0) {
 			int effective_hCHA = 0;
 			int new_result = spell_effectiveness;
+			int loop_count = 0;
 			Client* hCHA_source = nullptr;
 			if (spellOwner->IsClient() || spellOwner->IsPetOwnerClient()) {
 				hCHA_source = spellOwner->GetOwner() ? spellOwner->GetOwner()->CastToClient() : spellOwner->CastToClient();
 				effective_hCHA = hCHA_source->GetHeroicCHA();
-				hCHA_source->LoadAccountFlags();
-
-				int loop_count = 0;
+				hCHA_source->LoadAccountFlags();				
 
 				while (effective_hCHA > 0 && spell_effectiveness < 100) {					
 					int random = zone->random.Int(1,100);
