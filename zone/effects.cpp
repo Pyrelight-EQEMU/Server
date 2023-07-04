@@ -447,12 +447,7 @@ int64 Mob::GetActSpellHealing(uint16 spell_id, int64 value, Mob* target, bool fr
 	int16 critical_chance = 0;
 	int8  critical_modifier = 1;
 
-	if (RuleR(Character, Pyrelight_hWIS_HealPower) > 0) {
-		int effective_hWIS = GetOwner() ? std::ceil(RuleR(Character, Pyrelight_HeroicPetMod) * GetOwner()->GetHeroicWIS()) : GetHeroicWIS();
-		int bonus = round(effective_hWIS * RuleR(Character, Pyrelight_hWIS_HealPower) / 100);
-
-		LogDebug("effective_hWIS: [{}], bonus: [{}]", effective_hWIS, bonus);
-	}
+	
 
 	if (spells[spell_id].buff_duration < 1) {
 		critical_chance += itembonuses.CriticalHealChance + spellbonuses.CriticalHealChance + aabonuses.CriticalHealChance;
