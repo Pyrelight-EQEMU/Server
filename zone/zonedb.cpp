@@ -3097,7 +3097,7 @@ void ZoneDatabase::SaveBuffs(Client *client) {
                             "magic_rune, persistent, dot_rune, caston_x, caston_y, caston_z, ExtraDIChance, "
 							"instrument_mod, scale) "
                             "VALUES('%u', '%u', '%u', '%u', '%s', '%d', '%u', '%u', '%u', '%u', '%u', '%u', "
-                            "'%i', '%i', '%i', '%i', '%i')", client->CharacterID(), index, buffs[index].spellid,
+                            "'%i', '%i', '%i', '%i', '%i', '%i', '%i')", client->CharacterID(), index, buffs[index].spellid,
                             buffs[index].casterlevel, buffs[index].caster_name, buffs[index].ticsremaining,
                             buffs[index].counters, buffs[index].hit_number, buffs[index].melee_rune,
                             buffs[index].magic_rune, buffs[index].persistant_buff, buffs[index].dot_rune,
