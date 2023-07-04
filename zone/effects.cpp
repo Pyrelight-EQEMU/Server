@@ -86,7 +86,7 @@ int64 Mob::GetActSpellDamage(uint16 spell_id, int64 value, Mob* target) {
 		}
 
 		if (IsClient() && CastToClient()->GetAccountFlag("filter_hINT") != "off") {
-			Message(Chat::Spells, "Your Heroic Intelligence has increased the power of your magic by %i%% (%i)!", bonus_ratio, bonus_amount);
+			Message(Chat::Spells, "Your Heroic Intelligence has increased the power of your magic2 by %i%% (%i)!", bonus_ratio, bonus_amount);
 		} else if (GetOwner() && GetOwner()->IsClient() && 
 					GetOwner()->CastToClient()->GetAccountFlag("filter_hINT") != "off" && 
 					GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
