@@ -3882,7 +3882,7 @@ void Mob::BuffProcess()
 								}
 
 								if (buffs[buffs_i].melee_rune < max_rune) {
-									regen_amount = round(max_rune/20.0);
+									regen_amount = zone->random.Roll(10) ? round(max_rune/25.0) : round(max_rune/1.0);
 								}
 
 								if (regen_amount > 0 && buffs[buffs_i].melee_rune < max_rune) {
@@ -3890,7 +3890,11 @@ void Mob::BuffProcess()
 									if (buffs[buffs_i].melee_rune > max_rune) {
 										buffs[buffs_i].melee_rune = max_rune;
 									}
-									Message(Chat::Spells, "Your %s has regenerated! (%i/%i)", spells[buffs[buffs_i].spellid].name, buffs[buffs_i].melee_rune, max_rune);
+									if (IsClient()) {
+										Message(Chat::Spells, "Your %s has regenerated! (%i/%i)", spells[buffs[buffs_i].spellid].name, buffs[buffs_i].melee_rune, max_rune);
+									} else if (IsPet() && GetOwner()) {
+										GetOwner()->Message(Chat::Spells, "Your pet's %s has regenerated! (%i/%i)", spells[buffs[buffs_i].spellid].name, buffs[buffs_i].melee_rune, max_rune);
+									}
 								}
 							}
 
