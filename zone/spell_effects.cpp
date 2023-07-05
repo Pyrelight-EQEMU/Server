@@ -3946,7 +3946,7 @@ void Mob::BuffProcess()
 									if (CastToClient()->CanFastRegen()) {										
 										regen_amount = max_rune;
 									} else {
-										regen_amount = round(max_rune/50.0 * bonus_ratio * ((buffs[buffs_i].melee_rune < round(max_rune*0.1)) ? 10 : 1));
+										regen_amount = round(max_rune/50.0 * bonus_ratio * ((buffs[buffs_i].melee_rune < round(max_rune*0.1)) ? 2 : 1));
 									}										
 								}
 
@@ -3981,7 +3981,7 @@ void Mob::BuffProcess()
 									if (CastToClient()->CanFastRegen()) {
 										regen_amount = max_rune;
 									} else {
-										regen_amount = round(max_rune/50.0 * bonus_ratio * ((buffs[buffs_i].melee_rune < round(max_rune*0.1)) ? 10 : 1));
+										regen_amount = round(max_rune/50.0 * bonus_ratio * ((buffs[buffs_i].melee_rune < round(max_rune*0.1)) ? 2 : 1));
 									}										
 								}
 
@@ -3998,8 +3998,8 @@ void Mob::BuffProcess()
 								}
 							}
 
-							if (suspended && IsEffectInSpell(buffs[buffs_i].spellid, SE_MeleeThresholdGuard)) {
-								int max_rune = CalcSpellEffectValue(buffs[buffs_i].spellid, GetSpellEffectIndex(buffs[buffs_i].spellid, SE_MeleeThresholdGuard), caster->GetLevel(), 10, caster);
+							if (suspended && IsEffectInSpell(buffs[buffs_i].spellid, SE_MitigateMeleeDamage)) {
+								int max_rune = CalcSpellEffectValue(buffs[buffs_i].spellid, GetSpellEffectIndex(buffs[buffs_i].spellid, SE_MitigateMeleeDamage), caster->GetLevel(), 10, caster);
 								float bonus_ratio = 1;
 								LogDebug("base max_rune: [{}]", max_rune);
 								int regen_amount = 0;								
@@ -4016,7 +4016,7 @@ void Mob::BuffProcess()
 									if (CastToClient()->CanFastRegen()) {										
 										regen_amount = max_rune;
 									} else {
-										regen_amount = round(max_rune/50.0 * bonus_ratio * ((buffs[buffs_i].melee_rune < round(max_rune*0.1)) ? 10 : 1));
+										regen_amount = round(max_rune/50.0 * bonus_ratio * ((buffs[buffs_i].melee_rune < round(max_rune*0.1)) ? 2 : 1));
 									}										
 								}
 
