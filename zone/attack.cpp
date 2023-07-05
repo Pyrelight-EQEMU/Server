@@ -3291,6 +3291,7 @@ void Mob::DamageShield(Mob* attacker, bool spell_ds) {
 			if (effIDX > -1) {
 				amount = spells[spellid].base_value[effIDX];
 			}
+			LogDebug("effIDX:[{}], amount[{}]", effIDX, amount);
 			if (amount > 0) {
 				Client* client = GetOwnerOrSelf()->CastToClient();
 				Client* caster = entity_list.GetClientByName(buffs[buffs_i].caster_name);
