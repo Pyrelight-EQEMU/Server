@@ -3297,7 +3297,7 @@ void Mob::DamageShield(Mob* attacker, bool spell_ds) {
 						float bonus_ratio = effective_hWIS * RuleR(Character, Pyrelight_hINT_SpellDamage) / 100;
 						int bonus = round(DS * bonus_ratio);						
 						DS += bonus;
-						LogDebug("Adding bonus [{}] to DS due to caster's hWIS.");						
+						LogDebug("Adding bonus [{}] to DS due to caster's hWIS.", bonus);						
 					}
 				}
 			}
