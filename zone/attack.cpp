@@ -3276,6 +3276,34 @@ void Mob::DamageShield(Mob* attacker, bool spell_ds) {
 	if (DS == 0 && rev_ds == 0)
 		return;
 
+	// Pyrelight Custom Code. Scale Damage shield based on DS caster's hWIS
+	if (RuleR(Character, Pyrelight_hWIS_BuffPower) > 0 && (IsClient() || IsPetOwnerClient())) {
+		int buff_count = GetMaxTotalSlots();
+
+		for (int buffs_i = 0; buffs_i < buff_count; ++buffs_i) {
+			Client* client = GetOwnerOrSelf()->CastToClient();
+			Client* caster = entity_list.GetClientByName(buffs[buffs_i].caster_name);
+			uint32 spellid = buffs[buffs_i].spellid;
+
+			if (caster && client && caster->IsClient() && client->IsClient()) {
+				if (caster == client || (client->GetGroup() && client->GetGroup()->IsGroupMember(caster))) {
+					if (caster->FindSpellBookSlotBySpellID(spellid) >= 0 || caster->GetInv().IsClickEffectEquipped(spellid)) {
+						int effective_hWIS = caster->GetHeroicWIS();
+
+						if (RuleB(Character, Pyrelight_hStat_Randomize)) {
+							effective_hWIS *= zone->random.Real(1 - RuleR(Character, Pyrelight_hStat_RandomizationFactor), 1 + RuleR(Character, Pyrelight_hStat_RandomizationFactor));
+						}
+
+						float bonus_ratio = effective_hWIS * RuleR(Character, Pyrelight_hINT_SpellDamage) / 100;
+						int bonus = round(DS * bonus_ratio);						
+						DS += bonus;
+						LogDebug("Adding bonus [{}] to DS due to caster's hWIS.");						
+					}
+				}
+			}
+		}
+	}
+
 	LogCombat("Applying Damage Shield of value [{}] to [{}]", DS, attacker->GetName());
 
 	//invert DS... spells yield negative values for a true damage shield
