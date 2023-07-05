@@ -46,7 +46,10 @@ void perl_register_group();
 void perl_register_raid();
 void perl_register_inventory();
 void perl_register_questitem();
+void perl_register_questitem_data();
+void perl_register_spawn();
 void perl_register_spell();
+void perl_register_stat_bonuses();
 void perl_register_hateentry();
 void perl_register_object();
 void perl_register_doors();
@@ -179,6 +182,10 @@ const char *QuestEventSubroutines[_LargestEventID] = {
 	"EVENT_ITEM_CLICK_CAST_CLIENT",
 	"EVENT_DESTROY_ITEM_CLIENT",
 	"EVENT_DROP_ITEM_CLIENT",
+	"EVENT_MEMORIZE_SPELL",
+	"EVENT_UNMEMORIZE_SPELL",
+	"EVENT_SCRIBE_SPELL",
+	"EVENT_UNSCRIBE_SPELL",
 	// Add new events before these or Lua crashes
 	"EVENT_SPELL_EFFECT_BOT",
 	"EVENT_SPELL_EFFECT_BUFF_TIC_BOT"
@@ -520,8 +527,6 @@ bool PerlembParser::SpellHasQuestSub(uint32 spell_id, QuestEventID evt)
 
 bool PerlembParser::ItemHasQuestSub(EQ::ItemInstance *itm, QuestEventID evt)
 {
-	std::stringstream package_name;
-	package_name << "qst_item_" << itm->GetID();
 
 	if (!perl) {
 		return false;
@@ -534,6 +539,9 @@ bool PerlembParser::ItemHasQuestSub(EQ::ItemInstance *itm, QuestEventID evt)
 	if (evt >= _LargestEventID) {
 		return false;
 	}
+
+	std::stringstream package_name;
+	package_name << "qst_item_" << itm->GetID();
 
 	const char *subname = QuestEventSubroutines[evt];
 
@@ -834,25 +842,6 @@ void PerlembParser::ExportVar(const char *pkgprefix, const char *varname, float 
 	}
 }
 
-void PerlembParser::ExportVarComplex(const char *pkgprefix, const char *varname, const char *value)
-{
-
-	if (!perl) {
-		return;
-	}
-	try {
-		perl->eval(std::string("$").append(pkgprefix).append("::").append(varname).append("=").append(value).append(";").c_str());
-	}
-	catch (std::string e) {
-		AddError(
-			fmt::format(
-				"Error exporting Perl variable [{}]",
-				e
-			)
-		);
-	}
-}
-
 void PerlembParser::ExportVar(const char *pkgprefix, const char *varname, const char *value)
 {
 	if (!perl) {
@@ -1082,7 +1071,10 @@ void PerlembParser::MapFunctions()
 	perl_register_raid();
 	perl_register_inventory();
 	perl_register_questitem();
+	perl_register_questitem_data();
+	perl_register_spawn();
 	perl_register_spell();
+	perl_register_stat_bonuses();
 	perl_register_hateentry();
 	perl_register_object();
 	perl_register_doors();
@@ -2174,6 +2166,19 @@ void PerlembParser::ExportEventVariables(
 				ExportVar(package_name.c_str(), "item_name", inst->GetItem()->Name);
 				ExportVar(package_name.c_str(), "quantity", inst->IsStackable() ? inst->GetCharges() : 1);
 				ExportVar(package_name.c_str(), "item", "QuestItem", inst);
+			}
+			break;
+		}
+
+		case EVENT_MEMORIZE_SPELL:
+		case EVENT_UNMEMORIZE_SPELL:
+		case EVENT_SCRIBE_SPELL:
+		case EVENT_UNSCRIBE_SPELL: {
+			Seperator sep(data);
+			ExportVar(package_name.c_str(), "slot_id", sep.arg[0]);
+			ExportVar(package_name.c_str(), "spell_id", sep.arg[1]);
+			if (IsValidSpell(Strings::ToUnsignedInt(sep.arg[1]))) {
+				ExportVar(package_name.c_str(), "spell", "Spell", (void*)&spells[Strings::ToUnsignedInt(sep.arg[1])]);
 			}
 			break;
 		}

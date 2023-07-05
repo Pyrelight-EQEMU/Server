@@ -353,7 +353,7 @@ bool EQ::InventoryProfile::SwapItem(
 				fail_state = swapRaceClass;
 				return false;
 			}
-			if (deity_id && source_item->Deity && !(deity::ConvertDeityTypeToDeityTypeBit((deity::DeityType)deity_id) & source_item->Deity)) {
+			if (deity_id && source_item->Deity && !(deity::GetDeityBitmask((deity::DeityType)deity_id) & source_item->Deity)) {
 				fail_state = swapDeity;
 				return false;
 			}
@@ -410,7 +410,7 @@ bool EQ::InventoryProfile::SwapItem(
 				fail_state = swapRaceClass;
 				return false;
 			}
-			if (deity_id && destination_item->Deity && !(deity::ConvertDeityTypeToDeityTypeBit((deity::DeityType)deity_id) & destination_item->Deity)) {
+			if (deity_id && destination_item->Deity && !(deity::GetDeityBitmask((deity::DeityType)deity_id) & destination_item->Deity)) {
 				fail_state = swapDeity;
 				return false;
 			}
@@ -443,11 +443,12 @@ bool EQ::InventoryProfile::DeleteItem(int16 slot_id, int16 quantity) {
 		// If there are no charges left on the item,
 		if (item_to_delete->GetCharges() <= 0) {
 			// If the item is stackable (e.g arrows), or
-			// the item is not stackable, and is not a charged item, or is expendable, delete it
-			if (item_to_delete->IsStackable() ||
-				(!item_to_delete->IsStackable() &&
-				 ((item_to_delete->GetItem()->MaxCharges == 0) || item_to_delete->IsExpendable()))
-				) {
+			// the item is not a charged item, or is expendable, delete it
+			if (
+				item_to_delete->IsStackable() ||
+				item_to_delete->GetItem()->MaxCharges == 0 ||
+				item_to_delete->IsExpendable()
+			) {
 				// Item can now be destroyed
 				InventoryProfile::MarkDirty(item_to_delete);
 				return true;
@@ -1501,7 +1502,7 @@ int16 EQ::InventoryProfile::_PutItem(int16 slot_id, ItemInstance* inst)
 	}
 
 	if (result == INVALID_INDEX) {
-		LogError("InventoryProfile::_PutItem: Invalid slot_id specified ({}) with parent slot id ({})", slot_id, parentSlot);
+		LogError("Invalid slot_id specified ({}) with parent slot id ({})", slot_id, parentSlot);
 		InventoryProfile::MarkDirty(inst); // Slot not found, clean up
 	}
 

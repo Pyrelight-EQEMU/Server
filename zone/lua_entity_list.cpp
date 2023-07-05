@@ -1,12 +1,10 @@
 #ifdef LUA_EQEMU
 
-#include "lua.hpp"
 #include <luabind/luabind.hpp>
 #include <luabind/iterator_policy.hpp>
 
 #include "masterentity.h"
 #include "lua_entity_list.h"
-#include "lua_entity.h"
 #include "lua_mob.h"
 #include "lua_client.h"
 #include "lua_npc.h"
@@ -349,7 +347,7 @@ Lua_Mob_List Lua_EntityList::GetMobList() {
 
 	auto iter = t_list.begin();
 	while(iter != t_list.end()) {
-		ret.entries.push_back(Lua_Mob(iter->second));
+		ret.entries.emplace_back(Lua_Mob(iter->second));
 		++iter;
 	}
 
@@ -363,7 +361,7 @@ Lua_Client_List Lua_EntityList::GetClientList() {
 
 	auto iter = t_list.begin();
 	while(iter != t_list.end()) {
-		ret.entries.push_back(Lua_Client(iter->second));
+		ret.entries.emplace_back(Lua_Client(iter->second));
 		++iter;
 	}
 
@@ -387,7 +385,7 @@ Lua_Bot_List Lua_EntityList::GetBotList() {
 
 	if (bot_list.size()) {
 		for (auto bot : bot_list) {
-			ret.entries.push_back(Lua_Bot(bot));
+			ret.entries.emplace_back(Lua_Bot(bot));
 		}
 	}
 
@@ -411,7 +409,7 @@ Lua_Bot_List Lua_EntityList::GetBotListByCharacterID(uint32 character_id) {
 
 	if (bot_list.size()) {
 		for (auto bot : bot_list) {
-			ret.entries.push_back(Lua_Bot(bot));
+			ret.entries.emplace_back(Lua_Bot(bot));
 		}
 	}
 
@@ -425,7 +423,7 @@ Lua_Bot_List Lua_EntityList::GetBotListByCharacterID(uint32 character_id, uint8 
 
 	if (bot_list.size()) {
 		for (auto bot : bot_list) {
-			ret.entries.push_back(Lua_Bot(bot));
+			ret.entries.emplace_back(Lua_Bot(bot));
 		}
 	}
 
@@ -439,7 +437,7 @@ Lua_Bot_List Lua_EntityList::GetBotListByClientName(std::string client_name) {
 
 	if (bot_list.size()) {
 		for (auto bot : bot_list) {
-			ret.entries.push_back(Lua_Bot(bot));
+			ret.entries.emplace_back(Lua_Bot(bot));
 		}
 	}
 
@@ -453,7 +451,7 @@ Lua_Bot_List Lua_EntityList::GetBotListByClientName(std::string client_name, uin
 
 	if (bot_list.size()) {
 		for (auto bot : bot_list) {
-			ret.entries.push_back(Lua_Bot(bot));
+			ret.entries.emplace_back(Lua_Bot(bot));
 		}
 	}
 
@@ -487,7 +485,7 @@ Lua_Client_List Lua_EntityList::GetShuffledClientList() {
 
 	auto iter = t_list.begin();
 	while(iter != t_list.end()) {
-		ret.entries.push_back(Lua_Client(iter->second));
+		ret.entries.emplace_back(Lua_Client(iter->second));
 		++iter;
 	}
 
@@ -503,7 +501,7 @@ Lua_NPC_List Lua_EntityList::GetNPCList() {
 
 	auto iter = t_list.begin();
 	while(iter != t_list.end()) {
-		ret.entries.push_back(Lua_NPC(iter->second));
+		ret.entries.emplace_back(Lua_NPC(iter->second));
 		++iter;
 	}
 
@@ -517,7 +515,7 @@ Lua_Corpse_List Lua_EntityList::GetCorpseList() {
 
 	auto iter = t_list.begin();
 	while(iter != t_list.end()) {
-		ret.entries.push_back(Lua_Corpse(iter->second));
+		ret.entries.emplace_back(Lua_Corpse(iter->second));
 		++iter;
 	}
 
@@ -531,7 +529,7 @@ Lua_Object_List Lua_EntityList::GetObjectList() {
 
 	auto iter = t_list.begin();
 	while(iter != t_list.end()) {
-		ret.entries.push_back(Lua_Object(iter->second));
+		ret.entries.emplace_back(Lua_Object(iter->second));
 		++iter;
 	}
 
@@ -545,7 +543,7 @@ Lua_Doors_List Lua_EntityList::GetDoorsList() {
 
 	auto iter = t_list.begin();
 	while(iter != t_list.end()) {
-		ret.entries.push_back(Lua_Door(iter->second));
+		ret.entries.emplace_back(Lua_Door(iter->second));
 		++iter;
 	}
 
@@ -560,7 +558,7 @@ Lua_Spawn_List Lua_EntityList::GetSpawnList() {
 
 	auto iter = t_list.begin();
 	while(iter != t_list.end()) {
-		ret.entries.push_back(Lua_Spawn(*iter));
+		ret.entries.emplace_back(Lua_Spawn(*iter));
 		++iter;
 	}
 
@@ -637,6 +635,62 @@ Lua_Bot Lua_EntityList::GetRandomBot(float x, float y, float z, float distance, 
 	return self->GetRandomBot(glm::vec3(x, y, z), distance, exclude_bot);
 }
 
+Lua_Mob_List Lua_EntityList::GetCloseMobList(Lua_Mob mob) {
+	Lua_Safe_Call_Class(Lua_Mob_List);
+
+	Lua_Mob_List ret;
+
+	const auto& l = self->GetCloseMobList(mob);
+
+	ret.entries.reserve(l.size());
+
+	for (const auto& e : l) {
+		ret.entries.emplace_back(Lua_Mob(e.second));
+	}
+
+	return ret;
+}
+
+Lua_Mob_List Lua_EntityList::GetCloseMobList(Lua_Mob mob, float distance) {
+	Lua_Safe_Call_Class(Lua_Mob_List);
+
+	Lua_Mob_List ret;
+
+	const auto& l = self->GetCloseMobList(mob);
+
+	ret.entries.reserve(l.size());
+
+	for (const auto& e : l) {
+		if (mob.CalculateDistance(e.second) <= distance) {
+			ret.entries.emplace_back(Lua_Mob(e.second));
+		}
+	}
+
+	return ret;
+}
+
+Lua_Mob_List Lua_EntityList::GetCloseMobList(Lua_Mob mob, float distance, bool ignore_self) {
+	Lua_Safe_Call_Class(Lua_Mob_List);
+
+	Lua_Mob_List ret;
+
+	const auto& l = self->GetCloseMobList(mob);
+
+	ret.entries.reserve(l.size());
+
+	for (const auto& e : l) {
+		if (ignore_self && e.second == mob) {
+			continue;
+		}
+
+		if (mob.CalculateDistance(e.second) <= distance) {
+			ret.entries.emplace_back(Lua_Mob(e.second));
+		}
+	}
+
+	return ret;
+}
+
 luabind::scope lua_register_entity_list() {
 	return luabind::class_<Lua_EntityList>("EntityList")
 	.def(luabind::constructor<>())
@@ -667,6 +721,8 @@ luabind::scope lua_register_entity_list() {
 	.def("GetClientByName", (Lua_Client(Lua_EntityList::*)(const char*))&Lua_EntityList::GetClientByName)
 	.def("GetClientByWID", (Lua_Client(Lua_EntityList::*)(uint32))&Lua_EntityList::GetClientByWID)
 	.def("GetClientList", (Lua_Client_List(Lua_EntityList::*)(void))&Lua_EntityList::GetClientList)
+	.def("GetCloseMobList", (Lua_Mob_List(Lua_EntityList::*)(Lua_Mob))&Lua_EntityList::GetCloseMobList)
+	.def("GetCloseMobList", (Lua_Mob_List(Lua_EntityList::*)(Lua_Mob,float))&Lua_EntityList::GetCloseMobList)
 	.def("GetCorpseByID", (Lua_Corpse(Lua_EntityList::*)(int))&Lua_EntityList::GetCorpseByID)
 	.def("GetCorpseByName", (Lua_Corpse(Lua_EntityList::*)(const char*))&Lua_EntityList::GetCorpseByName)
 	.def("GetCorpseByOwner", (Lua_Corpse(Lua_EntityList::*)(Lua_Client))&Lua_EntityList::GetCorpseByOwner)

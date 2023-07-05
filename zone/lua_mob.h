@@ -12,6 +12,7 @@ class Lua_StatBonuses;
 class Lua_Bot;
 class Lua_NPC;
 class Lua_Client;
+struct Lua_Mob_List;
 
 namespace luabind {
 	struct scope;
@@ -227,6 +228,13 @@ public:
 	Lua_Client GetHateRandomClient();
 	Lua_NPC GetHateRandomNPC();
 	Lua_Mob GetHateClosest();
+	Lua_Mob GetHateClosest(bool skip_mezzed);
+	Lua_Bot GetHateClosestBot();
+	Lua_Bot GetHateClosestBot(bool skip_mezzed);
+	Lua_Client GetHateClosestClient();
+	Lua_Client GetHateClosestClient(bool skip_mezzed);
+	Lua_NPC GetHateClosestNPC();
+	Lua_NPC GetHateClosestNPC(bool skip_mezzed);
 	void AddToHateList(Lua_Mob other);
 	void AddToHateList(Lua_Mob other, int64 hate);
 	void AddToHateList(Lua_Mob other, int64 hate, int64 damage);
@@ -280,6 +288,7 @@ public:
 	void NavigateTo(double x, double y, double z);
 	void StopNavigation();
 	float CalculateDistance(double x, double y, double z);
+	float CalculateDistance(Lua_Mob mob);
 	void SendTo(double x, double y, double z);
 	void SendToFixZ(double x, double y, double z);
 	void NPCSpecialAttacks(const char *parse, int perm);
@@ -431,8 +440,8 @@ public:
 	uint8 GetNimbusEffect2();
 	uint8 GetNimbusEffect3();
 	bool IsTargetable();
-	bool HasShieldEquiped();
-	bool HasTwoHandBluntEquiped();
+	bool HasShieldEquipped();
+	bool HasTwoHandBluntEquipped();
 	bool HasTwoHanderEquipped();
 	uint32 GetHerosForgeModel(uint8 material_slot);
 	uint32 IsEliteMaterialItem(uint8 material_slot);
@@ -516,6 +525,8 @@ public:
 	bool IsFindable();
 	bool IsTrackable();
 	float GetDefaultRaceSize();
+	float GetDefaultRaceSize(int race_id);
+	float GetDefaultRaceSize(int race_id, int gender_id);
 	int64 GetActDoTDamage(uint16 spell_id, int64 value, Lua_Mob target);
 	int64 GetActDoTDamage(uint16 spell_id, int64 value, Lua_Mob target, bool from_buff_tic);
 	int64 GetActReflectedSpellDamage(uint16 spell_id, int64 value, int effectiveness);
@@ -538,6 +549,13 @@ public:
 	void SetTimerMS(const char* timer_name, int milliseconds);
 	void StopAllTimers();
 	void StopTimer(const char* timer_name);
+	luabind::object GetBuffSpellIDs(lua_State* L);
+	bool HasSpellEffect(int effect_id);
+	Lua_Mob_List GetCloseMobList();
+	Lua_Mob_List GetCloseMobList(float distance);
+	Lua_Mob_List GetCloseMobList(float distance, bool ignore_self);
+	std::string GetClassPlural();
+	std::string GetRacePlural();
 };
 
 #endif

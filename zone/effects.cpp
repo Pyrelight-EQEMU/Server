@@ -28,7 +28,6 @@
 #include "string_ids.h"
 #include "worldserver.h"
 #include "zonedb.h"
-#include "../common/zone_store.h"
 #include "position.h"
 
 float Mob::GetActSpellRange(uint16 spell_id, float range)
@@ -801,8 +800,8 @@ bool Client::TrainDiscipline(uint32 itemid) {
 	const std::string item_name = item->Name;
 
 	if (
-		item_name.substr(0, 5) != std::string("Tome ") &&
-		item_name.substr(0, 7) != std::string("Skill: ")
+		!Strings::BeginsWith(item_name, "Tome of ") &&
+		!Strings::BeginsWith(item_name, "Skill: ")
 	) {
 		Message(Chat::Red, "This item is not a tome.");
 		//summon them the item back...
@@ -888,9 +887,9 @@ bool Client::MemorizeSpellFromItem(uint32 item_id) {
 	const std::string item_name = item->Name;
 
 	if (
-		item_name.substr(0, 7) != std::string("Spell: ") &&
-		item_name.substr(0, 9) != std::string("Ancient: ") &&
-		item_name.substr(0, 6) != std::string("Song: ")
+		!Strings::BeginsWith(item_name, "Spell: ") &&
+		!Strings::BeginsWith(item_name, "Ancient: ")
+		!Strings::BeginsWith(item_name, "Song: ")
 	) {
 		Message(Chat::Red, "This item is not a scroll.");
 		SummonItem(item_id);
@@ -990,9 +989,9 @@ void Client::SendDisciplineUpdate() {
 
 bool Client::UseDiscipline(uint32 spell_id, uint32 target) {
 	// Dont let client waste a reuse timer if they can't use the disc
-	if ((IsStunned() && !IgnoreCastingRestriction(spell_id))||
+	if ((IsStunned() && !IsCastNotStandingSpell(spell_id))||
 		IsFeared() ||
-		(IsMezzed() && !IgnoreCastingRestriction(spell_id)) ||
+		(IsMezzed() && !IsCastNotStandingSpell(spell_id)) ||
 		IsAmnesiad() ||
 		IsPet())
 	{
@@ -1017,7 +1016,7 @@ bool Client::UseDiscipline(uint32 spell_id, uint32 target) {
 		return false;
 	}
 
-	if (DivineAura() && !IgnoreCastingRestriction(spell_id)) {
+	if (DivineAura() && !IsCastNotStandingSpell(spell_id)) {
 		return false;
 	}
 

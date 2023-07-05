@@ -133,7 +133,7 @@ int Mob::GetBaseSkillDamage(EQ::skills::SkillType skill, Mob *target)
 			float                  ac_bonus    = 0.0f;
 			const EQ::ItemInstance *inst       = nullptr;
 			if (IsClient()) {
-				if (HasShieldEquiped()) {
+				if (HasShieldEquipped()) {
 					inst = CastToClient()->GetInv().GetItem(EQ::invslot::slotSecondary);
 				} else if (HasTwoHanderEquipped()) {
 					inst = CastToClient()->GetInv().GetItem(EQ::invslot::slotPrimary);
@@ -241,7 +241,7 @@ void Mob::DoSpecialAttackDamage(Mob *who, EQ::skills::SkillType skill, int32 bas
 					hate += item->GetItem()->AC;
 				}
 				const EQ::ItemData *itm = item->GetItem();
-				auto fbash = GetFuriousBash(itm->Focus.Effect);
+				auto fbash = GetSpellFuriousBash(itm->Focus.Effect);
 				hate = hate * (100 + fbash) / 100;
 				if (fbash)
 					MessageString(Chat::FocusEffect, GLOWS_RED, itm->Name);
@@ -1848,7 +1848,13 @@ void NPC::DoClassAttacks(Mob *target) {
 
 	//general stuff, for all classes....
 	//only gets used when their primary ability get used too
-	if (taunting && HasOwner() && target->IsNPC() && target->GetBodyType() != BT_Undead && taunt_time) {
+	if (
+		IsTaunting() &&
+		HasOwner() &&
+		target->IsNPC() &&
+		target->GetBodyType() != BT_Undead &&
+		taunt_time
+	) {
 		GetOwner()->MessageString(Chat::PetResponse, PET_TAUNTING);
 		Taunt(target->CastToNPC(), false);
 	}
@@ -2462,7 +2468,7 @@ void Mob::DoMeleeSkillAttackDmg(Mob *who, int32 weapon_damage, EQ::skills::Skill
 					hate += item->GetItem()->AC;
 				}
 				const EQ::ItemData *itm = item->GetItem();
-				hate = hate * (100 + GetFuriousBash(itm->Focus.Effect)) / 100;
+				hate = hate * (100 + GetSpellFuriousBash(itm->Focus.Effect)) / 100;
 			}
 		}
 

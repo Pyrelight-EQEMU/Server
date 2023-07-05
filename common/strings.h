@@ -114,7 +114,7 @@ public:
 	static std::string Join(const std::vector<std::string> &ar, const std::string &delim);
 	static std::string Join(const std::vector<uint32_t> &ar, const std::string &delim);
 	static std::string MillisecondsToTime(int duration);
-	static std::string Money(uint32 platinum, uint32 gold = 0, uint32 silver = 0, uint32 copper = 0);
+	static std::string Money(uint64 platinum, uint64 gold = 0, uint64 silver = 0, uint64 copper = 0);
 	static std::string NumberToWords(unsigned long long int n);
 	static std::string Repeat(std::string s, int n);
 	static std::string Replace(std::string subject, const std::string &search, const std::string &replace);
@@ -128,6 +128,8 @@ public:
 	static bool ToBool(const std::string& bool_string);
 	static inline bool EqualFold(const std::string &string_one, const std::string &string_two) { return strcasecmp(string_one.c_str(), string_two.c_str()) == 0; }
 	static std::string Random(size_t length);
+	static bool BeginsWith(const std::string& subject, const std::string& search);
+	static bool EndsWith(const std::string& subject, const std::string& search);
 
 	template<typename T>
 	static std::string
@@ -219,7 +221,7 @@ std::vector<std::string> join_pair(
 	std::vector<std::string> output;
 
 	for (const std::pair<T1, T2> &src_iter: src) {
-		output.push_back(
+		output.emplace_back(
 
 			fmt::format(
 				"{}{}{}{}{}{}{}",
@@ -253,7 +255,7 @@ std::vector<std::string> join_tuple(
 
 	for (const std::tuple<T1, T2, T3, T4> &src_iter: src) {
 
-		output.push_back(
+		output.emplace_back(
 
 			fmt::format(
 				"{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}",
