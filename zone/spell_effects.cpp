@@ -3999,7 +3999,7 @@ void Mob::BuffProcess()
 							}
 
 							if (suspended && IsEffectInSpell(buffs[buffs_i].spellid, SE_MitigateMeleeDamage)) {
-								int max_rune = CalcSpellEffectValue(buffs[buffs_i].spellid, GetSpellEffectIndex(buffs[buffs_i].spellid, SE_MitigateMeleeDamage), caster->GetLevel(), 10, caster);
+								int max_rune = spells[buffs[buffs_i].spellid].max_value[GetSpellEffectIndex(buffs[buffs_i].spellid, SE_MitigateMeleeDamage)];
 								float bonus_ratio = 1;
 								LogDebug("base max_rune: [{}]", max_rune);
 								int regen_amount = 0;								
