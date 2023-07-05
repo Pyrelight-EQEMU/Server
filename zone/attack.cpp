@@ -3281,10 +3281,17 @@ void Mob::DamageShield(Mob* attacker, bool spell_ds) {
 		int buff_count = GetMaxTotalSlots();
 
 		for (int buffs_i = 0; buffs_i < buff_count; ++buffs_i) {
+			int effIDX = -1;
+			int amount = 0;
 			if (IsEffectInSpell(spellid, SE_DamageShield)) {
-				int effIDX = GetSpellEffectIndex(SE_DamageShield);
-				int amount = spells[spellid].base_value[effIDX];
-
+				effIDX = GetSpellEffectIndex(spellid, SE_DamageShield);				
+			} else if (IsEffectInSpell(spellid, SE_ReverseDS)) {
+				effIDX = GetSpellEffectIndex(spellid, SE_ReverseDS);
+			}
+			iff (effIDX > -1) {
+				amount = spells[spellid].base_value[effIDX];
+			}
+			if (amount > 0) {
 				Client* client = GetOwnerOrSelf()->CastToClient();
 				Client* caster = entity_list.GetClientByName(buffs[buffs_i].caster_name);
 				uint32 spellid = buffs[buffs_i].spellid;
