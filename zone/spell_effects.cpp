@@ -1477,7 +1477,7 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 				}
 
 				buffs[buffslot].melee_rune = effect_value;
-				Message(Chat::Spells, "%s has applied a %i point partial (%i%%) melee rune (to protect you!", caster->GetCleanName(), effect_value), spells[spell_id].base_value[i];
+				Message(Chat::Spells, "%s has applied a %i point partial (%i%%) rune to protect you!", caster->GetCleanName(), effect_value, spells[spell_id].base_value[i]);
 				break;
 			}
 
