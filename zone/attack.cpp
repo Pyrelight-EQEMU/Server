@@ -3288,7 +3288,7 @@ void Mob::DamageShield(Mob* attacker, bool spell_ds) {
 			} else if (IsEffectInSpell(spellid, SE_ReverseDS)) {
 				effIDX = GetSpellEffectIndex(spellid, SE_ReverseDS);
 			}
-			iff (effIDX > -1) {
+			if (effIDX > -1) {
 				amount = spells[spellid].base_value[effIDX];
 			}
 			if (amount > 0) {
