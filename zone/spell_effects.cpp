@@ -4016,7 +4016,7 @@ void Mob::BuffProcess()
 									if (CastToClient()->CanFastRegen()) {										
 										regen_amount = max_rune;
 									} else {
-										regen_amount = round(max_rune/50.0 * bonus_ratio * ((buffs[buffs_i].melee_rune < round(max_rune*0.1)) ? 2 : 1));
+										regen_amount = round(max_rune/100.0 * bonus_ratio * ((buffs[buffs_i].melee_rune < round(max_rune*0.1)) ? 2 : 1));
 									}										
 								}
 
