@@ -5928,7 +5928,6 @@ int32 Mob::RuneAbsorb(int64 damage, uint16 type)
 							Client* caster = entity_list.GetClientByName(buffs[slot].caster_name);
 							
 							if (!(caster->FindSpellBookSlotBySpellID(buffs[slot].spellid) >= 0 || caster->GetInv().IsClickEffectEquipped(buffs[slot].spellid))) {
-								LogDebug("Attempting to Fade");
 								BuffFadeBySlot(slot);
 							}
 							
