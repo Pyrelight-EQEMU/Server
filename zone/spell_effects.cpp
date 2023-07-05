@@ -3882,7 +3882,7 @@ void Mob::BuffProcess()
 								}
 
 								if (buffs[buffs_i].melee_rune < max_rune) {
-									if (CanFastRegen()) {
+									if (this->ooc_regen) {
 										regen_amount = max_rune;
 									} else {
 										regen_amount = round(max_rune/20.0);
@@ -3917,7 +3917,7 @@ void Mob::BuffProcess()
 								}
 
 								if (buffs[buffs_i].magic_rune < max_rune) {
-									if (CanFastRegen()) {
+									if (this->ooc_regen) {
 										regen_amount = max_rune;
 									} else {
 										regen_amount = round(max_rune/20.0);
