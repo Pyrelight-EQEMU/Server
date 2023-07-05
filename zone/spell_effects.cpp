@@ -3901,12 +3901,7 @@ void Mob::BuffProcess()
 							if (IsPet() && GetOwner()) {
 								SendPetBuffsToClient();
 							}
-						}
-						// Clean up expired runes
-						if (IsEffectInSpell(buffs[buffs_i].spellid, SE_Rune) && buffs[buffs_i].melee_rune == 0 && !suspended) {
-							BuffFadeBySlot(buffs_i);
-							buffs[buffs_i].UpdateClient = true;
-						}							
+						}					
 					}
 
 					if (!suspended) { 
