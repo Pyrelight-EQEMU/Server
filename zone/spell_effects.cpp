@@ -3883,6 +3883,7 @@ void Mob::BuffProcess()
 
 								if (buffs[buffs_i].melee_rune < max_rune) {
 									if (CastToClient()->CanFastRegen()) {
+										LogDebug("Fully Restoring Rune...");
 										regen_amount = max_rune;
 									} else {
 										regen_amount = round(max_rune/20.0);
