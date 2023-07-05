@@ -3904,13 +3904,13 @@ void Mob::BuffProcess()
 
 							if (suspended && IsEffectInSpell(buffs[buffs_i].spellid, SE_AbsorbMagicAtt)) {
 								int max_rune = CalcSpellEffectValue(buffs[buffs_i].spellid, GetSpellEffectIndex(buffs[buffs_i].spellid, SE_AbsorbMagicAtt), caster->GetLevel(), 10, caster);
-
+								float bonus_ratio = 1;
 								LogDebug("base max_rune: [{}]", max_rune);
 								int regen_amount = 0;								
 
 								if (RuleR(Character, Pyrelight_hINT_RunePower) > 0) {
 									int effective_hINT = caster->GetOwner() ? round(RuleR(Character, Pyrelight_HeroicPetMod) * caster->GetOwner()->GetHeroicINT()) : caster->GetHeroicINT();
-									float bonus_ratio = effective_hINT * RuleR(Character, Pyrelight_hINT_RunePower) / 100;
+									bonus_ratio = effective_hINT * RuleR(Character, Pyrelight_hINT_RunePower) / 100;
 									int bonus_amount = round(max_rune * bonus_ratio);
 									max_rune += bonus_amount;
 									LogDebug("modified max_rune: [{}]", max_rune);
