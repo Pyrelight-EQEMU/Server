@@ -3538,7 +3538,7 @@ int64 Mob::ReduceDamage(int64 damage)
 			{
 				LogSpellsDetail("SE_MitigateMeleeDamage [{}] damage negated, [{}] damage remaining, fading buff", damage_to_reduce, buffs[slot].melee_rune);
 				damage -= buffs[slot].melee_rune;
-				buffs[slot].melee_rune = 0
+				buffs[slot].melee_rune = 0;
 				if ((IsClient() || (IsPet() && IsPetOwnerClient()))) {
 					Client* client = GetOwnerOrSelf()->CastToClient();
 					Client* caster = entity_list.GetClientByName(buffs[slot].caster_name);
