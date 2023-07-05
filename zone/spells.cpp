@@ -2874,7 +2874,7 @@ int Mob::CalcBuffDuration(Mob *caster, Mob *target, uint16 spell_id, int32 caste
 
 		// Pyrelight Custom Code
 		// Increase Short Duration Buff Durations based on Heroic Wisdom
-		if (RuleR(Character, Pyrelight_hWIS_ShortBuff) > 0 && IsShortDurationBuff(spell_id)) {
+		if (RuleR(Character, Pyrelight_hWIS_ShortBuff) > 0 && IsShortDurationBuff(spell_id) && (caster->IsClient() || caster->IsPetOwnerClient())) {
 			int effective_hWIS = caster->GetOwner() ? std::ceil(RuleR(Character, Pyrelight_HeroicPetMod) * caster->GetOwner()->GetHeroicWIS()) : caster->GetHeroicWIS();
 
 			int res_add = round(res * (RuleR(Character, Pyrelight_hWIS_ShortBuff) * effective_hWIS / 100));
@@ -2884,21 +2884,23 @@ int Mob::CalcBuffDuration(Mob *caster, Mob *target, uint16 spell_id, int32 caste
 
 			Client* msgTarget = (caster->GetOwner() && caster->GetOwner()->IsClient()) ? caster->GetOwner()->CastToClient() :caster->CastToClient();
 
-			if (msgTarget) {
-				msgTarget->LoadAccountFlags();
-			}
+				if (res_add > 0 && msgTarget && msgTarget->IsClient()) {
+					msgTarget->LoadAccountFlags();
+			
 
-			if (effective_hWIS > 0) {
-				if (msgTarget->GetAccountFlag("filter_hWIS") != "off") {
-					if (caster->IsPet() && !caster->IsClient() && msgTarget->GetAccountFlag("filter_hPets") != "off") {
-						msgTarget->Message(Chat::Spells, "Your Heroic Wisdom has increased the duration of your pet's spell effect by %i%% (%i ticks)!", increase, res_add);
-					} else if (caster->IsClient()) {
-						msgTarget->Message(Chat::Spells, "Your Heroic Wisdom has increased the duration of your spell effect by %i%% (%i ticks)!", increase, res_add);
+				if (effective_hWIS > 0) {
+					if (msgTarget->GetAccountFlag("filter_hWIS") != "off") {
+						if (caster->IsPet() && !caster->IsClient() && msgTarget->GetAccountFlag("filter_hPets") != "off") {
+							msgTarget->Message(Chat::Spells, "Your Heroic Wisdom has increased the duration of your pet's spell effect by %i%% (%i ticks)!", increase, res_add);
+						} else if (caster->IsClient()) {
+							msgTarget->Message(Chat::Spells, "Your Heroic Wisdom has increased the duration of your spell effect by %i%% (%i ticks)!", increase, res_add);
+						}
 					}
 				}
+
+				res += res_add;
 			}
 
-			res += res_add;
 		}
 
 	}
