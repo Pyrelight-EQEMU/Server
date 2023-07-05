@@ -5983,7 +5983,7 @@ int32 Mob::RuneAbsorb(int64 damage, uint16 type)
 							Client* client = GetOwnerOrSelf()->CastToClient();
 							Client* caster = entity_list.GetClientByName(buffs[slot].caster_name);
 							
-							if (!(caster->FindSpellBookSlotBySpellID(buffs[slot].spellid) >= 0 || caster->GetInv().IsClickEffectEquipped(buffs[slot].spellid))) {
+							if (!caster || !(caster->FindSpellBookSlotBySpellID(buffs[slot].spellid) >= 0 || caster->GetInv().IsClickEffectEquipped(buffs[slot].spellid))) {
 								BuffFadeBySlot(slot);
 							}							
 						} else {
@@ -6022,7 +6022,7 @@ int32 Mob::RuneAbsorb(int64 damage, uint16 type)
 							Client* client = GetOwnerOrSelf()->CastToClient();
 							Client* caster = entity_list.GetClientByName(buffs[slot].caster_name);
 							
-							if (!(caster->FindSpellBookSlotBySpellID(buffs[slot].spellid) >= 0 || caster->GetInv().IsClickEffectEquipped(buffs[slot].spellid))) {
+							if (!caster || !(caster->FindSpellBookSlotBySpellID(buffs[slot].spellid) >= 0 || caster->GetInv().IsClickEffectEquipped(buffs[slot].spellid))) {
 								BuffFadeBySlot(slot);
 							}
 							
