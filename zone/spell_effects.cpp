@@ -3882,7 +3882,11 @@ void Mob::BuffProcess()
 								}
 
 								if (buffs[buffs_i].melee_rune < max_rune) {
-									regen_amount = round(max_rune/20.0);
+									if (CanFastRegen()) {
+										regen_amount = max_rune;
+									} else {
+										regen_amount = round(max_rune/20.0);
+									}										
 								}
 
 								if (regen_amount > 0 && buffs[buffs_i].melee_rune < max_rune) {
@@ -3894,6 +3898,41 @@ void Mob::BuffProcess()
 										Message(Chat::Spells, "Your %s has regenerated! (%i/%i)", spells[buffs[buffs_i].spellid].name, buffs[buffs_i].melee_rune, max_rune);
 									} else if (IsPet() && GetOwner()) {
 										GetOwner()->Message(Chat::Spells, "Your pet's %s has regenerated! (%i/%i)", spells[buffs[buffs_i].spellid].name, buffs[buffs_i].melee_rune, max_rune);
+									}
+								}
+							}
+
+							if (suspended && IsEffectInSpell(buffs[buffs_i].spellid, SE_AbsorbMagicAtt)) {
+								int max_rune = CalcSpellEffectValue(buffs[buffs_i].spellid, GetSpellEffectIndex(buffs[buffs_i].spellid, SE_AbsorbMagicAtt), caster->GetLevel(), 10, caster);
+
+								LogDebug("base max_rune: [{}]", max_rune);
+								int regen_amount = 0;								
+
+								if (RuleR(Character, Pyrelight_hINT_RunePower) > 0) {
+									int effective_hINT = caster->GetOwner() ? round(RuleR(Character, Pyrelight_HeroicPetMod) * caster->GetOwner()->GetHeroicINT()) : caster->GetHeroicINT();
+									float bonus_ratio = effective_hINT * RuleR(Character, Pyrelight_hINT_RunePower) / 100;
+									int bonus_amount = round(max_rune * bonus_ratio);
+									max_rune += bonus_amount;
+									LogDebug("modified max_rune: [{}]", max_rune);
+								}
+
+								if (buffs[buffs_i].magic_rune < max_rune) {
+									if (CanFastRegen()) {
+										regen_amount = max_rune;
+									} else {
+										regen_amount = round(max_rune/20.0);
+									}										
+								}
+
+								if (regen_amount > 0 && buffs[buffs_i].magic_rune < max_rune) {
+									buffs[buffs_i].magic_rune += regen_amount;
+									if (buffs[buffs_i].magic_rune > max_rune) {
+										buffs[buffs_i].magic_rune = max_rune;
+									}
+									if (IsClient()) {
+										Message(Chat::Spells, "Your %s has regenerated! (%i/%i)", spells[buffs[buffs_i].spellid].name, buffs[buffs_i].magic_rune, max_rune);
+									} else if (IsPet() && GetOwner()) {
+										GetOwner()->Message(Chat::Spells, "Your pet's %s has regenerated! (%i/%i)", spells[buffs[buffs_i].spellid].name, buffs[buffs_i].magic_rune, max_rune);
 									}
 								}
 							}
