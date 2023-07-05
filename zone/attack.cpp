@@ -3281,23 +3281,29 @@ void Mob::DamageShield(Mob* attacker, bool spell_ds) {
 		int buff_count = GetMaxTotalSlots();
 
 		for (int buffs_i = 0; buffs_i < buff_count; ++buffs_i) {
-			Client* client = GetOwnerOrSelf()->CastToClient();
-			Client* caster = entity_list.GetClientByName(buffs[buffs_i].caster_name);
-			uint32 spellid = buffs[buffs_i].spellid;
+			if (IsEffectInSpell(spellid, SE_DamageShield) || IsEffectInSpell(spellid, SE_ReverseDS)) {
+				int effIDX = max(GetSpellEffectIndex(SE_DamageShield), GetSpellEffectIndex(SE_ReverseDS));
+				int amount = spells[spellid].base_value[effIDX];
 
-			if (caster && client && caster->IsClient() && client->IsClient()) {
-				if (caster == client || (client->GetGroup() && client->GetGroup()->IsGroupMember(caster))) {
-					if (caster->FindSpellBookSlotBySpellID(spellid) >= 0 || caster->GetInv().IsClickEffectEquipped(spellid)) {
-						int effective_hWIS = caster->GetHeroicWIS();
+				Client* client = GetOwnerOrSelf()->CastToClient();
+				Client* caster = entity_list.GetClientByName(buffs[buffs_i].caster_name);
+				uint32 spellid = buffs[buffs_i].spellid;
 
-						if (RuleB(Character, Pyrelight_hStat_Randomize)) {
-							effective_hWIS *= zone->random.Real(1 - RuleR(Character, Pyrelight_hStat_RandomizationFactor), 1 + RuleR(Character, Pyrelight_hStat_RandomizationFactor));
+				if (caster && client && caster->IsClient() && client->IsClient()) {
+					if (caster == client || (client->GetGroup() && client->GetGroup()->IsGroupMember(caster))) {
+						if (caster->FindSpellBookSlotBySpellID(spellid) >= 0 || caster->GetInv().IsClickEffectEquipped(spellid)) {
+							int effective_hWIS = caster->GetHeroicWIS();
+
+							if (RuleB(Character, Pyrelight_hStat_Randomize)) {
+								effective_hWIS *= zone->random.Real(1 - RuleR(Character, Pyrelight_hStat_RandomizationFactor), 1 + RuleR(Character, Pyrelight_hStat_RandomizationFactor));
+							}
+
+							float bonus_ratio = effective_hWIS * RuleR(Character, Pyrelight_hINT_SpellDamage) / 100;
+							int bonus = round(amount * bonus_ratio);						
+							DS += bonus;
+
+							LogDebug("Adding bonus [{}] to DS due to caster's hWIS.", bonus);						
 						}
-
-						float bonus_ratio = effective_hWIS * RuleR(Character, Pyrelight_hINT_SpellDamage) / 100;
-						int bonus = round(DS * bonus_ratio);						
-						DS += bonus;
-						LogDebug("Adding bonus [{}] to DS due to caster's hWIS.", bonus);						
 					}
 				}
 			}
