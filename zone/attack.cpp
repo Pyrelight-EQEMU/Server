@@ -5924,7 +5924,6 @@ int32 Mob::RuneAbsorb(int64 damage, uint16 type)
 						buffs[slot].melee_rune = 0;
 
 						if ((IsClient() || (IsPet() && IsPetOwnerClient()))) {
-							LogDebug("Eligible to Fade");
 							Client* client = GetOwnerOrSelf()->CastToClient();
 							Client* caster = entity_list.GetClientByName(buffs[slot].caster_name);
 							
@@ -5968,12 +5967,11 @@ int32 Mob::RuneAbsorb(int64 damage, uint16 type)
 						if ((IsClient() || (IsPet() && IsPetOwnerClient()))) {
 							Client* client = GetOwnerOrSelf()->CastToClient();
 							Client* caster = entity_list.GetClientByName(buffs[slot].caster_name);
-
-							if (!(caster == client || (client->GetGroup() && client->GetGroup()->IsGroupMember(caster)))) {
-								if (!(caster->FindSpellBookSlotBySpellID(buffs[slot].spellid) >= 0 || caster->GetInv().IsClickEffectEquipped(buffs[slot].spellid))) {
-									BuffFadeBySlot(slot);
-								}
+							
+							if (!(caster->FindSpellBookSlotBySpellID(buffs[slot].spellid) >= 0 || caster->GetInv().IsClickEffectEquipped(buffs[slot].spellid))) {
+								BuffFadeBySlot(slot);
 							}
+							
 						} else {
 							if (!TryFadeEffect(slot)) {
 								BuffFadeBySlot(slot);
