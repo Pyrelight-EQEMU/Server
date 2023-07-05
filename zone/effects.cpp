@@ -65,7 +65,7 @@ int64 Mob::GetActSpellDamage(uint16 spell_id, int64 value, Mob* target) {
 	}
 
 	// Pyrelight Custom Code
-	if (RuleR(Character, Pyrelight_hINT_SpellDamage) > 0) {
+	if (RuleR(Character, Pyrelight_hINT_SpellDamage) > 0 && (IsClient() || IsPetOwnerClient())) {
 		int effective_hINT = GetOwner() ? round(RuleR(Character, Pyrelight_HeroicPetMod) * GetOwner()->GetHeroicINT()) : GetHeroicINT();
 		float bonus_ratio = effective_hINT * RuleR(Character, Pyrelight_hINT_SpellDamage) / 100;		
 
@@ -305,7 +305,7 @@ int64 Mob::GetActDoTDamage(uint16 spell_id, int64 value, Mob* target, bool from_
 	}
 
 	// Pyrelight Custom Code
-	if (RuleR(Character, Pyrelight_hINT_SpellDamage) > 0) {
+	if (RuleR(Character, Pyrelight_hINT_SpellDamage) > 0 && (IsClient() || IsPetOwnerClient())) {
 		int effective_hINT = GetOwner() ? round(RuleR(Character, Pyrelight_HeroicPetMod) * GetOwner()->GetHeroicINT()) : GetHeroicINT();
 
 		if (RuleB(Character, Pyrelight_hStat_Randomize)) {

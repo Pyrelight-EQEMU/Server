@@ -3538,8 +3538,18 @@ int64 Mob::ReduceDamage(int64 damage)
 			{
 				LogSpellsDetail("SE_MitigateMeleeDamage [{}] damage negated, [{}] damage remaining, fading buff", damage_to_reduce, buffs[slot].melee_rune);
 				damage -= buffs[slot].melee_rune;
-				if (!TryFadeEffect(slot))
-					BuffFadeBySlot(slot);
+				buffs[slot].melee_rune = 0
+				if ((IsClient() || (IsPet() && IsPetOwnerClient()))) {
+					Client* client = GetOwnerOrSelf()->CastToClient();
+					Client* caster = entity_list.GetClientByName(buffs[slot].caster_name);
+					
+					if (!(caster->FindSpellBookSlotBySpellID(buffs[slot].spellid) >= 0 || caster->GetInv().IsClickEffectEquipped(buffs[slot].spellid))) {
+						BuffFadeBySlot(slot);
+					}
+				} else {
+					if (!TryFadeEffect(slot))
+						BuffFadeBySlot(slot);
+				}
 			}
 			else
 			{
@@ -3549,6 +3559,10 @@ int64 Mob::ReduceDamage(int64 damage)
 					buffs[slot].melee_rune = (buffs[slot].melee_rune - damage_to_reduce);
 
 				damage -= damage_to_reduce;
+			}
+
+			if (damage_to_reduce > 0) {
+				Message(Chat::Spells, "Your partial rune has absorbed %i points of damage (%i points of protection remain)!", damage_to_reduce, buffs[slot].melee_rune);
 			}
 		}
 	}
@@ -5929,8 +5943,7 @@ int32 Mob::RuneAbsorb(int64 damage, uint16 type)
 							
 							if (!(caster->FindSpellBookSlotBySpellID(buffs[slot].spellid) >= 0 || caster->GetInv().IsClickEffectEquipped(buffs[slot].spellid))) {
 								BuffFadeBySlot(slot);
-							}
-							
+							}							
 						} else {
 							if (!TryFadeEffect(slot)) {
 								BuffFadeBySlot(slot);

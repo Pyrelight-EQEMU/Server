@@ -1361,7 +1361,7 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 				if (RuleB(Spells, RuneUseHealAmt) && (IsClient() || IsBot()))
 					effect_value += caster->GetExtraSpellAmt(spell_id, itembonuses.HealAmt, effect_value);
 				
-				if (RuleR(Character, Pyrelight_hINT_RunePower) > 0) {
+				if (RuleR(Character, Pyrelight_hINT_RunePower) > 0 && (caster->IsClient() || caster->IsPetOwnerClient())) {
 					int effective_hINT = caster->GetOwner() ? round(RuleR(Character, Pyrelight_HeroicPetMod) * caster->GetOwner()->GetHeroicINT()) : caster->GetHeroicINT();
 					float bonus_ratio = effective_hINT * RuleR(Character, Pyrelight_hINT_RunePower) / 100;
 
@@ -1400,23 +1400,98 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 			case SE_AbsorbMagicAtt:
 			{
 				if (RuleB(Spells, RuneUseHealAmt) && (IsClient() || IsBot()))
-                                        effect_value += GetExtraSpellAmt(spell_id, itembonuses.HealAmt, effect_value);
+					effect_value += caster->GetExtraSpellAmt(spell_id, itembonuses.HealAmt, effect_value);
+				
+				if (RuleR(Character, Pyrelight_hINT_RunePower) > 0 && (caster->IsClient() || caster->IsPetOwnerClient())) {
+					int effective_hINT = caster->GetOwner() ? round(RuleR(Character, Pyrelight_HeroicPetMod) * caster->GetOwner()->GetHeroicINT()) : caster->GetHeroicINT();
+					float bonus_ratio = effective_hINT * RuleR(Character, Pyrelight_hINT_RunePower) / 100;
 
-				if(effect_value > 0)
-					buffs[buffslot].magic_rune = effect_value;
+					if (RuleB(Character, Pyrelight_hStat_Randomize)) {
+						bonus_ratio *= zone->random.Real(1 - RuleR(Character, Pyrelight_hStat_RandomizationFactor), 1 + RuleR(Character, Pyrelight_hStat_RandomizationFactor));
+					}
 
+					int bonus_amount = round(effect_value * bonus_ratio);
+
+					LogDebug("effective_hINT: [{}], bonus_ratio: [{}], bonus_amount: [{}]", effective_hINT, bonus_ratio, bonus_amount);
+
+					effect_value += bonus_amount;
+
+					if (effective_hINT > 0) {
+						if (caster->IsClient()) {
+							caster->CastToClient()->LoadAccountFlags(); 
+						} else if (caster->GetOwner() && caster->GetOwner()->IsClient()) {
+							caster->GetOwner()->CastToClient()->LoadAccountFlags();
+						}
+
+						if (caster->IsClient() && caster->CastToClient()->GetAccountFlag("filter_hINT") != "off") {
+							caster->Message(Chat::Spells, "Your Heroic Intelligence has increased the power of your rune by %i (%i%%)!", abs(bonus_amount), static_cast<int>(bonus_ratio * 100));
+						} else if (caster->GetOwner() && caster->GetOwner()->IsClient() && 
+							caster->GetOwner()->CastToClient()->GetAccountFlag("filter_hINT") != "off" && 
+							caster->GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
+							caster->GetOwner()->Message(Chat::Spells, "Your Heroic Intelligence has increased the power of your pet's rune by %i (%i%%)!", abs(bonus_amount), static_cast<int>(bonus_ratio * 100));
+						}
+					}
+				}
+
+				buffs[buffslot].magic_rune = effect_value;
+				Message(Chat::Spells, "%s has applied a %i point magic rune to protect you!", caster->GetCleanName(), effect_value);
 				break;
 			}
 
+			
 			case SE_MitigateMeleeDamage:
 			{
 				if (RuleB(Spells, RuneUseHealAmt) && (IsClient() || IsBot())) {
 					int mv = spells[spell_id].max_value[i];
-                                        mv += GetExtraSpellAmt(spell_id, itembonuses.HealAmt, mv);
+					mv += GetExtraSpellAmt(spell_id, itembonuses.HealAmt, mv);
 					buffs[buffslot].melee_rune = mv;
 				} else {
 					buffs[buffslot].melee_rune = spells[spell_id].max_value[i];
 				}
+				break;
+			}
+			
+
+			case SE_MitigateMeleeDamage:
+			{
+				effect_value = spells[spell_id].max_value[i];
+
+				if (RuleB(Spells, RuneUseHealAmt) && (IsClient() || IsBot()))
+					effect_value += caster->GetExtraSpellAmt(spell_id, itembonuses.HealAmt, effect_value);
+				
+				if (RuleR(Character, Pyrelight_hINT_RunePower) > 0 && (caster->IsClient() || caster->IsPetOwnerClient())) {
+					int effective_hINT = caster->GetOwner() ? round(RuleR(Character, Pyrelight_HeroicPetMod) * caster->GetOwner()->GetHeroicINT()) : caster->GetHeroicINT();
+					float bonus_ratio = effective_hINT * RuleR(Character, Pyrelight_hINT_RunePower) / 100;
+
+					if (RuleB(Character, Pyrelight_hStat_Randomize)) {
+						bonus_ratio *= zone->random.Real(1 - RuleR(Character, Pyrelight_hStat_RandomizationFactor), 1 + RuleR(Character, Pyrelight_hStat_RandomizationFactor));
+					}
+
+					int bonus_amount = round(effect_value * bonus_ratio);
+
+					LogDebug("effective_hINT: [{}], bonus_ratio: [{}], bonus_amount: [{}]", effective_hINT, bonus_ratio, bonus_amount);
+
+					effect_value += bonus_amount;
+
+					if (effective_hINT > 0) {
+						if (caster->IsClient()) {
+							caster->CastToClient()->LoadAccountFlags(); 
+						} else if (caster->GetOwner() && caster->GetOwner()->IsClient()) {
+							caster->GetOwner()->CastToClient()->LoadAccountFlags();
+						}
+
+						if (caster->IsClient() && caster->CastToClient()->GetAccountFlag("filter_hINT") != "off") {
+							caster->Message(Chat::Spells, "Your Heroic Intelligence has increased the power of your rune by %i (%i%%)!", abs(bonus_amount), static_cast<int>(bonus_ratio * 100));
+						} else if (caster->GetOwner() && caster->GetOwner()->IsClient() && 
+							caster->GetOwner()->CastToClient()->GetAccountFlag("filter_hINT") != "off" && 
+							caster->GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
+							caster->GetOwner()->Message(Chat::Spells, "Your Heroic Intelligence has increased the power of your pet's rune by %i (%i%%)!", abs(bonus_amount), static_cast<int>(bonus_ratio * 100));
+						}
+					}
+				}
+
+				buffs[buffslot].melee_rune = effect_value;
+				Message(Chat::Spells, "%s has applied a %i point partial (%i%%) melee rune (to protect you!", caster->GetCleanName(), spells[spell_id].base_value[i], effect_value);
 				break;
 			}
 
