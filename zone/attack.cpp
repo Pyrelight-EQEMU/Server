@@ -3283,6 +3283,7 @@ void Mob::DamageShield(Mob* attacker, bool spell_ds) {
 		for (int buffs_i = 0; buffs_i < buff_count; ++buffs_i) {
 			int effIDX = -1;
 			int amount = 0;
+			int spellid = buffs[buffs_i].spellid;
 			if (IsEffectInSpell(spellid, SE_DamageShield)) {
 				effIDX = GetSpellEffectIndex(spellid, SE_DamageShield);				
 			} else if (IsEffectInSpell(spellid, SE_ReverseDS)) {
