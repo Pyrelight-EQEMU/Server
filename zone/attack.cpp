@@ -5929,9 +5929,7 @@ int32 Mob::RuneAbsorb(int64 damage, uint16 type)
 
 							if (!(caster == client || (client->GetGroup() && client->GetGroup()->IsGroupMember(caster)))) {
 								if (!(caster->FindSpellBookSlotBySpellID(buffs[slot].spellid) >= 0 || caster->GetInv().IsClickEffectEquipped(buffs[slot].spellid))) {
-									if (!TryFadeEffect(slot)) {
-										BuffFadeBySlot(slot);
-									}
+									BuffFadeBySlot(slot);
 								}
 							}
 						} else {
@@ -5972,9 +5970,7 @@ int32 Mob::RuneAbsorb(int64 damage, uint16 type)
 
 							if (!(caster == client || (client->GetGroup() && client->GetGroup()->IsGroupMember(caster)))) {
 								if (!(caster->FindSpellBookSlotBySpellID(buffs[slot].spellid) >= 0 || caster->GetInv().IsClickEffectEquipped(buffs[slot].spellid))) {
-									if (!TryFadeEffect(slot)) {
-										BuffFadeBySlot(slot);
-									}
+									BuffFadeBySlot(slot);
 								}
 							}
 						} else {
