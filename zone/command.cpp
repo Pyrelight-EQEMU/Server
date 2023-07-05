@@ -85,6 +85,7 @@ int command_init(void)
 
 	if (
 		command_add("filterheroic", "[filterheroic] - [str|sta|dex|agi|int|wis|cha] - Toggle the visibility of additional info about heroic stat effects.", AccountStatus::Player, command_filterheroic) ||
+		command_add("discord", "[discord] DISCORD_ID - claim a discord ID.", AccountStatus::Player, command_discord) ||
 		command_add("acceptrules", "[acceptrules] - Accept the EQEmu Agreement", AccountStatus::Player, command_acceptrules) ||
 		command_add("advnpcspawn", "[maketype|makegroup|addgroupentry|addgroupspawn][removegroupspawn|movespawn|editgroupbox|cleargroupbox]", AccountStatus::GMLeadAdmin, command_advnpcspawn) ||
 		command_add("aggro", "[Distance] [-v] - Display aggro information for all mobs 'Distance' distance from your target. (-v is verbose Faction Information)", AccountStatus::QuestTroupe, command_aggro) ||
@@ -963,6 +964,7 @@ void command_bot(Client *c, const Seperator *sep)
 }
 
 #include "gm_commands/filterheroic.cpp"
+#include "gm_commands/discord.cpp"
 #include "gm_commands/acceptrules.cpp"
 #include "gm_commands/advnpcspawn.cpp"
 #include "gm_commands/aggro.cpp"

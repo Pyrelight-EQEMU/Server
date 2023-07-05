@@ -4078,7 +4078,7 @@ void Mob::BuffProcess()
 				// We clear all debuffs from NPCs if they are not engaged in combat
 				int spellid = buffs[buffs_i].spellid;
 				if (!IsEngaged() && IsDetrimentalSpell(spellid) && (buffs[buffs_i].ticsremaining) > 0 
-				 && !IsCharmSpell(spellid) && !IsHarmonySpell(spellid) && !IsAllianceSpellLine(spellid) && !IsMezSpell(spellid)) {
+				 && !IsCharmSpell(spellid) && !IsHarmonySpell(spellid) && !IsAllianceSpell(spellid) && !IsMesmerizeSpell(spellid)) {
 					LogDebug("Fading Buff: [{}]", spellid);
 					BuffFadeBySlot(buffs_i);
 				}

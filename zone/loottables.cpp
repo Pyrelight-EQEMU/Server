@@ -537,9 +537,9 @@ void NPC::AddLootDrop(
 		safe_delete(item);
 	}
 
-	if (found) {
+	//if (found) {
 		CalcBonuses();
-	}
+	//}
 
 	if (IsRecordLootStats()) {
 		m_rolled_items.emplace_back(item->item_id);

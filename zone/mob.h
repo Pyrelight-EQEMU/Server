@@ -1730,6 +1730,9 @@ public:
 	const CombatRecord &GetCombatRecord() const;
 
 public:
+	virtual EQ::InventoryProfile& GetInvPublic() { return m_inv; }
+
+public:
 	bool GetWasSpawnedInWater() const;
 
 	void SetSpawnedInWater(bool spawned_in_water);

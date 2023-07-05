@@ -3314,19 +3314,7 @@ void ZoneDatabase::SavePetInfo(Client *client)
 			if (!IsValidSpell(petinfo->Buffs[index].spellid)) {
 				continue;
 			}
-			if (query.length() == 0)
-				query = StringFormat("REPLACE INTO `character_pet_buffs` "
-						"(`char_id`, `pet`, `slot`, `spell_id`, `caster_level`, "
-						"`ticsremaining`, `counters`, `instrument_mod`, `castername`) "
-						"VALUES (%u, %u, %u, %u, %u, %d, %d, %u, '%s')",
-						client->CharacterID(), pet, index, petinfo->Buffs[index].spellid,
-						petinfo->Buffs[index].level, petinfo->Buffs[index].duration,
-						petinfo->Buffs[index].counters, petinfo->Buffs[index].bard_modifier, client->GetPet()->GetBuffs()[index].caster_name);
-			else
-				query += StringFormat(", (%u, %u, %u, %u, %u, %d, %d, %u, '%s')",
-						client->CharacterID(), pet, index, petinfo->Buffs[index].spellid,
-						petinfo->Buffs[index].level, petinfo->Buffs[index].duration,
-						petinfo->Buffs[index].counters, petinfo->Buffs[index].bard_modifier, client->GetPet()->GetBuffs()[index].caster_name);
+			pet_buff_count++;
 		}
 
 		// reserve space for pet buffs
@@ -3346,6 +3334,7 @@ void ZoneDatabase::SavePetInfo(Client *client)
 			pet_buff.ticsremaining  = petinfo->Buffs[index].duration;
 			pet_buff.counters       = petinfo->Buffs[index].counters;
 			pet_buff.instrument_mod = petinfo->Buffs[index].bard_modifier;
+			pet_buff.castername     = petinfo->Buffs[index].caster_name;
 
 			// add pet buffs to vector
 			pet_buffs.push_back(pet_buff);
