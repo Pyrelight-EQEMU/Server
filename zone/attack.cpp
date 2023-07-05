@@ -3281,8 +3281,8 @@ void Mob::DamageShield(Mob* attacker, bool spell_ds) {
 		int buff_count = GetMaxTotalSlots();
 
 		for (int buffs_i = 0; buffs_i < buff_count; ++buffs_i) {
-			if (IsEffectInSpell(spellid, SE_DamageShield) || IsEffectInSpell(spellid, SE_ReverseDS)) {
-				int effIDX = max(GetSpellEffectIndex(SE_DamageShield), GetSpellEffectIndex(SE_ReverseDS));
+			if (IsEffectInSpell(spellid, SE_DamageShield)) {
+				int effIDX = GetSpellEffectIndex(SE_DamageShield);
 				int amount = spells[spellid].base_value[effIDX];
 
 				Client* client = GetOwnerOrSelf()->CastToClient();
