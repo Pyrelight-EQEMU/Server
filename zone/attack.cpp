@@ -3283,7 +3283,8 @@ void Mob::DamageShield(Mob* attacker, bool spell_ds) {
 		for (int buffs_i = 0; buffs_i < buff_count; ++buffs_i) {
 			int effIDX = -1;
 			int amount = 0;
-			int spellid = buffs[buffs_i].spellid;
+			uint32 spellid = buffs[buffs_i].spellid;
+
 			if (IsEffectInSpell(spellid, SE_DamageShield)) {
 				effIDX = GetSpellEffectIndex(spellid, SE_DamageShield);				
 			} else if (IsEffectInSpell(spellid, SE_ReverseDS)) {
@@ -3294,8 +3295,7 @@ void Mob::DamageShield(Mob* attacker, bool spell_ds) {
 			}
 			if (amount != 0) {
 				Client* client = GetOwnerOrSelf()->CastToClient();
-				Client* caster = entity_list.GetClientByName(buffs[buffs_i].caster_name);
-				uint32 spellid = buffs[buffs_i].spellid;
+				Client* caster = entity_list.GetClientByName(buffs[buffs_i].caster_name);				
 
 				if (caster && client && caster->IsClient() && client->IsClient()) {
 					if (caster == client || (client->GetGroup() && client->GetGroup()->IsGroupMember(caster))) {
