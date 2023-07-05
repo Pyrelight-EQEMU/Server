@@ -1436,21 +1436,7 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 				buffs[buffslot].magic_rune = effect_value;
 				Message(Chat::Spells, "%s has applied a %i point magic rune to protect you!", caster->GetCleanName(), effect_value);
 				break;
-			}
-
-			
-			case SE_MitigateMeleeDamage:
-			{
-				if (RuleB(Spells, RuneUseHealAmt) && (IsClient() || IsBot())) {
-					int mv = spells[spell_id].max_value[i];
-					mv += GetExtraSpellAmt(spell_id, itembonuses.HealAmt, mv);
-					buffs[buffslot].melee_rune = mv;
-				} else {
-					buffs[buffslot].melee_rune = spells[spell_id].max_value[i];
-				}
-				break;
-			}
-			
+			}			
 
 			case SE_MitigateMeleeDamage:
 			{
