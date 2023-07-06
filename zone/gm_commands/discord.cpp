@@ -20,9 +20,7 @@ void command_discord(Client *c, const Seperator *sep)
         if (strcasecmp(sep->arg[1], "claim") || strcasecmp(sep->arg[1], "list")) {
             LogDebug("Got valid command");
 
-        } else { err = true; }
-
-    
+        } else { err = true; }    
     } else { err = true ;}
     
     if (err) {
