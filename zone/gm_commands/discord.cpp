@@ -15,7 +15,7 @@ void command_discord(Client *c, const Seperator *sep)
     // Check if there's at least one argument
     if (sep->argnum >= 1) {
         std::string command = sep->arg[0];
-        
+        LogDebug(command);
         if (command == "list") {
             std::ifstream infile(filePath);
 
