@@ -42,15 +42,15 @@ void command_discord(Client *c, const Seperator *sep)
                 }
             } else {
                 if (users.find(charName) != users.end()) {
-                    c->Message(Chat::White, "Your Discord ID is: %s", users[charName]);
+                    c->Message(Chat::White, "Your Discord ID is: %s", users[charName].c_str());
                 }
             }
         } else if (!strcasecmp(sep->arg[1], "claim")) {
             std::string userID = "";
-            
-            if (sep->argnum > 2) { // check that there is a third argument
-                userID = std::string(sep->arg[2]); // get the user ID from the third argument
-                if (userID.size() == 18 && std::all_of(userID.begin(), userID.end(), ::isdigit)) {
+
+        if (sep->argnum > 2) { // check that there is a third argument
+            std::string userID(sep->arg[2]); // get the user ID from the third argument
+            if (userID.size() == 18 && std::all_of(userID.begin(), userID.end(), ::isdigit)) {
                    users[charName] = userID;
 
                    std::ofstream outfile(filePath, std::ofstream::out);
