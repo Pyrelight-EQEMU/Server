@@ -35,7 +35,8 @@ void command_discord(Client *c, const Seperator *sep)
             userFile.close();
         } else { err = true; }
 
-        if (!strcasecmp(sep->arg[1], "list")) {                
+        if (!strcasecmp(sep->arg[1], "list")) {     
+            c->Message(Chat::White, "ok, try this? [{}], [{}]", sep->arg[1], sep->arg[2]);           
             if (c->GetGM()) {
                 for (auto& user : users) {
                     c->Message(Chat::White, (user.first + ": " + user.second).c_str());
