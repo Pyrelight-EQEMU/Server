@@ -21,7 +21,7 @@ void command_discord(Client *c, const Seperator *sep)
 
         std::unordered_map<std::string, std::string> users; // Hold charname:userid pairs
 
-        if (!strcasecmp(sep->arg[1], "claim") || !strcasecmp(sep->arg[1], "list")) {
+        if (strcasecmp(sep->arg[1], "claim") || strcasecmp(sep->arg[1], "list")) {
             LogDebug("Got valid command");
 
             // Read the file and load everything into the data structure
