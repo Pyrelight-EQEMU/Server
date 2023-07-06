@@ -35,8 +35,7 @@ void command_discord(Client *c, const Seperator *sep)
             userFile.close();
         } else { err = true; }
 
-        if (!strcasecmp(sep->arg[1], "list")) {     
-            c->Message(Chat::White, "ok, try this? [{}], [{}]", sep->arg[1], sep->arg[2]);           
+        if (!strcasecmp(sep->arg[1], "list")) {                
             if (c->GetGM()) {
                 for (auto& user : users) {
                     c->Message(Chat::White, (user.first + ": " + user.second).c_str());
@@ -47,6 +46,7 @@ void command_discord(Client *c, const Seperator *sep)
                 }
             }
         } else if (!strcasecmp(sep->arg[1], "claim")) {
+            LogDebug("What in tarnation? [{}], [{}]", sep->arg[1], sep->arg[2]);
             c->Message(Chat::White, "ok, try this? [{}], [{}]", sep->arg[1], sep->arg[2]);
         }         
         else { err = true; }    
