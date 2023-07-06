@@ -48,13 +48,13 @@ void command_discord(Client *c, const Seperator *sep)
         } else if (!strcasecmp(sep->arg[1], "claim")) {
             std::string userID = "";
 
-        if (sep->argnum > 2) { // check that there is a third argument
-            std::string userID(sep->arg[2]); // get the user ID from the third argument
-            LogDebug("Got arg: %s (%i digits)", userID.c_str(), userID.size());
-            if (userID.size() == 18 && std::all_of(userID.begin(), userID.end(), ::isdigit)) {
-                   users[charName] = userID;
+            if (sep->argnum > 1) { // check that there is a third argument
+                std::string userID(sep->arg[2], strlen(sep->arg[2])); // get the user ID from the third argument
+                LogDebug("Got arg: %s (%i digits)", userID.c_str(), userID.size());
+                if (userID.size() == 18 && std::all_of(userID.begin(), userID.end(), ::isdigit)) {
+                    users[charName] = userID;
 
-                   std::ofstream outfile(filePath, std::ofstream::out);
+                    std::ofstream outfile(filePath, std::ofstream::out);
 
                     if(outfile.is_open()){
                         for(const auto& user : users){
@@ -65,9 +65,7 @@ void command_discord(Client *c, const Seperator *sep)
                         // Error handling
                         LogDebug("Cannot open file to write");
                     }
-                } else {
-                    err = true;
-                }
+                } else { err = true; }
             } else { err = true; }
         }         
         else { err = true; }    
