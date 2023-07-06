@@ -42,7 +42,8 @@ void command_discord(Client *c, const Seperator *sep)
                 if (!strcasecmp(sep->arg[1], "list")) {
                     // Print all users
                     for (auto& user : users) {
-                        c->Message(Chat::White, user.first + ": " + user.second);
+                        c->Message(Chat::White, (user.first + ": " + user.second).c_str());
+
                     }
                 }
             } else {
