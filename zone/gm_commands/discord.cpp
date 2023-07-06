@@ -45,7 +45,31 @@ void command_discord(Client *c, const Seperator *sep)
                     c->Message(Chat::White, "Your Discord ID is: %s", users[charName]);
                 }
             }
-        } else { err = true; }    
+        } else if (!strcasecmp(sep->arg[1], "claim")) {
+            auto userID = "";
+
+            if (sep->argnum > 2) { // check that there is a third argument
+                userID = sep->arg[2]; // get the user ID from the third argument
+                if (userID.size() == 18 && std::all_of(userID.begin(), userID.end(), ::isdigit)) {
+                   users[charName] = userID;
+
+                   std::ofstream outfile(filePath, std::ofstream::out);
+
+                    if(outfile.is_open()){
+                        for(const auto& user : users){
+                            outfile << user.first << ':' << user.second << "\n";
+                        }
+                        outfile.close();
+                    }else{
+                        // Error handling
+                        LogDebug("Cannot open file to write");
+                    }
+                } else {
+                    err = true;
+                }
+            } else { err = true; }
+        }         
+        else { err = true; }    
     } else { err = true; }
     
     if (err) {
