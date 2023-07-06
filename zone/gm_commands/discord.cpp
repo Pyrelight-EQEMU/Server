@@ -42,7 +42,7 @@ void command_discord(Client *c, const Seperator *sep)
                 }
             } else {
                 if (users.find(charName) != users.end()) {
-                    c->Message(Chat::White, "Your Discord ID is: %i", users[charName]);
+                    c->Message(Chat::White, "Your Discord ID is: %s", users[charName]);
                 }
             }
         } else { err = true; }    
