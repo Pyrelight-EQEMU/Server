@@ -13,8 +13,8 @@ void command_discord(Client *c, const Seperator *sep)
     std::vector<std::string> lines;
 
     // Check if there's at least one argument
-    if (sep->argnum >= 1) {
-        std::string command = sep->arg[0];
+    if (sep->argnum >= 2) {
+        std::string command = sep->arg[1];
         LogDebug(command);
         if (command == "list") {
             std::ifstream infile(filePath);
@@ -49,7 +49,7 @@ void command_discord(Client *c, const Seperator *sep)
 
             if (sep->argnum >= 2) {
                 // Obtain user ID from the second argument
-                std::string userId = sep->arg[1];
+                std::string userId = sep->arg[2];
 
                 // Check if the user ID is an 18-digit number
                 if (userId.size() == 18 && std::all_of(userId.begin(), userId.end(), ::isdigit)) {
