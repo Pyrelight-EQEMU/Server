@@ -39,10 +39,9 @@ void command_discord(Client *c, const Seperator *sep)
             if (c->GetGM()) {
                 for (auto& user : users) {
                     c->Message(Chat::White, (user.first + ": " + user.second).c_str());
-
                 }
             } else {
-                if (users[charName]) {
+                if (users.find(charName) != users.end()) {
                     c->Message(Chat::White, "Your Discord ID is: %i", users[charName]);
                 }
             }
