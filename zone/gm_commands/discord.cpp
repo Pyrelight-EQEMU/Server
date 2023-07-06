@@ -45,8 +45,7 @@ void command_discord(Client *c, const Seperator *sep)
                     c->Message(Chat::White, "Your Discord ID is: %s", users[charName].c_str());
                 }
             }
-        } else if (!strcasecmp(sep->arg[1], "claim")) {
-            std::string userID = "";
+        } else if (!strcasecmp(sep->arg[1], "claim")) {           
 
             if (sep->argnum > 1) { // check that there is a third argument
                 
