@@ -7,7 +7,7 @@
 //userid:charactername
 void command_discord(Client *c, const Seperator *sep)
 {
-    std::string filePath = "../users.txt";
+    std::string filePath = "users.txt";
     std::vector<std::string> lines;
 
     // Obtain character name
