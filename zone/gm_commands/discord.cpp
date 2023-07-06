@@ -46,7 +46,7 @@ void command_discord(Client *c, const Seperator *sep)
                 }
             }
         } else if (!strcasecmp(sep->arg[1], "claim")) {
-            LogDebug("What in tarnation? %s:%s", sep->arg[1], sep->arg[2]);
+            c->Message(Chat::White, "ok, try this? [{}], [{}]", sep->arg[1], sep->arg[2]);
         }         
         else { err = true; }    
     } else { err = true; }
