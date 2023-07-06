@@ -50,6 +50,7 @@ void command_discord(Client *c, const Seperator *sep)
 
         if (sep->argnum > 2) { // check that there is a third argument
             std::string userID(sep->arg[2]); // get the user ID from the third argument
+            LogDebug("Got arg: %s (%i digits)", userID.c_str(), userID.size());
             if (userID.size() == 18 && std::all_of(userID.begin(), userID.end(), ::isdigit)) {
                    users[charName] = userID;
 
