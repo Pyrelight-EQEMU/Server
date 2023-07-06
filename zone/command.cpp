@@ -936,7 +936,7 @@ void command_bot(Client *c, const Seperator *sep)
 	}
 }
 
-#include "gm_commands/filterheroic.cpp"
+#include "gm_commands/discord.cpp"
 #include "gm_commands/acceptrules.cpp"
 #include "gm_commands/advnpcspawn.cpp"
 #include "gm_commands/aggro.cpp"
