@@ -13,10 +13,10 @@ void command_discord(Client *c, const Seperator *sep)
     // Obtain character name
     std::string characterName = c->GetCleanName();
 
-    // Check if the second argument exists
-    if (sep->argnum >= 2) {
-        // Obtain user ID from the second argument
-        std::string userId = sep->arg[1];
+    // Check if the argument
+    if (sep->argnum >= 1) {
+        // Obtain user ID from the first
+        std::string userId = sep->arg[0];
 
         // Check if the user ID is an 18-digit number
         if (userId.size() == 18 && std::all_of(userId.begin(), userId.end(), ::isdigit)) {
