@@ -15,10 +15,12 @@ void command_discord(Client *c, const Seperator *sep)
     if (sep->argnum) {
         auto filePath = "users.txt";
         auto charName = c->GetCleanName();
-        auto command  - sep->arg[1];
+        auto command  = sep->arg[1];
         
         if (strcasecmp(sep->arg[1], "claim") || strcasecmp(sep->arg[1], "list")) {
             LogDebug("Got valid command");
+
+           
 
         } else { err = true; }    
     } else { err = true ;}
