@@ -49,27 +49,20 @@ void command_discord(Client *c, const Seperator *sep)
             auto userID = "";
 
             if (sep->argnum > 2) { // check that there is a third argument
-                userID = sep->arg[2]; // get the user ID from the third argument
+                userID = std::string(sep->arg[2]); // get the user ID from the third argument
                 if (userID.size() == 18 && std::all_of(userID.begin(), userID.end(), ::isdigit)) {
                    users[charName] = userID;
 
                    std::ofstream outfile(filePath, std::ofstream::out);
 
-                    std::string userIDStr = userID; // Convert userID to std::string
-                    if (userIDStr.size() == 18 && std::all_of(userIDStr.begin(), userIDStr.end(), ::isdigit)) {
-                        users[charName] = userIDStr;
-
-                        std::ofstream outfile(filePath, std::ofstream::out);
-                        if(outfile.is_open()){
-                            for(const auto& user : users){
-                                outfile << user.first << ':' << user.second << "\n";
-                            }
-                            outfile.close();
-                        } else {
-                            LogDebug("Cannot open file to write");
+                    if(outfile.is_open()){
+                        for(const auto& user : users){
+                            outfile << user.first << ':' << user.second << "\n";
                         }
-                    } else {
-                        err = true;
+                        outfile.close();
+                    }else{
+                        // Error handling
+                        LogDebug("Cannot open file to write");
                     }
                 } else {
                     err = true;
