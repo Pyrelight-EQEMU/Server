@@ -19,35 +19,32 @@ void command_discord(Client *c, const Seperator *sep)
         auto charName = c->GetCleanName();
         auto command  = sep->arg[1];
 
-        std::unordered_map<std::string, std::string> users; // Hold charname:userid pairs
-
-        if (strcasecmp(sep->arg[1], "claim") || strcasecmp(sep->arg[1], "list")) {
-            LogDebug("Got valid command");
-
-            // Read the file and load everything into the data structure
-            std::ifstream userFile(filePath);
-            if (userFile.is_open()) {
-                std::string line;
-                while (getline(userFile, line)) {
-                    // Each line should exactly be charname:18-digit userid
-                    std::size_t sepPos = line.find(':');
-                    if (sepPos != std::string::npos && sepPos != line.size()-1 && line.substr(sepPos+1).size() == 18) {
-                        users[line.substr(0, sepPos)] = line.substr(sepPos+1);
-                    } else {
-                        LogDebug("Invalid line format");
-                    }
+        std::unordered_map<std::string, std::string> users;
+        std::ifstream userFile(filePath);
+        if (userFile.is_open()) {
+            std::string line;
+            while (getline(userFile, line)) {
+                // Each line should exactly be charname:18-digit userid
+                std::size_t sepPos = line.find(':');
+                if (sepPos != std::string::npos && sepPos != line.size()-1 && line.substr(sepPos+1).size() == 18) {
+                    users[line.substr(0, sepPos)] = line.substr(sepPos+1);
+                } else {
+                    LogDebug("Invalid line format");
                 }
-                userFile.close();
+            }
+            userFile.close();
+        } else { err = true; }
 
-                if (!strcasecmp(sep->arg[1], "list")) {
-                    // Print all users
-                    for (auto& user : users) {
-                        c->Message(Chat::White, (user.first + ": " + user.second).c_str());
+        if (!strcasecmp(sep->arg[1], "list")) {                
+            if (c->GetGM()) {
+                for (auto& user : users) {
+                    c->Message(Chat::White, (user.first + ": " + user.second).c_str());
 
-                    }
                 }
             } else {
-                c->Message(Chat::White, "Unable to open file");
+                if (users[charName]) {
+                    c->Message(Chat::White, "Your Discord ID is: %i", users[charName]);
+                }
             }
         } else { err = true; }    
     } else { err = true; }
