@@ -50,7 +50,7 @@ void command_discord(Client *c, const Seperator *sep)
             if (sep->argnum > 1) { // check that there is a third argument
                 
                 for (int p = 0; p <= sep->argnum; p++) {
-                    LogDebug("Arg %i: %s", p, sep->arg[p]);
+                    LogDebug("Arg %i", p);
                 }
 
                 std::string userID(sep->arg[2], strlen(sep->arg[2])); // get the user ID from the third argument
