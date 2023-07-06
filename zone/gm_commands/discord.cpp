@@ -55,14 +55,21 @@ void command_discord(Client *c, const Seperator *sep)
 
                    std::ofstream outfile(filePath, std::ofstream::out);
 
-                    if(outfile.is_open()){
-                        for(const auto& user : users){
-                            outfile << user.first << ':' << user.second << "\n";
+                    std::string userIDStr = userID; // Convert userID to std::string
+                    if (userIDStr.size() == 18 && std::all_of(userIDStr.begin(), userIDStr.end(), ::isdigit)) {
+                        users[charName] = userIDStr;
+
+                        std::ofstream outfile(filePath, std::ofstream::out);
+                        if(outfile.is_open()){
+                            for(const auto& user : users){
+                                outfile << user.first << ':' << user.second << "\n";
+                            }
+                            outfile.close();
+                        } else {
+                            LogDebug("Cannot open file to write");
                         }
-                        outfile.close();
-                    }else{
-                        // Error handling
-                        LogDebug("Cannot open file to write");
+                    } else {
+                        err = true;
                     }
                 } else {
                     err = true;
