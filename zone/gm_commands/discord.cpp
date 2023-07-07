@@ -58,7 +58,7 @@ void command_discord(Client *c, const Seperator *sep)
                 std::string charName(sep->arg[3]);
                 if (userID.size() == 18 && std::all_of(userID.begin(), userID.end(), ::isdigit)) {
                     users[charName] = userID;
-                    if (!writeUsersToFile(users, filePath)) {
+                    if (!DiscordWriteFile(users, filePath)) {
                         err = true;
                         c->Message(Chat::Red, "Unable to set Discord UserID.");
                     } else { c->Message(Chat::White, "CharName: %s UserID: %s", charName.c_str(), users[charName].c_str()); }                    
