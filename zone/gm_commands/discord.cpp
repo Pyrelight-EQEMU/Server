@@ -23,18 +23,14 @@ void command_discord(Client *c, const Seperator *sep)
         std::ifstream userFile(filePath);
         if (userFile.is_open()) {
             std::string line;
-            while (getline(userFile, line)) {
-                // Each line should exactly be charname:18-digit userid
+            while (getline(userFile, line)) {                
                 std::size_t sepPos = line.find(':');
                 if (sepPos != std::string::npos && sepPos != line.size()-1 && line.substr(sepPos+1).size() == 18) {
                     users[line.substr(0, sepPos)] = line.substr(sepPos+1);
-                } else {
-                    LogDebug("Invalid line format");
                 }
             }
             userFile.close();
         } else { err = true; }
-
         if (!strcasecmp(sep->arg[1], "list")) {                
             if (c->GetGM()) {
                 for (auto& user : users) {
@@ -42,40 +38,52 @@ void command_discord(Client *c, const Seperator *sep)
                 }
             } else {
                 if (users.find(charName) != users.end()) {
-                    c->Message(Chat::White, "Your Discord ID is: %s", users[charName].c_str());
-                }
+                    c->Message(Chat::White, "Your Discord UserID is: %s", users[charName].c_str());
+                } else { c->Message(Chat::White, "You have not set your Discord UserID."); }
             }
-        } else if (!strcasecmp(sep->arg[1], "claim")) {           
-
-            if (sep->argnum > 1) { // check that there is a third argument
-                
-                for (int p = 0; p <= sep->argnum; p++) {
-                    LogDebug("Arg [{}], [{}]", p, sep->arg[p]);
-                }
-
-                std::string userID(sep->arg[2], strlen(sep->arg[2])); // get the user ID from the third argument
-                LogDebug("Got arg: [{}] ([{}] digits)", userID.c_str(), userID.size());
+        } else if (!strcasecmp(sep->arg[1], "claim")) {
+            if (sep->argnum > 1) {
+                std::string userID(sep->arg[2]);
                 if (userID.size() == 18 && std::all_of(userID.begin(), userID.end(), ::isdigit)) {
                     users[charName] = userID;
-
-                    std::ofstream outfile(filePath, std::ofstream::out);
-
-                    if(outfile.is_open()){
-                        for(const auto& user : users){
-                            outfile << user.first << ':' << user.second << "\n";
-                        }
-                        outfile.close();
-                    }else{
-                        // Error handling
-                        LogDebug("Cannot open file to write");
-                    }
+                    if (!writeUsersToFile(users, filePath)) {
+                        err = true;
+                        c->Message(Chat::Red, "Unable to set Discord UserID.");
+                    } else { c->Message(Chat::White, "Your Discord UserID is: %s", users[charName].c_str()); }                  
                 } else { err = true; }
             } else { err = true; }
-        }         
-        else { err = true; }    
+        } else if (!strcasecmp(sep->arg[1], "set") && c->GetGM()) {
+            if (sep->argnum > 1) {
+                std::string userID(sep->arg[2]);
+                std::string charName(sep->arg[3]);
+                if (userID.size() == 18 && std::all_of(userID.begin(), userID.end(), ::isdigit)) {
+                    users[charName] = userID;
+                    if (!writeUsersToFile(users, filePath)) {
+                        err = true;
+                        c->Message(Chat::Red, "Unable to set Discord UserID.");
+                    } else { c->Message(Chat::White, "CharName: %s UserID: %s", charName.c_str(), users[charName].c_str()); }                    
+                } else { err = true; }
+            }      
+        } else { err = true; }    
     } else { err = true; }
     
     if (err) {
         c->Message(Chat::White,"Usage: #discord [list|claim <18-digit Discord ID>]");
+    }
+}
+
+bool DiscordWriteFile(const std::unordered_map<std::string, std::string>& users, const std::string& filePath) {
+    std::ofstream outfile(filePath, std::ofstream::out);
+
+    if(outfile.is_open()){
+        for(const auto& user : users){
+            outfile << user.first << ':' << user.second << "\n";
+        }
+        outfile.close();
+        return true;
+    }else{
+        // Error handling
+        LogDebug("Cannot open file to write");
+        return false;
     }
 }

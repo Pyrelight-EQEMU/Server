@@ -34,6 +34,7 @@ void SendNPCEditSubCommands(Client *c);
 void SendRuleSubCommands(Client *c);
 void SendGuildSubCommands(Client *c);
 void SendPeekInvSubCommands(Client *c);
+bool DiscordWriteFile(const std::unordered_map<std::string, std::string>& users, const std::string& filePath);
 
 // Commands
 void command_discord(Client *c, const Seperator *sep);
