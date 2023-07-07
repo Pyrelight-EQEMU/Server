@@ -41,7 +41,7 @@ void command_mystats(Client *c, const Seperator *sep)
 				c->Message(
 					Chat::White,
 					fmt::format(
-						"Slot {:<10} | {}",
+						"Slot {:_<10} | {}",
 						EQ::invslot::GetInvPossessionsSlotName(i),
 						linker.GenerateLink()
 					).c_str()
