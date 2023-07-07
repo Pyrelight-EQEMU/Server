@@ -36,14 +36,14 @@ void command_mystats(Client *c, const Seperator *sep)
 			}
 			
 
-			if (inst_main && linker) {
+			if (inst_main) {
 				std::string padded_string = "";
 				if (item_data) {
 					padded_string = fmt::format("[{:>10}][{}]", EQ::invslot::GetInvPossessionsSlotName(i), linker.GenerateLink());	
 				} else {
 					padded_string = fmt::format("[{:>10}][{}]", EQ::invslot::GetInvPossessionsSlotName(i), "<Empty>");					
 				}
-				std::replace(padded_slot_name.begin(), padded_slot_name.end(), ' ', '-');
+				std::replace(padded_slot_name.begin(), padded_slot_name.end(), ' ', '\xA0');
 
 				c->Message(
 					Chat::White, padded_string.c_str()
