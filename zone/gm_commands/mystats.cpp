@@ -33,22 +33,20 @@ void command_mystats(Client *c, const Seperator *sep)
 				linker.SetItemInst(inst_main);
 			} else {
 				item_data = nullptr;
-				LogDebug("Didn't find an item in slot %i", i);
 			}
 			
 
-			if (item_data) {
-				std::string padded_slot_name = fmt::format("{:<10}", EQ::invslot::GetInvPossessionsSlotName(i));
-				std::replace(padded_slot_name.begin(), padded_slot_name.end(), ' ', '_');
+			if (inst_main && linker) {
+				std::string padded_string = "";
+				if (item_data) {
+					padded_string = fmt::format("[{:>10}][{}]", EQ::invslot::GetInvPossessionsSlotName(i), linker.GenerateLink());	
+				} else {
+					padded_string = fmt::format("[{:>10}][{}]", EQ::invslot::GetInvPossessionsSlotName(i), "<Empty>");					
+				}
+				std::replace(padded_slot_name.begin(), padded_slot_name.end(), ' ', '-');
 
 				c->Message(
-					Chat::White,
-					fmt::format(
-						"Slot {} | {} ({})",
-						padded_slot_name,
-						linker.GenerateLink(),
-						item_data->ID
-					).c_str()
+					Chat::White, padded_string.c_str()
 				);
 			}
 		}
