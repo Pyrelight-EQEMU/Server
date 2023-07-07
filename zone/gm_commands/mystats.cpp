@@ -43,7 +43,7 @@ void command_mystats(Client *c, const Seperator *sep)
 				} else {
 					padded_string = fmt::format("[{:>10}][{}]", EQ::invslot::GetInvPossessionsSlotName(i), "<Empty>");					
 				}
-				std::replace(padded_slot_name.begin(), padded_slot_name.end(), ' ', '\xA0');
+				std::replace(padded_string.begin(), padded_string.end(), ' ', '\xA0');
 
 				c->Message(
 					Chat::White, padded_string.c_str()
