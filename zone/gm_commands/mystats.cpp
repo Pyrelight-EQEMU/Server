@@ -38,12 +38,16 @@ void command_mystats(Client *c, const Seperator *sep)
 			
 
 			if (item_data) {
+				std::string padded_slot_name = fmt::format("{:<10}", EQ::invslot::GetInvPossessionsSlotName(i));
+				std::replace(padded_slot_name.begin(), padded_slot_name.end(), ' ', '_');
+
 				c->Message(
 					Chat::White,
 					fmt::format(
-						"Slot {:_<10} | {}",
-						EQ::invslot::GetInvPossessionsSlotName(i),
-						linker.GenerateLink()
+						"Slot {} | {} ({})",
+						padded_slot_name,
+						linker.GenerateLink(),
+						item_data->ID
 					).c_str()
 				);
 			}
