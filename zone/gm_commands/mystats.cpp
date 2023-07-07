@@ -34,18 +34,19 @@ void command_mystats(Client *c, const Seperator *sep)
 			} else {
 				item_data = nullptr;
 			}
-			
-			std::string padded_string = fmt::format("[{:>10}]", EQ::invslot::GetInvPossessionsSlotName(i));
-			std::replace(padded_string.begin(), padded_string.end(), ' ', '-');
-			if (item_data) {
-				padded_string = fmt::format("{}[{}]", padded_string, linker.GenerateLink());	
-			} else {
-				padded_string = fmt::format("{}[{}]", padded_string, "<Empty>");					
-			}				
+			if (i != EQ::invslot::slotCharm && i != EQ::invslot::slotPowerSource && i != EQ::invslot::slotAmmo) {			
+				std::string padded_string = fmt::format("[{:>10}]", EQ::invslot::GetInvPossessionsSlotName(i));
+				std::replace(padded_string.begin(), padded_string.end(), ' ', '-');
+				if (item_data) {
+					padded_string = fmt::format("{}[{}]", padded_string, linker.GenerateLink());	
+				} else {
+					padded_string = fmt::format("{}[{}]", padded_string, "<Empty>");					
+				}				
 
-			c->Message(
-				Chat::White, padded_string.c_str()
-			);
+				c->Message(
+					Chat::White, padded_string.c_str()
+				);
+			}
 			
 		}
 
