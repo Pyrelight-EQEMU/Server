@@ -50,7 +50,9 @@ void command_discord(Client *c, const Seperator *sep)
                         err = true;
                         c->Message(Chat::Red, "Unable to set Discord UserID.");
                     } else { c->Message(Chat::White, "Your Discord UserID is: %s", users[charName].c_str()); }                  
-                } else { err = true; }
+                } else { 
+                    c->Message(Chat::White, "Invalid Discord UserID format. It should be exactly 18 numerical digits.");
+                    err = true; }
             } else { err = true; }
         } else if (!strcasecmp(sep->arg[1], "set") && c->GetGM()) {
             if (sep->argnum > 1) {
