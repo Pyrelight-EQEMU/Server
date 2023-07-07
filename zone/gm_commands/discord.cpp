@@ -52,19 +52,23 @@ void command_discord(Client *c, const Seperator *sep)
                     } else { c->Message(Chat::White, "Your Discord UserID is: %s", users[charName].c_str()); }                  
                 } else { 
                     c->Message(Chat::White, "Invalid Discord UserID format. It should be exactly 18 numerical digits.");
-                    err = true; }
+                    err = true; 
+                }
             } else { err = true; }
         } else if (!strcasecmp(sep->arg[1], "set") && c->GetGM()) {
-            if (sep->argnum > 1) {
-                std::string userID(sep->arg[2]);
-                std::string charName(sep->arg[3]);
+            if (sep->argnum > 2) {
+                std::string userID(sep->arg[3]);
+                std::string charName(sep->arg[2]);
                 if (userID.size() == 18 && std::all_of(userID.begin(), userID.end(), ::isdigit)) {
                     users[charName] = userID;
                     if (!DiscordWriteFile(users, filePath)) {
                         err = true;
                         c->Message(Chat::Red, "Unable to set Discord UserID.");
                     } else { c->Message(Chat::White, "CharName: %s UserID: %s", charName.c_str(), users[charName].c_str()); }                    
-                } else { err = true; }
+                } else { 
+                    c->Message(Chat::White, "Invalid Input. You should know how to use this.");
+                    err = true; 
+                }
             }      
         } else { err = true; }    
     } else { err = true; }
