@@ -425,7 +425,7 @@ bool Client::Process() {
 				// Pyrelight Custom Code
 				// Do Epic/Power Source procs
 				EQ::ItemInstance *epic = GetInv().GetItem(EQ::invslot::slotPowerSource);
-				if (epic && target && !target->HasDied()) {
+				if (epic && auto_attack_target && !auto_attack_target->HasDied()) {
 					TryWeaponProc(epic, epic->GetItem(), auto_attack_target);
 				}
 
