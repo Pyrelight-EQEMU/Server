@@ -422,6 +422,13 @@ bool Client::Process() {
 				TryCombatProcs(wpn, auto_attack_target, EQ::invslot::slotPrimary);
 				TriggerDefensiveProcs(auto_attack_target, EQ::invslot::slotPrimary, false);
 
+				// Pyrelight Custom Code
+				// Do Epic/Power Source procs
+				EQ::ItemInstance *epic = GetInv().GetItem(EQ::invslot::slotPowerSource);
+				if (epic && target && !target->HasDied()) {
+					TryWeaponProc(epic, epic->GetItem(), auto_attack_target);
+				}
+
 				DoAttackRounds(auto_attack_target, EQ::invslot::slotPrimary);
 
 				if (TryDoubleMeleeRoundEffect()) {
@@ -466,6 +473,13 @@ bool Client::Process() {
 				if (CheckDualWield()) {
 					EQ::ItemInstance *wpn = GetInv().GetItem(EQ::invslot::slotSecondary);
 					TryCombatProcs(wpn, auto_attack_target, EQ::invslot::slotSecondary);
+
+				// Pyrelight Custom Code
+				// Do Epic/Power Source procs
+				EQ::ItemInstance *epic = GetInv().GetItem(EQ::invslot::slotPowerSource);
+				if (epic && target && !target->HasDied()) {
+					TryWeaponProc(epic, epic->GetItem(), auto_attack_target);
+				}
 
 					DoAttackRounds(auto_attack_target, EQ::invslot::slotSecondary);
 				}

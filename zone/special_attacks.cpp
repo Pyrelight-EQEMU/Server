@@ -982,6 +982,13 @@ void Mob::DoArcheryAttackDmg(Mob *who, const EQ::ItemInstance *RangeWeapon, cons
 			TryWeaponProc(secondary, secondary->GetItem(), who, EQ::invslot::slotSecondary);
 		}
 
+		// Pyrelight Custom Code
+		// Do Epic/Power Source procs
+		EQ::ItemInstance *epic = GetInv().GetItem(EQ::invslot::slotPowerSource);
+		if (epic && who && !who->HasDied()) {
+			TryWeaponProc(epic, epic->GetItem(), who);
+		}
+
 		// Ammo Proc, do not try spell procs if from ammo.
 		if (last_ammo_used) {
 			TryWeaponProc(nullptr, last_ammo_used, who, EQ::invslot::slotRange);
@@ -1663,6 +1670,13 @@ void Mob::DoThrowingAttackDmg(Mob *who, const EQ::ItemInstance *RangeWeapon, con
 		EQ::ItemInstance* secondary = GetInv().GetItem(EQ::invslot::slotSecondary);
 		if (secondary && who && !who->HasDied()) {
 			TryWeaponProc(secondary, secondary->GetItem(), who, EQ::invslot::slotSecondary);
+		}
+
+		// Pyrelight Custom Code
+		// Do Epic/Power Source procs
+		EQ::ItemInstance *epic = GetInv().GetItem(EQ::invslot::slotPowerSource);
+		if (epic && who && !who->HasDied()) {
+			TryWeaponProc(epic, epic->GetItem(), who);
 		}
 	}
 

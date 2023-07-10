@@ -1659,6 +1659,13 @@ void Mob::CastedSpellFinished(uint16 spell_id, uint32 target_id, CastingSlot slo
 		if (secondary && target && !target->HasDied()) {
 			TryWeaponProc(secondary, secondary->GetItem(), target, EQ::invslot::slotSecondary);
 		}
+
+		// Pyrelight Custom Code
+		// Do Epic/Power Source procs
+		EQ::ItemInstance *epic = GetInv().GetItem(EQ::invslot::slotPowerSource);
+		if (epic && target && !target->HasDied()) {
+			TryWeaponProc(epic, epic->GetItem(), target);
+		}
 	}
 
 	TryTwincast(this, target, spell_id);
