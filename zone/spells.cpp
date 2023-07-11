@@ -4565,6 +4565,7 @@ bool Mob::SpellOnTarget(
 
 		if (c && c->GetPet() && c->GetInv().HasItemEquippedByID(8495)) {
 			Mob* extraTar = (this == c->CastToClient()) ? GetPet() : this;
+			LogDebug("extraTar [{}]", extraTar->GetName());
 			SpellOnTarget(spell_id, extraTar, reflect_effectiveness, use_resist_adjust, resist_adjust, isproc, level_override, duration_override, disable_buff_overwrite, true);
 		}
 	}
