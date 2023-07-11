@@ -2912,9 +2912,8 @@ int Mob::CalcBuffDuration(Mob *caster, Mob *target, uint16 spell_id, int32 caste
 
 	// Pyrelight Custom Code
 	// Force maximum duration of beneficial 'long buffs'
-
-	if (IsBeneficialSpell(spell_id) && !IsShortDurationBuff(spell_id) && res > 600) {
-		res = 600;
+	if (IsBeneficialSpell(spell_id) && !IsShortDurationBuff(spell_id) && res > 150) {
+		res = 150;
 	}
 
 	LogSpells("Spell [{}]: Casting level [{}], formula [{}], base_duration [{}]: result [{}]", spell_id, castlevel, formula, duration, res);
