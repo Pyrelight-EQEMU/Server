@@ -4653,16 +4653,6 @@ void Mob::HealDamage(uint64 amount, Mob* caster, uint16 spell_id)
 
 		SendHPUpdate();
 	}
-
-	if (IsClient() || IsPetOwnerClient()) {
-		Client* c = IsClient() ? CastToClient() : GetOwner()->CastToClient();
-
-		if (c && c->GetPet() && c->GetInv().HasItemEquippedByID(8495)) {
-			Mob* pet = c->GetPet();
-			Mob* extra_target = (pet == this) ? GetOwner() : pet;
-			extra_target->HealDamage(amount, caster, spell_id);
-		}
-	}
 }
 
 //proc chance includes proc bonus

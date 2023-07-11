@@ -4556,6 +4556,18 @@ bool Mob::SpellOnTarget(
 
 	LogSpells("Cast of [{}] by [{}] on [{}] complete successfully", spell_id, GetName(), spelltar->GetName());
 
+	// Pyrelight Custom Code
+	// Beastlord Epic Effect - Mirror spells between Pet and Owner
+
+	if (spelltar->IsClient() || spelltar->IsPetOwnerClient()) {
+		Client* c = IsClient() ? CastToClient() : GetOwner()->CastToClient();
+
+		if (c && c->GetPet() && c->GetInv().HasItemEquippedByID(8495)) {
+			Mob* extraTar = (this == c->CastToClient()) ? GetPet() ? this;
+			SpellOnTarget(spell_id, extraTar, reflect_effectiveness, use_resist_adjust, resist_adjust, isproc, level_override, duration_override, disable_buff_overwrite);
+		}
+	}
+
 	return true;
 }
 
