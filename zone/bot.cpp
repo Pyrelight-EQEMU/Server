@@ -5678,7 +5678,8 @@ bool Bot::SpellOnTarget(
 		bool isproc,
 		int level_override,
 		int duration_override,
-		bool disable_buff_overwrite
+		bool disable_buff_overwrite,
+		bool is_mirror
 ) {
 	if (!IsValidSpell(spell_id)) {
 		return false;
