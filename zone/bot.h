@@ -363,7 +363,7 @@ public:
 			int level_override = -1,
 			int duration_override = 0,
 			bool disable_buff_overwrite = false,
-			bool is_mirror
+			bool is_mirror = false
 	) final;
 	bool IsImmuneToSpell(uint16 spell_id, Mob *caster) override;
 	virtual bool DetermineSpellTargets(uint16 spell_id, Mob *&spell_target, Mob *&ae_center, CastAction_type &CastAction, EQ::spells::CastingSlot slot);
