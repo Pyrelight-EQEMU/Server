@@ -4655,7 +4655,7 @@ void Mob::HealDamage(uint64 amount, Mob* caster, uint16 spell_id)
 	}
 
 	if (IsClient() || IsPetOwnerClient()) {
-		Client* c = IsClient() ? this : GetOwner();
+		Client* c = IsClient() ? CastToClient() : GetOwner()->CastToClient();
 
 		if (c && c->GetPet() && c->GetInv().HasItemEquippedByID(8495)) {
 			Mob* pet = c->GetPet();
