@@ -1732,17 +1732,15 @@ bool Mob::Attack(Mob* other, int Hand, bool bRiposte, bool IsStrikethrough, bool
 		if ((other->IsClient() || other->IsPetOwnerClient()) && (my_hit.original_damage > my_hit.damage_done)) {				
 			int reduction_percentage = (1 - static_cast<float>(my_hit.damage_done) / static_cast<float>(my_hit.original_damage)) * 100;
 			if (other->GetOwner() && other->GetOwner()->IsClient()  && other->GetOwner()->CastToClient()->GetAccountFlag("filter_hSTA") != "off") {
-				if (other->GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
-					auto capped = other->GetOwner()->GetDamageReductionCap() <= reduction_percentage ? " (CAPPED)" : "";
-					other->GetOwner()->Message(Chat::MyPet, "The damage to your pet was reduced by %i (%i%%) by your Heroic Stamina%s!", 
+				if (other->GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {					
+					other->GetOwner()->Message(Chat::MyPet, "The damage to your pet was reduced by %i (%i%%) by your Heroic Stamina!", 
 											   my_hit.original_damage - my_hit.damage_done,
-											   reduction_percentage, capped);
+											   reduction_percentage);
 				}
 			} else if (other->IsClient() && other->CastToClient()->GetAccountFlag("filter_hSTA") != "off") {
-				auto capped = other->GetDamageReductionCap() <= reduction_percentage ? " (CAPPED)" : "";
-				other->Message(Chat::OtherHitYou,"The damage to you was reduced by %i (%i%%) by your Heroic Stamina%s!", 
+				other->Message(Chat::OtherHitYou,"The damage to you was reduced by %i (%i%%) by your Heroic Stamina!", 
 							   my_hit.original_damage - my_hit.damage_done,
-							   reduction_percentage, capped);
+							   reduction_percentage);
 			}
 		}			
 	}
@@ -2420,18 +2418,16 @@ bool NPC::Attack(Mob* other, int Hand, bool bRiposte, bool IsStrikethrough, bool
 				int reduction_percentage = (1 - static_cast<float>(my_hit.damage_done) / static_cast<float>(my_hit.original_damage)) * 100;
 				if (other->GetOwner() && other->GetOwner()->IsClient()  && other->GetOwner()->CastToClient()->GetAccountFlag("filter_hSTA") != "off") {
 					if (other->GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
-						auto capped = other->GetOwner()->GetDamageReductionCap() <= reduction_percentage ? " (CAPPED)" : "";
-						other->GetOwner()->Message(Chat::MyPet, "The damage to your pet was reduced by %i (%i%%) by your Heroic Stamina%s!", 
-												my_hit.original_damage - my_hit.damage_done,
-												reduction_percentage, capped);
+						other->GetOwner()->Message(Chat::MyPet, "The damage to your pet was reduced by %i (%i%%) by your Heroic Stamina!", 
+											   	   my_hit.original_damage - my_hit.damage_done,
+											  	   reduction_percentage);
 					}
 				} else if (other->IsClient() && other->CastToClient()->GetAccountFlag("filter_hSTA") != "off") {
-					auto capped = other->GetDamageReductionCap() <= reduction_percentage ? " (CAPPED)" : "";
-					other->Message(Chat::OtherHitYou,"The damage to you was reduced by %i (%i%%) by your Heroic Stamina%s!", 
+					other->Message(Chat::OtherHitYou,"The damage to you was reduced by %i (%i%%) by your Heroic Stamina!", 
 								my_hit.original_damage - my_hit.damage_done,
-								reduction_percentage, capped);
+								reduction_percentage);
 				}
-			}				
+			}			
 		}
 
 	} else
