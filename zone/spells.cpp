@@ -4564,9 +4564,16 @@ bool Mob::SpellOnTarget(
 		Client* c = IsClient() ? CastToClient() : GetOwner()->CastToClient();
 
 		if (c && c->GetPet() && c->GetInv().HasItemEquippedByID(8495)) {
-			Mob* extraTar = (this == c->CastToClient()) ? GetPet() : this;
-			LogDebug("extraTar [{}]", extraTar->GetName());
-			SpellOnTarget(spell_id, extraTar, reflect_effectiveness, use_resist_adjust, resist_adjust, isproc, level_override, duration_override, disable_buff_overwrite, true);
+			LogDebug("Spell is eligible for mirroring.");
+			Mob* extratar = nullptr;
+			if (spelltar->GetClient()) {
+				extratar = spelltar->GetPet();
+			} else {
+				extratar = spelltar->GetOwner();
+			}
+
+			LogDebug("extraTar [{}]", extratar->GetName());
+			SpellOnTarget(spell_id, extratar, reflect_effectiveness, use_resist_adjust, resist_adjust, isproc, level_override, duration_override, disable_buff_overwrite, true);
 		}
 	}
 
