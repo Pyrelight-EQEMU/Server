@@ -4560,7 +4560,7 @@ bool Mob::SpellOnTarget(
 	// Pyrelight Custom Code
 	// Beastlord Epic Effect - Mirror spells between Pet and Owner
 
-	if ((spelltar->IsClient() || spelltar->IsPetOwnerClient()) && !is_mirror) {
+	if ((spelltar->IsClient() || spelltar->IsPetOwnerClient()) && IsBeneficialSpell(spell_id) && !IsPetSpell(spell_id) && !is_mirror) {
 		Client* c = IsClient() ? CastToClient() : GetOwner()->CastToClient();
 
 		if (c && c->GetPet() && c->GetInv().HasItemEquippedByID(8495)) {
