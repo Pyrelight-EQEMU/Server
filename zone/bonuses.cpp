@@ -6017,16 +6017,22 @@ void Mob::SetHeroicAgiBonuses(StatBonuses* n)
 
 void Mob::SetHeroicStaBonuses(StatBonuses* n)
 {
-	n->heroic_max_hp += GetHeroicSTA() * RuleR(Character, HeroicStaminaMultiplier) * 10;
-	n->heroic_hp_regen += GetHeroicSTA() * RuleR(Character, HeroicStaminaMultiplier) / 20;
-	n->heroic_max_end += GetHeroicSTA() * RuleR(Character, HeroicStaminaMultiplier) / 4 * 10.0f;
-	n->heroic_end_regen += GetHeroicSTA() * RuleR(Character, HeroicStaminaMultiplier) / 4 / 50;
+	Mob* hStatSource = this;
+
+	if (!IsClient() && IsPet() && GetOwner()) {
+		hStatSource = GetOwner();
+	}
+	
+	n->heroic_max_hp += hStatSource->GetHeroicSTA() * RuleR(Character, HeroicStaminaMultiplier) * 10;
+	n->heroic_hp_regen +=  hStatSource->GetHeroicSTA() * RuleR(Character, HeroicStaminaMultiplier) / 20;
+	n->heroic_max_end +=  hStatSource->GetHeroicSTA() * RuleR(Character, HeroicStaminaMultiplier) / 4 * 10.0f;
+	n->heroic_end_regen +=  hStatSource->GetHeroicSTA() * RuleR(Character, HeroicStaminaMultiplier) / 4 / 50;
 
 	if (RuleB(Character, HeroicStatsUseDataBucketsToScale)) {
-		n->heroic_max_hp += GetHeroicSTA() * CheckHeroicBonusesDataBuckets(HeroicBonusBucket::StaMaxHP) * 10;
-		n->heroic_hp_regen += GetHeroicSTA() * CheckHeroicBonusesDataBuckets(HeroicBonusBucket::StaHPRegen) / 20;
-		n->heroic_max_end += GetHeroicSTA() * CheckHeroicBonusesDataBuckets(HeroicBonusBucket::StaMaxEndurance) / 4 * 10.0f;
-		n->heroic_end_regen += GetHeroicSTA() * CheckHeroicBonusesDataBuckets(HeroicBonusBucket::StaEnduranceRegen) / 4 / 50;
+		n->heroic_max_hp +=  hStatSource->GetHeroicSTA() *  hStatSource->CheckHeroicBonusesDataBuckets(HeroicBonusBucket::StaMaxHP) * 10;
+		n->heroic_hp_regen +=  hStatSource->GetHeroicSTA() *  hStatSource->CheckHeroicBonusesDataBuckets(HeroicBonusBucket::StaHPRegen) / 20;
+		n->heroic_max_end +=  hStatSource->GetHeroicSTA() *  hStatSource->CheckHeroicBonusesDataBuckets(HeroicBonusBucket::StaMaxEndurance) / 4 * 10.0f;
+		n->heroic_end_regen +=  hStatSource->GetHeroicSTA() *  hStatSource->CheckHeroicBonusesDataBuckets(HeroicBonusBucket::StaEnduranceRegen) / 4 / 50;
 	}
 }
 
