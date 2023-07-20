@@ -4157,6 +4157,16 @@ void Mob::DoBuffTic(const Buffs_Struct &buff, int slot, Mob *caster)
 				caster->ResourceTap(-effect_value, buff.spellid);
 				effect_value = -effect_value;
 				Damage(caster, effect_value, buff.spellid, spell.skill, false, i, true);
+
+				// Pyrelight Custom Code
+				// Shaman Epic DoT->Heal Effect
+				if (caster->IsClient() && caster->GetClass() == SHAMAN && caster->GetInv().HasItemEquippedByID(10651)) {
+					caster->HealDamage(round(effect_value * 0.50), caster, buff.spellid);
+					if (caster->GetPet()) {
+						caster->GetPet()->HealDamage(round(effect_value * 0.50), caster, buff.spellid);
+					}
+				}
+
 			} else if (effect_value > 0) {
 				// Regen spell...
 				// handled with bonuses
