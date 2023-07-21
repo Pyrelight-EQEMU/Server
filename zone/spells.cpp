@@ -5016,7 +5016,13 @@ bool Mob::IsImmuneToSpell(uint16 spell_id, Mob *caster)
 			assert(effect_index >= 0);
 
 			// Pyrelight Custom - Ench Epic allows DC to work up to Caster Level.
-			int32 max_level_target = (caster && caster->IsClient() && caster->GetInv().HasItemEquippedByID(10650)) ? caster->GetLevel() : spells[spell_id].max_value[effect_index];
+			bool enchEpic = (caster && caster->IsClient() && caster->GetInv().HasItemEquippedByID(10650));
+			int max_level_target = spells[spell_id].max_value[effect_index];
+
+			if (enchEpic) {
+				max_level_target = spells[spell_id].no_resist == -1 ? caster->GetLevel() : max_level_target + 5;
+				
+			}
 
 			if(GetLevel() > max_level_target && max_level_target != 0)
 			{
