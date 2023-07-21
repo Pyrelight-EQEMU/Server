@@ -4462,6 +4462,7 @@ void Mob::BuffFadeBySlot(int slot, bool iRecalcBonuses)
 		CastToClient()->MakeBuffFadePacket(buffs[slot].spellid, slot);
 
 	LogSpells("Fading buff [{}] from slot [{}]", buffs[slot].spellid, slot);
+	LogDebug("Fading buff [{}] from slot [{}]", buffs[slot].spellid, slot);
 
 	const auto has_fade_event = parse->SpellHasQuestSub(buffs[slot].spellid, EVENT_SPELL_FADE);
 	std::string export_string = "";

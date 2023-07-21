@@ -4233,8 +4233,7 @@ bool Mob::SpellOnTarget(
 				level_override
 			);
 		}
-
-		/*
+		
 		// Pyrelight Custom Code		
 		if (RuleR(Character,Pyrelight_hCHA_ResistReroll) > 0) {
 			int effective_hCHA = 0;
@@ -4340,8 +4339,7 @@ bool Mob::SpellOnTarget(
 					loop_count++;				
 				}
 			}
-		}
-		*/	
+		}		
 
 		if (spell_effectiveness < 100) {
 			if (spell_effectiveness == 0 || !IsPartialResistableSpell(spell_id)) {
