@@ -785,6 +785,7 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 				}
 
 				caster->SetPet(this);
+				caster->SetPetID(this->GetID());
 				SetOwnerID(caster->GetID());
 				SetPetOrder(SPO_Follow);
 				SetAppearance(eaStanding);
