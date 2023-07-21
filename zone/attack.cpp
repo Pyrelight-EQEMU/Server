@@ -1713,7 +1713,10 @@ bool Mob::Attack(Mob* other, int Hand, bool bRiposte, bool IsStrikethrough, bool
 			other->CastToClient()->LoadAccountFlags();
 		} else if (other->GetOwner() && other->GetOwner()->IsClient()) {
 			other->GetOwner()->CastToClient()->LoadAccountFlags();
-		} 
+		}
+
+		LogDebug("Debugging Pet information. My Pet: [[]]", GetPet());
+
 		if ((IsClient() || IsPetOwnerClient()) && (my_hit.damage_done > my_hit.original_damage)) {				
 			int increase_percentage = ((static_cast<float>(my_hit.damage_done) / static_cast<float>(my_hit.original_damage)) - 1) * 100;
 			if (GetOwner() && GetOwner()->IsClient() && GetOwner()->CastToClient()->GetAccountFlag("filter_hSTR") != "off") {
