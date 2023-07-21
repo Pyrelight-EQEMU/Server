@@ -5348,6 +5348,8 @@ float Mob::ResistSpell(uint8 resist_type, uint16 spell_id, Mob *caster, bool use
 		float min_charmbreakchance = ((100.0f/static_cast<float>(RuleI(Spells, CharmBreakCheckChance)))/66.0f * 100.0f)*2.0f;
 		if (resist_chance < static_cast<int>(min_charmbreakchance))
 			resist_chance = min_charmbreakchance;
+
+		LogDebug("resist_chance: [{}]", resist_chance);
 	}
 
 	//Average root duration agianst mobs with 0% chance to resist on LIVE is ~ 22 ticks (6% resist chance).

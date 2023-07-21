@@ -836,8 +836,6 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 					}
 				}
 
-				LogDebug("Successfully Charmed This Mob");
-
 				break;
 			}
 
@@ -4079,8 +4077,7 @@ void Mob::BuffProcess()
 				// Pyrelight custom code
 				// We clear all debuffs from NPCs if they are not engaged in combat
 				int spellid = buffs[buffs_i].spellid;
-				if (!IsEngaged() && IsDetrimentalSpell(spellid) && (buffs[buffs_i].ticsremaining) > 0 
-				 && !IsCharmSpell(spellid) && !IsHarmonySpell(spellid) && !IsAllianceSpell(spellid) && !IsMesmerizeSpell(spellid)) {
+				if (!IsEngaged() && IsDetrimentalSpell(spellid) && (buffs[buffs_i].ticsremaining) > 0 && !IsCharmSpell(spellid) && !IsHarmonySpell(spellid) && !IsAllianceSpell(spellid) && !IsMesmerizeSpell(spellid)) {
 					LogDebug("Fading Buff: [{}]", spellid);
 					BuffFadeBySlot(buffs_i);
 				}
