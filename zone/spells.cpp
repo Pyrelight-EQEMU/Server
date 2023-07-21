@@ -4234,6 +4234,7 @@ bool Mob::SpellOnTarget(
 			);
 		}
 
+		/*
 		// Pyrelight Custom Code		
 		if (RuleR(Character,Pyrelight_hCHA_ResistReroll) > 0) {
 			int effective_hCHA = 0;
@@ -4339,7 +4340,8 @@ bool Mob::SpellOnTarget(
 					loop_count++;				
 				}
 			}
-		}		
+		}
+		*/	
 
 		if (spell_effectiveness < 100) {
 			if (spell_effectiveness == 0 || !IsPartialResistableSpell(spell_id)) {
@@ -4560,7 +4562,7 @@ bool Mob::SpellOnTarget(
 
 	// Pyrelight Custom Code
 	// Beastlord Epic Effect - Mirror spells between Pet and Owner
-
+	/*
 	if ((spelltar->IsClient() || spelltar->IsPetOwnerClient()) && IsBeneficialSpell(spell_id) && !IsPetSpell(spell_id) && !is_mirror) {
 		Client* c = IsClient() ? CastToClient() : GetOwner()->CastToClient();
 
@@ -4572,6 +4574,7 @@ bool Mob::SpellOnTarget(
 			SpellOnTarget(spell_id, extratar, reflect_effectiveness, use_resist_adjust, resist_adjust, isproc, level_override, duration_override, disable_buff_overwrite, true);
 		}
 	}
+	*/
 
 	return true;
 }
