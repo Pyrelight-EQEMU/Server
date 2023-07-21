@@ -3897,6 +3897,8 @@ void Mob::BuffProcess()
 	if (IsClient()) {
 		LogDebug("My Pet ID: [{}]", GetPetID() ? GetPetID() : 0);
 		LogDebug("My Pet Name: [{}]", GetPet() ? GetPet()->GetCleanName() : "NULL");
+		LogDebug("My Pet's Owner: [{}]", GetPet() ? (IsPetOwnerClient() ? "Pet Owner Is Client" : "Pet Owner Is Not Client") : "No Pet Found");
+
 	}
 
 
