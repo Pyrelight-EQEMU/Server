@@ -1715,7 +1715,9 @@ bool Mob::Attack(Mob* other, int Hand, bool bRiposte, bool IsStrikethrough, bool
 			other->GetOwner()->CastToClient()->LoadAccountFlags();
 		}
 
-		LogDebug("Debugging Pet information. My Pet: [[]]", GetPet());
+		if (GetPet()) {
+			LogDebug("Debugging Pet information. My Pet: [[]]", GetPet()->GetCleanName());
+		}
 
 		if ((IsClient() || IsPetOwnerClient()) && (my_hit.damage_done > my_hit.original_damage)) {				
 			int increase_percentage = ((static_cast<float>(my_hit.damage_done) / static_cast<float>(my_hit.original_damage)) - 1) * 100;
