@@ -5013,7 +5013,11 @@ bool Mob::IsImmuneToSpell(uint16 spell_id, Mob *caster)
 			// check level limit of charm spell
 			effect_index = GetSpellEffectIndex(spell_id, SE_Charm);
 			assert(effect_index >= 0);
-			if(GetLevel() > spells[spell_id].max_value[effect_index] && spells[spell_id].max_value[effect_index] != 0)
+
+			// Pyrelight Custom - Ench Epic allows DC to work up to Caster Level.
+			int32 max_level_target = (caster && caster->IsClient() && caster->GetInv().HasItemEquippedByID(10650)) ? caster->GetLevel() : spells[spell_id].max_value[effect_index];
+
+			if(GetLevel() > max_level_target && max_level_target != 0)
 			{
 				LogSpells("Our level ([{}]) is higher than the limit of this Charm spell ([{}])", GetLevel(), spells[spell_id].max_value[effect_index]);
 				caster->MessageString(Chat::Red, CANNOT_CHARM_YET);	// need to verify message type, not in MQ2Cast for easy look up<Paste>
