@@ -836,6 +836,8 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 					}
 				}
 
+				LogDebug("Successfully Charmed This Mob");
+
 				break;
 			}
 
