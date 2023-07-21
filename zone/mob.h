@@ -1067,7 +1067,7 @@ public:
 	inline int16 GetTempPetCount() const { return count_TempPet; }
 	inline void SetTempPetCount(int16 i) { count_TempPet = i; }
 	bool HasPetAffinity() { if (aabonuses.GivePetGroupTarget || itembonuses.GivePetGroupTarget || spellbonuses.GivePetGroupTarget) return true; return false; }
-	bool IsPetOwnerClient();
+	inline bool IsPetOwnerClient() const { return pet_owner_client; }
 	inline void SetPetOwnerClient(bool value) { pet_owner_client = value; }
 	inline bool IsPetOwnerNPC() const { return pet_owner_npc; }
 	inline void SetPetOwnerNPC(bool value) { pet_owner_npc = value; }

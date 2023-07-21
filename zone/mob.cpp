@@ -4464,10 +4464,6 @@ Mob* Mob::GetOwnerOrSelf() {
 	return this;
 }
 
-bool Mob::IsPetOwnerClient() {
-    return GetOwner() ? GetOwner()->IsClient() : false;
-}
-
 Mob* Mob::GetOwner() {
 	Mob* owner = entity_list.GetMob(GetOwnerID());
 	if (owner && owner->GetPetID() == GetID()) {
