@@ -3895,7 +3895,7 @@ void Mob::BuffProcess()
 {
 	// Debug pls remove
 	if (IsClient()) {
-		LogDebug("My Pet ID: [{}]", GetPetID() ? GetPetID() : "NULL");
+		LogDebug("My Pet ID: [{}]", GetPetID() ? GetPetID() : 0);
 	}
 
 
