@@ -785,7 +785,7 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 				}
 
 				caster->SetPet(this);
-				caster->SetPetID(this->GetID());
+				this->SetPetOwnerClient(caster->IsClient());
 				SetOwnerID(caster->GetID());
 				SetPetOrder(SPO_Follow);
 				SetAppearance(eaStanding);
@@ -4627,6 +4627,7 @@ void Mob::BuffFadeBySlot(int slot, bool iRecalcBonuses)
 				SendAppearancePacket(AT_Pet, 0, true, true);
 				Mob* owner = GetOwner();
 				SetOwnerID(0);
+				SetPetOwnerClient(false);
 				SetPetType(petNone);
 				SetHeld(false);
 				SetGHeld(false);
