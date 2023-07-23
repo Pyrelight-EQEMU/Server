@@ -3892,17 +3892,7 @@ snare has both of them negative, yet their range should work the same:
 
 
 void Mob::BuffProcess()
-{
-	// Debug pls remove
-	if (IsClient()) {
-		LogDebug("My Pet ID: [{}]", GetPetID() ? GetPetID() : 0);
-		LogDebug("My Pet Name: [{}]", GetPet() ? GetPet()->GetCleanName() : "NULL");
-		LogDebug("My Pet's Owner: [{}]", GetPet() ? (IsPetOwnerClient() ? "Pet Owner Is Client" : "Pet Owner Is Not Client") : "No Pet Found");
-
-	}
-
-
-
+{	
 	int buff_count = GetMaxTotalSlots();
 
 	for (int buffs_i = 0; buffs_i < buff_count; ++buffs_i)
