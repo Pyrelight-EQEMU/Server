@@ -1244,18 +1244,6 @@ void SharedDatabase::LoadItems(void *data, uint32 size, int32 items, uint32 max_
 			LogError("Database::LoadItems: {}", ex.what());
 			break;
 		}
-
-		// Make +1 Version
-
-		item.ID += 1000000;
-		item.Name = snprintf(item.Name, sizeof(item.Name), "%s + 1", item.Name);
-
-		try {
-			hash.insert(item.ID, item);
-		} catch (std::exception &ex) {
-			LogError("Database::LoadItems: {}", ex.what());
-			break;
-		}
 	}
 }
 
