@@ -48,7 +48,7 @@ namespace EQ
 
 	struct SayLinkBody_Struct {
 		uint8 action_id;		/* %1X */
-		uint64 item_id;			/* %05X */
+		uint32 item_id;			/* %05X */
 		uint32 augment_1;		/* %05X */
 		uint32 augment_2;		/* %05X */
 		uint32 augment_3;		/* %05X */
@@ -78,7 +78,7 @@ namespace EQ
 
 		// mainly for saylinks..but, not limited to
 		void SetProxyActionID(uint8 proxy_action_id) { m_LinkProxyStruct.action_id = proxy_action_id; } // should always be '0'
-		void SetProxyItemID(uint64 proxy_item_id) { m_LinkProxyStruct.item_id = proxy_item_id; }
+		void SetProxyItemID(uint32 proxy_item_id) { m_LinkProxyStruct.item_id = proxy_item_id; }
 		void SetProxyAugment1ID(uint32 proxy_augment_id) { m_LinkProxyStruct.augment_1 = proxy_augment_id; }
 		void SetProxyAugment2ID(uint32 proxy_augment_id) { m_LinkProxyStruct.augment_2 = proxy_augment_id; }
 		void SetProxyAugment3ID(uint32 proxy_augment_id) { m_LinkProxyStruct.augment_3 = proxy_augment_id; }

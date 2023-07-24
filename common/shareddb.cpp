@@ -43,6 +43,7 @@
 #include "repositories/faction_association_repository.h"
 #include "path_manager.h"
 #include "repositories/loottable_repository.h"
+#include "repositories/discovered_items_repository.h"
 
 namespace ItemField
 {
@@ -847,6 +848,7 @@ void SharedDatabase::GetItemsCount(int32 &item_count, uint32 &max_id)
 
 	if (row[0])
 		max_id = Strings::ToUnsignedInt(row[0]);
+		
 
 	if (row[1])
 		item_count = Strings::ToUnsignedInt(row[1]);

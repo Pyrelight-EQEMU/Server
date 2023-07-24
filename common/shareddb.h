@@ -46,7 +46,6 @@ struct LootDrop_Struct;
 
 namespace EQ
 {
-
 	struct ItemData;
 	class ItemInstance;
 	class InventoryProfile;
@@ -161,7 +160,6 @@ public:
 	const EvolveInfo *GetEvolveInfo(uint32 loregroup);
 	uint32 GetSharedItemsCount() { return m_shared_items_count; }
 	uint32 GetItemsCount();
-
 	/**
 	 * faction
 	 */

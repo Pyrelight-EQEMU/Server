@@ -8750,7 +8750,7 @@ void Client::Handle_OP_ItemLinkClick(const EQApplicationPacket *app)
 	const EQ::ItemData *item = database.GetItem(ivrs->item_id);
 	if (!item) {
 		if (ivrs->item_id != SAYLINK_ITEM_ID) {
-			Message(Chat::Red, "Error: The item for the link you have clicked on does not exist!");
+			Message(Chat::Red, "Error: The item for the link you have clicked on does not exist! [{}]", ivrs->item_id);
 			return;
 		}
 		// This new scheme will shuttle the ID in the first augment for non-silent links
