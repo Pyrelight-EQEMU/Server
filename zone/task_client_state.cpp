@@ -2258,18 +2258,19 @@ bool ClientTaskState::HasActiveSharedTask()
 
 void ClientTaskState::CreateTaskDynamicZone(Client* client, int task_id, DynamicZone& dz_request)
 {
+	LogDebug("Check 1");	
 	const auto task = task_manager->GetTaskData(task_id);
 	if (!task)
 	{
 		return;
 	}
-
+	LogDebug("Check 2");	
 	// dz should be named the version-based zone name (used in choose zone window and dz window on live)
 	auto zone_info = zone_store.GetZone(dz_request.GetZoneID(), dz_request.GetZoneVersion());
-	dz_request.SetName(zone_info->long_name.empty() ? task->title : zone_info->long_name);
+	dz_request.SetName("hello");
 	dz_request.SetMinPlayers(task->min_players);
 	dz_request.SetMaxPlayers(task->max_players);
-
+	LogDebug("Check 3");	
 	// a task might create a dz from an objective so override dz duration to time remaining
 	// live probably creates the dz with the shared task and just adds members for objectives
 	std::chrono::seconds seconds(TaskTimeLeft(task_id));
@@ -2282,7 +2283,7 @@ void ClientTaskState::CreateTaskDynamicZone(Client* client, int task_id, Dynamic
 	}
 
 	dz_request.SetDuration(static_cast<uint32_t>(seconds.count()));
-
+	LogDebug("Check 4");	
 	if (task->type == TaskType::Task || task->type == TaskType::Quest)
 	{
 		if (task->type == TaskType::Task) {
@@ -2297,11 +2298,12 @@ void ClientTaskState::CreateTaskDynamicZone(Client* client, int task_id, Dynamic
 	}
 	else if (task->type == TaskType::Shared)
 	{
+		LogDebug("Check 5");	
 		dz_request.SetType(DynamicZoneType::Mission);
 
 		// shared task missions are created in world
 		EQ::Net::DynamicPacket dyn_pack = dz_request.GetSerializedDzPacket();
-
+		LogDebug("Check 6");
 		auto pack_size = sizeof(ServerSharedTaskCreateDynamicZone_Struct) + dyn_pack.Length();
 		auto pack = std::make_unique<ServerPacket>(ServerOP_SharedTaskCreateDynamicZone, static_cast<uint32_t>(pack_size));
 		auto buf = reinterpret_cast<ServerSharedTaskCreateDynamicZone_Struct*>(pack->pBuffer);
