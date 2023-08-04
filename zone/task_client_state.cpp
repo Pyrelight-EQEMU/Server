@@ -2267,7 +2267,7 @@ void ClientTaskState::CreateTaskDynamicZone(Client* client, int task_id, Dynamic
 	LogDebug("Check 2");	
 	// dz should be named the version-based zone name (used in choose zone window and dz window on live)
 	auto zone_info = zone_store.GetZone(dz_request.GetZoneID(), dz_request.GetZoneVersion());
-	dz_request.SetName(zone_info->long_name.empty() ? task->title : zone_info->long_name);
+	dz_request.SetName("hello");
 	dz_request.SetMinPlayers(task->min_players);
 	dz_request.SetMaxPlayers(task->max_players);
 	LogDebug("Check 3");	
