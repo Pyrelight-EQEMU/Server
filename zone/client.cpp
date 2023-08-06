@@ -2181,7 +2181,7 @@ void Client::ReadBook(BookRequest_Struct *book) {
 
 			if(inst) {
 				out->type = inst->GetItem()->Book;
-				LogDebug("Book itemID: [{}]", inst->GetItem()->GetID());
+				LogDebug("Book itemID: [{}]", inst->GetID());
 			}
 			else
 				out->type = book->type;
