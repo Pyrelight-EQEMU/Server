@@ -2143,6 +2143,8 @@ void Client::ReadBook(BookRequest_Struct *book) {
 
 	if (content_db.GetItem(txtfileId)) {
 		LogDebug("Filename: [{}]", content_db.GetItem(txtfileId)->Filename);
+	} else {
+		LogDebug("Wasn't able to find item");
 	}
 /*
 	if(txtfile[0] == '0' && txtfile[1] == '\0') {
