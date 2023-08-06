@@ -4131,7 +4131,7 @@ std::string Client::GetDiscoverer(uint32 item_id) {
 		)
 	);
 	
-	if (l.empty()) { return; }
+	if (l.empty()) { return ''; }
 
 	return l[0].char_name;
 }
