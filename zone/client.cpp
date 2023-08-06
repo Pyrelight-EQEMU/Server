@@ -4123,7 +4123,7 @@ bool Client::IsDiscovered(uint32 item_id) {
 }
 
 std::string Client::GetDiscoverer(uint32 item_id) {
-	const auto& e = DiscoveredItemsRepository::GetWhere(
+	const auto& l = DiscoveredItemsRepository::GetWhere(
 		database,
 		fmt::format(
 			"item_id = {}",
@@ -4131,8 +4131,8 @@ std::string Client::GetDiscoverer(uint32 item_id) {
 		)
 	);
 	
-	if (e.item_id > 0) {
-		return e.char_name;
+	if (l.item_id > 0) {
+		return l.char_name;
 	}
 
 	return "";
