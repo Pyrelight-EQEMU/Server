@@ -2141,6 +2141,8 @@ void Client::ReadBook(BookRequest_Struct *book) {
 	char *txtfile = book->txtfile;
 
 	LogDebug("Dumping Packet: window: [{}], type: [{}], invslot: [{}], subslot: [{}], txtfile [{}]", book->window, book->type, book->invslot, book->subslot, book->txtfile);
+	LogDebug("Item Name: [{}]", database.GetItem(static_cast<uint32>(book->txtfile))->Name);
+	LogDebug("Discoverer Name: [{}]", this->GetDiscoverer(static_cast<uint32>(book->txtfile)));
 
 	if(txtfile[0] == '0' && txtfile[1] == '\0') {
 		//invalid book... coming up on non-book items.
@@ -4115,6 +4117,19 @@ bool Client::IsDiscovered(uint32 item_id) {
 	}
 
 	return true;
+}
+
+std::string Client::GetDiscoverer(uint32 item_id) {
+	// Call the FindOne method on the DiscoveredItems class, passing the item_id
+	DiscoveredItems discoveredItem = DiscoveredItems::FindOne(database, static_cast<int>(item_id));
+
+	// Check if the item was found
+	if (discoveredItem.item_id > 0) {
+		// Return the character name who discovered the item
+		return discoveredItem.char_name;
+	}
+
+	return ""; // Return an empty string if the item was not found
 }
 
 void Client::DiscoverItem(uint32 item_id) {
