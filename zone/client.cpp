@@ -2140,6 +2140,8 @@ void Client::ReadBook(BookRequest_Struct *book) {
 	int16 book_language=0;
 	char *txtfile = book->txtfile;
 
+	LogDebug("Dumping Packet: window: [{}], type: [{}], invslot: [{}], subslot: [{}], txtfile [{}]", book->window, book->type, book->invslot, book->subslot, book->txtfile);
+
 	if(txtfile[0] == '0' && txtfile[1] == '\0') {
 		//invalid book... coming up on non-book items.
 		return;
