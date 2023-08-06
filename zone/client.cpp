@@ -4123,7 +4123,13 @@ bool Client::IsDiscovered(uint32 item_id) {
 }
 
 std::string Client::GetDiscoverer(uint32 item_id) {
-	auto e = DiscoveredItemsRepository::FindOne(database, item_id);
+	const auto& e = DiscoveredItemsRepository::GetWhere(
+		database,
+		fmt::format(
+			"item_id = {}",
+			item_id
+		)
+	);
 	
 	if (e.item_id > 0) {
 		return e.char_name;
