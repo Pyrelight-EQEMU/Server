@@ -4131,13 +4131,10 @@ std::string Client::GetDiscoverer(uint32 item_id) {
 		)
 	);
 	
-	if (l.item_id > 0) {
-		return l.char_name;
-	}
+	if (l.empty()) { return; }
 
-	return "";
+	return l[0].char_name;
 }
-
 void Client::DiscoverItem(uint32 item_id) {
 	auto e = DiscoveredItemsRepository::NewEntity();
 
