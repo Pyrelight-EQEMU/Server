@@ -4124,7 +4124,7 @@ bool Client::IsDiscovered(uint32 item_id) {
 
 std::string Client::GetDiscoverer(uint32 item_id) {
 	// Call the FindOne method on the DiscoveredItems class, passing the item_id
-	auto discoveredItem = DiscoveredItems::FindOne(database, static_cast<int>(item_id));
+	auto discoveredItem = DiscoveredItemsRepository::FindOne(database, static_cast<int>(item_id));
 
 	// Check if the item was found
 	if (discoveredItem.item_id > 0) {
