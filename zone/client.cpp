@@ -2138,14 +2138,10 @@ void Client::SetGM(bool toggle) {
 
 void Client::ReadBook(BookRequest_Struct *book) {
 	int16 book_language=0;
+	uint32 txtfileId = static_cast<uint32>(std::stoul(book->txtfile));
 	char *txtfile = book->txtfile;
 
-	uint32 txtfileId = static_cast<uint32>(std::stoul(book->txtfile));
-
-
-	LogDebug("Dumping Packet: window: [{}], type: [{}], invslot: [{}], subslot: [{}], txtfile [{}]", book->window, book->type, book->invslot, book->subslot, book->txtfile);
-	LogDebug("Item Name: [{}]", database.GetItem(txtfileId)->Name);
-	LogDebug("Discoverer Name: [{}]", this->GetDiscoverer(txtfileId));
+	LogDebug("Filename: [{}]", content_db.GetItem(txtfileId)->Filename);
 
 	if(txtfile[0] == '0' && txtfile[1] == '\0') {
 		//invalid book... coming up on non-book items.
@@ -2154,6 +2150,8 @@ void Client::ReadBook(BookRequest_Struct *book) {
 
 	std::string booktxt2 = content_db.GetBook(txtfile, &book_language);
 	int length = booktxt2.length();
+
+	
 
 	if (booktxt2[0] != '\0') {
 #if EQDEBUG >= 6
