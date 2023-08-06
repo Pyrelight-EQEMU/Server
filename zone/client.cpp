@@ -2140,9 +2140,12 @@ void Client::ReadBook(BookRequest_Struct *book) {
 	int16 book_language=0;
 	char *txtfile = book->txtfile;
 
+	uint32 txtfileId = static_cast<uint32>(std::stoul(book->txtfile));
+
+
 	LogDebug("Dumping Packet: window: [{}], type: [{}], invslot: [{}], subslot: [{}], txtfile [{}]", book->window, book->type, book->invslot, book->subslot, book->txtfile);
-	LogDebug("Item Name: [{}]", database.GetItem(static_cast<uint32>(book->txtfile))->Name);
-	LogDebug("Discoverer Name: [{}]", this->GetDiscoverer(static_cast<uint32>(book->txtfile)));
+	LogDebug("Item Name: [{}]", database.GetItem(txtfileId)->Name);
+	LogDebug("Discoverer Name: [{}]", this->GetDiscoverer(txtfileId));
 
 	if(txtfile[0] == '0' && txtfile[1] == '\0') {
 		//invalid book... coming up on non-book items.
