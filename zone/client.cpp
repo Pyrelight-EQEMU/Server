@@ -2179,8 +2179,10 @@ void Client::ReadBook(BookRequest_Struct *book) {
 				inst = m_inv[read_from_slot];
 				}
 
-			if(inst)
+			if(inst) {
 				out->type = inst->GetItem()->Book;
+				LogDebug("Book itemID: [{}]", inst->GetItem()->GetID());
+			}
 			else
 				out->type = book->type;
 		}
@@ -2195,9 +2197,7 @@ void Client::ReadBook(BookRequest_Struct *book) {
 			if (m_pp.languages[book_language] < 100) {
 				GarbleMessage(out->booktext, (100 - m_pp.languages[book_language]));
 			}
-		}
-
-		LogDebug("Book itemID: [{}]", inst->GetItem()->GetID());
+		}	
 
 		QueuePacket(outapp);
 		safe_delete(outapp);
