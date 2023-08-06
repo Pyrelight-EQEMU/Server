@@ -2185,6 +2185,7 @@ void Client::ReadBook(BookRequest_Struct *book) {
 			}
 			else
 				out->type = book->type;
+				LogDebug("Book Type: [{}]", book->type);
 		}
 		else {
 			out->type = book->type;
