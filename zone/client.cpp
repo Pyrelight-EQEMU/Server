@@ -2141,8 +2141,10 @@ void Client::ReadBook(BookRequest_Struct *book) {
 	uint32 txtfileId = static_cast<uint32>(std::stoul(book->txtfile));
 	char *txtfile = book->txtfile;
 
-	LogDebug("Filename: [{}]", content_db.GetItem(txtfileId)->Filename);
-
+	if (content_db.GetItem(txtfileId)) {
+		LogDebug("Filename: [{}]", content_db.GetItem(txtfileId)->Filename);
+	}
+/*
 	if(txtfile[0] == '0' && txtfile[1] == '\0') {
 		//invalid book... coming up on non-book items.
 		return;
@@ -2208,6 +2210,7 @@ void Client::ReadBook(BookRequest_Struct *book) {
 		QueuePacket(outapp);
 		safe_delete(outapp);
 	}
+	*/
 }
 
 void Client::QuestReadBook(const char* text, uint8 type) {
