@@ -2197,6 +2197,8 @@ void Client::ReadBook(BookRequest_Struct *book) {
 			}
 		}
 
+		LogDebug("Book itemID: [{}]", inst->GetItem()->GetID());
+
 		QueuePacket(outapp);
 		safe_delete(outapp);
 	}
