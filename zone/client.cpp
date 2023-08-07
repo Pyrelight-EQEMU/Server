@@ -2147,17 +2147,10 @@ void Client::ReadBook(BookRequest_Struct *book) {
 		// This is fine.
 	}
 
-	if (database.GetItem(txtfileId)) {
-		LogDebug("Filename: [{}]", database.GetItem(txtfileId)->Filename);
-	} else {
-		LogDebug("Wasn't able to find item: [{}]", txtfileId);
-	}
-
 	if(txtfile[0] == '0' && txtfile[1] == '\0') {
 		//invalid book... coming up on non-book items.
 		return;
 	}
-
 	std::string booktxt2 = content_db.GetBook(txtfile, &book_language);
 	int length = booktxt2.length();	
 
@@ -2201,6 +2194,12 @@ void Client::ReadBook(BookRequest_Struct *book) {
 			out->type = book->type;
 		}
 		out->invslot = book->invslot;
+
+		std::string additionalText = "Additional text here.";
+		booktxt2 += additionalText; // Append additional text to the original string.
+
+		// Update the length to reflect the new size.
+		length = booktxt2.length();
 
 		memcpy(out->booktext, booktxt2.c_str(), length);
 
