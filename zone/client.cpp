@@ -2146,21 +2146,16 @@ void Client::ReadBook(BookRequest_Struct *book) {
 	} else {
 		LogDebug("Wasn't able to find item: [{}]", txtfileId);
 	}
-/*
+
 	if(txtfile[0] == '0' && txtfile[1] == '\0') {
 		//invalid book... coming up on non-book items.
 		return;
 	}
 
 	std::string booktxt2 = content_db.GetBook(txtfile, &book_language);
-	int length = booktxt2.length();
-
-	
+	int length = booktxt2.length();	
 
 	if (booktxt2[0] != '\0') {
-#if EQDEBUG >= 6
-		LogInfo("Client::ReadBook() textfile:[{}] Text:[{}]", txtfile, booktxt2.c_str());
-#endif
 		auto outapp = new EQApplicationPacket(OP_ReadBook, length + sizeof(BookText_Struct));
 
 		BookText_Struct *out = (BookText_Struct *) outapp->pBuffer;
@@ -2211,8 +2206,7 @@ void Client::ReadBook(BookRequest_Struct *book) {
 
 		QueuePacket(outapp);
 		safe_delete(outapp);
-	}
-	*/
+	}	
 }
 
 void Client::QuestReadBook(const char* text, uint8 type) {
