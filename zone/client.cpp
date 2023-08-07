@@ -2156,7 +2156,7 @@ void Client::ReadBook(BookRequest_Struct *book) {
 	if (book->type == 2 && txtfileId > 0) {
 		auto discover_charname = GetDiscoverer(txtfileId);
 		if (!discover_charname.empty()) {
-			booktxt2 = "Discovered by: " + discover_charname;
+			booktxt2 = "Discovered by: " + discover_charname + "\n";
 		}		
 	}
 
