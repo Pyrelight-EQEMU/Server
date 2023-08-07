@@ -2153,10 +2153,11 @@ void Client::ReadBook(BookRequest_Struct *book) {
 	}
 	std::string booktxt2 = content_db.GetBook(txtfile, &book_language);	
 
-	if (book->type == 2) {
-		LogDebug("Original booktext: [{}]", booktxt2.c_str());
-
-		booktxt2 = "Discovered by: ";
+	if (book->type == 2 && txtfileId > 0) {
+		auto discover_charname = GetDiscoverer(txtfileId);
+		if (!discover_charname.empty()) {
+			booktxt2 = "Discovered by: " + discover_charname;
+		}		
 	}
 
 	if (booktxt2[0] != '\0') {
