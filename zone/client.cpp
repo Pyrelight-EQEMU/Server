@@ -2137,6 +2137,13 @@ void Client::SetGM(bool toggle) {
 }
 
 void Client::ReadBook(BookRequest_Struct *book) {
+	if (book) {
+		LogDebug("Dumping struct: window: [{}], type: [{}], txtfile: [{}]", book->window, book->type, book->txtfile);
+	} else {
+		LogDebug("Passed nullptr instead of book struct");
+	}
+	
+	
 	int16 book_language=0;
 	uint32 txtfileId = static_cast<uint32>(std::stoul(book->txtfile));
 	char *txtfile = book->txtfile;
