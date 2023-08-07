@@ -2184,17 +2184,21 @@ void Client::ReadBook(BookRequest_Struct *book) {
 
 			if(inst) {
 				out->type = inst->GetItem()->Book;
-				LogDebug("Book itemID: [{}]", inst->GetID());
 			}
 			else {
 				out->type = book->type;
-				LogDebug("Book Type: [{}]", book->type);
 			}
 		}
 		else {
 			out->type = book->type;
 		}
+
 		out->invslot = book->invslot;
+
+		if (out->type == 2) {
+			LogDebug("We are an item info window, attempting to prepend some data.");
+			LogDebug("Original booktext: [{}]", booktxt2.c_str());
+		}
 
 		memcpy(out->booktext, booktxt2.c_str(), length);
 
