@@ -2137,16 +2137,15 @@ void Client::SetGM(bool toggle) {
 }
 
 void Client::ReadBook(BookRequest_Struct *book) {
-	if (book) {
-		LogDebug("Dumping struct: window: [{}], type: [{}], txtfile: [{}]", book->window, book->type, book->txtfile);
-	} else {
-		LogDebug("Passed nullptr instead of book struct");
-	}
-	
-	
-	int16 book_language=0;
-	uint32 txtfileId = static_cast<uint32>(std::stoul(book->txtfile));
+	int16  book_language = 0;	
+	uint32 txtfileId     = 0;
 	char *txtfile = book->txtfile;
+
+	try {
+		txtfileId = static_cast<uint32>(std::stoul(book->txtfile));
+	} catch (const std::exception& e) {
+		// This is fine.
+	}
 
 	if (database.GetItem(txtfileId)) {
 		LogDebug("Filename: [{}]", database.GetItem(txtfileId)->Filename);
