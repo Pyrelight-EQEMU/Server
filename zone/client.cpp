@@ -2186,20 +2186,15 @@ void Client::ReadBook(BookRequest_Struct *book) {
 				out->type = inst->GetItem()->Book;
 				LogDebug("Book itemID: [{}]", inst->GetID());
 			}
-			else
+			else {
 				out->type = book->type;
 				LogDebug("Book Type: [{}]", book->type);
+			}
 		}
 		else {
 			out->type = book->type;
 		}
 		out->invslot = book->invslot;
-
-		std::string additionalText = "Additional text here.";
-		booktxt2 += additionalText; // Append additional text to the original string.
-
-		// Update the length to reflect the new size.
-		length = booktxt2.length();
 
 		memcpy(out->booktext, booktxt2.c_str(), length);
 
