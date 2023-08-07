@@ -27,7 +27,7 @@ void command_discord(Client *c, const Seperator *sep)
             while (getline(userFile, line)) { 
                 LogDebug("Trying to load a line...");               
                 std::size_t sepPos = line.find(':');
-                if (sepPos != std::string::npos && sepPos != line.size()-1 && line.substr(0, sepPos).size() == 18) {
+                if (sepPos != std::string::npos && sepPos != line.size()-1) {
                     
                     auto discordID = line.substr(0, sepPos);
                     auto charName = line.substr(sepPos+1);
@@ -54,14 +54,14 @@ void command_discord(Client *c, const Seperator *sep)
         } else if (!strcasecmp(sep->arg[1], "claim")) {
             if (sep->argnum > 1) {
                 std::string userID(sep->arg[2]);
-                if (userID.size() == 18 && std::all_of(userID.begin(), userID.end(), ::isdigit)) {
+                if (std::all_of(userID.begin(), userID.end(), ::isdigit)) {
                     users[charName] = userID;
                     if (!DiscordWriteFile(users, filePath)) {
                         err = true;
                         c->Message(Chat::Red, "Unable to set Discord UserID.");
                     } else { c->Message(Chat::White, "Your Discord UserID is: %s", users[charName].c_str()); }                  
                 } else { 
-                    c->Message(Chat::White, "Invalid Discord UserID format. It should be exactly 18 numerical digits.");
+                    c->Message(Chat::White, "Invalid Discord UserID format.");
                     err = true; 
                 }
             } else { err = true; }
@@ -69,7 +69,7 @@ void command_discord(Client *c, const Seperator *sep)
             if (sep->argnum > 2) {
                 std::string userID(sep->arg[3]);
                 std::string charName(sep->arg[2]);
-                if (userID.size() == 18 && std::all_of(userID.begin(), userID.end(), ::isdigit)) {
+                if (std::all_of(userID.begin(), userID.end(), ::isdigit)) {
                     users[charName] = userID;
                     if (!DiscordWriteFile(users, filePath)) {
                         err = true;
@@ -84,7 +84,7 @@ void command_discord(Client *c, const Seperator *sep)
     } else { err = true; }
     
     if (err) {
-        c->Message(Chat::White,"Usage: #discord [list|claim <18-digit Discord ID>]");
+        c->Message(Chat::White,"Usage: #discord [list|claim <Discord ID>]");
     }
 }
 
