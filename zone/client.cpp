@@ -2141,8 +2141,8 @@ void Client::ReadBook(BookRequest_Struct *book) {
 	uint32 txtfileId = static_cast<uint32>(std::stoul(book->txtfile));
 	char *txtfile = book->txtfile;
 
-	if (content_db.GetItem(txtfileId)) {
-		LogDebug("Filename: [{}]", content_db.GetItem(txtfileId)->Filename);
+	if (database.GetItem(txtfileId)) {
+		LogDebug("Filename: [{}]", database.GetItem(txtfileId)->Filename);
 	} else {
 		LogDebug("Wasn't able to find item: [{}]", txtfileId);
 	}
