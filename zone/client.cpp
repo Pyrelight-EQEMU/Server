@@ -2151,14 +2151,19 @@ void Client::ReadBook(BookRequest_Struct *book) {
 		//invalid book... coming up on non-book items.
 		return;
 	}
-	std::string booktxt2 = content_db.GetBook(txtfile, &book_language);
+	std::string booktxt2 = content_db.GetBook(txtfile, &book_language);	
+
+	if (out->type == 2) {
+		LogDebug("Original booktext: [{}]", booktxt2.c_str());
+
+		booktxt2 = "Discovered by: ";
+	}
 
 	if (booktxt2[0] != '\0') {
-		auto outapp = new EQApplicationPacket(OP_ReadBook, length + sizeof(BookText_Struct));
+		auto outapp = new EQApplicationPacket(OP_ReadBook, booktxt2.length() + sizeof(BookText_Struct));
 
 		BookText_Struct *out = (BookText_Struct *) outapp->pBuffer;
 		out->window = book->window;
-
 
 		if (ClientVersion() >= EQ::versions::ClientVersion::SoF) {
 			// Find out what slot the book was read from.
@@ -2193,12 +2198,6 @@ void Client::ReadBook(BookRequest_Struct *book) {
 		}
 
 		out->invslot = book->invslot;
-
-		if (out->type == 2) {
-			LogDebug("Original booktext: [{}]", booktxt2.c_str());
-
-			booktxt2 = "Discovered by: ";
-		}
 
 		memcpy(out->booktext, booktxt2.c_str(), booktxt2.length());
 
