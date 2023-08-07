@@ -2152,7 +2152,6 @@ void Client::ReadBook(BookRequest_Struct *book) {
 		return;
 	}
 	std::string booktxt2 = content_db.GetBook(txtfile, &book_language);
-	int length = booktxt2.length();	
 
 	if (booktxt2[0] != '\0') {
 		auto outapp = new EQApplicationPacket(OP_ReadBook, length + sizeof(BookText_Struct));
@@ -2196,11 +2195,12 @@ void Client::ReadBook(BookRequest_Struct *book) {
 		out->invslot = book->invslot;
 
 		if (out->type == 2) {
-			LogDebug("We are an item info window, attempting to prepend some data.");
 			LogDebug("Original booktext: [{}]", booktxt2.c_str());
+
+			booktext2 = "Discovered by: ";
 		}
 
-		memcpy(out->booktext, booktxt2.c_str(), length);
+		memcpy(out->booktext, booktxt2.c_str(), booktxt2.length());
 
 		if (book_language > 0 && book_language < MAX_PP_LANGUAGE) {
 			if (m_pp.languages[book_language] < 100) {
