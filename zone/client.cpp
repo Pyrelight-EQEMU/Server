@@ -2197,7 +2197,7 @@ void Client::ReadBook(BookRequest_Struct *book) {
 		if (out->type == 2) {
 			LogDebug("Original booktext: [{}]", booktxt2.c_str());
 
-			booktext2 = "Discovered by: ";
+			booktxt2 = "Discovered by: ";
 		}
 
 		memcpy(out->booktext, booktxt2.c_str(), booktxt2.length());
