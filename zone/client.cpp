@@ -2153,7 +2153,7 @@ void Client::ReadBook(BookRequest_Struct *book) {
 	}
 	std::string booktxt2 = content_db.GetBook(txtfile, &book_language);	
 
-	if (out->type == 2) {
+	if (book->type == 2) {
 		LogDebug("Original booktext: [{}]", booktxt2.c_str());
 
 		booktxt2 = "Discovered by: ";
