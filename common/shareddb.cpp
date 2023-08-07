@@ -1207,7 +1207,6 @@ void SharedDatabase::LoadItems(void *data, uint32 size, int32 items, uint32 max_
 
 const EQ::ItemData *SharedDatabase::GetItem(uint32 id) const
 {
-	LogDebug("Passed ItemID: [{}], max_key: [{}]", id, items_hash->max_key());
 	if (id == 0) {
 		return nullptr;
 	}
