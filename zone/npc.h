@@ -309,6 +309,8 @@ public:
 	void	StartSwarmTimer(uint32 duration) { swarm_timer.Start(duration); }
 	void	DisableSwarmTimer() { swarm_timer.Disable(); }
 
+	virtual int32 GetHeroicSTR();
+
 	void AddLootDrop(
 		const EQ::ItemData *item2,
 		ItemList *itemlist,
