@@ -2704,9 +2704,9 @@ void NPC::ModifyNPCStat(const std::string& stat, const std::string& value)
 	}
 }
 
-int32 NPC::GetHeroicSTR() {
+int32 NPC::GetHeroicSTA() {
 	if (IsPet() && GetOwner()) {
-		return GetOwner()->GetHeroicSTR();
+		return GetOwner()->GetHeroicSTA();
 	} else {
 		return 0;
 	}
