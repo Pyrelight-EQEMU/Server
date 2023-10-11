@@ -601,7 +601,7 @@ public:
 	inline StatBonuses* GetSpellBonusesPtr() { return &spellbonuses; }
 	inline StatBonuses* GetAABonusesPtr() { return &aabonuses; }
 	inline virtual int32 GetHeroicSTR() const { return 0; }
-	inline virtual int32 GetHeroicSTA() { return GetOwner() ? GetOwner()->GetHeroicSTA() : 0; }
+	inline virtual int32 GetHeroicSTA() const { return 0; }
 	inline virtual int32 GetHeroicDEX() const { return 0; }
 	inline virtual int32 GetHeroicAGI() const { return 0; }
 	inline virtual int32 GetHeroicINT() const { return 0; }
