@@ -2150,8 +2150,8 @@ void Client::ReadBook(BookRequest_Struct *book) {
             itemID = static_cast<uint32>(std::stoul(txtfileString.substr(0, hashPosition)));
             bookString = txtfileString.substr(hashPosition + 1);
         } catch (const std::exception& e) {
-            // Failed to convert to uint, treat everything before # as a string.
-            bookString = txtfileString.substr(0, hashPosition);
+            // Failed to convert to uint, capture everything after the #
+            bookString = txtfileString.substr(hashPosition + 1);
         }
     } else {
         // No # found, try to interpret as uint first.
