@@ -2163,13 +2163,17 @@ void Client::ReadBook(BookRequest_Struct *book) {
         }
     }
 
-    std::string booktxt2 = content_db.GetBook(bookString.c_str(), &book_language);
+    std::string booktxt2;
+
+	if (!bookString.empty()) {
+		booktxt2 = content_db.GetBook(bookString.c_str(), &book_language);
+	}
 
     if (book->type == 2 && itemID > 0) {
         auto discover_charname = GetDiscoverer(itemID);
         if (!discover_charname.empty()) {
             // Append the discovery information to booktxt2
-            booktxt2 += "\nDiscovered by: " + discover_charname + "\n";
+            booktxt2 += "\r\nDiscovered by: " + discover_charname;
         }        
     }
 
