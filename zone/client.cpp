@@ -2173,7 +2173,7 @@ void Client::ReadBook(BookRequest_Struct *book) {
         auto discover_charname = GetDiscoverer(itemID);
         if (!discover_charname.empty()) {
             // Append the discovery information to booktxt2
-            booktxt2 += "\r\nDiscovered by: " + discover_charname;
+            booktxt2 += "<br>Discovered by: " + discover_charname;
         }        
     }
 
