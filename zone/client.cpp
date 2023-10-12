@@ -2137,28 +2137,41 @@ void Client::SetGM(bool toggle) {
 }
 
 void Client::ReadBook(BookRequest_Struct *book) {
-	int16  book_language = 0;	
-	uint32 txtfileId     = 0;
-	char *txtfile = book->txtfile;
+    int16 book_language = 0;    
+    char *txtfile = book->txtfile;
+    std::string txtfileString = txtfile;
+    uint32 itemID = 0; // itemID from custom data rider
+    std::string bookString; // Store the original charmfileID
 
-	try {
-		txtfileId = static_cast<uint32>(std::stoul(book->txtfile));
-	} catch (const std::exception& e) {
-		// This is fine.
-	}
+    // Check if # exists in the txtfile.
+    size_t hashPosition = txtfileString.find('#');
+    if (hashPosition != std::string::npos) {
+        try {
+            itemID = static_cast<uint32>(std::stoul(txtfileString.substr(0, hashPosition)));
+            bookString = txtfileString.substr(hashPosition + 1);
+        } catch (const std::exception& e) {
+            // Failed to convert to uint, treat everything before # as a string.
+            bookString = txtfileString.substr(0, hashPosition);
+        }
+    } else {
+        // No # found, try to interpret as uint first.
+        try {
+            itemID = static_cast<uint32>(std::stoul(txtfileString));
+        } catch (const std::exception& e) {
+            // Failed to convert to uint, treat the entire txtfile as a string.
+            bookString = txtfileString;
+        }
+    }
 
-	if(txtfile[0] == '0' && txtfile[1] == '\0') {
-		//invalid book... coming up on non-book items.
-		return;
-	}
-	std::string booktxt2 = content_db.GetBook(txtfile, &book_language);	
+    std::string booktxt2 = content_db.GetBook(bookString, &book_language);    
 
-	if (book->type == 2 && txtfileId > 0) {
-		auto discover_charname = GetDiscoverer(txtfileId);
-		if (!discover_charname.empty()) {
-			booktxt2 = "Discovered by: " + discover_charname + "\n";
-		}		
-	}
+    if (book->type == 2 && itemID > 0) {
+        auto discover_charname = GetDiscoverer(itemID);
+        if (!discover_charname.empty()) {
+            // Append the discovery information to booktxt2
+            booktxt2 += "\nDiscovered by: " + discover_charname + "\n";
+        }        
+    }
 
 	if (booktxt2[0] != '\0') {
 		auto outapp = new EQApplicationPacket(OP_ReadBook, booktxt2.length() + sizeof(BookText_Struct));

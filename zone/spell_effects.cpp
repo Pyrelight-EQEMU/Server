@@ -1361,7 +1361,7 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 					effect_value += caster->GetExtraSpellAmt(spell_id, itembonuses.HealAmt, effect_value);
 				
 				if (RuleR(Character, Pyrelight_hINT_RunePower) > 0 && (caster->IsClient() || caster->IsPetOwnerClient())) {
-					int effective_hINT = caster->GetOwner() ? round(RuleR(Character, Pyrelight_HeroicPetMod) * caster->GetOwner()->GetHeroicINT()) : caster->GetHeroicINT();
+					int effective_hINT = caster->GetOwner() ? round(RuleR(Character, Pyrelight_HeroicPetMod) * caster->GetOwner()->GetHeroicWIS()) : caster->GetHeroicWIS();
 					float bonus_ratio = effective_hINT * RuleR(Character, Pyrelight_hINT_RunePower) / 100;
 
 					if (RuleB(Character, Pyrelight_hStat_Randomize)) {
@@ -1382,11 +1382,11 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 						}
 
 						if (caster->IsClient() && caster->CastToClient()->GetAccountFlag("filter_hINT") != "off") {
-							caster->Message(Chat::Spells, "Your Heroic Intelligence has increased the power of your rune by %i (%i%%)!", abs(bonus_amount), static_cast<int>(bonus_ratio * 100));
+							caster->Message(Chat::Spells, "Your Heroic Wisdon has increased the power of your rune by %i (%i%%)!", abs(bonus_amount), static_cast<int>(bonus_ratio * 100));
 						} else if (caster->GetOwner() && caster->GetOwner()->IsClient() && 
-							caster->GetOwner()->CastToClient()->GetAccountFlag("filter_hINT") != "off" && 
+							caster->GetOwner()->CastToClient()->GetAccountFlag("filter_hWIS") != "off" && 
 							caster->GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
-							caster->GetOwner()->Message(Chat::Spells, "Your Heroic Intelligence has increased the power of your pet's rune by %i (%i%%)!", abs(bonus_amount), static_cast<int>(bonus_ratio * 100));
+							caster->GetOwner()->Message(Chat::Spells, "Your Heroic Wisdon has increased the power of your pet's rune by %i (%i%%)!", abs(bonus_amount), static_cast<int>(bonus_ratio * 100));
 						}
 					}
 				}
@@ -1402,7 +1402,7 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 					effect_value += caster->GetExtraSpellAmt(spell_id, itembonuses.HealAmt, effect_value);
 				
 				if (RuleR(Character, Pyrelight_hINT_RunePower) > 0 && (caster->IsClient() || caster->IsPetOwnerClient())) {
-					int effective_hINT = caster->GetOwner() ? round(RuleR(Character, Pyrelight_HeroicPetMod) * caster->GetOwner()->GetHeroicINT()) : caster->GetHeroicINT();
+					int effective_hINT = caster->GetOwner() ? round(RuleR(Character, Pyrelight_HeroicPetMod) * caster->GetOwner()->GetHeroicWIS()) : caster->GetHeroicWIS();
 					float bonus_ratio = effective_hINT * RuleR(Character, Pyrelight_hINT_RunePower) / 100;
 
 					if (RuleB(Character, Pyrelight_hStat_Randomize)) {
@@ -1423,11 +1423,11 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 						}
 
 						if (caster->IsClient() && caster->CastToClient()->GetAccountFlag("filter_hINT") != "off") {
-							caster->Message(Chat::Spells, "Your Heroic Intelligence has increased the power of your rune by %i (%i%%)!", abs(bonus_amount), static_cast<int>(bonus_ratio * 100));
+							caster->Message(Chat::Spells, "Your Heroic Wisdon has increased the power of your rune by %i (%i%%)!", abs(bonus_amount), static_cast<int>(bonus_ratio * 100));
 						} else if (caster->GetOwner() && caster->GetOwner()->IsClient() && 
-							caster->GetOwner()->CastToClient()->GetAccountFlag("filter_hINT") != "off" && 
+							caster->GetOwner()->CastToClient()->GetAccountFlag("filter_hWIS") != "off" && 
 							caster->GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
-							caster->GetOwner()->Message(Chat::Spells, "Your Heroic Intelligence has increased the power of your pet's rune by %i (%i%%)!", abs(bonus_amount), static_cast<int>(bonus_ratio * 100));
+							caster->GetOwner()->Message(Chat::Spells, "Your Heroic Wisdon has increased the power of your pet's rune by %i (%i%%)!", abs(bonus_amount), static_cast<int>(bonus_ratio * 100));
 						}
 					}
 				}
@@ -1445,7 +1445,7 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 					effect_value += caster->GetExtraSpellAmt(spell_id, itembonuses.HealAmt, effect_value);
 				
 				if (RuleR(Character, Pyrelight_hINT_RunePower) > 0 && (caster->IsClient() || caster->IsPetOwnerClient())) {
-					int effective_hINT = caster->GetOwner() ? round(RuleR(Character, Pyrelight_HeroicPetMod) * caster->GetOwner()->GetHeroicINT()) : caster->GetHeroicINT();
+					int effective_hINT = caster->GetOwner() ? round(RuleR(Character, Pyrelight_HeroicPetMod) * caster->GetOwner()->GetHeroicWIS()) : caster->GetHeroicWIS();
 					float bonus_ratio = effective_hINT * RuleR(Character, Pyrelight_hINT_RunePower) / 100;
 
 					if (RuleB(Character, Pyrelight_hStat_Randomize)) {
@@ -1468,9 +1468,9 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 						if (caster->IsClient() && caster->CastToClient()->GetAccountFlag("filter_hINT") != "off") {
 							caster->Message(Chat::Spells, "Your Heroic Intelligence has increased the power of your rune by %i (%i%%)!", abs(bonus_amount), static_cast<int>(bonus_ratio * 100));
 						} else if (caster->GetOwner() && caster->GetOwner()->IsClient() && 
-							caster->GetOwner()->CastToClient()->GetAccountFlag("filter_hINT") != "off" && 
+							caster->GetOwner()->CastToClient()->GetAccountFlag("filter_hWIS") != "off" && 
 							caster->GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
-							caster->GetOwner()->Message(Chat::Spells, "Your Heroic Intelligence has increased the power of your pet's rune by %i (%i%%)!", abs(bonus_amount), static_cast<int>(bonus_ratio * 100));
+							caster->GetOwner()->Message(Chat::Spells, "Your Heroic Wisdon has increased the power of your pet's rune by %i (%i%%)!", abs(bonus_amount), static_cast<int>(bonus_ratio * 100));
 						}
 					}
 				}
@@ -3941,7 +3941,7 @@ void Mob::BuffProcess()
 								int regen_amount = 0;								
 
 								if (RuleR(Character, Pyrelight_hINT_RunePower) > 0) {
-									int effective_hINT = caster->GetOwner() ? round(RuleR(Character, Pyrelight_HeroicPetMod) * caster->GetOwner()->GetHeroicINT()) : caster->GetHeroicINT();
+									int effective_hINT = caster->GetOwner() ? round(RuleR(Character, Pyrelight_HeroicPetMod) * caster->GetOwner()->GetHeroicWIS()) : caster->GetHeroicWIS();
 									bonus_ratio = effective_hINT * RuleR(Character, Pyrelight_hINT_RunePower) / 100;
 									int bonus_amount = round(max_rune * bonus_ratio);
 									max_rune += bonus_amount;
@@ -3976,7 +3976,7 @@ void Mob::BuffProcess()
 								int regen_amount = 0;								
 
 								if (RuleR(Character, Pyrelight_hINT_RunePower) > 0) {
-									int effective_hINT = caster->GetOwner() ? round(RuleR(Character, Pyrelight_HeroicPetMod) * caster->GetOwner()->GetHeroicINT()) : caster->GetHeroicINT();
+									int effective_hINT = caster->GetOwner() ? round(RuleR(Character, Pyrelight_HeroicPetMod) * caster->GetOwner()->GetHeroicWIS()) : caster->GetHeroicWIS();
 									bonus_ratio = effective_hINT * RuleR(Character, Pyrelight_hINT_RunePower) / 100;
 									int bonus_amount = round(max_rune * bonus_ratio);
 									max_rune += bonus_amount;
@@ -4011,7 +4011,7 @@ void Mob::BuffProcess()
 								int regen_amount = 0;								
 
 								if (RuleR(Character, Pyrelight_hINT_RunePower) > 0) {
-									int effective_hINT = caster->GetOwner() ? round(RuleR(Character, Pyrelight_HeroicPetMod) * caster->GetOwner()->GetHeroicINT()) : caster->GetHeroicINT();
+									int effective_hINT = caster->GetOwner() ? round(RuleR(Character, Pyrelight_HeroicPetMod) * caster->GetOwner()->GetHeroicWIS()) : caster->GetHeroicWIS();
 									bonus_ratio = effective_hINT * RuleR(Character, Pyrelight_hINT_RunePower) / 100;
 									int bonus_amount = round(max_rune * bonus_ratio);
 									max_rune += bonus_amount;
