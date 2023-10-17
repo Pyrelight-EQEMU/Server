@@ -262,7 +262,7 @@ bool QuestParserCollection::ItemHasQuestSub(EQ::ItemInstance *itm, QuestEventID 
 
 	// Now, let's extract the second serialized data if it exists
 	size_t delimiterPos = item_script.find('#');
-
+d
 	if (delimiterPos != std::string::npos) {
 		// The '#' delimiter exists, so we want the part after it
 		item_script = item_script.substr(delimiterPos + 1);
