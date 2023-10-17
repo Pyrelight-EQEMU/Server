@@ -253,8 +253,18 @@ bool QuestParserCollection::ItemHasQuestSub(EQ::ItemInstance *itm, QuestEventID 
 	if(itm->GetItem()->ScriptFileID != 0) {
 		item_script = "script_";
 		item_script += std::to_string(itm->GetItem()->ScriptFileID);
-	} else if(strlen(itm->GetItem()->CharmFile) > 0) {
-		item_script = itm->GetItem()->CharmFile;
+	} else if (strlen(itm->GetItem()->CharmFile) > 0) {
+		char* charmFile = itm->GetItem()->CharmFile;
+		
+		char* delimiterPos = strchr(charmFile, '#'); // Locate the position of first '#'
+		
+		if (delimiterPos != nullptr) {
+			// The '#'' delimiter exists, so the desired string starts after it
+			item_script = delimiterPos + 1; 
+		} else {
+			// No '#' found, so we'll use the entire string
+			item_script = charmFile;
+		}	
 	} else {
 		item_script = std::to_string(itm->GetID());
 	}
