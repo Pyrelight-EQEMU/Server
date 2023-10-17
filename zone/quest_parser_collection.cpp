@@ -269,8 +269,6 @@ bool QuestParserCollection::ItemHasQuestSub(EQ::ItemInstance *itm, QuestEventID 
 	}
 	// If there's no '#', item_script remains unchanged.
 
-	LogDebug("ItemScript: []", item_script);
-
 	uint32 item_id = itm->GetID();
 	auto iter = _item_quest_status.find(item_id);
 	if(iter != _item_quest_status.end()) {
