@@ -22,7 +22,6 @@
 #include "../common/global_define.h"
 #include "../common/item_instance.h"
 #include "../common/rulesys.h"
-#include "../common/skills.h"
 #include "../common/spdat.h"
 #include "../common/data_verification.h"
 #include "../common/misc_functions.h"
@@ -147,9 +146,10 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 		if (spells[spell_id].hit_number > 0) {
 
 			int numhit = spells[spell_id].hit_number;
-
-			numhit += numhit * caster->GetFocusEffect(focusFcLimitUse, spell_id) / 100;
-			numhit += caster->GetFocusEffect(focusIncreaseNumHits, spell_id);
+			if (caster) {
+				numhit += numhit * caster->GetFocusEffect(focusFcLimitUse, spell_id) / 100;
+				numhit += caster->GetFocusEffect(focusIncreaseNumHits, spell_id);
+			}
 			buffs[buffslot].hit_number = numhit;
 		}
 
@@ -207,16 +207,16 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 		}
 	}
 
-	if(IsVirusSpell(spell_id)) {
-
+	if (IsVirusSpell(spell_id) && buffslot > -1) {
 		if (!viral_timer.Enabled()) {
 			viral_timer.Start(1000);
 		}
-		buffs[buffslot].virus_spread_time = zone->random.Int(GetViralMinSpreadTime(spell_id), GetViralMaxSpreadTime(spell_id));
+
+		buffs[buffslot].virus_spread_time = zone->random.Int(GetSpellViralMinimumSpreadTime(spell_id), GetSpellViralMaximumSpreadTime(spell_id));
 	}
 
 
-	if (!IsPowerDistModSpell(spell_id))
+	if (!IsDistanceModifierSpell(spell_id))
 		SetSpellPowerDistanceMod(0);
 
 	bool spell_trigger_cast_complete = false; //Used with SE_Spell_Trigger and SE_Chance_Best_in_Spell_Grp, true when spell has been triggered.
@@ -262,7 +262,7 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 				// SE_CurrentHP is calculated at first tick if its a dot/buff
 				if (buffslot >= 0) {
 					//This is here so dots with hit counters tic down on initial cast.
-					if (effect_value < 0) {
+					if (caster && effect_value < 0) {
 						caster->GetActDoTDamage(spell_id, effect_value, this, false);
 					}
 					break;
@@ -303,8 +303,9 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 				else if(dmg > 0) {
 					//healing spell...
 
-					if(caster)
+					if(caster) {
 						dmg = caster->GetActSpellHealing(spell_id, dmg, this);
+					}
 
 					HealDamage(dmg, caster);
 				}
@@ -410,8 +411,9 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 					if (spell.max_value[i] && val > spell.max_value[i])
 						val = spell.max_value[i];
 
-					if(caster)
+					if(caster) {
 						val = caster->GetActSpellHealing(spell_id, val, this);
+					}
 				}
 
 				if (val < 0)
@@ -783,6 +785,7 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 				}
 
 				caster->SetPet(this);
+				this->SetPetOwnerClient(caster->IsClient());
 				SetOwnerID(caster->GetID());
 				SetPetOrder(SPO_Follow);
 				SetAppearance(eaStanding);
@@ -818,20 +821,20 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 
 				// define spells with fixed duration
 				// charm spells with -1 in field 209 are all of fixed duration, so lets use that instead of spell_ids
-				if(spells[spell_id].no_resist)
+				if (spells[spell_id].no_resist) {
 					bBreak = true;
-
-				if (!bBreak)
-				{
-					int resistMod = static_cast<int>(partial) + (GetCHA()/25);
-					resistMod = resistMod > 100 ? 100 : resistMod;
-					buffs[buffslot].ticsremaining = resistMod * buffs[buffslot].ticsremaining / 100;
 				}
 
-				if (IsClient() || IsBot())
-				{
-					if(buffs[buffslot].ticsremaining > RuleI(Character, MaxCharmDurationForPlayerCharacter))
+				if (buffslot > -1) {
+					if (!bBreak) {
+						int resistMod = static_cast<int>(partial) + (GetCHA() / 25);
+						resistMod = resistMod > 100 ? 100 : resistMod;
+						buffs[buffslot].ticsremaining = resistMod * buffs[buffslot].ticsremaining / 100;
+					}
+
+					if (IsOfClientBot() && buffs[buffslot].ticsremaining > RuleI(Character, MaxCharmDurationForPlayerCharacter)) {
 						buffs[buffslot].ticsremaining = RuleI(Character, MaxCharmDurationForPlayerCharacter);
+					}
 				}
 
 				break;
@@ -886,8 +889,7 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 #ifdef SPELL_EFFECT_SPAM
 				snprintf(effect_desc, _EDLEN, "Fear: %+i", effect_value);
 #endif
-				if (IsClient() || IsBot())
-				{
+				if (IsOfClientBot() && buffslot > -1) {
 					if (buffs[buffslot].ticsremaining > RuleI(Character, MaxFearDurationForPlayerCharacter)) {
 						buffs[buffslot].ticsremaining = RuleI(Character, MaxFearDurationForPlayerCharacter);
 					}
@@ -901,13 +903,11 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 					}
 
 					CalculateNewFearpoint();
-					if (currently_fleeing)
-					{
+					if (currently_fleeing) {
 						break;
 					}
 				}
-				else
-				{
+				else if (buffslot > -1) {
 					Stun(buffs[buffslot].ticsremaining * 6000 - (6000 - tic_timer.GetRemainingTime()));
 				}
 				break;
@@ -1311,8 +1311,9 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 #ifdef SPELL_EFFECT_SPAM
 				snprintf(effect_desc, _EDLEN, "Invulnerability");
 #endif
-				if(spell_id==4789) // Touch of the Divine - Divine Save
-					buffs[buffslot].ticsremaining = spells[spell_id].buff_duration; // Prevent focus/aa buff extension
+				if (spell_id == 4789 && buffslot > -1) { // Touch of the Divine - Divine Save
+					buffs[buffslot].ticsremaining = spells[spell_id].buff_duration;
+				} // Prevent focus/aa buff extension
 
 				SetInvul(true);
 				break;
@@ -1337,7 +1338,7 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 				snprintf(effect_desc, _EDLEN, "Blind: %+i", effect_value);
 #endif
 				// 'cure blind'
-				if (BeneficialSpell(spell_id) && spells[spell_id].buff_duration == 0) {
+				if (IsBeneficialSpell(spell_id) && spells[spell_id].buff_duration == 0) {
 					int buff_count = GetMaxBuffSlots();
 					for (int slot = 0; slot < buff_count; slot++) {
 						if (IsValidSpell(buffs[slot].spellid) && IsEffectInSpell(buffs[slot].spellid, SE_Blind)) {
@@ -1356,39 +1357,126 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 
 			case SE_Rune:
 			{
-#ifdef SPELL_EFFECT_SPAM
-				snprintf(effect_desc, _EDLEN, "Melee Absorb Rune: %+i", effect_value);
-#endif
 				if (RuleB(Spells, RuneUseHealAmt) && (IsClient() || IsBot()))
-					effect_value += GetExtraSpellAmt(spell_id, itembonuses.HealAmt, effect_value);
+					effect_value += caster->GetExtraSpellAmt(spell_id, itembonuses.HealAmt, effect_value);
+				
+				if (RuleR(Character, Pyrelight_hINT_RunePower) > 0 && (caster->IsClient() || caster->IsPetOwnerClient())) {
+					int effective_hINT = caster->GetOwner() ? round(RuleR(Character, Pyrelight_HeroicPetMod) * caster->GetOwner()->GetHeroicWIS()) : caster->GetHeroicWIS();
+					float bonus_ratio = effective_hINT * RuleR(Character, Pyrelight_hINT_RunePower) / 100;
+
+					if (RuleB(Character, Pyrelight_hStat_Randomize)) {
+						bonus_ratio *= zone->random.Real(1 - RuleR(Character, Pyrelight_hStat_RandomizationFactor), 1 + RuleR(Character, Pyrelight_hStat_RandomizationFactor));
+					}
+
+					int bonus_amount = round(effect_value * bonus_ratio);
+
+					LogDebug("effective_hINT: [{}], bonus_ratio: [{}], bonus_amount: [{}]", effective_hINT, bonus_ratio, bonus_amount);
+
+					effect_value += bonus_amount;
+
+					if (effective_hINT > 0) {
+						if (caster->IsClient()) {
+							caster->CastToClient()->LoadAccountFlags(); 
+						} else if (caster->GetOwner() && caster->GetOwner()->IsClient()) {
+							caster->GetOwner()->CastToClient()->LoadAccountFlags();
+						}
+
+						if (caster->IsClient() && caster->CastToClient()->GetAccountFlag("filter_hINT") != "off") {
+							caster->Message(Chat::Spells, "Your Heroic Wisdon has increased the power of your rune by %i (%i%%)!", abs(bonus_amount), static_cast<int>(bonus_ratio * 100));
+						} else if (caster->GetOwner() && caster->GetOwner()->IsClient() && 
+							caster->GetOwner()->CastToClient()->GetAccountFlag("filter_hWIS") != "off" && 
+							caster->GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
+							caster->GetOwner()->Message(Chat::Spells, "Your Heroic Wisdon has increased the power of your pet's rune by %i (%i%%)!", abs(bonus_amount), static_cast<int>(bonus_ratio * 100));
+						}
+					}
+				}
 
 				buffs[buffslot].melee_rune = effect_value;
+				Message(Chat::Spells, "%s has applied a %i point melee rune to protect you!", caster->GetCleanName(), effect_value);
 				break;
 			}
 
 			case SE_AbsorbMagicAtt:
 			{
-#ifdef SPELL_EFFECT_SPAM
-				snprintf(effect_desc, _EDLEN, "Spell Absorb Rune: %+i", effect_value);
-#endif
 				if (RuleB(Spells, RuneUseHealAmt) && (IsClient() || IsBot()))
-                                        effect_value += GetExtraSpellAmt(spell_id, itembonuses.HealAmt, effect_value);
+					effect_value += caster->GetExtraSpellAmt(spell_id, itembonuses.HealAmt, effect_value);
+				
+				if (RuleR(Character, Pyrelight_hINT_RunePower) > 0 && (caster->IsClient() || caster->IsPetOwnerClient())) {
+					int effective_hINT = caster->GetOwner() ? round(RuleR(Character, Pyrelight_HeroicPetMod) * caster->GetOwner()->GetHeroicWIS()) : caster->GetHeroicWIS();
+					float bonus_ratio = effective_hINT * RuleR(Character, Pyrelight_hINT_RunePower) / 100;
 
-				if(effect_value > 0)
-					buffs[buffslot].magic_rune = effect_value;
+					if (RuleB(Character, Pyrelight_hStat_Randomize)) {
+						bonus_ratio *= zone->random.Real(1 - RuleR(Character, Pyrelight_hStat_RandomizationFactor), 1 + RuleR(Character, Pyrelight_hStat_RandomizationFactor));
+					}
 
+					int bonus_amount = round(effect_value * bonus_ratio);
+
+					LogDebug("effective_hINT: [{}], bonus_ratio: [{}], bonus_amount: [{}]", effective_hINT, bonus_ratio, bonus_amount);
+
+					effect_value += bonus_amount;
+
+					if (effective_hINT > 0) {
+						if (caster->IsClient()) {
+							caster->CastToClient()->LoadAccountFlags(); 
+						} else if (caster->GetOwner() && caster->GetOwner()->IsClient()) {
+							caster->GetOwner()->CastToClient()->LoadAccountFlags();
+						}
+
+						if (caster->IsClient() && caster->CastToClient()->GetAccountFlag("filter_hINT") != "off") {
+							caster->Message(Chat::Spells, "Your Heroic Wisdon has increased the power of your rune by %i (%i%%)!", abs(bonus_amount), static_cast<int>(bonus_ratio * 100));
+						} else if (caster->GetOwner() && caster->GetOwner()->IsClient() && 
+							caster->GetOwner()->CastToClient()->GetAccountFlag("filter_hWIS") != "off" && 
+							caster->GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
+							caster->GetOwner()->Message(Chat::Spells, "Your Heroic Wisdon has increased the power of your pet's rune by %i (%i%%)!", abs(bonus_amount), static_cast<int>(bonus_ratio * 100));
+						}
+					}
+				}
+
+				buffs[buffslot].magic_rune = effect_value;
+				Message(Chat::Spells, "%s has applied a %i point magic rune to protect you!", caster->GetCleanName(), effect_value);
 				break;
-			}
+			}			
 
 			case SE_MitigateMeleeDamage:
 			{
-				if (RuleB(Spells, RuneUseHealAmt) && (IsClient() || IsBot())) {
-					int mv = spells[spell_id].max_value[i];
-                                        mv += GetExtraSpellAmt(spell_id, itembonuses.HealAmt, mv);
-					buffs[buffslot].melee_rune = mv;
-				} else {
-					buffs[buffslot].melee_rune = spells[spell_id].max_value[i];
+				effect_value = spells[spell_id].max_value[i];
+
+				if (RuleB(Spells, RuneUseHealAmt) && (IsClient() || IsBot()))
+					effect_value += caster->GetExtraSpellAmt(spell_id, itembonuses.HealAmt, effect_value);
+				
+				if (RuleR(Character, Pyrelight_hINT_RunePower) > 0 && (caster->IsClient() || caster->IsPetOwnerClient())) {
+					int effective_hINT = caster->GetOwner() ? round(RuleR(Character, Pyrelight_HeroicPetMod) * caster->GetOwner()->GetHeroicWIS()) : caster->GetHeroicWIS();
+					float bonus_ratio = effective_hINT * RuleR(Character, Pyrelight_hINT_RunePower) / 100;
+
+					if (RuleB(Character, Pyrelight_hStat_Randomize)) {
+						bonus_ratio *= zone->random.Real(1 - RuleR(Character, Pyrelight_hStat_RandomizationFactor), 1 + RuleR(Character, Pyrelight_hStat_RandomizationFactor));
+					}
+
+					int bonus_amount = round(effect_value * bonus_ratio);
+
+					LogDebug("effective_hINT: [{}], bonus_ratio: [{}], bonus_amount: [{}]", effective_hINT, bonus_ratio, bonus_amount);
+
+					effect_value += bonus_amount;
+
+					if (effective_hINT > 0) {
+						if (caster->IsClient()) {
+							caster->CastToClient()->LoadAccountFlags(); 
+						} else if (caster->GetOwner() && caster->GetOwner()->IsClient()) {
+							caster->GetOwner()->CastToClient()->LoadAccountFlags();
+						}
+
+						if (caster->IsClient() && caster->CastToClient()->GetAccountFlag("filter_hINT") != "off") {
+							caster->Message(Chat::Spells, "Your Heroic Intelligence has increased the power of your rune by %i (%i%%)!", abs(bonus_amount), static_cast<int>(bonus_ratio * 100));
+						} else if (caster->GetOwner() && caster->GetOwner()->IsClient() && 
+							caster->GetOwner()->CastToClient()->GetAccountFlag("filter_hWIS") != "off" && 
+							caster->GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
+							caster->GetOwner()->Message(Chat::Spells, "Your Heroic Wisdon has increased the power of your pet's rune by %i (%i%%)!", abs(bonus_amount), static_cast<int>(bonus_ratio * 100));
+						}
+					}
 				}
+
+				buffs[buffslot].melee_rune = effect_value;
+				Message(Chat::Spells, "%s has applied a %i point partial (%i%%) rune to protect you!", caster->GetCleanName(), effect_value, spells[spell_id].base_value[i]);
 				break;
 			}
 
@@ -1442,9 +1530,11 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 
 			case SE_DistanceRemoval:
 			{
-				buffs[buffslot].caston_x = int(GetX());
-				buffs[buffslot].caston_y = int(GetY());
-				buffs[buffslot].caston_z = int(GetZ());
+				if (buffslot > -1) {
+					buffs[buffslot].caston_x = int(GetX());
+					buffs[buffslot].caston_y = int(GetY());
+					buffs[buffslot].caston_z = int(GetZ());
+				}
 				break;
 			}
 
@@ -1474,7 +1564,9 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 							caster->spellbonuses.UnfailingDivinity;
 				}
 
-				buffs[buffslot].ExtraDIChance = mod;
+				if (buffslot > -1) {
+					buffs[buffslot].ExtraDIChance = mod;
+				}
   				break;
  			}
 
@@ -1504,6 +1596,7 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 						for (int x = EQ::textures::textureBegin; x <= EQ::textures::LastTintableTexture; x++)
 							caster->SendWearChange(x);
 				}
+				break;
 			}
 
 			case SE_WipeHateList:
@@ -1734,7 +1827,7 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 #endif
 				rooted = true;
 
-				if (caster){
+				if (caster && buffslot > -1) {
 					buffs[buffslot].RootBreakChance = caster->aabonuses.RootBreakChance +
 													caster->itembonuses.RootBreakChance +
 													caster->spellbonuses.RootBreakChance;
@@ -1791,7 +1884,7 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 							gid = r->GetGroup(caster->GetName());
 							if(gid < 11)
 							{
-								if(r->GetGroup(TargetClient->GetName()) != gid) {
+								if (TargetClient && r->GetGroup(TargetClient->GetName()) != gid) {
 									Message(Chat::Red, "Your target must be a group member for this spell.");
 									break;
 								}
@@ -1842,7 +1935,7 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 			{
 				if (IsClient()) {
 					Client* client_target = CastToClient();
-					if (client_target->IsGrouped()) {
+					if (client_target && client_target->IsGrouped()) {
 						Group* group = client_target->GetGroup();
 						if (!group->IsGroupMember(caster)) {
 							if (caster != this) {
@@ -1855,7 +1948,7 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 							Raid *raid = caster->GetRaid();
 							uint32 group_id = raid->GetGroup(caster->GetName());
 							if (group_id > 0 && group_id < MAX_RAID_GROUPS) {
-								if (raid->GetGroup(client_target->GetName()) != group_id) {
+								if (client_target && raid->GetGroup(client_target->GetName()) != group_id) {
 									caster->MessageString(Chat::Red, SUMMON_ONLY_GROUP_CORPSE);
 									break;
 								}
@@ -1897,7 +1990,7 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 #ifdef SPELL_EFFECT_SPAM
 				snprintf(effect_desc, _EDLEN, "Weapon Proc: %s (id %d)", spells[effect_value].name, procid);
 #endif
-				AddProcToWeapon(procid, false, 100 + spells[spell_id].limit_value[i], spell_id, caster_level, GetProcLimitTimer(spell_id, ProcType::MELEE_PROC));
+				AddProcToWeapon(procid, false, 100 + spells[spell_id].limit_value[i], spell_id, caster_level, GetSpellProcLimitTimer(spell_id, ProcType::MELEE_PROC));
 				break;
 			}
 
@@ -1907,7 +2000,7 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 #ifdef SPELL_EFFECT_SPAM
 				snprintf(effect_desc, _EDLEN, "Ranged Proc: %+i", effect_value);
 #endif
-				AddRangedProc(procid, 100 + spells[spell_id].limit_value[i], spell_id, GetProcLimitTimer(spell_id, ProcType::RANGED_PROC));
+				AddRangedProc(procid, 100 + spells[spell_id].limit_value[i], spell_id, GetSpellProcLimitTimer(spell_id, ProcType::RANGED_PROC));
 				break;
 			}
 
@@ -1917,7 +2010,7 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 #ifdef SPELL_EFFECT_SPAM
 				snprintf(effect_desc, _EDLEN, "Defensive Proc: %s (id %d)", spells[effect_value].name, procid);
 #endif
-				AddDefensiveProc(procid, 100 + spells[spell_id].limit_value[i], spell_id, GetProcLimitTimer(spell_id, ProcType::DEFENSIVE_PROC));
+				AddDefensiveProc(procid, 100 + spells[spell_id].limit_value[i], spell_id, GetSpellProcLimitTimer(spell_id, ProcType::DEFENSIVE_PROC));
 				break;
 			}
 
@@ -2220,6 +2313,8 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 						if (RuleR(Spells, CallOfTheHeroAggroClearDist) == 0 || caster->CalculateDistance(GetX(), GetY(), GetZ()) >= RuleR(Spells, CallOfTheHeroAggroClearDist)) {
 							entity_list.ClearAggro(this);
 						}
+					} else if (!RuleB(Combat, SummonMeleeRange) && caster->GetZoneID() == GetZoneID() && caster->CombatRange(this)) {
+						break;
 					}
 
 					CastToClient()->MovePC(zone->GetZoneID(), zone->GetInstanceID(), caster->GetX(),
@@ -2495,8 +2590,9 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 					Damage(caster, dmg, spell_id, spell.skill, false, buffslot, false);
 				} else if(dmg > 0) {
 					//healing spell...
-					if(caster)
+					if(caster) {
 						dmg = caster->GetActSpellHealing(spell_id, dmg, this);
+					}
 					HealDamage(dmg, caster);
 				}
 #ifdef SPELL_EFFECT_SPAM
@@ -2994,10 +3090,10 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 				if (caster && !caster->IsClient())
 					break;
 
-				if (zone->random.Roll(spells[spell_id].base_value[i])) {
+				if (caster && zone->random.Roll(spells[spell_id].base_value[i])) {
 					uint32 best_spell_id = caster->CastToClient()->GetHighestScribedSpellinSpellGroup(spells[spell_id].limit_value[i]);
 
-					if (caster && IsValidSpell(best_spell_id))
+					if (IsValidSpell(best_spell_id))
 						caster->SpellFinished(best_spell_id, this, EQ::spells::CastingSlot::Item, 0, -1, spells[best_spell_id].resist_difficulty);
 				}
 				break;
@@ -3067,9 +3163,9 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 						int shield_target_mitigation = spells[spell_id].limit_value[i] ? spells[spell_id].limit_value[i] : 50;
 						int shielder_mitigation      = spells[spell_id].max_value[i] ? spells[spell_id].limit_value[i] : 50;
 						ShieldAbility(petowner->GetID(), 25, shield_duration, shield_target_mitigation, shielder_mitigation);
-						break;
 					}
 				}
+				break;
 			}
 
 			case SE_Weapon_Stance: {
@@ -3428,7 +3524,7 @@ int64 Mob::CalcSpellEffectValue(uint16 spell_id, int effect_id, int caster_level
 
 	// this doesn't actually need to be a song to get mods, just the right skill
 	if (EQ::skills::IsBardInstrumentSkill(spells[spell_id].skill)
-		&& IsInstrumentModAppliedToSpellEffect(spell_id, spells[spell_id].effect_id[effect_id])) {
+		&& IsInstrumentModifierAppliedToSpellEffect(spell_id, spells[spell_id].effect_id[effect_id])) {
 			oval = effect_value;
 			effect_value = effect_value * static_cast<int>(instrument_mod) / 10;
 			LogSpells("Effect value [{}] altered with bard modifier of [{}] to yeild [{}]",
@@ -3796,7 +3892,7 @@ snare has both of them negative, yet their range should work the same:
 
 
 void Mob::BuffProcess()
-{
+{	
 	int buff_count = GetMaxTotalSlots();
 
 	for (int buffs_i = 0; buffs_i < buff_count; ++buffs_i)
@@ -3819,6 +3915,7 @@ void Mob::BuffProcess()
 							
 					// Pyrelight Custom Code	
 					// We pause the timers on buffs that we or our group members cast, as long as those are spells they own
+					// Also do buff scaling with fake item here
 					if (!spells[buffs[buffs_i].spellid].short_buff_box && (IsClient() || (IsPet() && IsPetOwnerClient()))) {
 						Client* client = GetOwnerOrSelf()->CastToClient();
 						Client* caster = entity_list.GetClientByName(buffs[buffs_i].caster_name);
@@ -3836,10 +3933,116 @@ void Mob::BuffProcess()
 								suspended = true;
 							}
 
+							// Regenerate Runes
+							if (suspended && IsEffectInSpell(buffs[buffs_i].spellid, SE_Rune)) {
+								int max_rune = CalcSpellEffectValue(buffs[buffs_i].spellid, GetSpellEffectIndex(buffs[buffs_i].spellid, SE_Rune), caster->GetLevel(), 10, caster);
+								float bonus_ratio = 1;
+								LogDebug("base max_rune: [{}]", max_rune);
+								int regen_amount = 0;								
+
+								if (RuleR(Character, Pyrelight_hINT_RunePower) > 0) {
+									int effective_hINT = caster->GetOwner() ? round(RuleR(Character, Pyrelight_HeroicPetMod) * caster->GetOwner()->GetHeroicWIS()) : caster->GetHeroicWIS();
+									bonus_ratio = effective_hINT * RuleR(Character, Pyrelight_hINT_RunePower) / 100;
+									int bonus_amount = round(max_rune * bonus_ratio);
+									max_rune += bonus_amount;
+									LogDebug("modified max_rune: [{}]", max_rune);
+								}
+
+								if (buffs[buffs_i].melee_rune < max_rune) {
+									if (CastToClient()->CanFastRegen()) {										
+										regen_amount = max_rune;
+									} else {
+										regen_amount = round(max_rune/50.0 * bonus_ratio * ((buffs[buffs_i].melee_rune < round(max_rune*0.1)) ? 2 : 1));
+									}										
+								}
+
+								if (regen_amount > 0 && buffs[buffs_i].melee_rune < max_rune) {
+									buffs[buffs_i].melee_rune += regen_amount;
+									if (buffs[buffs_i].melee_rune > max_rune) {
+										buffs[buffs_i].melee_rune = max_rune;
+									}
+									if (IsClient()) {
+										Message(Chat::Spells, "Your %s has regenerated! (%i/%i)", spells[buffs[buffs_i].spellid].name, buffs[buffs_i].melee_rune, max_rune);
+									} else if (IsPet() && GetOwner()) {
+										GetOwner()->Message(Chat::Spells, "Your pet's %s has regenerated! (%i/%i)", spells[buffs[buffs_i].spellid].name, buffs[buffs_i].melee_rune, max_rune);
+									}
+								}
+							}
+
+							if (suspended && IsEffectInSpell(buffs[buffs_i].spellid, SE_AbsorbMagicAtt)) {
+								int max_rune = CalcSpellEffectValue(buffs[buffs_i].spellid, GetSpellEffectIndex(buffs[buffs_i].spellid, SE_AbsorbMagicAtt), caster->GetLevel(), 10, caster);
+								float bonus_ratio = 1;
+								LogDebug("base max_rune: [{}]", max_rune);
+								int regen_amount = 0;								
+
+								if (RuleR(Character, Pyrelight_hINT_RunePower) > 0) {
+									int effective_hINT = caster->GetOwner() ? round(RuleR(Character, Pyrelight_HeroicPetMod) * caster->GetOwner()->GetHeroicWIS()) : caster->GetHeroicWIS();
+									bonus_ratio = effective_hINT * RuleR(Character, Pyrelight_hINT_RunePower) / 100;
+									int bonus_amount = round(max_rune * bonus_ratio);
+									max_rune += bonus_amount;
+									LogDebug("modified max_rune: [{}]", max_rune);
+								}
+
+								if (buffs[buffs_i].magic_rune < max_rune) {
+									if (CastToClient()->CanFastRegen()) {
+										regen_amount = max_rune;
+									} else {
+										regen_amount = round(max_rune/50.0 * bonus_ratio * ((buffs[buffs_i].melee_rune < round(max_rune*0.1)) ? 2 : 1));
+									}										
+								}
+
+								if (regen_amount > 0 && buffs[buffs_i].magic_rune < max_rune) {
+									buffs[buffs_i].magic_rune += regen_amount;
+									if (buffs[buffs_i].magic_rune > max_rune) {
+										buffs[buffs_i].magic_rune = max_rune;
+									}
+									if (IsClient()) {
+										Message(Chat::Spells, "Your %s has regenerated! (%i/%i)", spells[buffs[buffs_i].spellid].name, buffs[buffs_i].magic_rune, max_rune);
+									} else if (IsPet() && GetOwner()) {
+										GetOwner()->Message(Chat::Spells, "Your pet's %s has regenerated! (%i/%i)", spells[buffs[buffs_i].spellid].name, buffs[buffs_i].magic_rune, max_rune);
+									}
+								}
+							}
+
+							if (suspended && IsEffectInSpell(buffs[buffs_i].spellid, SE_MitigateMeleeDamage)) {
+								int max_rune = spells[buffs[buffs_i].spellid].max_value[GetSpellEffectIndex(buffs[buffs_i].spellid, SE_MitigateMeleeDamage)];
+								float bonus_ratio = 1;
+								LogDebug("base max_rune: [{}]", max_rune);
+								int regen_amount = 0;								
+
+								if (RuleR(Character, Pyrelight_hINT_RunePower) > 0) {
+									int effective_hINT = caster->GetOwner() ? round(RuleR(Character, Pyrelight_HeroicPetMod) * caster->GetOwner()->GetHeroicWIS()) : caster->GetHeroicWIS();
+									bonus_ratio = effective_hINT * RuleR(Character, Pyrelight_hINT_RunePower) / 100;
+									int bonus_amount = round(max_rune * bonus_ratio);
+									max_rune += bonus_amount;
+									LogDebug("modified max_rune: [{}]", max_rune);
+								}
+
+								if (buffs[buffs_i].melee_rune < max_rune) {
+									if (CastToClient()->CanFastRegen()) {										
+										regen_amount = max_rune;
+									} else {
+										regen_amount = round(max_rune/100.0 * bonus_ratio * ((buffs[buffs_i].melee_rune < round(max_rune*0.1)) ? 2 : 1));
+									}										
+								}
+
+								if (regen_amount > 0 && buffs[buffs_i].melee_rune < max_rune) {
+									buffs[buffs_i].melee_rune += regen_amount;
+									if (buffs[buffs_i].melee_rune > max_rune) {
+										buffs[buffs_i].melee_rune = max_rune;
+									}
+									if (IsClient()) {
+										Message(Chat::Spells, "Your %s has regenerated! (%i/%i)", spells[buffs[buffs_i].spellid].name, buffs[buffs_i].melee_rune, max_rune);
+									} else if (IsPet() && GetOwner()) {
+										GetOwner()->Message(Chat::Spells, "Your pet's %s has regenerated! (%i/%i)", spells[buffs[buffs_i].spellid].name, buffs[buffs_i].melee_rune, max_rune);
+									}
+								}
+							}
+
 							if (IsPet() && GetOwner()) {
 								SendPetBuffsToClient();
 							}
-						}							
+						}					
 					}
 
 					if (!suspended) { 
@@ -3875,8 +4078,7 @@ void Mob::BuffProcess()
 				// Pyrelight custom code
 				// We clear all debuffs from NPCs if they are not engaged in combat
 				int spellid = buffs[buffs_i].spellid;
-				if (!IsEngaged() && IsDetrimentalSpell(spellid) && (buffs[buffs_i].ticsremaining) > 0 
-				 && !IsCharmSpell(spellid) && !IsHarmonySpell(spellid) && !IsAllianceSpellLine(spellid) && !IsMezSpell(spellid)) {
+				if (!IsEngaged() && IsDetrimentalSpell(spellid) && (buffs[buffs_i].ticsremaining) > 0 && !IsCharmSpell(spellid) && !IsHarmonySpell(spellid) && !IsAllianceSpell(spellid) && !IsMesmerizeSpell(spellid)) {
 					LogDebug("Fading Buff: [{}]", spellid);
 					BuffFadeBySlot(buffs_i);
 				}
@@ -3955,6 +4157,16 @@ void Mob::DoBuffTic(const Buffs_Struct &buff, int slot, Mob *caster)
 				caster->ResourceTap(-effect_value, buff.spellid);
 				effect_value = -effect_value;
 				Damage(caster, effect_value, buff.spellid, spell.skill, false, i, true);
+
+				// Pyrelight Custom Code
+				// Shaman Epic DoT->Heal Effect
+				if (caster->IsClient() && caster->GetClass() == SHAMAN && caster->GetInv().HasItemEquippedByID(10651)) {
+					caster->HealDamage(round(effect_value * 0.50), caster, buff.spellid);
+					if (caster->GetPet()) {
+						caster->GetPet()->HealDamage(round(effect_value * 0.50), caster, buff.spellid);
+					}
+				}
+
 			} else if (effect_value > 0) {
 				// Regen spell...
 				// handled with bonuses
@@ -4025,7 +4237,7 @@ void Mob::DoBuffTic(const Buffs_Struct &buff, int slot, Mob *caster)
 		}
 
 		case SE_WipeHateList: {
-			if (IsMezSpell(buff.spellid)) {
+			if (IsMesmerizeSpell(buff.spellid)) {
 				break;
 			}
 
@@ -4120,7 +4332,7 @@ void Mob::DoBuffTic(const Buffs_Struct &buff, int slot, Mob *caster)
 		case SE_InterruptCasting: {
 			if (IsCasting()) {
 				const auto &spell = spells[casting_spell_id];
-				if (!IgnoreCastingRestriction(spell.id) && zone->random.Roll(spells[buff.spellid].base_value[i])) {
+				if (!IsCastNotStandingSpell(spell.id) && zone->random.Roll(spells[buff.spellid].base_value[i])) {
 					InterruptSpell();
 				}
 			}
@@ -4250,6 +4462,7 @@ void Mob::BuffFadeBySlot(int slot, bool iRecalcBonuses)
 		CastToClient()->MakeBuffFadePacket(buffs[slot].spellid, slot);
 
 	LogSpells("Fading buff [{}] from slot [{}]", buffs[slot].spellid, slot);
+	LogDebug("Fading buff [{}] from slot [{}]", buffs[slot].spellid, slot);
 
 	const auto has_fade_event = parse->SpellHasQuestSub(buffs[slot].spellid, EVENT_SPELL_FADE);
 	std::string export_string = "";
@@ -4404,6 +4617,7 @@ void Mob::BuffFadeBySlot(int slot, bool iRecalcBonuses)
 				SendAppearancePacket(AT_Pet, 0, true, true);
 				Mob* owner = GetOwner();
 				SetOwnerID(0);
+				SetPetOwnerClient(false);
 				SetPetType(petNone);
 				SetHeld(false);
 				SetGHeld(false);
@@ -4429,7 +4643,7 @@ void Mob::BuffFadeBySlot(int slot, bool iRecalcBonuses)
 								for (unsigned int j = 0; j < buff_count; j++) {
 									if (IsValidSpell(tar->GetBuffs()[j].spellid)) {
 										auto spell = spells[tar->GetBuffs()[j].spellid];
-										if (spell.good_effect == 0 && IsEffectInSpell(spell.id, SE_CurrentHP) && tar->GetBuffs()[j].casterid == GetID()) {
+										if (spell.good_effect == DETRIMENTAL_EFFECT && IsEffectInSpell(spell.id, SE_CurrentHP) && tar->GetBuffs()[j].casterid == GetID()) {
 											tar->BuffFadeBySpellID(spell.id);
 										}
 									}
@@ -4443,7 +4657,7 @@ void Mob::BuffFadeBySlot(int slot, bool iRecalcBonuses)
 						for (unsigned int j = 0; j < buff_count; j++) {
 							if (IsValidSpell(GetBuffs()[j].spellid )) {
 								auto spell = spells[GetBuffs()[j].spellid];
-								if (spell.good_effect == 0 && IsEffectInSpell(spell.id, SE_CurrentHP)) {
+								if (spell.good_effect == DETRIMENTAL_EFFECT && IsEffectInSpell(spell.id, SE_CurrentHP)) {
 									BuffFadeBySpellID(spell.id);
 								}
 							}
@@ -4545,9 +4759,9 @@ void Mob::BuffFadeBySlot(int slot, bool iRecalcBonuses)
 					if (flee_mode) {
 						currently_fleeing = true;
 						CheckFlee();
-						break;
 					}
 				}
+				break;
 			}
 
 			case SE_BindSight:
@@ -4586,6 +4800,7 @@ void Mob::BuffFadeBySlot(int slot, bool iRecalcBonuses)
 					}
 					CastToClient()->SetControlledMobId(0);
 				}
+				break;
 			}
 
 			case SE_Weapon_Stance:
@@ -4850,7 +5065,7 @@ int64 Mob::CalcAAFocus(focusType type, const AA::Rank &rank, uint16 spell_id)
 					LimitInclude[IncludeExistsSELimitEffect] = true;
 					// they use 33 here for all classes ... unsure if the type check is really needed
 					if (base_value == SE_SummonPet && type == focusReagentCost) {
-						if (IsSummonPetSpell(spell_id) || IsSummonSkeletonSpell(spell_id)) {
+						if (IsPetSpell(spell_id)) {
 							LimitInclude[IncludeFoundSELimitEffect] = true;
 						}
 					}
@@ -5250,8 +5465,8 @@ int64 Mob::CalcAAFocus(focusType type, const AA::Rank &rank, uint16 spell_id)
 						value        = 0;
 						LimitFailure = true;
 					}
-					break;
 				}
+				break;
 
 			case SE_FcSpellVulnerability:
 				if (type == focusSpellVulnerability) {
@@ -6327,7 +6542,7 @@ bool Mob::TryTriggerOnCastProc(uint16 focusspellid, uint16 spell_id, uint16 proc
 			return true;
 		}
 		// Edge cases where proc spell does not require a target such as PBAE, allows proc to still occur even if target potentially dead. Live spells exist with PBAE procs.
-		else if (!SpellRequiresTarget(proc_spellid)) {
+		else if (!IsTargetRequiredForSpell(proc_spellid)) {
 			SpellFinished(proc_spellid, this, EQ::spells::CastingSlot::Item, 0, -1, spells[proc_spellid].resist_difficulty);
 			return true;
 		}
@@ -8159,8 +8374,8 @@ bool Mob::PassCastRestriction(int value)
 				return true;
 			break;
 
-		case IS_OFF_HAND_EQUIPED:
-			if (HasShieldEquiped() || CanThisClassDualWield())
+		case IS_OFF_HAND_EQUIPPED:
+			if (HasShieldEquipped() || CanThisClassDualWield())
 				return true;
 			break;
 
@@ -9368,7 +9583,7 @@ void Mob::SendCastRestrictionMessage(int requirement_id, bool target_requirement
 	case IS_HP_UNDER_50_PCT:
 		Message(Chat::Red, fmt::format("{}  This target must be at oe below 50 pct of its maximum hit points.", msg).c_str());
 		break;
-	case IS_OFF_HAND_EQUIPED:
+	case IS_OFF_HAND_EQUIPPED:
 		Message(Chat::Red, fmt::format("{} You must be wielding a weapon or shield in your offhand to use this ability.", msg).c_str());
 		break;
 	case HAS_NO_PACT_OF_FATE_RECOURSE_BUFF:
@@ -9673,7 +9888,7 @@ void Mob::CastSpellOnLand(Mob* caster, int32 spell_id)
 
 void Mob::CalcSpellPowerDistanceMod(uint16 spell_id, float range, Mob* caster)
 {
-	if (IsPowerDistModSpell(spell_id)){
+	if (IsDistanceModifierSpell(spell_id)){
 
 		float distance = 0;
 
@@ -10024,7 +10239,7 @@ void Mob::VirusEffectProcess()
 			}
 
 			if (buffs[buffs_i].virus_spread_time <= 0) {
-				buffs[buffs_i].virus_spread_time = zone->random.Int(GetViralMinSpreadTime(buffs[buffs_i].spellid), GetViralMaxSpreadTime(buffs[buffs_i].spellid));
+				buffs[buffs_i].virus_spread_time = zone->random.Int(GetSpellViralMinimumSpreadTime(buffs[buffs_i].spellid), GetSpellViralMaximumSpreadTime(buffs[buffs_i].spellid));
 				SpreadVirusEffect(buffs[buffs_i].spellid, buffs[buffs_i].casterid, buffs[buffs_i].ticsremaining);
 				stop_timer = false;
 			}
@@ -10047,7 +10262,7 @@ void Mob::SpreadVirusEffect(int32 spell_id, uint32 caster_id, int32 buff_tics_re
 	std::vector<Mob *> targets_in_range = entity_list.GetTargetsForVirusEffect(
 		this,
 		caster,
-		GetViralSpreadRange(spell_id),
+		GetSpellViralSpreadRange(spell_id),
 		spells[spell_id].pcnpc_only_flag,
 		spell_id
 	);

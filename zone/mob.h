@@ -209,8 +209,8 @@ public:
 	int compute_defense();
 	int GetTotalDefense(); // compute_defense + spell bonuses
 	bool CheckHitChance(Mob* attacker, DamageHitInfo &hit);
-	void TryCriticalHit(Mob *defender, DamageHitInfo &hit, ExtraAttackOptions *opts = nullptr);
-	void TryPetCriticalHit(Mob *defender, DamageHitInfo &hit);
+	bool TryCriticalHit(Mob *defender, DamageHitInfo &hit, ExtraAttackOptions *opts = nullptr);
+	bool TryPetCriticalHit(Mob *defender, DamageHitInfo &hit);
 	virtual bool TryFinishingBlow(Mob *defender, int64 &damage);
 	int TryHeadShot(Mob* defender, EQ::skills::SkillType skillInUse);
 	int TryAssassinate(Mob* defender, EQ::skills::SkillType skillInUse);
@@ -236,6 +236,7 @@ public:
 	void DoMainHandAttackRounds(Mob *target, ExtraAttackOptions *opts = nullptr);
 	void DoOffHandAttackRounds(Mob *target, ExtraAttackOptions *opts = nullptr);
 	virtual bool CheckDoubleAttack();
+	int GetDamageReductionCap();
 	// inline process for places where we need to do them outside of the AI_Process
 	void ProcessAttackRounds(Mob *target, ExtraAttackOptions *opts = nullptr)
 	{
@@ -362,7 +363,8 @@ public:
 		bool isproc = false,
 		int level_override = -1,
 		int duration_override = 0,
-		bool disable_buff_overwrite = false
+		bool disable_buff_overwrite = false,
+		bool is_mirror = false
 	);
 	virtual bool SpellEffect(Mob* caster, uint16 spell_id, float partial = 100, int level_override = -1, int reflect_effectiveness = 0, int32 duration_override = 0, bool disable_buff_overwrite = false);
 	virtual bool DetermineSpellTargets(uint16 spell_id, Mob *&spell_target, Mob *&ae_center,
@@ -394,7 +396,7 @@ public:
 	int16 GetItemSlotToConsumeCharge(int32 spell_id, uint32 inventory_slot);
 	bool CheckItemRaceClassDietyRestrictionsOnCast(uint32 inventory_slot);
 	bool IsFromTriggeredSpell(EQ::spells::CastingSlot slot, uint32 item_slot = 0xFFFFFFFF);
-	Mob* GetImpliedTarget(Mob* otarget, uint32 spell_id, int depth = 0, Mob* original_otarget = nullptr);
+	Mob* GetImpliedTarget(Mob* target, uint32 spell_id);
 
 	//Bard
 	bool ApplyBardPulse(int32 spell_id, Mob *spell_target, EQ::spells::CastingSlot slot);
@@ -422,7 +424,7 @@ public:
 	void BuffModifyDurationBySpellID(uint16 spell_id, int32 newDuration);
 	int AddBuff(Mob *caster, const uint16 spell_id, int duration = 0, int32 level_override = -1, bool disable_buff_overwrite = false);
 	int CanBuffStack(uint16 spellid, uint8 caster_level, bool iFailIfOverwrite = false);
-	int CalcBuffDuration(Mob *caster, Mob *target, uint16 spell_id, int32 caster_level_override = -1);
+	int CalcBuffDuration(Mob *caster, Mob *target, uint16 spell_id, int32 caster_level_override = -1, bool inform_client = false);
 	void SendPetBuffsToClient();
 	virtual int GetCurrentBuffSlots() const { return 0; }
 	virtual int GetCurrentSongSlots() const { return 0; }
@@ -442,6 +444,7 @@ public:
 	void DoGravityEffect();
 	void DamageShield(Mob* other, bool spell_ds = false);
 	int32 RuneAbsorb(int64 damage, uint16 type);
+	std::vector<uint16> GetBuffSpellIDs();
 	bool FindBuff(uint16 spell_id);
 	uint16 FindBuffBySlot(int slot);
 	uint32 BuffCount(bool is_beneficial = true, bool is_detrimental = true);
@@ -485,19 +488,19 @@ public:
 	void TempName(const char *newname = nullptr);
 	void SetTargetable(bool on);
 	bool IsTargetable() const { return m_targetable; }
-	bool HasShieldEquiped() const { return has_shieldequiped; }
-	inline void SetShieldEquiped(bool val) { has_shieldequiped = val; }
-	bool HasTwoHandBluntEquiped() const { return has_twohandbluntequiped; }
-	inline void SetTwoHandBluntEquiped(bool val) { has_twohandbluntequiped = val; }
-	bool HasTwoHanderEquipped() { return has_twohanderequipped; }
-	void SetTwoHanderEquipped(bool val) { has_twohanderequipped = val; }
-	bool HasDualWeaponsEquiped() const { return has_duelweaponsequiped; }
+	bool HasShieldEquipped() const { return has_shield_equipped; }
+	inline void SetShieldEquipped(bool val) { has_shield_equipped = val; }
+	bool HasTwoHandBluntEquipped() const { return has_two_hand_blunt_equipped; }
+	inline void SetTwoHandBluntEquipped(bool val) { has_two_hand_blunt_equipped = val; }
+	bool HasTwoHanderEquipped() { return has_two_hander_equipped; }
+	void SetTwoHanderEquipped(bool val) { has_two_hander_equipped = val; }
+	bool HasDualWeaponsEquipped() const { return has_dual_weapons_equipped; }
 	bool HasBowEquipped() const { return has_bowequipped; }
 	void SetBowEquipped(bool val) { has_bowequipped = val; }
 	bool HasArrowEquipped() const { return has_arrowequipped; }
 	void SetArrowEquipped(bool val) { has_arrowequipped = val; }
 	bool HasBowAndArrowEquipped() const { return HasBowEquipped() && HasArrowEquipped(); }
-	inline void SetDuelWeaponsEquiped(bool val) { has_duelweaponsequiped = val; }
+	inline void SetDualWeaponsEquipped(bool val) { has_dual_weapons_equipped = val; }
 	bool CanFacestab() { return can_facestab; }
 	void SetFacestab(bool val) { can_facestab = val; }
 	virtual uint8 ConvertItemTypeToSkillID(uint8 item_type);
@@ -523,7 +526,7 @@ public:
 	virtual inline uint8 GetBaseGender() const { return base_gender; }
 	virtual uint16 GetFactionRace();
 	virtual inline uint16 GetDeity() const { return deity; }
-	virtual EQ::deity::DeityTypeBit GetDeityBit() { return EQ::deity::ConvertDeityTypeToDeityTypeBit((EQ::deity::DeityType)deity); }
+	virtual EQ::deity::DeityTypeBit GetDeityBit() { return EQ::deity::GetDeityBitmask((EQ::deity::DeityType)deity); }
 	inline uint16 GetRace() const { return race; }
 	inline uint16 GetModel() const { return (use_model == 0) ? race : use_model; }
 	inline uint8 GetGender() const { return gender; }
@@ -732,7 +735,10 @@ public:
 	NPC* GetHateRandomNPC() { return hate_list.GetRandomNPCOnHateList(); }
 	Bot* GetHateRandomBot() { return hate_list.GetRandomBotOnHateList(); }
 	Mob* GetHateMost() { return hate_list.GetEntWithMostHateOnList();}
-	Mob* GetHateClosest() { return hate_list.GetClosestEntOnHateList(this); }
+	Mob* GetHateClosest(bool skip_mezzed = false) { return hate_list.GetClosestEntOnHateList(this, skip_mezzed); }
+	Bot* GetHateClosestBot(bool skip_mezzed = false) { return hate_list.GetClosestEntOnHateList(this, skip_mezzed, EntityFilterType::Bots)->CastToBot(); }
+	Client* GetHateClosestClient(bool skip_mezzed = false) { return hate_list.GetClosestEntOnHateList(this, skip_mezzed, EntityFilterType::Clients)->CastToClient(); }
+	NPC* GetHateClosestNPC(bool skip_mezzed = false) { return hate_list.GetClosestEntOnHateList(this, skip_mezzed, EntityFilterType::NPCs)->CastToNPC(); }
 	bool IsEngaged() { return(!hate_list.IsHateListEmpty()); }
 	bool HasPrimaryAggro() { return PrimaryAggro; }
 	bool HasAssistAggro() { return AssistAggro; }
@@ -750,6 +756,7 @@ public:
 	bool CheckLosFN(Mob* other);
 	bool CheckLosFN(float posX, float posY, float posZ, float mobSize);
 	static bool CheckLosFN(glm::vec3 posWatcher, float sizeWatcher, glm::vec3 posTarget, float sizeTarget);
+	virtual bool CheckWaterLoS(Mob* m);
 	inline void SetLastLosState(bool value) { last_los_check = value; }
 	inline bool CheckLastLosState() const { return last_los_check; }
 	std::string GetMobDescription();
@@ -797,8 +804,6 @@ public:
 	//Util
 	static uint32 RandomTimer(int min, int max);
 	static uint8 GetDefaultGender(uint16 in_race, uint8 in_gender = 0xFF);
-	static bool IsPlayerClass(uint16 in_class);
-	static bool IsPlayerRace(uint16 in_race);
 	EQ::skills::SkillType GetSkillByItemType(int ItemType);
 	uint8 GetItemTypeBySkill(EQ::skills::SkillType skill);
 	virtual void MakePet(uint16 spell_id, const char* pettype, const char *petname = nullptr);
@@ -807,9 +812,9 @@ public:
 	char GetCasterClass() const;
 	uint8 GetArchetype() const;
 	void SetZone(uint32 zone_id, uint32 instance_id);
+	void SendStatsWindow(Client* c, bool use_window);
 	void ShowStats(Client* client);
-	void ShowBuffs(Client* client);
-	void ShowBuffList(Client* client);
+	void ShowBuffs(Client* c);
 	bool PlotPositionAroundTarget(Mob* target, float &x_dest, float &y_dest, float &z_dest, bool lookForAftArc = true);
 	bool PlotPositionOnArcInFrontOfTarget(Mob *target, float &x_dest, float &y_dest, float &z_dest, float distance, float min_deg = 5.0f, float max_deg = 150.0f);
 	bool PlotPositionOnArcBehindTarget(Mob *target, float &x_dest, float &y_dest, float &z_dest, float distance);
@@ -1201,11 +1206,12 @@ public:
 	void				RotateToRunning(float new_heading);
 	void				StopNavigation();
 	float				CalculateDistance(float x, float y, float z);
+	float				CalculateDistance(Mob* mob);
 	float				GetGroundZ(float new_x, float new_y, float z_offset=0.0);
 	void				SendTo(float new_x, float new_y, float new_z);
 	void				SendToFixZ(float new_x, float new_y, float new_z);
 	float				GetZOffset() const;
-	float               GetDefaultRaceSize() const;
+	float               GetDefaultRaceSize(int race_id = -1, int gender_id = -1) const;
 	void 				FixZ(int32 z_find_offset = 5, bool fix_client_z = false);
 	float				GetFixedZ(const glm::vec3 &destination, int32 z_find_offset = 5);
 	virtual int			GetStuckBehavior() const { return 0; }
@@ -1328,6 +1334,9 @@ public:
 
 	bool HasSpellEffect(int effect_id);
 
+	std::string GetRacePlural();
+	std::string GetClassPlural();
+
 	//Command #Tune functions
 	void TuneGetStats(Mob* defender, Mob *attacker);
 	void TuneGetACByPctMitigation(Mob* defender, Mob *attacker, float pct_mitigation, int interval = 10, int max_loop = 1000, int atk_override = 0, int Msg = 0);
@@ -1440,7 +1449,6 @@ public:
 protected:
 	void CommonDamage(Mob* other, int64 &damage, const uint16 spell_id, const EQ::skills::SkillType attack_skill, bool &avoidable, const int8 buffslot, const bool iBuffTic, eSpecialAttacks specal = eSpecialAttacks::None);
 	static uint16 GetProcID(uint16 spell_id, uint8 effect_index);
-	float _GetMovementSpeed(int mod) const;
 	int _GetWalkSpeed() const;
 	int _GetRunSpeed() const;
 	int _GetFearSpeed() const;
@@ -1451,7 +1459,6 @@ protected:
 	virtual bool AI_PursueCastCheck() { return(false); }
 	virtual bool AI_IdleCastCheck() { return(false); }
 
-	bool IsFullHP;
 	bool moved;
 
 	std::vector<uint16> RampageArray;
@@ -1464,7 +1471,6 @@ protected:
 
 	bool isgrouped;
 	bool israidgrouped;
-	bool pendinggroup;
 	uint16 entity_id_being_looted; //the id of the entity being looted, 0 if not looting.
 	uint8 texture;
 	uint8 helmtexture;
@@ -1700,10 +1706,10 @@ protected:
 	bool silenced;
 	bool amnesiad;
 	bool offhand;
-	bool has_shieldequiped;
-	bool has_twohandbluntequiped;
-	bool has_twohanderequipped;
-	bool has_duelweaponsequiped;
+	bool has_shield_equipped;
+	bool has_two_hand_blunt_equipped;
+	bool has_two_hander_equipped;
+	bool has_dual_weapons_equipped;
 	bool has_bowequipped = false;
 	bool has_arrowequipped = false;
 	bool use_double_melee_round_dmg_bonus;
@@ -1723,6 +1729,9 @@ protected:
 
 public:
 	const CombatRecord &GetCombatRecord() const;
+
+public:
+	virtual EQ::InventoryProfile& GetInvPublic() { return m_inv; }
 
 public:
 	bool GetWasSpawnedInWater() const;

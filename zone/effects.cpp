@@ -28,7 +28,6 @@
 #include "string_ids.h"
 #include "worldserver.h"
 #include "zonedb.h"
-#include "../common/zone_store.h"
 #include "position.h"
 
 float Mob::GetActSpellRange(uint16 spell_id, float range)
@@ -64,9 +63,41 @@ int64 Mob::GetActSpellDamage(uint16 spell_id, int64 value, Mob* target) {
 		value *= std::abs(GetSkillDmgAmt(spells[spell_id].skill) / 100);
 	}
 
-	bool Critical = false;
+	// Pyrelight Custom Code
+	if (RuleR(Character, Pyrelight_hINT_SpellDamage) > 0 && (IsClient() || IsPetOwnerClient())) {
+		int effective_hINT = GetOwner() ? round(RuleR(Character, Pyrelight_HeroicPetMod) * GetOwner()->GetHeroicINT()) : GetHeroicINT();
+		float bonus_ratio = effective_hINT * RuleR(Character, Pyrelight_hINT_SpellDamage) / 100;		
+
+		if (RuleB(Character, Pyrelight_hStat_Randomize)) {
+			bonus_ratio *= zone->random.Real(1 - RuleR(Character, Pyrelight_hStat_RandomizationFactor), 1 + RuleR(Character, Pyrelight_hStat_RandomizationFactor));
+		}
+
+		int bonus_amount = round(value * bonus_ratio);
+
+		LogDebug("effective_hINT: [{}], bonus_ratio: [{}], bonus_amount: [{}]", effective_hINT, bonus_ratio, bonus_amount);
+
+		if (effective_hINT > 0) {
+			if (IsClient()) {
+				CastToClient()->LoadAccountFlags(); 
+			} else if (GetOwner() && GetOwner()->IsClient()) {
+				GetOwner()->CastToClient()->LoadAccountFlags();
+			}
+
+			if (IsClient() && CastToClient()->GetAccountFlag("filter_hINT") != "off") {
+				Message(Chat::Spells, "Your Heroic Intelligence has increased the power of your magic by %i (%i%%)!", abs(bonus_amount), static_cast<int>(bonus_ratio * 100));
+			} else if (GetOwner() && GetOwner()->IsClient() && 
+						GetOwner()->CastToClient()->GetAccountFlag("filter_hINT") != "off" && 
+						GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
+				GetOwner()->Message(Chat::Spells, "Your Heroic Intelligence has increased the power of your pet's magic by %i (%i%%)!", abs(bonus_amount), static_cast<int>(bonus_ratio * 100));
+			}
+		}
+
+		value += bonus_amount;
+	}
+	// End Pyrelight Custom Code
+
 	int64 base_value = value;
-	int chance = 0;
+	int chance = 0;	
 
 	// Need to scale HT damage differently after level 40! It no longer scales by the constant value in the spell file. It scales differently, instead of 10 more damage per level, it does 30 more damage per level. So we multiply the level minus 40 times 20 if they are over level 40.
 	if ((spell_id == SPELL_HARM_TOUCH || spell_id == SPELL_HARM_TOUCH2 || spell_id == SPELL_IMP_HARM_TOUCH ) && GetLevel() > 40)
@@ -82,27 +113,50 @@ int64 Mob::GetActSpellDamage(uint16 spell_id, int64 value, Mob* target) {
 	chance += itembonuses.FrenziedDevastation + spellbonuses.FrenziedDevastation + aabonuses.FrenziedDevastation;
 
 	//Crtical Hit Calculation pathway
-	if (chance > 0 || (IsOfClientBot() && GetClass() == WIZARD && GetLevel() >= RuleI(Spells, WizCritLevel))) {
+	bool Critical = false;
 
-		 int32 ratio = RuleI(Spells, BaseCritRatio); //Critical modifier is applied from spell effects only. Keep at 100 for live like criticals.
+	if (spells[spell_id].override_crit_chance > 0 && chance > spells[spell_id].override_crit_chance)
+		chance = spells[spell_id].override_crit_chance;
+
+	if (chance > 0 || (IsOfClientBot() && GetClass() == WIZARD && GetLevel() >= RuleI(Spells, WizCritLevel))) {
+		
+		int32 ratio = RuleI(Spells, BaseCritRatio); //Critical modifier is applied from spell effects only. Keep at 100 for live like criticals.
 
 		//Improved Harm Touch is a guaranteed crit if you have at least one level of SCF.
 		if (spell_id == SPELL_IMP_HARM_TOUCH && IsOfClientBot() && (GetAA(aaSpellCastingFury) > 0) && (GetAA(aaUnholyTouch) > 0))
 			 chance = 100;
 
-		if (spells[spell_id].override_crit_chance > 0 && chance > spells[spell_id].override_crit_chance)
-			chance = spells[spell_id].override_crit_chance;
+		Critical = zone->random.Roll(chance);
 
-		if (zone->random.Roll(chance)) {
-			Critical = true;
+		// Pyrelight Custom Code
+		if (RuleR(Character, Pyrelight_hDEX_CriticalReroll) > 0) {	
+			if (IsClient()) {
+				CastToClient()->LoadAccountFlags();
+			} else if (GetOwner() && GetOwner()->IsClient()) {
+				GetOwner()->CastToClient()->LoadAccountFlags();
+			}		
+			int effective_hDEX = (IsPetOwnerClient() && GetOwner()) ? std::ceil(RuleR(Character, Pyrelight_HeroicPetMod) * GetOwner()->GetHeroicDEX()) : GetHeroicDEX();	
+			while (effective_hDEX > 0 && !Critical) {	
+				auto random = zone->random.Int(1,100);
+				if (random <= (effective_hDEX * RuleR(Character, Pyrelight_hDEX_CriticalReroll))) {
+					Critical = zone->random.Roll(chance);
+					if (Critical) {
+						if (IsClient() && CastToClient()->GetAccountFlag("filter_hDEX") != "off") {
+							Message(Chat::SpellCrit, "Your Heroic Dexterity allows you to deliver a critical blast!");
+						} else if (GetOwner() && GetOwner()->IsClient() && 
+								   GetOwner()->CastToClient()->GetAccountFlag("filter_hDEX") != "off" && 
+								   GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
+								   GetOwner()->Message(Chat::PetCritical, "Your Heroic Dexterity allows your pet to deliver a critical blast!");
+						}
+					}
+				}	
+				effective_hDEX -= random * RuleR(Character, Pyrelight_HeroicRerollDecayRate);	
+			}
+		}
+
+		if (Critical) {
 			ratio += itembonuses.SpellCritDmgIncrease + spellbonuses.SpellCritDmgIncrease + aabonuses.SpellCritDmgIncrease;
 			ratio += itembonuses.SpellCritDmgIncNoStack + spellbonuses.SpellCritDmgIncNoStack + aabonuses.SpellCritDmgIncNoStack;
-
-			if (RuleR(Character, HeroicIntelligenceExtraCriticalDamage) > 0) {
-				if (IsClient()) {
-					ratio += GetHeroicINT() * RuleR(Character, HeroicIntelligenceExtraCriticalDamage);
-				}
-			}
 		}
 
 		else if ((IsOfClientBot() && GetClass() == WIZARD) || (IsMerc() && GetClass() == CASTERDPS)) {
@@ -154,19 +208,6 @@ int64 Mob::GetActSpellDamage(uint16 spell_id, int64 value, Mob* target) {
 				this, true, 100, Chat::SpellCrit, FilterSpellCrits,
 				OTHER_CRIT_BLAST, nullptr, GetName(), itoa(-value));
 
-			if (RuleI(Character, HeroicWisdomDamageReduction) > 0) {
-				int64 damage_reduction_value = 0;
-				if (target->IsClient() && target->GetHeroicWIS() > 0) {
-					damage_reduction_value = std::ceil(RuleI(Character, HeroicWisdomDamageReduction) * target->GetHeroicWIS());
-				} else if (RuleB(Character, ExtraHeroicModifiersForPets) && target->IsPetOwnerClient() && target->GetOwner()->GetHeroicWIS() > 0) {
-					damage_reduction_value = std::ceil((2/3) * RuleI(Character, HeroicWisdomDamageReduction) * target->GetHeroicWIS());
-				}
-				if (damage_reduction_value > 0) {
-					value = (std::min(static_cast<int64>(value * RuleR(Character, HeroicWisdomDamageReductionCap) / 100), // Capped Damage Reduction
-                                                     	 value + damage_reduction_value)); // Reduced Damage
-				}
-			}
-
 			if (IsClient())
 				MessageString(Chat::SpellCrit, YOU_CRIT_BLAST, itoa(-value));
 			return value;
@@ -205,19 +246,6 @@ int64 Mob::GetActSpellDamage(uint16 spell_id, int64 value, Mob* target) {
 		spells[spell_id].classes[(GetClass() % 17) - 1] >= GetLevel() - 5
 	) {
 		value -= GetExtraSpellAmt(spell_id, GetSpellDmg(), base_value);
-	}
-
-	if (RuleI(Character, HeroicWisdomDamageReduction) > 0) {
-		int64 damage_reduction_value = 0;
-		if (target->IsClient() && target->GetHeroicWIS() > 0) {
-			damage_reduction_value = std::ceil(RuleI(Character, HeroicWisdomDamageReduction) * target->GetHeroicWIS());
-		} else if (RuleB(Character, ExtraHeroicModifiersForPets) && target->IsPetOwnerClient() && target->GetOwner()->GetHeroicWIS() > 0) {
-			damage_reduction_value = std::ceil((2/3) * RuleI(Character, HeroicWisdomDamageReduction) * target->GetHeroicWIS());
-		}
-		if (damage_reduction_value > 0) {
-			value = (std::min(static_cast<int64>(value * RuleR(Character, HeroicWisdomDamageReductionCap) / 100), // Capped Damage Reduction
-													value + damage_reduction_value)); // Reduced Damage
-		}
 	}
 
 	return value;
@@ -275,10 +303,44 @@ int64 Mob::GetActDoTDamage(uint16 spell_id, int64 value, Mob* target, bool from_
 		value *= std::abs(GetSkillDmgAmt(spells[spell_id].skill) / 100);
 	}
 
+	// Pyrelight Custom Code
+	if (RuleR(Character, Pyrelight_hINT_SpellDamage) > 0 && (IsClient() || IsPetOwnerClient())) {
+		int effective_hINT = GetOwner() ? round(RuleR(Character, Pyrelight_HeroicPetMod) * GetOwner()->GetHeroicINT()) : GetHeroicINT();
+
+		if (RuleB(Character, Pyrelight_hStat_Randomize)) {
+			effective_hINT *= zone->random.Real(1 - RuleR(Character, Pyrelight_hStat_RandomizationFactor), 1 + RuleR(Character, Pyrelight_hStat_RandomizationFactor));
+		}
+
+		float bonus_ratio = effective_hINT * RuleR(Character, Pyrelight_hINT_SpellDamage) / 100;
+		int bonus_amount = round(value * bonus_ratio);
+
+		LogDebug("effective_hINT: [{}], bonus_ratio: [{}], bonus_amount: [{}]", effective_hINT, bonus_ratio, bonus_amount);
+
+		if (from_buff_tic && effective_hINT > 0) {
+			if (IsClient()) {
+				CastToClient()->LoadAccountFlags(); 
+			} else if (GetOwner() && GetOwner()->IsClient()) {
+				GetOwner()->CastToClient()->LoadAccountFlags();
+			}
+
+			if (IsClient() && CastToClient()->GetAccountFlag("filter_hINT") != "off") {
+				Message(Chat::Spells, "Your Heroic Intelligence has increased the power of your magic by %i (%i%%)!", abs(bonus_amount), static_cast<int>(bonus_ratio * 100));
+			} else if (GetOwner() && GetOwner()->IsClient() && 
+						GetOwner()->CastToClient()->GetAccountFlag("filter_hINT") != "off" && 
+						GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
+				GetOwner()->Message(Chat::Spells, "Your Heroic Intelligence has increased the power of your pet's magic by %i (%i%%)!", abs(bonus_amount), static_cast<int>(bonus_ratio * 100));
+			}
+		}
+
+		value += bonus_amount;
+	}
+	// End Pyrelight Custom Code
+
 	int64 base_value = value;
 	int64 extra_dmg = 0;
 	int16 chance = 0;
-	chance += itembonuses.CriticalDoTChance + spellbonuses.CriticalDoTChance + aabonuses.CriticalDoTChance;
+	
+	chance += itembonuses.CriticalDoTChance + spellbonuses.CriticalDoTChance + aabonuses.CriticalDoTChance;	
 
 	if (spellbonuses.CriticalDotDecay)
 		chance += GetDecayEffectValue(spell_id, SE_CriticalDotDecay);
@@ -286,22 +348,50 @@ int64 Mob::GetActDoTDamage(uint16 spell_id, int64 value, Mob* target, bool from_
 	if (spells[spell_id].override_crit_chance > 0 && chance > spells[spell_id].override_crit_chance)
 		chance = spells[spell_id].override_crit_chance;
 
-	if (!spells[spell_id].good_effect && chance > 0 && (zone->random.Roll(chance))) {
-		int64 ratio = 200;
-		ratio += itembonuses.DotCritDmgIncrease + spellbonuses.DotCritDmgIncrease + aabonuses.DotCritDmgIncrease;
+	bool Critical = false;
 
-		if (RuleR(Character, HeroicIntelligenceExtraCriticalDamage) > 0) {
+	if (chance > 0) {
+
+		Critical = zone->random.Roll(chance);
+		
+		// Pyrelight Custom Code
+		if (RuleR(Character, Pyrelight_hDEX_CriticalReroll) > 0) {			
 			if (IsClient()) {
-				ratio += GetHeroicINT() * RuleR(Character, HeroicIntelligenceExtraCriticalDamage);
+				CastToClient()->LoadAccountFlags();
+			} else if (GetOwner() && GetOwner()->IsClient()) {
+				GetOwner()->CastToClient()->LoadAccountFlags();
+			}	
+			int effective_hDEX = (IsPetOwnerClient() && GetOwner()) ? std::ceil(RuleR(Character, Pyrelight_HeroicPetMod) * GetOwner()->GetHeroicDEX()) : GetHeroicDEX();	
+			while (effective_hDEX > 0 && !Critical) {	
+				auto random = zone->random.Int(1,100);
+				if (random <= (effective_hDEX * RuleR(Character, Pyrelight_hDEX_CriticalReroll))) {
+					Critical = zone->random.Roll(chance);
+					if (Critical) {			
+						if (IsClient() && CastToClient()->GetAccountFlag("filter_hDEX") != "off") {
+							Message(Chat::SpellCrit, "Your Heroic Dexterity allows you to deliver a critical affliction!");
+						} else if (GetOwner() && GetOwner()->IsClient() && 
+								   GetOwner()->CastToClient()->GetAccountFlag("filter_hDEX") != "off" && 
+								   GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
+								   GetOwner()->Message(Chat::PetCritical, "Your Heroic Dexterity allows your pet to deliver a affliction");
+						}
+					}
+				}	
+				effective_hDEX -= random * RuleR(Character, Pyrelight_HeroicRerollDecayRate);	
 			}
 		}
+	}
 
-		value = base_value*ratio/100;
+	if (!spells[spell_id].good_effect && chance > 0 && Critical) {
+		int64 ratio = 500;
+		ratio += itembonuses.DotCritDmgIncrease + spellbonuses.DotCritDmgIncrease + aabonuses.DotCritDmgIncrease;
+
 		value += int64(base_value*GetFocusEffect(focusImprovedDamage, spell_id, nullptr, from_buff_tic)/100)*ratio/100;
 		value += int64(base_value*GetFocusEffect(focusImprovedDamage2, spell_id, nullptr, from_buff_tic)/100)*ratio/100;
 		value += int64(base_value*GetFocusEffect(focusFcDamagePctCrit, spell_id, nullptr, from_buff_tic)/100)*ratio/100;
 		value += int64(base_value*GetFocusEffect(focusFcAmplifyMod, spell_id, nullptr, from_buff_tic) / 100)*ratio/100;
 		value += int64(base_value*target->GetVulnerability(this, spell_id, 0, from_buff_tic)/100)*ratio/100;
+		value = base_value*ratio/100;
+
 		extra_dmg = target->GetFcDamageAmtIncoming(this, spell_id, from_buff_tic) +
 					int64(GetFocusEffect(focusFcDamageAmtCrit, spell_id, nullptr, from_buff_tic)*ratio/100) +
 					GetFocusEffect(focusFcDamageAmt, spell_id, nullptr, from_buff_tic) +
@@ -353,15 +443,14 @@ int64 Mob::GetActDoTDamage(uint16 spell_id, int64 value, Mob* target, bool from_
 
 	value -= extra_dmg;
 
-	if (RuleI(Character, HeroicWisdomDamageReduction) > 0) {
-		auto damage_reduction_value = 0;
-		if (target->IsClient() && target->GetHeroicWIS() > 0) {
-			damage_reduction_value = RuleI(Character, HeroicWisdomDamageReduction) * target->GetHeroicWIS();
-		} else if (RuleB(Character, ExtraHeroicModifiersForPets) && target->IsPetOwnerClient() && target->GetOwner()->GetHeroicWIS() > 0) {
-			damage_reduction_value = (2/3) * RuleI(Character, HeroicWisdomDamageReduction) * target->GetHeroicWIS();
+	//Pyrelight Custom Code
+	if (Critical) {
+		entity_list.MessageClose(this, true, 100, Chat::SpellCrit,
+								"%s invokes a critical affliction! (%i)",
+								GetName(), -1 * value);
+		if (IsClient()) {
+			Message(Chat::SpellCrit, "You invoke a critical affliction! (%i)", -1 * value);
 		}
-		value = (std::min(static_cast<int64>(value * RuleR(Character, HeroicWisdomDamageReductionCap) / 100), // Capped Damage Reduction
-                                             value + damage_reduction_value)); // Reduced Damage
 	}
 
 	return value;
@@ -401,11 +490,7 @@ int64 Mob::GetExtraSpellAmt(uint16 spell_id, int64 extra_spell_amt, int64 base_s
 		}
 	}
 
-	if (base_spell_dmg < 0 && !(IsINTCasterClass(GetClass()) || IsWISCasterClass(GetClass()))) { // This is a DD
-		return static_cast<float>(extra_spell_amt) * RuleR(Spells, NonCasterSpellDmgPenalty);
-	} else { // This is a heal
-		return extra_spell_amt;
-	}
+	return extra_spell_amt;
 }
 
 int64 Mob::GetActSpellHealing(uint16 spell_id, int64 value, Mob* target, bool from_buff_tic) {
@@ -424,7 +509,43 @@ int64 Mob::GetActSpellHealing(uint16 spell_id, int64 value, Mob* target, bool fr
 	if (RuleB(Spells, AllowExtraDmgSkill) && RuleB(Character, ItemExtraSkillDamageCalcAsPercent) && GetSkillDmgAmt(spells[spell_id].skill) > 0) {
 		value *= std::abs(GetSkillDmgAmt(spells[spell_id].skill) / 100);
 	}
+	
+	// Pyrelight Custom Code
+	if (RuleR(Character, Pyrelight_hWIS_HealPower) > 0) {
+		int effective_hWIS = GetOwner() ? round(RuleR(Character, Pyrelight_HeroicPetMod) * GetOwner()->GetHeroicWIS()) : GetHeroicWIS();
 
+		if (RuleB(Character, Pyrelight_hStat_Randomize)) {
+			effective_hWIS *= zone->random.Real(1 - RuleR(Character, Pyrelight_hStat_RandomizationFactor), 1 + RuleR(Character, Pyrelight_hStat_RandomizationFactor));
+		}
+
+		float bonus_ratio = effective_hWIS * RuleR(Character, Pyrelight_hWIS_HealPower) / 100;
+		int bonus_amount = round(value * bonus_ratio);
+
+		LogDebug("effective_hWIS: [{}], bonus_ratio: [{}], bonus_amount: [{}]", effective_hWIS, bonus_ratio, bonus_amount);
+
+		if (effective_hWIS > 0) {
+			if ((IsHealOverTimeSpell(spell_id) && from_buff_tic) || (!IsHealOverTimeSpell(spell_id))) {
+				if (IsClient()) {
+					CastToClient()->LoadAccountFlags(); 
+				} else if (GetOwner() && GetOwner()->IsClient()) {
+					GetOwner()->CastToClient()->LoadAccountFlags();
+				}
+
+				if (IsClient() && CastToClient()->GetAccountFlag("filter_hWIS") != "off") {
+					Message(Chat::Spells, "Your Heroic Wisdom has increased the power of your magic by %i (%i%%)!", abs(bonus_amount), static_cast<int>(bonus_ratio * 100));
+				} else if (GetOwner() && GetOwner()->IsClient() && 
+							GetOwner()->CastToClient()->GetAccountFlag("filter_hWIS") != "off" && 
+							GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
+					GetOwner()->Message(Chat::Spells, "Your Heroic Wisdom has increased the power of your pet's magic by %i (%i%%)!", abs(bonus_amount), static_cast<int>(bonus_ratio * 100));
+				}
+			}
+		}
+
+		value += bonus_amount;
+	}
+	// End Pyrelight Custom Code
+
+	bool Critical = false;
 	int64 base_value = value;
 	int16 critical_chance = 0;
 	int8  critical_modifier = 1;
@@ -444,20 +565,42 @@ int64 Mob::GetActSpellHealing(uint16 spell_id, int64 value, Mob* target, bool fr
 		}
 	}
 
-	if (critical_chance) {
+	
+	if (spells[spell_id].override_crit_chance > 0 && critical_chance > spells[spell_id].override_crit_chance) {
+		critical_chance = spells[spell_id].override_crit_chance;
+	}
 
-		if (spells[spell_id].override_crit_chance > 0 && critical_chance > spells[spell_id].override_crit_chance) {
-			critical_chance = spells[spell_id].override_crit_chance;
+	if (critical_chance) {
+		Critical = zone->random.Roll(critical_chance);
+
+		// Pyrelight Custom Code
+		if (RuleR(Character, Pyrelight_hDEX_CriticalReroll) > 0) {	
+			if (IsClient()) {
+				CastToClient()->LoadAccountFlags();
+			} else if (GetOwner() && GetOwner()->IsClient()) {
+				GetOwner()->CastToClient()->LoadAccountFlags();
+			}		
+			int effective_hDEX = (IsPetOwnerClient() && GetOwner()) ? std::ceil(RuleR(Character, Pyrelight_HeroicPetMod) * GetOwner()->GetHeroicDEX()) : GetHeroicDEX();	
+			while (effective_hDEX > 0 && !Critical) {	
+				auto random = zone->random.Int(1,100);
+				if (random <= (effective_hDEX * RuleR(Character, Pyrelight_hDEX_CriticalReroll))) {
+					Critical = zone->random.Roll(critical_chance);
+					if (Critical) {
+						if (IsClient() && CastToClient()->GetAccountFlag("filter_hDEX") != "off") {
+							Message(Chat::SpellCrit, "Your Heroic Dexterity allows you to deliver an exceptional heal!");
+						} else if (GetOwner() && GetOwner()->IsClient() && 
+								   GetOwner()->CastToClient()->GetAccountFlag("filter_hDEX") != "off" && 
+								   GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
+								   GetOwner()->Message(Chat::PetCritical, "Your Heroic Dexterity allows your pet to deliver an exceptional heal!");
+						}
+					}
+				}	
+				effective_hDEX -= random * RuleR(Character, Pyrelight_HeroicRerollDecayRate);	
+			}
 		}
 
-		if (zone->random.Roll(critical_chance)) {
+		if (Critical) {
 			critical_modifier = 2; //At present time no critical heal amount modifier SPA exists.
-
-			if (RuleR(Character, HeroicIntelligenceExtraCriticalDamage) > 0) {
-				if (IsClient()) {
-					critical_modifier += GetHeroicINT() * RuleR(Character, HeroicIntelligenceExtraCriticalDamage);
-				}
-			}
 		}
 	}
 
@@ -657,8 +800,8 @@ bool Client::TrainDiscipline(uint32 itemid) {
 	const std::string item_name = item->Name;
 
 	if (
-		item_name.substr(0, 5) != std::string("Tome ") &&
-		item_name.substr(0, 7) != std::string("Skill: ")
+		!Strings::BeginsWith(item_name, "Tome of ") &&
+		!Strings::BeginsWith(item_name, "Skill: ")
 	) {
 		Message(Chat::Red, "This item is not a tome.");
 		//summon them the item back...
@@ -744,9 +887,9 @@ bool Client::MemorizeSpellFromItem(uint32 item_id) {
 	const std::string item_name = item->Name;
 
 	if (
-		item_name.substr(0, 7) != std::string("Spell: ") &&
-		item_name.substr(0, 9) != std::string("Ancient: ") &&
-		item_name.substr(0, 6) != std::string("Song: ")
+		!Strings::BeginsWith(item_name, "Spell: ") &&
+		!Strings::BeginsWith(item_name, "Ancient: ") &&
+		!Strings::BeginsWith(item_name, "Song: ")
 	) {
 		Message(Chat::Red, "This item is not a scroll.");
 		SummonItem(item_id);
@@ -846,9 +989,9 @@ void Client::SendDisciplineUpdate() {
 
 bool Client::UseDiscipline(uint32 spell_id, uint32 target) {
 	// Dont let client waste a reuse timer if they can't use the disc
-	if ((IsStunned() && !IgnoreCastingRestriction(spell_id))||
+	if ((IsStunned() && !IsCastNotStandingSpell(spell_id))||
 		IsFeared() ||
-		(IsMezzed() && !IgnoreCastingRestriction(spell_id)) ||
+		(IsMezzed() && !IsCastNotStandingSpell(spell_id)) ||
 		IsAmnesiad() ||
 		IsPet())
 	{
@@ -873,7 +1016,7 @@ bool Client::UseDiscipline(uint32 spell_id, uint32 target) {
 		return false;
 	}
 
-	if (DivineAura() && !IgnoreCastingRestriction(spell_id)) {
+	if (DivineAura() && !IsCastNotStandingSpell(spell_id)) {
 		return false;
 	}
 

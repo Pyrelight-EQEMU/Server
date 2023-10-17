@@ -6,8 +6,6 @@
 #include <unordered_map>
 #include <string>
 
-//userid:charactername
-
 //Usage: #discord [list|claim <18-digit Discord ID>]
 // arg[0] is 'discord', arg[1] is list\claim 
 void command_discord(Client *c, const Seperator *sep)

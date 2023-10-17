@@ -169,13 +169,7 @@ void ClientTaskState::EnableTask(int character_id, int task_count, int *task_lis
 		query_stream << (i ? ", " : "") << StringFormat("(%i, %i)", character_id, tasks_enabled[i]);
 	}
 
-	std::string query = query_stream.str();
-	if (!tasks_enabled.empty()) {
-		database.QueryDatabase(query);
-	}
-	else {
-		LogTasks("Called for character_id [{}] but, no tasks exist", character_id);
-	}
+	database.QueryDatabase(query_stream.str());
 }
 
 void ClientTaskState::DisableTask(int character_id, int task_count, int *task_list)
@@ -228,17 +222,7 @@ void ClientTaskState::DisableTask(int character_id, int task_count, int *task_li
 
 	queryStream << ")";
 
-	std::string query = queryStream.str();
-
-	if (tasks_disabled.size()) {
-		database.QueryDatabase(query);
-	}
-	else {
-		LogTasks(
-			"DisableTask called for character_id [{}] ... but, no tasks exist",
-			character_id
-		);
-	}
+	database.QueryDatabase(queryStream.str());
 }
 
 bool ClientTaskState::IsTaskEnabled(int task_id)
@@ -2282,7 +2266,7 @@ void ClientTaskState::CreateTaskDynamicZone(Client* client, int task_id, Dynamic
 
 	// dz should be named the version-based zone name (used in choose zone window and dz window on live)
 	auto zone_info = zone_store.GetZone(dz_request.GetZoneID(), dz_request.GetZoneVersion());
-	dz_request.SetName(zone_info->long_name.empty() ? task->title : zone_info->long_name);
+	dz_request.SetName(task->title);
 	dz_request.SetMinPlayers(task->min_players);
 	dz_request.SetMaxPlayers(task->max_players);
 

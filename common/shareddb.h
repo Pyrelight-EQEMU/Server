@@ -46,7 +46,6 @@ struct LootDrop_Struct;
 
 namespace EQ
 {
-
 	struct ItemData;
 	class ItemInstance;
 	class InventoryProfile;
@@ -81,7 +80,11 @@ public:
 	bool SetGMInvul(uint32 account_id, bool gminvul);
 	bool SetGMFlymode(uint32 account_id, uint8 flymode);
 	void SetMailKey(int CharID, int IPAddress, int MailKey);
-	std::string GetMailKey(int CharID, bool key_only = false);
+	struct MailKeys {
+		std::string mail_key;
+		std::string mail_key_full;
+	};
+	MailKeys GetMailKey(int character_id);
 	bool SaveCursor(
 		uint32 char_id,
 		std::list<EQ::ItemInstance *>::const_iterator &start,
@@ -157,7 +160,6 @@ public:
 	const EvolveInfo *GetEvolveInfo(uint32 loregroup);
 	uint32 GetSharedItemsCount() { return m_shared_items_count; }
 	uint32 GetItemsCount();
-
 	/**
 	 * faction
 	 */
