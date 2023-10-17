@@ -250,24 +250,24 @@ bool QuestParserCollection::ItemHasQuestSub(EQ::ItemInstance *itm, QuestEventID 
 	}
 
 	std::string item_script;
+
 	if(itm->GetItem()->ScriptFileID != 0) {
 		item_script = "script_";
 		item_script += std::to_string(itm->GetItem()->ScriptFileID);
-	} else if (strlen(itm->GetItem()->CharmFile) > 0) {
-		char* charmFile = itm->GetItem()->CharmFile;
-		
-		char* delimiterPos = strchr(charmFile, '#'); // Locate the position of first '#'
-		
-		if (delimiterPos != nullptr) {
-			// The '#'' delimiter exists, so the desired string starts after it
-			item_script = delimiterPos + 1; 
-		} else {
-			// No '#' found, so we'll use the entire string
-			item_script = charmFile;
-		}	
+	} else if(strlen(itm->GetItem()->CharmFile) > 0) {
+		item_script = itm->GetItem()->CharmFile;
 	} else {
 		item_script = std::to_string(itm->GetID());
 	}
+
+	// Now, let's extract the second serialized data if it exists
+	size_t delimiterPos = item_script.find('#');
+
+	if (delimiterPos != std::string::npos) {
+		// The '#' delimiter exists, so we want the part after it
+		item_script = item_script.substr(delimiterPos + 1);
+	}
+	// If there's no '#', item_script remains unchanged.
 
 	uint32 item_id = itm->GetID();
 	auto iter = _item_quest_status.find(item_id);
