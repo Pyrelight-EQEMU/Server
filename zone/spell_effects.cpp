@@ -3921,7 +3921,7 @@ void Mob::BuffProcess()
 						Client* caster = entity_list.GetClientByName(buffs[buffs_i].caster_name);
 						uint32 spellid = buffs[buffs_i].spellid;
 
-						LogDebug("Caster Name on tick: []", buffs[buffs_i].caster_name);
+						LogDebug("Caster Name on tick: [{}]", buffs[buffs_i].caster_name);
 						
 						
 						if (caster && client) {
