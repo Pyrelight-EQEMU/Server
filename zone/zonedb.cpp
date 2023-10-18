@@ -3334,7 +3334,7 @@ void ZoneDatabase::SavePetInfo(Client *client)
 			pet_buff.ticsremaining  = petinfo->Buffs[index].duration;
 			pet_buff.counters       = petinfo->Buffs[index].counters;
 			pet_buff.instrument_mod = petinfo->Buffs[index].bard_modifier;
-			pet_buff.castername     = client->GetPet()->buffs[index].caster_name;
+			pet_buff.castername     = petinfo->Buffs[index].caster_name;
 
 			// add pet buffs to vector
 			pet_buffs.push_back(pet_buff);
