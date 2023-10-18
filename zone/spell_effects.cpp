@@ -3920,9 +3920,6 @@ void Mob::BuffProcess()
 						Client* client = GetOwnerOrSelf()->CastToClient();
 						Client* caster = entity_list.GetClientByName(buffs[buffs_i].caster_name);
 						uint32 spellid = buffs[buffs_i].spellid;
-
-						LogDebug("Caster Name on tick: [{}]", buffs[buffs_i].caster_name);
-						
 						
 						if (caster && client) {
 							if (caster == client || (client->GetGroup() && client->GetGroup()->IsGroupMember(caster))) {
