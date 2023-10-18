@@ -316,7 +316,7 @@ int64 Mob::GetActDoTDamage(uint16 spell_id, int64 value, Mob* target, bool from_
 
 		LogDebug("effective_hINT: [{}], bonus_ratio: [{}], bonus_amount: [{}]", effective_hINT, bonus_ratio, bonus_amount);
 
-		if (from_buff_tic && effective_hINT > 0) {
+		if (from_buff_tic && effective_hINT > 0 && !spells[spell_id].good_effect) {
 			if (IsClient()) {
 				CastToClient()->LoadAccountFlags(); 
 			} else if (GetOwner() && GetOwner()->IsClient()) {
