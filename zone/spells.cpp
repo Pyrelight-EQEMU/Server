@@ -2880,8 +2880,8 @@ int Mob::CalcBuffDuration(Mob *caster, Mob *target, uint16 spell_id, int32 caste
 		}
 
 		// Pyrelight Custom Code
-		// Increase Short Duration Buff Durations based on Heroic Wisdom
-		if (RuleR(Character, Pyrelight_hWIS_ShortBuff) > 0 && IsShortDurationBuff(spell_id) && (caster->IsClient() || caster->IsPetOwnerClient())) {
+		// Increase Short Duration Buff Durations based on Heroic Wisdom		
+		if (RuleR(Character, Pyrelight_hWIS_ShortBuff) > 0 && IsShortDurationBuff(spell_id) && !IsEffectInSpell(spell_id, 40) && (caster->IsClient() || caster->IsPetOwnerClient())) {
 			int effective_hWIS = caster->GetOwner() ? std::ceil(RuleR(Character, Pyrelight_HeroicPetMod) * caster->GetOwner()->GetHeroicWIS()) : caster->GetHeroicWIS();
 
 			int res_add = round(res * (RuleR(Character, Pyrelight_hWIS_ShortBuff) * effective_hWIS / 100));
@@ -2913,8 +2913,8 @@ int Mob::CalcBuffDuration(Mob *caster, Mob *target, uint16 spell_id, int32 caste
 
 	// Pyrelight Custom Code
 	// Force maximum duration of beneficial 'long buffs'
-	if (IsBeneficialSpell(spell_id) && !IsShortDurationBuff(spell_id) && res > 150) {
-		res = 150;
+	if (IsBeneficialSpell(spell_id) && !IsShortDurationBuff(spell_id) && res > 300) {
+		res = 300;
 	}
 
 	LogSpells("Spell [{}]: Casting level [{}], formula [{}], base_duration [{}]: result [{}]", spell_id, castlevel, formula, duration, res);
