@@ -4159,10 +4159,17 @@ void Mob::DoBuffTic(const Buffs_Struct &buff, int slot, Mob *caster)
 
 				// Pyrelight Custom Code
 				// Shaman Epic DoT->Heal Effect
-				if (caster->IsClient() && caster->GetClass() == SHAMAN && caster->GetInv().HasItemEquippedByID(10651)) {
-					caster->HealDamage(round(effect_value * 0.50), caster, buff.spellid);
+				bool epic_equip = false;
+				for(int i = 0; i <= 10; i++) {
+					if (c->GetInv().HasAugmentEquippedByID(10651 + (i*1000000))) {
+						epic_equip = true;
+						break;
+					}			
+				}
+				if (caster->IsClient() && true) {
+					caster->HealDamage(round(effect_value * 0.25), caster, buff.spellid);
 					if (caster->GetPet()) {
-						caster->GetPet()->HealDamage(round(effect_value * 0.50), caster, buff.spellid);
+						caster->GetPet()->HealDamage(round(effect_value * 0.25), caster, buff.spellid);
 					}
 				}
 
