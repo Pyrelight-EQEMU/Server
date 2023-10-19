@@ -1643,28 +1643,10 @@ void Mob::CastedSpellFinished(uint16 spell_id, uint32 target_id, CastingSlot slo
 	}
 
 	if(IsOfClientBotMerc() && slot <= CastingSlot::Gem12) {
-		TrySympatheticProc(target, spell_id);		
+		TrySympatheticProc(target, spell_id);
 
-		EQ::ItemInstance* ranged = GetInv().GetItem(EQ::invslot::slotRange);	
-		if (ranged && target && !target->HasDied()) {
-			TryCombatProcs(ranged, target, EQ::invslot::slotRange);
-		}
-
-		EQ::ItemInstance* primary = GetInv().GetItem(EQ::invslot::slotPrimary);	
-		if (primary && target && !target->HasDied()) {
-			TryWeaponProc(primary, primary->GetItem(), target, EQ::invslot::slotPrimary);
-		}
-
-		EQ::ItemInstance* secondary = GetInv().GetItem(EQ::invslot::slotSecondary);
-		if (secondary && target && !target->HasDied()) {
-			TryWeaponProc(secondary, secondary->GetItem(), target, EQ::invslot::slotSecondary);
-		}
-
-		// Pyrelight Custom Code
-		// Do Epic/Power Source procs
-		EQ::ItemInstance *epic = GetInv().GetItem(EQ::invslot::slotPowerSource);
-		if (epic && target && !target->HasDied()) {
-			TryWeaponProc(epic, epic->GetItem(), target);
+		if (IsClient()) {
+			TryCombatProcs(nullptr, target, EQ::invslot::slotRange);
 		}
 	}
 
@@ -2853,59 +2835,62 @@ int Mob::CalcBuffDuration(Mob *caster, Mob *target, uint16 spell_id, int32 caste
 		// Pyrelight Custom Code
 		// Increase Detrimental Durations based on Heroic Intelligence
 		if (RuleR(Character, Pyrelight_hINT_DetDurIncrease) > 0 && IsDetrimentalSpell(spell_id) && (caster->IsClient() || caster->IsPetOwnerClient())) {
-			int effective_hINT = caster->GetOwner() ? std::ceil(RuleR(Character, Pyrelight_HeroicPetMod) * caster->GetOwner()->GetHeroicINT()) : caster->GetHeroicINT();
+			int effective_hINT = 0;
+			effective_hINT = caster->GetOwner() ? std::ceil(RuleR(Character, Pyrelight_HeroicPetMod) * caster->GetOwner()->GetHeroicINT()) : caster->GetHeroicINT();
+			if (effective_hINT) {
+				int res_add = round(res * (RuleR(Character, Pyrelight_hINT_DetDurIncrease) * effective_hINT / 100));
+				int increase = round(((static_cast<float>(res_add) / res)) * 100);
 
-			int res_add = round(res * (RuleR(Character, Pyrelight_hINT_DetDurIncrease) * effective_hINT / 100));
-			int increase = round(((static_cast<float>(res_add) / res)) * 100);
+				LogDebug("res_add: [{}], increase: [{}]", res_add, increase);
 
-			LogDebug("res_add: [{}], increase: [{}]", res_add, increase);
+				Client* msgTarget = (caster->GetOwner() && caster->GetOwner()->IsClient()) ? caster->GetOwner()->CastToClient() :caster->CastToClient();
 
-			Client* msgTarget = (caster->GetOwner() && caster->GetOwner()->IsClient()) ? caster->GetOwner()->CastToClient() :caster->CastToClient();
-
-			if (res_add > 0 && msgTarget && msgTarget->IsClient()) {
-				msgTarget->LoadAccountFlags();		
-			
-				if (effective_hINT > 0) {
-					if (msgTarget->GetAccountFlag("filter_hINT") != "off") {
-						if (caster->IsPet() && !caster->IsClient() && msgTarget->GetAccountFlag("filter_hPets") != "off") {
-							msgTarget->Message(Chat::Spells, "Your Heroic Intelligence has increased the duration of your pet's spell effect by %i%% (%i ticks)!", increase, res_add);
-						} else if (caster->IsClient()) {
-							msgTarget->Message(Chat::Spells, "Your Heroic Intelligence has increased the duration of your spell effect by %i%% (%i ticks)!", increase, res_add);
+				if (res_add > 0 && msgTarget && msgTarget->IsClient()) {
+					msgTarget->LoadAccountFlags();		
+				
+					if (effective_hINT > 0) {
+						if (msgTarget->GetAccountFlag("filter_hINT") != "off") {
+							if (caster->IsPet() && !caster->IsClient() && msgTarget->GetAccountFlag("filter_hPets") != "off") {
+								msgTarget->Message(Chat::Spells, "Your Heroic Intelligence has increased the duration of your pet's spell effect by %i%% (%i ticks)!", increase, res_add);
+							} else if (caster->IsClient()) {
+								msgTarget->Message(Chat::Spells, "Your Heroic Intelligence has increased the duration of your spell effect by %i%% (%i ticks)!", increase, res_add);
+							}
 						}
 					}
-				}
 
 				res += res_add;
+				}
 			}
 		}
 
 		// Pyrelight Custom Code
-		// Increase Short Duration Buff Durations based on Heroic Wisdom
-		if (RuleR(Character, Pyrelight_hWIS_ShortBuff) > 0 && IsShortDurationBuff(spell_id) && (caster->IsClient() || caster->IsPetOwnerClient())) {
-			int effective_hWIS = caster->GetOwner() ? std::ceil(RuleR(Character, Pyrelight_HeroicPetMod) * caster->GetOwner()->GetHeroicWIS()) : caster->GetHeroicWIS();
+		// Increase Short Duration Buff Durations based on Heroic Wisdom		
+		if (RuleR(Character, Pyrelight_hWIS_ShortBuff) > 0 && IsShortDurationBuff(spell_id) && !IsEffectInSpell(spell_id, 40) && (caster->IsClient() || caster->IsPetOwnerClient())) {
+			int effective_hWIS = 0;
+			effective_hWIS = caster->GetOwner() ? std::ceil(RuleR(Character, Pyrelight_HeroicPetMod) * caster->GetOwner()->GetHeroicWIS()) : caster->GetHeroicWIS();
+			if (effective_hWIS > 0) {
+				int res_add = round(res * (RuleR(Character, Pyrelight_hWIS_ShortBuff) * effective_hWIS / 100));
+				int increase = round(((static_cast<float>(res_add) / res)) * 100);
 
-			int res_add = round(res * (RuleR(Character, Pyrelight_hWIS_ShortBuff) * effective_hWIS / 100));
-			int increase = round(((static_cast<float>(res_add) / res)) * 100);
+				LogDebug("res_add: [{}], increase: [{}]", res_add, increase);
 
-			LogDebug("res_add: [{}], increase: [{}]", res_add, increase);
-
-			Client* msgTarget = (caster->GetOwner() && caster->GetOwner()->IsClient()) ? caster->GetOwner()->CastToClient() :caster->CastToClient();
+				Client* msgTarget = (caster->GetOwner() && caster->GetOwner()->IsClient()) ? caster->GetOwner()->CastToClient() :caster->CastToClient();
 
 				if (res_add > 0 && msgTarget && msgTarget->IsClient()) {
-					msgTarget->LoadAccountFlags();
-			
+					msgTarget->LoadAccountFlags();			
 
-				if (effective_hWIS > 0) {
-					if (msgTarget->GetAccountFlag("filter_hWIS") != "off") {
-						if (caster->IsPet() && !caster->IsClient() && msgTarget->GetAccountFlag("filter_hPets") != "off") {
-							msgTarget->Message(Chat::Spells, "Your Heroic Wisdom has increased the duration of your pet's spell effect by %i%% (%i ticks)!", increase, res_add);
-						} else if (caster->IsClient()) {
-							msgTarget->Message(Chat::Spells, "Your Heroic Wisdom has increased the duration of your spell effect by %i%% (%i ticks)!", increase, res_add);
+					if (effective_hWIS > 0) {
+						if (msgTarget->GetAccountFlag("filter_hWIS") != "off") {
+							if (caster->IsPet() && !caster->IsClient() && msgTarget->GetAccountFlag("filter_hPets") != "off") {
+								msgTarget->Message(Chat::Spells, "Your Heroic Wisdom has increased the duration of your pet's spell effect by %i%% (%i ticks)!", increase, res_add);
+							} else if (caster->IsClient()) {
+								msgTarget->Message(Chat::Spells, "Your Heroic Wisdom has increased the duration of your spell effect by %i%% (%i ticks)!", increase, res_add);
+							}
 						}
 					}
-				}
 
 				res += res_add;
+				}
 			}
 		}
 
@@ -2913,8 +2898,8 @@ int Mob::CalcBuffDuration(Mob *caster, Mob *target, uint16 spell_id, int32 caste
 
 	// Pyrelight Custom Code
 	// Force maximum duration of beneficial 'long buffs'
-	if (IsBeneficialSpell(spell_id) && !IsShortDurationBuff(spell_id) && res > 150) {
-		res = 150;
+	if (IsBeneficialSpell(spell_id) && !IsShortDurationBuff(spell_id) && res > 300) {
+		res = 300;
 	}
 
 	LogSpells("Spell [{}]: Casting level [{}], formula [{}], base_duration [{}]: result [{}]", spell_id, castlevel, formula, duration, res);
@@ -4234,111 +4219,11 @@ bool Mob::SpellOnTarget(
 			);
 		}
 		
-		// Pyrelight Custom Code		
+		// Pyrelight Custom Code - Heroic Charisma
 		if (RuleR(Character,Pyrelight_hCHA_ResistReroll) > 0) {
-			int effective_hCHA = 0;
-			int new_result = spell_effectiveness;
-			int loop_count = 1;
-			Client* hCHA_source = nullptr;
-			if (spellOwner->IsClient() || spellOwner->IsPetOwnerClient()) {
-				hCHA_source = spellOwner->GetOwner() ? spellOwner->GetOwner()->CastToClient() : spellOwner->CastToClient();
-				effective_hCHA = hCHA_source->GetHeroicCHA();
-				hCHA_source->LoadAccountFlags();
-
-				// Added chance to just no-sell the resist check completely.
-				// Added chance to just no-sell the resist check completely.
-				double y = 0.03;
-				double raw_score = (double(effective_hCHA) / double(spelltar->GetLevel())) * y;
-				double x = std::max(0.0, std::min(100.0, raw_score));
-				int success_chance = static_cast<int>(x); // our chance of success in percent
-
-				spell_effectiveness = zone->random.Roll(success_chance) ? 100 : spell_effectiveness;
-				if (spell_effectiveness == 100) {
-					if (hCHA_source->GetAccountFlag("filter_hCHA") != "off") {					
-						if (hCHA_source->IsPet() && hCHA_source->GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
-							hCHA_source->GetOwner()->Message(Chat::PetSpell, "Your Heroic Charisma allows your pet's magic to bypass your target's resistences!");
-						} else {
-							hCHA_source->Message(Chat::Spells, "Your Heroic Charisma allows your magic to bypass your target's resistences!");
-						}
-					}
-				}
-
-				while (effective_hCHA > 0 && spell_effectiveness < 100) {					
-					int random = zone->random.Int(1,100);
-					LogDebug("Re-Rolling Offensive resist check for [{}], hCHA: [{}], target: [{}], owner: [{}], random: [{}]", hCHA_source->GetName(), effective_hCHA, spelltar->GetName(), spellOwner->GetName(), random);				
-					LogDebug("resist_adjust: [{}], [{}]", resist_adjust, use_resist_adjust);
-					if ((effective_hCHA * RuleR(Character,Pyrelight_hCHA_ResistReroll)) >= random) {						
-						new_result = spelltar->ResistSpell(
-										spells[spell_id].resist_type,
-										spell_id,
-										this,
-										use_resist_adjust + (loop_count * -50),
-										resist_adjust,
-										false,
-										false,
-										false,
-										level_override);
-
-						LogDebug("Reroll Result... [{}]", new_result);
-								
-						if (new_result > spell_effectiveness) {
-							spell_effectiveness = new_result;
-							LogDebug("Reroll succeeded!");	
-							if (hCHA_source->GetAccountFlag("filter_hCHA") != "off") {					
-								if (hCHA_source->IsPet() && hCHA_source->GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
-									hCHA_source->GetOwner()->Message(Chat::PetSpell, "Your Heroic Charisma allows your pet's magic to bypass your target's resistences!");
-								} else {
-									hCHA_source->Message(Chat::Spells, "Your Heroic Charisma allows your magic to bypass your target's resistences!");
-								}
-							}							
-						} else {
-							LogDebug("Reroll failed!");
-						}
-					}
-					effective_hCHA -= random * RuleR(Character, Pyrelight_HeroicRerollDecayRate);
-					loop_count++;
-				}
-			} else if (spelltar->IsClient() || spelltar->IsPetOwnerClient() && spell_effectiveness > 0) {
-				hCHA_source = spelltar->GetOwner() ? spelltar->GetOwner()->CastToClient() : spelltar->CastToClient();
-				effective_hCHA = hCHA_source->GetHeroicCHA();
-				hCHA_source->LoadAccountFlags();				
-
-				while (effective_hCHA > 0 && spell_effectiveness > 0) {					
-					int random = zone->random.Int(1,100);
-					LogDebug("Re-Rolling Defensive resist check for [{}], hCHA: [{}], target: [{}], owner: [{}], random: [{}]", hCHA_source->GetName(), effective_hCHA, spelltar->GetName(), spellOwner->GetName(), random);			
-					LogDebug("resist_adjust: [{}], [{}]", resist_adjust, use_resist_adjust);
-					if ((effective_hCHA * RuleR(Character,Pyrelight_hCHA_ResistReroll)) >= random) {
-						new_result = spelltar->ResistSpell(
-										spells[spell_id].resist_type,
-										spell_id,
-										this,
-										use_resist_adjust + (loop_count * -50),
-										resist_adjust,
-										false,
-										false,
-										false,
-										level_override);
-
-						LogDebug("Reroll Result... [{}]", new_result);
-						
-						if (new_result < spell_effectiveness) {	
-							spell_effectiveness = new_result;
-							LogDebug("Reroll succeeded!");
-							if (hCHA_source->GetAccountFlag("filter_hCHA") != "off") {					
-								if (hCHA_source->IsPet() && hCHA_source->GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
-									hCHA_source->GetOwner()->Message(Chat::SpellFailure, "Your Heroic Charisma allows your pet to resist the magic!");
-								} else {
-									hCHA_source->Message(Chat::SpellFailure, "Your Heroic Charisma allows you to resist the magic!");
-								}								
-							}
-						} else {
-							LogDebug("Reroll failed!");
-						}
-					}
-					effective_hCHA -= random * RuleR(Character, Pyrelight_HeroicRerollDecayRate);
-					loop_count++;				
-				}
-			}
+			// This has been consistently nasty code.
+			// Simplify it down to 'spell becomes unresistable'.
+			
 		}		
 
 		if (spell_effectiveness < 100) {
@@ -4560,19 +4445,26 @@ bool Mob::SpellOnTarget(
 
 	// Pyrelight Custom Code
 	// Beastlord Epic Effect - Mirror spells between Pet and Owner
-	/*
+	
 	if ((spelltar->IsClient() || spelltar->IsPetOwnerClient()) && IsBeneficialSpell(spell_id) && !IsPetSpell(spell_id) && !is_mirror) {
 		Client* c = IsClient() ? CastToClient() : GetOwner()->CastToClient();
 
-		if (c && c->GetPet() && c->GetInv().HasItemEquippedByID(8495)) {
+		bool epic_equip = false;
+		for(int i = 0; i <= 10; i++) {
+			if (c->GetInv().HasAugmentEquippedByID(8495 + (i*1000000))) {
+				epic_equip = true;
+				break;
+			}			
+		}
+
+		if (c && c->GetPet() && epic_equip) {
 			LogDebug("Spell is eligible for mirroring.");
 			Mob* extratar = spelltar->IsClient() ? spelltar->GetPet() : spelltar->GetOwner();
 
 			LogDebug("extraTar [{}]", extratar->GetName());
 			SpellOnTarget(spell_id, extratar, reflect_effectiveness, use_resist_adjust, resist_adjust, isproc, level_override, duration_override, disable_buff_overwrite, true);
 		}
-	}
-	*/
+	}	
 
 	return true;
 }
@@ -5009,22 +4901,21 @@ bool Mob::IsImmuneToSpell(uint16 spell_id, Mob *caster)
 		}
 
 		//let npcs cast whatever charm on anyone
-		if(!caster->IsNPC())
+		// Pyrelight Custom Code - Enchanter Epic allows unrestricted charm spells.
+		bool epic_equip = false;
+		for(int i = 0; i <= 10; i++) {
+			if (caster->GetInv().HasAugmentEquippedByID(10650 + (i*1000000))) {
+				epic_equip = true;
+				break;
+			}			
+		}
+		
+		if(!caster->IsNPC() || epic_equip)
 		{
 			// check level limit of charm spell
 			effect_index = GetSpellEffectIndex(spell_id, SE_Charm);
 			assert(effect_index >= 0);
-
-			// Pyrelight Custom - Ench Epic allows DC to work up to Caster Level.
-			bool enchEpic = (caster && caster->IsClient() && caster->GetInv().HasItemEquippedByID(10650));
-			int max_level_target = spells[spell_id].max_value[effect_index];
-
-			if (enchEpic) {
-				max_level_target = spells[spell_id].no_resist == -1 ? caster->GetLevel() : max_level_target + 5;
-				
-			}
-
-			if(GetLevel() > max_level_target && max_level_target != 0)
+			if(GetLevel() > spells[spell_id].max_value[effect_index] && spells[spell_id].max_value[effect_index] != 0)
 			{
 				LogSpells("Our level ([{}]) is higher than the limit of this Charm spell ([{}])", GetLevel(), spells[spell_id].max_value[effect_index]);
 				caster->MessageString(Chat::Red, CANNOT_CHARM_YET);	// need to verify message type, not in MQ2Cast for easy look up<Paste>
