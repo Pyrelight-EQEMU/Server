@@ -477,7 +477,7 @@ void NPC::GetPetState(SpellBuff_Struct *pet_buffs, uint32 *items, char *name) {
 	memcpy(items, equipment, sizeof(uint32) * EQ::invslot::EQUIPMENT_COUNT);
 
 	//save their buffs.
-	for (int i=EQ::invslot::EQUIPMENT_BEGIN; i < GetPetMaxTotalSlots(); i++) {
+	for (int i=0; i < GetPetMaxTotalSlots(); i++) {
 		if (IsValidSpell(buffs[i].spellid)) {
 			pet_buffs[i].spellid = buffs[i].spellid;
 			pet_buffs[i].effect_type = i+1;
@@ -486,6 +486,8 @@ void NPC::GetPetState(SpellBuff_Struct *pet_buffs, uint32 *items, char *name) {
 			pet_buffs[i].bard_modifier = 10;
 			pet_buffs[i].counters = buffs[i].counters;
 			pet_buffs[i].bard_modifier = buffs[i].instrument_mod;
+			strcpy(pet_buffs[i].caster_name, buffs[i].caster_name);
+
 		}
 		else {
 			pet_buffs[i].spellid = SPELL_UNKNOWN;
