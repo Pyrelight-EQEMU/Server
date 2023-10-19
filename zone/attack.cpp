@@ -3985,9 +3985,14 @@ void Mob::CommonDamage(Mob* attacker, int64 &damage, const uint16 spell_id, cons
 				attacker->HealDamage(healed);
 
 				// Pyrelight Custom Code
-				// New Necromancer Epic 1.0 Effect. Share Lifetaps with pet, and if you have a pet also share them at a reduced value with your group.				
-				if (attacker->IsClient() && attacker->HasPet() && attacker->GetInv().HasItemEquippedByID(20544)) {
-					attacker->GetPet()->HealDamage(healed);
+				// New Necromancer Epic 1.0 Effect. Share Lifetaps with pet
+				if (caster->IsClient() && spells[spell_id].good_effect != BENEFICIAL_EFFECT) {					
+					for(int i = 0; i <= 10; i++) {
+						if (caster->GetInv().HasAugmentEquippedByID(20544 + (i*1000000))) {
+							attacker->GetPet()->HealDamage(healed);
+							break;
+						}			
+					}
 				}
 
 				//we used to do a message to the client, but its gone now.
