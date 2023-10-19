@@ -4163,33 +4163,24 @@ void Mob::DoBuffTic(const Buffs_Struct &buff, int slot, Mob *caster)
 				// Pyrelight Custom Code
 				// Shaman Epic DoT->Heal Effect
 				if (spells[buff.spellid].good_effect != BENEFICIAL_EFFECT) {
-				bool epic_equip = false;
 					for(int i = 0; i <= 10; i++) {
 						if (caster->GetInv().HasAugmentEquippedByID(10651 + (i*1000000))) {
-							epic_equip = true;
-							break;
+							caster->HealDamage(round(effect_value * 0.25), caster, buff.spellid);
+							if (caster->GetPet()) {
+								caster->GetPet()->HealDamage(round(effect_value * 0.25), caster, buff.spellid);
+							}
 						}			
-					}
-					if (caster->IsClient() && epic_equip) {
-						caster->HealDamage(round(effect_value * 0.25), caster, buff.spellid);
-						if (caster->GetPet()) {
-							caster->GetPet()->HealDamage(round(effect_value * 0.25), caster, buff.spellid);
-						}
 					}
 				}
 
 				// Pyrelight Custom Code
 				// Necro Epic DoT Procs
 				if (spells[buff.spellid].good_effect != BENEFICIAL_EFFECT) {
-					bool epic_equip = false;
 					for(int i = 0; i <= 10; i++) {
 						if (caster->GetInv().HasAugmentEquippedByID(20544 + (i*1000000))) {
-							epic_equip = true;
+							caster->TryCombatProcs(nullptr, this, EQ::invslot::slotRange);
 							break;
 						}			
-					}
-					if (caster->IsClient() && epic_equip) {
-						caster->TryCombatProcs(nullptr, this, EQ::invslot::slotRange);
 					}
 				}
 

@@ -3986,7 +3986,7 @@ void Mob::CommonDamage(Mob* attacker, int64 &damage, const uint16 spell_id, cons
 
 				// Pyrelight Custom Code
 				// New Necromancer Epic 1.0 Effect. Share Lifetaps with pet
-				if (attacker->IsClient() && spells[spell_id].good_effect != BENEFICIAL_EFFECT) {					
+				if (attacker->IsClient() && spells[spell_id].good_effect != BENEFICIAL_EFFECT && attacker->GetPet()) {					
 					for(int i = 0; i <= 10; i++) {
 						if (attacker->GetInv().HasAugmentEquippedByID(20544 + (i*1000000))) {
 							attacker->GetPet()->HealDamage(healed);
@@ -4838,18 +4838,18 @@ void Mob::TryCombatProcs(const EQ::ItemInstance* weapon_g, Mob *on, uint16 hand,
 
 		return;
 	} else {
+
+		if (!weapon_g->IsClassCommon()) {
+			TrySpellProc(nullptr, (const EQ::ItemData*)nullptr, on);
+			return;
+		}
+
 		// Innate + aug procs from weapons
 		// TODO: powersource procs -- powersource procs are on invis augs, so shouldn't need anything extra
 		TryWeaponProc(weapon_g, weapon_g->GetItem(), on, hand);
 		// Procs from Buffs and AA both melee and range
 		TrySpellProc(weapon_g, weapon_g->GetItem(), on, hand);
 	}	
-
-//	if (!weapon_g->IsClassCommon()) {
-//		TrySpellProc(nullptr, (const EQ::ItemData*)nullptr, on);
-//		return;
-//	}
-
 	return;
 }
 
