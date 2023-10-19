@@ -1361,8 +1361,9 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 					effect_value += caster->GetExtraSpellAmt(spell_id, itembonuses.HealAmt, effect_value);
 				
 				if (RuleR(Character, Pyrelight_hINT_RunePower) > 0 && (caster->IsClient() || caster->IsPetOwnerClient())) {
-					int effective_hINT = caster->GetOwner() ? round(RuleR(Character, Pyrelight_HeroicPetMod) * caster->GetOwner()->GetHeroicWIS()) : caster->GetHeroicWIS();
-					float bonus_ratio = effective_hINT * RuleR(Character, Pyrelight_hINT_RunePower) / 100;
+					int effective_hWIS = 0;
+					effective_hWIS = caster->GetOwner() ? round(RuleR(Character, Pyrelight_HeroicPetMod) * caster->GetOwner()->GetHeroicWIS()) : caster->GetHeroicWIS();
+					float bonus_ratio = effective_hWIS * RuleR(Character, Pyrelight_hINT_RunePower) / 100;
 
 					if (RuleB(Character, Pyrelight_hStat_Randomize)) {
 						bonus_ratio *= zone->random.Real(1 - RuleR(Character, Pyrelight_hStat_RandomizationFactor), 1 + RuleR(Character, Pyrelight_hStat_RandomizationFactor));
@@ -1370,11 +1371,11 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 
 					int bonus_amount = round(effect_value * bonus_ratio);
 
-					LogDebug("effective_hINT: [{}], bonus_ratio: [{}], bonus_amount: [{}]", effective_hINT, bonus_ratio, bonus_amount);
+					LogDebug("effective_hWIS: [{}], bonus_ratio: [{}], bonus_amount: [{}]", effective_hWIS, bonus_ratio, bonus_amount);
 
 					effect_value += bonus_amount;
 
-					if (effective_hINT > 0) {
+					if (effective_hWIS > 0) {
 						if (caster->IsClient()) {
 							caster->CastToClient()->LoadAccountFlags(); 
 						} else if (caster->GetOwner() && caster->GetOwner()->IsClient()) {
@@ -1402,8 +1403,9 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 					effect_value += caster->GetExtraSpellAmt(spell_id, itembonuses.HealAmt, effect_value);
 				
 				if (RuleR(Character, Pyrelight_hINT_RunePower) > 0 && (caster->IsClient() || caster->IsPetOwnerClient())) {
-					int effective_hINT = caster->GetOwner() ? round(RuleR(Character, Pyrelight_HeroicPetMod) * caster->GetOwner()->GetHeroicWIS()) : caster->GetHeroicWIS();
-					float bonus_ratio = effective_hINT * RuleR(Character, Pyrelight_hINT_RunePower) / 100;
+					int effective_hWIS = 0;
+					effective_hWIS = caster->GetOwner() ? round(RuleR(Character, Pyrelight_HeroicPetMod) * caster->GetOwner()->GetHeroicWIS()) : caster->GetHeroicWIS();
+					float bonus_ratio = effective_hWIS * RuleR(Character, Pyrelight_hINT_RunePower) / 100;
 
 					if (RuleB(Character, Pyrelight_hStat_Randomize)) {
 						bonus_ratio *= zone->random.Real(1 - RuleR(Character, Pyrelight_hStat_RandomizationFactor), 1 + RuleR(Character, Pyrelight_hStat_RandomizationFactor));
@@ -1411,23 +1413,23 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 
 					int bonus_amount = round(effect_value * bonus_ratio);
 
-					LogDebug("effective_hINT: [{}], bonus_ratio: [{}], bonus_amount: [{}]", effective_hINT, bonus_ratio, bonus_amount);
+					LogDebug("effective_hINT: [{}], bonus_ratio: [{}], bonus_amount: [{}]", effective_hWIS, bonus_ratio, bonus_amount);
 
 					effect_value += bonus_amount;
 
-					if (effective_hINT > 0) {
+					if (effective_hWIS > 0) {
 						if (caster->IsClient()) {
 							caster->CastToClient()->LoadAccountFlags(); 
 						} else if (caster->GetOwner() && caster->GetOwner()->IsClient()) {
 							caster->GetOwner()->CastToClient()->LoadAccountFlags();
 						}
 
-						if (caster->IsClient() && caster->CastToClient()->GetAccountFlag("filter_hINT") != "off") {
-							caster->Message(Chat::Spells, "Your Heroic Wisdon has increased the power of your rune by %i (%i%%)!", abs(bonus_amount), static_cast<int>(bonus_ratio * 100));
+						if (caster->IsClient() && caster->CastToClient()->GetAccountFlag("filter_hWIS") != "off") {
+							caster->Message(Chat::Spells, "Your Heroic Wisdo, has increased the power of your rune by %i (%i%%)!", abs(bonus_amount), static_cast<int>(bonus_ratio * 100));
 						} else if (caster->GetOwner() && caster->GetOwner()->IsClient() && 
 							caster->GetOwner()->CastToClient()->GetAccountFlag("filter_hWIS") != "off" && 
 							caster->GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
-							caster->GetOwner()->Message(Chat::Spells, "Your Heroic Wisdon has increased the power of your pet's rune by %i (%i%%)!", abs(bonus_amount), static_cast<int>(bonus_ratio * 100));
+							caster->GetOwner()->Message(Chat::Spells, "Your Heroic Wisdo, has increased the power of your pet's rune by %i (%i%%)!", abs(bonus_amount), static_cast<int>(bonus_ratio * 100));
 						}
 					}
 				}
@@ -1445,8 +1447,9 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 					effect_value += caster->GetExtraSpellAmt(spell_id, itembonuses.HealAmt, effect_value);
 				
 				if (RuleR(Character, Pyrelight_hINT_RunePower) > 0 && (caster->IsClient() || caster->IsPetOwnerClient())) {
-					int effective_hINT = caster->GetOwner() ? round(RuleR(Character, Pyrelight_HeroicPetMod) * caster->GetOwner()->GetHeroicWIS()) : caster->GetHeroicWIS();
-					float bonus_ratio = effective_hINT * RuleR(Character, Pyrelight_hINT_RunePower) / 100;
+					int effective_hWIS = 0; 
+					effective_hWIS = caster->GetOwner() ? round(RuleR(Character, Pyrelight_HeroicPetMod) * caster->GetOwner()->GetHeroicWIS()) : caster->GetHeroicWIS();
+					float bonus_ratio = effective_hWIS * RuleR(Character, Pyrelight_hINT_RunePower) / 100;
 
 					if (RuleB(Character, Pyrelight_hStat_Randomize)) {
 						bonus_ratio *= zone->random.Real(1 - RuleR(Character, Pyrelight_hStat_RandomizationFactor), 1 + RuleR(Character, Pyrelight_hStat_RandomizationFactor));
@@ -1454,23 +1457,23 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 
 					int bonus_amount = round(effect_value * bonus_ratio);
 
-					LogDebug("effective_hINT: [{}], bonus_ratio: [{}], bonus_amount: [{}]", effective_hINT, bonus_ratio, bonus_amount);
+					LogDebug("effective_hWIS: [{}], bonus_ratio: [{}], bonus_amount: [{}]", effective_hWIS, bonus_ratio, bonus_amount);
 
 					effect_value += bonus_amount;
 
-					if (effective_hINT > 0) {
+					if (effective_hWIS > 0) {
 						if (caster->IsClient()) {
 							caster->CastToClient()->LoadAccountFlags(); 
 						} else if (caster->GetOwner() && caster->GetOwner()->IsClient()) {
 							caster->GetOwner()->CastToClient()->LoadAccountFlags();
 						}
 
-						if (caster->IsClient() && caster->CastToClient()->GetAccountFlag("filter_hINT") != "off") {
-							caster->Message(Chat::Spells, "Your Heroic Intelligence has increased the power of your rune by %i (%i%%)!", abs(bonus_amount), static_cast<int>(bonus_ratio * 100));
+						if (caster->IsClient() && caster->CastToClient()->GetAccountFlag("filter_hWIS") != "off") {
+							caster->Message(Chat::Spells, "Your Heroic Wisdom has increased the power of your rune by %i (%i%%)!", abs(bonus_amount), static_cast<int>(bonus_ratio * 100));
 						} else if (caster->GetOwner() && caster->GetOwner()->IsClient() && 
 							caster->GetOwner()->CastToClient()->GetAccountFlag("filter_hWIS") != "off" && 
 							caster->GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
-							caster->GetOwner()->Message(Chat::Spells, "Your Heroic Wisdon has increased the power of your pet's rune by %i (%i%%)!", abs(bonus_amount), static_cast<int>(bonus_ratio * 100));
+							caster->GetOwner()->Message(Chat::Spells, "Your Heroic Wisdom has increased the power of your pet's rune by %i (%i%%)!", abs(bonus_amount), static_cast<int>(bonus_ratio * 100));
 						}
 					}
 				}
@@ -4159,17 +4162,34 @@ void Mob::DoBuffTic(const Buffs_Struct &buff, int slot, Mob *caster)
 
 				// Pyrelight Custom Code
 				// Shaman Epic DoT->Heal Effect
+				if (spells[spell_id].good_effect != BENEFICIAL_EFFECT) {
 				bool epic_equip = false;
-				for(int i = 0; i <= 10; i++) {
-					if (caster->GetInv().HasAugmentEquippedByID(10651 + (i*1000000))) {
-						epic_equip = true;
-						break;
-					}			
+					for(int i = 0; i <= 10; i++) {
+						if (caster->GetInv().HasAugmentEquippedByID(10651 + (i*1000000))) {
+							epic_equip = true;
+							break;
+						}			
+					}
+					if (caster->IsClient() && epic_equip) {
+						caster->HealDamage(round(effect_value * 0.25), caster, buff.spellid);
+						if (caster->GetPet()) {
+							caster->GetPet()->HealDamage(round(effect_value * 0.25), caster, buff.spellid);
+						}
+					}
 				}
-				if (caster->IsClient() && true) {
-					caster->HealDamage(round(effect_value * 0.25), caster, buff.spellid);
-					if (caster->GetPet()) {
-						caster->GetPet()->HealDamage(round(effect_value * 0.25), caster, buff.spellid);
+
+				// Pyrelight Custom Code
+				// Necro Epic DoT Procs
+				if (spells[spell_id].good_effect != BENEFICIAL_EFFECT) {
+					bool epic_equip = false;
+					for(int i = 0; i <= 10; i++) {
+						if (caster->GetInv().HasAugmentEquippedByID(20544 + (i*1000000))) {
+							epic_equip = true;
+							break;
+						}			
+					}
+					if (caster->IsClient() && epic_equip) {
+						caster->TryCombatProcs(nullptr, this, EQ::invslot::slotRange);
 					}
 				}
 

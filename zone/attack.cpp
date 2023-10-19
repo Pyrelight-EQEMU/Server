@@ -1425,7 +1425,8 @@ void Mob::DoAttack(Mob *other, DamageHitInfo &hit, ExtraAttackOptions *opts, boo
 			} else if (other->GetOwner() && other->GetOwner()->IsClient()) {
 				other->GetOwner()->CastToClient()->LoadAccountFlags();
 			}
-			int effective_hAGI = (other->IsPetOwnerClient() && other->GetOwner()) ? std::ceil(RuleR(Character, Pyrelight_HeroicPetMod) * other->GetOwner()->GetHeroicAGI()) : other->GetHeroicAGI();	
+			int effective_hAGI = 0;
+			effective_hAGI = (other->IsPetOwnerClient() && other->GetOwner()) ? std::ceil(RuleR(Character, Pyrelight_HeroicPetMod) * other->GetOwner()->GetHeroicAGI()) : other->GetHeroicAGI();	
 			while (!avoided && effective_hAGI > 0) {
 				auto random = zone->random.Int(1,100);
 				if (random <= (effective_hAGI * RuleR(Character, Pyrelight_hAGI_EvasionReroll))) {
@@ -1715,7 +1716,7 @@ bool Mob::Attack(Mob* other, int Hand, bool bRiposte, bool IsStrikethrough, bool
 			other->GetOwner()->CastToClient()->LoadAccountFlags();
 		}
 
-		if ((IsClient() && GetHeroicSTR() > 0) || (IsPetOwnerClient() && GetOwner()->GetHeroicSTR())) {
+		if ((IsClient() && GetHeroicSTR() > 0) || (IsPetOwnerClient() && GetOwner()->GetHeroicSTR() > 0)) {
 			if ((IsClient() || IsPetOwnerClient()) && (my_hit.damage_done > my_hit.original_damage)) {				
 				int increase_percentage = ((static_cast<float>(my_hit.damage_done) / static_cast<float>(my_hit.original_damage)) - 1) * 100;
 				if (GetOwner() && GetOwner()->IsClient() && GetOwner()->CastToClient()->GetAccountFlag("filter_hSTR") != "off") {
@@ -1732,7 +1733,7 @@ bool Mob::Attack(Mob* other, int Hand, bool bRiposte, bool IsStrikethrough, bool
 			}
 		}
 
-		if ((other->IsClient() && other->GetHeroicSTA() > 0) || (other->IsPetOwnerClient() && other->GetOwner()->GetHeroicSTA())) {
+		if ((other->IsClient() && other->GetHeroicSTA() > 0) || (other->IsPetOwnerClient() && other->GetOwner()->GetHeroicSTA() > 0)) {
 			if ((other->IsClient() || other->IsPetOwnerClient()) && (my_hit.original_damage > my_hit.damage_done)) {				
 				int reduction_percentage = (1 - static_cast<float>(my_hit.damage_done) / static_cast<float>(my_hit.original_damage)) * 100;
 				if (other->GetOwner() && other->GetOwner()->IsClient()  && other->GetOwner()->CastToClient()->GetAccountFlag("filter_hSTA") != "off") {
@@ -2405,7 +2406,7 @@ bool NPC::Attack(Mob* other, int Hand, bool bRiposte, bool IsStrikethrough, bool
 				other->GetOwner()->CastToClient()->LoadAccountFlags();
 			}
 
-			if ((IsClient() && GetHeroicSTR() > 0) || (IsPetOwnerClient() && GetOwner()->GetHeroicSTR())) {
+			if ((IsClient() && GetHeroicSTR() > 0) || (IsPetOwnerClient() && GetOwner()->GetHeroicSTR() > 0)) {
 				if ((IsClient() || IsPetOwnerClient()) && (my_hit.damage_done > my_hit.original_damage)) {				
 					int increase_percentage = ((static_cast<float>(my_hit.damage_done) / static_cast<float>(my_hit.original_damage)) - 1) * 100;
 					if (GetOwner() && GetOwner()->IsClient() && GetOwner()->CastToClient()->GetAccountFlag("filter_hSTR") != "off") {
@@ -2422,7 +2423,7 @@ bool NPC::Attack(Mob* other, int Hand, bool bRiposte, bool IsStrikethrough, bool
 				}
 			}
 			
-			if ((other->IsClient() && other->GetHeroicSTA() > 0) || (other->IsPetOwnerClient() && other->GetOwner()->GetHeroicSTA())) {
+			if ((other->IsClient() && other->GetHeroicSTA() > 0) || (other->IsPetOwnerClient() && other->GetOwner()->GetHeroicSTA() > 0)) {
 				if ((other->IsClient() || other->IsPetOwnerClient()) && (my_hit.original_damage > my_hit.damage_done)) {				
 					int reduction_percentage = (1 - static_cast<float>(my_hit.damage_done) / static_cast<float>(my_hit.original_damage)) * 100;
 					if (other->GetOwner() && other->GetOwner()->IsClient()  && other->GetOwner()->CastToClient()->GetAccountFlag("filter_hSTA") != "off") {
@@ -4774,6 +4775,9 @@ void Mob::TryDefensiveProc(Mob *on, uint16 hand) {
 	}
 }
 
+
+// Pyrelight Custom Code
+// Modified so that it can be used to trigger everything for ungeneralized attacks if weapon_g is null;
 void Mob::TryCombatProcs(const EQ::ItemInstance* weapon_g, Mob *on, uint16 hand, const EQ::ItemData* weapon_data) {
 
 	if (!on) {
@@ -4799,21 +4803,47 @@ void Mob::TryCombatProcs(const EQ::ItemInstance* weapon_g, Mob *on, uint16 hand,
 		return;
 	}
 
-	if (!weapon_g) {
-		TrySpellProc(nullptr, (const EQ::ItemData*)nullptr, on);
-		return;
+	// Only do generalized Procs for Clients
+	if (IsClient()) {
+		// Do Epic/Power Source procs
+		EQ::ItemInstance *epic = GetInv().GetItem(EQ::invslot::slotPowerSource);
+		if (epic && on && !on->HasDied()) {
+			TryWeaponProc(epic, epic->GetItem(), on);
+		}
 	}
 
-	if (!weapon_g->IsClassCommon()) {
+	if (!weapon_g || hand == EQ::invslot::slotRange) {
 		TrySpellProc(nullptr, (const EQ::ItemData*)nullptr, on);
-		return;
-	}
 
-	// Innate + aug procs from weapons
-	// TODO: powersource procs -- powersource procs are on invis augs, so shouldn't need anything extra
-	TryWeaponProc(weapon_g, weapon_g->GetItem(), on, hand);
-	// Procs from Buffs and AA both melee and range
-	TrySpellProc(weapon_g, weapon_g->GetItem(), on, hand);
+		EQ::ItemInstance *primary = GetInv().GetItem(EQ::invslot::slotPrimary);
+		if (primary && on && !on->HasDied()) {
+			TryWeaponProc(primary, primary->GetItem(), on);
+		}
+
+		EQ::ItemInstance *secondary = GetInv().GetItem(EQ::invslot::slotSecondary);
+		if (secondary && on && !on->HasDied()) {
+			TryWeaponProc(secondary, secondary->GetItem(), on);
+		}
+
+		// Don't do ranged proc twice
+		EQ::ItemInstance *range = GetInv().GetItem(EQ::invslot::slotRange);
+		if (range && on && !on->HasDied()) {
+			TryWeaponProc(range, range->GetItem(), on);
+		}		
+
+		return;
+	} else {
+		// Innate + aug procs from weapons
+		// TODO: powersource procs -- powersource procs are on invis augs, so shouldn't need anything extra
+		TryWeaponProc(weapon_g, weapon_g->GetItem(), on, hand);
+		// Procs from Buffs and AA both melee and range
+		TrySpellProc(weapon_g, weapon_g->GetItem(), on, hand);
+	}	
+
+//	if (!weapon_g->IsClassCommon()) {
+//		TrySpellProc(nullptr, (const EQ::ItemData*)nullptr, on);
+//		return;
+//	}
 
 	return;
 }
@@ -6233,7 +6263,8 @@ void Mob::CommonOutgoingHitSuccess(Mob* defender, DamageHitInfo &hit, ExtraAttac
 		} else if (GetOwner() && GetOwner()->IsClient()) {
 			GetOwner()->CastToClient()->LoadAccountFlags();
 		}
-		int effective_hDEX = (IsPetOwnerClient() && GetOwner()) ? std::ceil(RuleR(Character, Pyrelight_HeroicPetMod) * GetOwner()->GetHeroicDEX()) : GetHeroicDEX();	
+		int effective_hDEX = 0;
+		effective_hDEX = (IsPetOwnerClient() && GetOwner()) ? std::ceil(RuleR(Character, Pyrelight_HeroicPetMod) * GetOwner()->GetHeroicDEX()) : GetHeroicDEX();	
 		while (effective_hDEX > 0 && !crit) {	
 			auto random = zone->random.Int(1,100);
 			if (random <= (effective_hDEX * RuleR(Character, Pyrelight_hDEX_CriticalReroll))) {
