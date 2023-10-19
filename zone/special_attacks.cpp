@@ -956,7 +956,7 @@ void Mob::DoArcheryAttackDmg(Mob *who, const EQ::ItemInstance *RangeWeapon, cons
 			}
 		}
 		
-		if (who->IsClient() && who->GetHeroicSTA() > 0) || (who->IsPetOwnerClient() && who->GetOwner()->GetHeroicSTA()) {
+		if ((who->IsClient() && who->GetHeroicSTA() > 0) || (who->IsPetOwnerClient() && who->GetOwner()->GetHeroicSTA())) {
 			if ((who->IsClient() || who->IsPetOwnerClient()) && (my_hit.original_damage > my_hit.damage_done)) {				
 				int reduction_percentage = (1 - static_cast<float>(my_hit.damage_done) / static_cast<float>(my_hit.original_damage)) * 100;
 				if (who->GetOwner() && who->GetOwner()->IsClient()  && who->GetOwner()->CastToClient()->GetAccountFlag("filter_hSTA") != "off") {
