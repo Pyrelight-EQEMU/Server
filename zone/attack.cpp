@@ -1732,7 +1732,7 @@ bool Mob::Attack(Mob* other, int Hand, bool bRiposte, bool IsStrikethrough, bool
 			}
 		}
 
-		if (other->IsClient() && other->GetHeroicSTA() > 0) || (other->IsPetOwnerClient() && other->GetOwner()->GetHeroicSTA()) {
+		if ((other->IsClient() && other->GetHeroicSTA() > 0) || (other->IsPetOwnerClient() && other->GetOwner()->GetHeroicSTA())) {
 			if ((other->IsClient() || other->IsPetOwnerClient()) && (my_hit.original_damage > my_hit.damage_done)) {				
 				int reduction_percentage = (1 - static_cast<float>(my_hit.damage_done) / static_cast<float>(my_hit.original_damage)) * 100;
 				if (other->GetOwner() && other->GetOwner()->IsClient()  && other->GetOwner()->CastToClient()->GetAccountFlag("filter_hSTA") != "off") {
@@ -2405,7 +2405,7 @@ bool NPC::Attack(Mob* other, int Hand, bool bRiposte, bool IsStrikethrough, bool
 				other->GetOwner()->CastToClient()->LoadAccountFlags();
 			}
 
-			if (IsClient() && GetHeroicSTR() > 0) || (IsPetOwnerClient() && GetOwner()->GetHeroicSTR()) {
+			if ((IsClient() && GetHeroicSTR() > 0) || (IsPetOwnerClient() && GetOwner()->GetHeroicSTR())) {
 				if ((IsClient() || IsPetOwnerClient()) && (my_hit.damage_done > my_hit.original_damage)) {				
 					int increase_percentage = ((static_cast<float>(my_hit.damage_done) / static_cast<float>(my_hit.original_damage)) - 1) * 100;
 					if (GetOwner() && GetOwner()->IsClient() && GetOwner()->CastToClient()->GetAccountFlag("filter_hSTR") != "off") {
@@ -2422,7 +2422,7 @@ bool NPC::Attack(Mob* other, int Hand, bool bRiposte, bool IsStrikethrough, bool
 				}
 			}
 			
-			if (other->IsClient() && other->GetHeroicSTA() > 0) || (other->IsPetOwnerClient() && other->GetOwner()->GetHeroicSTA()) {
+			if ((other->IsClient() && other->GetHeroicSTA() > 0) || (other->IsPetOwnerClient() && other->GetOwner()->GetHeroicSTA())) {
 				if ((other->IsClient() || other->IsPetOwnerClient()) && (my_hit.original_damage > my_hit.damage_done)) {				
 					int reduction_percentage = (1 - static_cast<float>(my_hit.damage_done) / static_cast<float>(my_hit.original_damage)) * 100;
 					if (other->GetOwner() && other->GetOwner()->IsClient()  && other->GetOwner()->CastToClient()->GetAccountFlag("filter_hSTA") != "off") {

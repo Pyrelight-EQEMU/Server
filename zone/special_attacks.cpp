@@ -275,7 +275,7 @@ void Mob::DoSpecialAttackDamage(Mob *who, EQ::skills::SkillType skill, int32 bas
 		} else if (who->GetOwner() && who->GetOwner()->IsClient()) {
 			who->GetOwner()->CastToClient()->LoadAccountFlags();
 		}
-		if (IsClient() && GetHeroicSTR() > 0) || (IsPetOwnerClient() && GetOwner()->GetHeroicSTR()) {
+		if ((IsClient() && GetHeroicSTR() > 0) || (IsPetOwnerClient() && GetOwner()->GetHeroicSTR())) {
 			if ((IsClient() || IsPetOwnerClient()) && (my_hit.damage_done > my_hit.original_damage)) {				
 				int increase_percentage = ((static_cast<float>(my_hit.damage_done) / static_cast<float>(my_hit.original_damage)) - 1) * 100;
 				if (GetOwner() && GetOwner()->IsClient() && GetOwner()->CastToClient()->GetAccountFlag("filter_hSTR") != "off") {
@@ -292,7 +292,7 @@ void Mob::DoSpecialAttackDamage(Mob *who, EQ::skills::SkillType skill, int32 bas
 			}
 		}
 		
-		if (who->IsClient() && who->GetHeroicSTA() > 0) || (who->IsPetOwnerClient() && who->GetOwner()->GetHeroicSTA()) {
+		if ((who->IsClient() && who->GetHeroicSTA() > 0) || (who->IsPetOwnerClient() && who->GetOwner()->GetHeroicSTA())) {
 			if ((who->IsClient() || who->IsPetOwnerClient()) && (my_hit.original_damage > my_hit.damage_done)) {				
 				int reduction_percentage = (1 - static_cast<float>(my_hit.damage_done) / static_cast<float>(my_hit.original_damage)) * 100;
 				if (who->GetOwner() && who->GetOwner()->IsClient()  && who->GetOwner()->CastToClient()->GetAccountFlag("filter_hSTA") != "off") {
@@ -939,7 +939,7 @@ void Mob::DoArcheryAttackDmg(Mob *who, const EQ::ItemInstance *RangeWeapon, cons
 		} else if (who->GetOwner() && who->GetOwner()->IsClient()) {
 			who->GetOwner()->CastToClient()->LoadAccountFlags();
 		}
-		if (IsClient() && GetHeroicSTR() > 0) || (IsPetOwnerClient() && GetOwner()->GetHeroicSTR()) {
+		if ((IsClient() && GetHeroicSTR() > 0) || (IsPetOwnerClient() && GetOwner()->GetHeroicSTR())) {
 			if ((IsClient() || IsPetOwnerClient()) && (my_hit.damage_done > my_hit.original_damage)) {				
 				int increase_percentage = ((static_cast<float>(my_hit.damage_done) / static_cast<float>(my_hit.original_damage)) - 1) * 100;
 				if (GetOwner() && GetOwner()->IsClient() && GetOwner()->CastToClient()->GetAccountFlag("filter_hSTR") != "off") {
@@ -1382,7 +1382,7 @@ void NPC::DoRangedAttackDmg(Mob* who, bool Launch, int16 damage_mod, int16 chanc
 		} else if (who->GetOwner() && who->GetOwner()->IsClient()) {
 			who->GetOwner()->CastToClient()->LoadAccountFlags();
 		} 
-		if (IsClient() && GetHeroicSTR() > 0) || (IsPetOwnerClient() && GetOwner()->GetHeroicSTR()) {
+		if ((IsClient() && GetHeroicSTR() > 0) || (IsPetOwnerClient() && GetOwner()->GetHeroicSTR())) {
 			if ((IsClient() || IsPetOwnerClient()) && (my_hit.damage_done > my_hit.original_damage)) {				
 				int increase_percentage = ((static_cast<float>(my_hit.damage_done) / static_cast<float>(my_hit.original_damage)) - 1) * 100;
 				if (GetOwner() && GetOwner()->IsClient() && GetOwner()->CastToClient()->GetAccountFlag("filter_hSTR") != "off") {
@@ -1399,7 +1399,7 @@ void NPC::DoRangedAttackDmg(Mob* who, bool Launch, int16 damage_mod, int16 chanc
 			}
 		}
 		
-		if (who->IsClient() && who->GetHeroicSTA() > 0) || (who->IsPetOwnerClient() && who->GetOwner()->GetHeroicSTA()) {
+		if ((who->IsClient() && who->GetHeroicSTA() > 0) || (who->IsPetOwnerClient() && who->GetOwner()->GetHeroicSTA())) {
 			if ((who->IsClient() || who->IsPetOwnerClient()) && (my_hit.original_damage > my_hit.damage_done)) {				
 				int reduction_percentage = (1 - static_cast<float>(my_hit.damage_done) / static_cast<float>(my_hit.original_damage)) * 100;
 				if (who->GetOwner() && who->GetOwner()->IsClient()  && who->GetOwner()->CastToClient()->GetAccountFlag("filter_hSTA") != "off") {
@@ -1637,7 +1637,7 @@ void Mob::DoThrowingAttackDmg(Mob *who, const EQ::ItemInstance *RangeWeapon, con
 		} else if (who->GetOwner() && who->GetOwner()->IsClient()) {
 			who->GetOwner()->CastToClient()->LoadAccountFlags();
 		} 
-		if (IsClient() && GetHeroicSTR() > 0) || (IsPetOwnerClient() && GetOwner()->GetHeroicSTR()) { 
+		if ((IsClient() && GetHeroicSTR() > 0) || (IsPetOwnerClient() && GetOwner()->GetHeroicSTR())) { { 
 			if ((IsClient() || IsPetOwnerClient()) && (my_hit.damage_done > my_hit.original_damage)) {				
 				int increase_percentage = ((static_cast<float>(my_hit.damage_done) / static_cast<float>(my_hit.original_damage)) - 1) * 100;
 				if (GetOwner() && GetOwner()->IsClient() && GetOwner()->CastToClient()->GetAccountFlag("filter_hSTR") != "off") {
@@ -1654,7 +1654,7 @@ void Mob::DoThrowingAttackDmg(Mob *who, const EQ::ItemInstance *RangeWeapon, con
 			}
 		}
 		
-		if (who->IsClient() && who->GetHeroicSTA() > 0) || (who->IsPetOwnerClient() && who->GetOwner()->GetHeroicSTA()) {
+		if ((who->IsClient() && who->GetHeroicSTA() > 0) || (who->IsPetOwnerClient() && who->GetOwner()->GetHeroicSTA())) {
 			if ((who->IsClient() || who->IsPetOwnerClient()) && (my_hit.original_damage > my_hit.damage_done)) {				
 				int reduction_percentage = (1 - static_cast<float>(my_hit.damage_done) / static_cast<float>(my_hit.original_damage)) * 100;
 				if (who->GetOwner() && who->GetOwner()->IsClient()  && who->GetOwner()->CastToClient()->GetAccountFlag("filter_hSTA") != "off") {
@@ -2542,7 +2542,7 @@ void Mob::DoMeleeSkillAttackDmg(Mob *who, int32 weapon_damage, EQ::skills::Skill
 		} else if (who->GetOwner() && who->GetOwner()->IsClient()) {
 			who->GetOwner()->CastToClient()->LoadAccountFlags();
 		} 
-		if (IsClient() && GetHeroicSTR() > 0) || (IsPetOwnerClient() && GetOwner()->GetHeroicSTR()) {
+		if ((IsClient() && GetHeroicSTR() > 0) || (IsPetOwnerClient() && GetOwner()->GetHeroicSTR())) {
 			if ((IsClient() || IsPetOwnerClient()) && (my_hit.damage_done > my_hit.original_damage)) {				
 				int increase_percentage = ((static_cast<float>(my_hit.damage_done) / static_cast<float>(my_hit.original_damage)) - 1) * 100;
 				if (GetOwner() && GetOwner()->IsClient() && GetOwner()->CastToClient()->GetAccountFlag("filter_hSTR") != "off") {
@@ -2559,7 +2559,7 @@ void Mob::DoMeleeSkillAttackDmg(Mob *who, int32 weapon_damage, EQ::skills::Skill
 			}
 		}
 		
-		if (who->IsClient() && who->GetHeroicSTA() > 0) || (who->IsPetOwnerClient() && who->GetOwner()->GetHeroicSTA()) {
+		if ((who->IsClient() && who->GetHeroicSTA() > 0) || (who->IsPetOwnerClient() && who->GetOwner()->GetHeroicSTA())) {
 			if ((who->IsClient() || who->IsPetOwnerClient()) && (my_hit.original_damage > my_hit.damage_done)) {				
 				int reduction_percentage = (1 - static_cast<float>(my_hit.damage_done) / static_cast<float>(my_hit.original_damage)) * 100;
 				if (who->GetOwner() && who->GetOwner()->IsClient()  && who->GetOwner()->CastToClient()->GetAccountFlag("filter_hSTA") != "off") {
