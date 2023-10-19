@@ -4162,7 +4162,7 @@ void Mob::DoBuffTic(const Buffs_Struct &buff, int slot, Mob *caster)
 
 				// Pyrelight Custom Code
 				// Shaman Epic DoT->Heal Effect
-				if (spells[spell_id].good_effect != BENEFICIAL_EFFECT) {
+				if (spells[buff.spellid].good_effect != BENEFICIAL_EFFECT) {
 				bool epic_equip = false;
 					for(int i = 0; i <= 10; i++) {
 						if (caster->GetInv().HasAugmentEquippedByID(10651 + (i*1000000))) {
@@ -4180,7 +4180,7 @@ void Mob::DoBuffTic(const Buffs_Struct &buff, int slot, Mob *caster)
 
 				// Pyrelight Custom Code
 				// Necro Epic DoT Procs
-				if (spells[spell_id].good_effect != BENEFICIAL_EFFECT) {
+				if (spells[buff.spellid].good_effect != BENEFICIAL_EFFECT) {
 					bool epic_equip = false;
 					for(int i = 0; i <= 10; i++) {
 						if (caster->GetInv().HasAugmentEquippedByID(20544 + (i*1000000))) {
