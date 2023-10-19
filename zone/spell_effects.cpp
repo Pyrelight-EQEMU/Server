@@ -4161,7 +4161,7 @@ void Mob::DoBuffTic(const Buffs_Struct &buff, int slot, Mob *caster)
 				// Shaman Epic DoT->Heal Effect
 				bool epic_equip = false;
 				for(int i = 0; i <= 10; i++) {
-					if (c->GetInv().HasAugmentEquippedByID(10651 + (i*1000000))) {
+					if (caster->GetInv().HasAugmentEquippedByID(10651 + (i*1000000))) {
 						epic_equip = true;
 						break;
 					}			

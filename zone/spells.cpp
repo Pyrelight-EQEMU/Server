@@ -5019,7 +5019,7 @@ bool Mob::IsImmuneToSpell(uint16 spell_id, Mob *caster)
 		// Pyrelight Custom Code - Enchanter Epic allows unrestricted charm spells.
 		bool epic_equip = false;
 		for(int i = 0; i <= 10; i++) {
-			if (c->GetInv().HasAugmentEquippedByID(10650 + (i*1000000))) {
+			if (caster->GetInv().HasAugmentEquippedByID(10650 + (i*1000000))) {
 				epic_equip = true;
 				break;
 			}			
@@ -5030,8 +5030,7 @@ bool Mob::IsImmuneToSpell(uint16 spell_id, Mob *caster)
 			// check level limit of charm spell
 			effect_index = GetSpellEffectIndex(spell_id, SE_Charm);
 			assert(effect_index >= 0);
-
-			if(GetLevel() > max_level_target && max_level_target != 0)
+			if(GetLevel() > spells[spell_id].max_value[effect_index] && spells[spell_id].max_value[effect_index] != 0)
 			{
 				LogSpells("Our level ([{}]) is higher than the limit of this Charm spell ([{}])", GetLevel(), spells[spell_id].max_value[effect_index]);
 				caster->MessageString(Chat::Red, CANNOT_CHARM_YET);	// need to verify message type, not in MQ2Cast for easy look up<Paste>
