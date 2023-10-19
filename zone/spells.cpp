@@ -4240,63 +4240,66 @@ bool Mob::SpellOnTarget(
 			int new_result = spell_effectiveness;
 			int loop_count = 1;
 			Client* hCHA_source = nullptr;
+			
 			if (spellOwner->IsClient() || spellOwner->IsPetOwnerClient()) {
 				hCHA_source = spellOwner->GetOwner() ? spellOwner->GetOwner()->CastToClient() : spellOwner->CastToClient();
 				effective_hCHA = hCHA_source->GetHeroicCHA();
 				hCHA_source->LoadAccountFlags();
+				if (effective_hCHA > 0) {
 
-				// Added chance to just no-sell the resist check completely.
-				// Added chance to just no-sell the resist check completely.
-				double y = 0.03;
-				double raw_score = (double(effective_hCHA) / double(spelltar->GetLevel())) * y;
-				double x = std::max(0.0, std::min(100.0, raw_score));
-				int success_chance = static_cast<int>(x); // our chance of success in percent
+					// Added chance to just no-sell the resist check completely.
+					// Added chance to just no-sell the resist check completely.
+					double y = 0.03;
+					double raw_score = (double(effective_hCHA) / double(spelltar->GetLevel())) * y;
+					double x = std::max(0.0, std::min(100.0, raw_score));
+					int success_chance = static_cast<int>(x); // our chance of success in percent
 
-				spell_effectiveness = zone->random.Roll(success_chance) ? 100 : spell_effectiveness;
-				if (spell_effectiveness == 100) {
-					if (hCHA_source->GetAccountFlag("filter_hCHA") != "off") {					
-						if (hCHA_source->IsPet() && hCHA_source->GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
-							hCHA_source->GetOwner()->Message(Chat::PetSpell, "Your Heroic Charisma allows your pet's magic to bypass your target's resistences!");
-						} else {
-							hCHA_source->Message(Chat::Spells, "Your Heroic Charisma allows your magic to bypass your target's resistences!");
+					spell_effectiveness = zone->random.Roll(success_chance) ? 100 : spell_effectiveness;
+					if (spell_effectiveness == 100) {
+						if (hCHA_source->GetAccountFlag("filter_hCHA") != "off") {					
+							if (hCHA_source->IsPet() && hCHA_source->GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
+								hCHA_source->GetOwner()->Message(Chat::PetSpell, "Your Heroic Charisma allows your pet's magic to bypass your target's resistences!");
+							} else {
+								hCHA_source->Message(Chat::Spells, "Your Heroic Charisma allows your magic to bypass your target's resistences!");
+							}
 						}
 					}
-				}
 
-				while (effective_hCHA > 0 && spell_effectiveness < 100) {					
-					int random = zone->random.Int(1,100);
-					LogDebug("Re-Rolling Offensive resist check for [{}], hCHA: [{}], target: [{}], owner: [{}], random: [{}]", hCHA_source->GetName(), effective_hCHA, spelltar->GetName(), spellOwner->GetName(), random);				
-					LogDebug("resist_adjust: [{}], [{}]", resist_adjust, use_resist_adjust);
-					if ((effective_hCHA * RuleR(Character,Pyrelight_hCHA_ResistReroll)) >= random) {						
-						new_result = spelltar->ResistSpell(
-										spells[spell_id].resist_type,
-										spell_id,
-										this,
-										use_resist_adjust + (loop_count * -50),
-										resist_adjust,
-										false,
-										false,
-										false,
-										level_override);
+					while (effective_hCHA > 0 && spell_effectiveness < 100) {					
+						int random = zone->random.Int(1,100);
+						LogDebug("Re-Rolling Offensive resist check for [{}], hCHA: [{}], target: [{}], owner: [{}], random: [{}]", hCHA_source->GetName(), effective_hCHA, spelltar->GetName(), spellOwner->GetName(), random);				
+						LogDebug("resist_adjust: [{}], [{}]", resist_adjust, use_resist_adjust);
+						if ((effective_hCHA * RuleR(Character,Pyrelight_hCHA_ResistReroll)) >= random) {						
+							new_result = spelltar->ResistSpell(
+											spells[spell_id].resist_type,
+											spell_id,
+											this,
+											use_resist_adjust + (loop_count * -50),
+											resist_adjust,
+											false,
+											false,
+											false,
+											level_override);
 
-						LogDebug("Reroll Result... [{}]", new_result);
-								
-						if (new_result > spell_effectiveness) {
-							spell_effectiveness = new_result;
-							LogDebug("Reroll succeeded!");	
-							if (hCHA_source->GetAccountFlag("filter_hCHA") != "off") {					
-								if (hCHA_source->IsPet() && hCHA_source->GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
-									hCHA_source->GetOwner()->Message(Chat::PetSpell, "Your Heroic Charisma allows your pet's magic to bypass your target's resistences!");
-								} else {
-									hCHA_source->Message(Chat::Spells, "Your Heroic Charisma allows your magic to bypass your target's resistences!");
-								}
-							}							
-						} else {
-							LogDebug("Reroll failed!");
+							LogDebug("Reroll Result... [{}]", new_result);
+									
+							if (new_result > spell_effectiveness) {
+								spell_effectiveness = new_result;
+								LogDebug("Reroll succeeded!");	
+								if (hCHA_source->GetAccountFlag("filter_hCHA") != "off") {					
+									if (hCHA_source->IsPet() && hCHA_source->GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
+										hCHA_source->GetOwner()->Message(Chat::PetSpell, "Your Heroic Charisma allows your pet's magic to bypass your target's resistences!");
+									} else {
+										hCHA_source->Message(Chat::Spells, "Your Heroic Charisma allows your magic to bypass your target's resistences!");
+									}
+								}							
+							} else {
+								LogDebug("Reroll failed!");
+							}
 						}
+						effective_hCHA -= random * RuleR(Character, Pyrelight_HeroicRerollDecayRate);
+						loop_count++;
 					}
-					effective_hCHA -= random * RuleR(Character, Pyrelight_HeroicRerollDecayRate);
-					loop_count++;
 				}
 			} else if (spelltar->IsClient() || spelltar->IsPetOwnerClient() && spell_effectiveness > 0) {
 				hCHA_source = spelltar->GetOwner() ? spelltar->GetOwner()->CastToClient() : spelltar->CastToClient();
