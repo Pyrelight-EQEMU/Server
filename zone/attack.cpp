@@ -6590,16 +6590,22 @@ void Client::DoAttackRounds(Mob *target, int hand, bool IsFromSpell)
 	// Pyrelight Custom Code
 	// Multi-Attack via Heroic DEX
 	if (IsClient() && GetHeroicDEX() > 0 && successful_hit)  {
-		int effective_hDEX = GetHeroicDEX() - zone->random.Int(0,500);
+		int effective_hDEX = GetHeroicDEX() - zone->random.Int(1,500);
 		int attack_count = 0;		
 		while (effective_hDEX > 0 && successful_hit) {			
 			successful_hit = Attack(target, hand, false, false, IsFromSpell);
 			attack_count++;
-			effective_hDEX -= zone->random.Int(0,500);									
+			effective_hDEX -= zone->random.Int(1,500);									
 		}
 
-		if (attack_count) {			
-			Message(Chat::NPCFlurry, "Your Heroic Dexterity allows you to unleash a flurry of attacks.");		
+		if (attack_count) {
+			LoadAccountFlags();
+			if (GetAccountFlag("filter_hDEX") != "off") {
+				Message(Chat::NPCFlurry, 
+						"Your Heroic Dexterity allows you to unleash a flurry of %u additional attack%s.", 
+						attack_count, 
+						(attack_count > 1 ? "s" : ""));
+			}		
 		}
 	}
 }
@@ -6692,16 +6698,24 @@ void Mob::DoMainHandAttackRounds(Mob *target, ExtraAttackOptions *opts)
 	// Pyrelight Custom Code
 	// Multi-Attack via Heroic DEX (Pets)
 	if (IsPetOwnerClient() && GetOwner() && GetOwner()->GetHeroicDEX() > 0 && successful_hit)  {
-		int effective_hDEX = GetHeroicDEX() - zone->random.Int(0,500);
+		LogDebug("Checking Pet hDex Flurry... [{}]", GetOwner()->GetHeroicDEX());
+		int effective_hDEX = GetOwner()->GetHeroicDEX() - zone->random.Int(1,500);
 		int attack_count = 0;		
 		while (effective_hDEX > 0 && successful_hit) {			
 			successful_hit = Attack(target, EQ::invslot::slotPrimary, false, false, false, opts);
 			attack_count++;
-			effective_hDEX -= zone->random.Int(0,500);									
+			effective_hDEX -= zone->random.Int(1,500);									
 		}
 
 		if (attack_count) {			
-			GetOwner()->Message(Chat::NPCFlurry, "Your Heroic Dexterity allows your pet to unleash a flurry of attacks.");		
+			GetOwner()->CastToClient()->LoadAccountFlags();
+			if (GetOwner()->CastToClient()->GetAccountFlag("filter_hDEX") != "off") {
+				GetOwner()->Message(Chat::NPCFlurry, 
+									"Your Heroic Dexterity allows your pet to unleash a flurry of %u additional attack%s.", 
+									attack_count, 
+									(attack_count > 1 ? "s" : ""));
+
+			}		
 		}
 	}
 }
@@ -6730,16 +6744,23 @@ void Mob::DoOffHandAttackRounds(Mob *target, ExtraAttackOptions *opts)
 			// Pyrelight Custom Code
 			// Multi-Attack via Heroic DEX (Pets)
 			if (IsPetOwnerClient() && GetOwner() && GetOwner()->GetHeroicDEX() > 0 && successful_hit)  {
-				int effective_hDEX = GetHeroicDEX() - zone->random.Int(0,500);
+				LogDebug("Checking Pet hDex Flurry... [{}]", GetOwner()->GetHeroicDEX());
+				int effective_hDEX = GetOwner()->GetHeroicDEX() - zone->random.Int(1,500);
 				int attack_count = 0;		
 				while (effective_hDEX > 0 && successful_hit) {			
 					successful_hit = Attack(target, EQ::invslot::slotSecondary, false, false, false, opts);
 					attack_count++;
-					effective_hDEX -= zone->random.Int(0,500);									
+					effective_hDEX -= zone->random.Int(1,500);									
 				}
 
 				if (attack_count) {			
-					GetOwner()->Message(Chat::NPCFlurry, "Your Heroic Dexterity allows your pet to unleash a flurry of attacks.");		
+					GetOwner()->CastToClient()->LoadAccountFlags();
+					if (GetOwner()->CastToClient()->GetAccountFlag("filter_hDEX") != "off") {
+						GetOwner()->Message(Chat::NPCFlurry, 
+											"Your Heroic Dexterity allows your pet to unleash a flurry of %u additional attack%s.", 
+											attack_count, 
+											(attack_count > 1 ? "s" : ""));
+					}		
 				}
 			}
 		}
