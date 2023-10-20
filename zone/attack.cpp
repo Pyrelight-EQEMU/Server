@@ -3984,13 +3984,10 @@ void Mob::CommonDamage(Mob* attacker, int64 &damage, const uint16 spell_id, cons
 				attacker->HealDamage(healed);
 
 				// Pyrelight Custom Code
-				// New Necromancer Epic 1.0 Effect. Share Lifetaps with pet
-				if (attacker->IsClient() && spells[spell_id].good_effect != BENEFICIAL_EFFECT && attacker->GetPet()) {					
-					for(int i = 0; i <= 10; i++) {
-						if (attacker->GetInv().HasAugmentEquippedByID(20544 + (i*1000000))) {
-							attacker->GetPet()->HealDamage(healed);
-							break;
-						}			
+				// New Necro Epic 1.0 Effect. Share Lifetaps with pet
+				if (attacker->IsClient() && spells[spell_id].good_effect != BENEFICIAL_EFFECT && attacker->GetPet()) {		
+					if (attacker->GetInv().HasAugmentEquippedByID_Mod(20544)) {
+						attacker->GetPet()->HealDamage(healed);
 					}
 				}
 
@@ -6595,7 +6592,7 @@ void Client::DoAttackRounds(Mob *target, int hand, bool IsFromSpell)
 		while (effective_hDEX > 0 && successful_hit) {			
 			successful_hit = Attack(target, hand, false, false, IsFromSpell);
 			attack_count++;
-			effective_hDEX -= zone->random.Int(1,500);									
+			effective_hDEX -= zone->random.Int(100,500);									
 		}
 
 		if (attack_count) {
@@ -6704,7 +6701,7 @@ void Mob::DoMainHandAttackRounds(Mob *target, ExtraAttackOptions *opts)
 		while (effective_hDEX > 0 && successful_hit) {			
 			successful_hit = Attack(target, EQ::invslot::slotPrimary, false, false, false, opts);
 			attack_count++;
-			effective_hDEX -= zone->random.Int(1,500);									
+			effective_hDEX -= zone->random.Int(1100,500);									
 		}
 
 		if (attack_count) {			
@@ -6750,7 +6747,7 @@ void Mob::DoOffHandAttackRounds(Mob *target, ExtraAttackOptions *opts)
 				while (effective_hDEX > 0 && successful_hit) {			
 					successful_hit = Attack(target, EQ::invslot::slotSecondary, false, false, false, opts);
 					attack_count++;
-					effective_hDEX -= zone->random.Int(1,500);									
+					effective_hDEX -= zone->random.Int(100,500);									
 				}
 
 				if (attack_count) {			

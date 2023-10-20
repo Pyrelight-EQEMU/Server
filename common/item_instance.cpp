@@ -750,6 +750,29 @@ bool EQ::ItemInstance::ContainsAugmentByID(uint32 item_id)
 	return false;
 }
 
+bool EQ::ItemInstance::ContainsAugmentByID_Mod(uint32 item_id)
+{
+	if (!m_item || !m_item->IsClassCommon()) {
+		return false;
+	}
+
+	if (ContainsAugmentByID(item_id)) {
+		return true;
+	}
+
+	if (!item_id) {
+		return false;
+	}
+
+	for (uint8 augment_slot = invaug::SOCKET_BEGIN; augment_slot <= invaug::SOCKET_END; ++augment_slot) {
+		if (GetAugmentItemID(augment_slot) % 1000000 == item_id && (item_id < 110000000)) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
 int EQ::ItemInstance::CountAugmentByID(uint32 item_id)
 {
 	int quantity = 0;

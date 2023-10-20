@@ -363,7 +363,7 @@ bool EQ::InventoryProfile::SwapItem(
 			}
 			if (RuleB(Items, LoreEquipOnly)) {
 				if (source_item->LoreGroup == -1) {
-					if (HasItemEquippedByID(source_item->ID)) {
+					if (HasItemEquippedByID_Mod(source_item->ID) || HasItemEquippedByID(source_item->ID)) {
 						fail_state = swapItemLore;
 						return false;
 					}
@@ -374,7 +374,7 @@ bool EQ::InventoryProfile::SwapItem(
 				if (source_item_instance->IsAugmented()) {
 					for (int i = EQ::invaug::SOCKET_BEGIN; i <= EQ::invaug::SOCKET_END; i++) {
 						EQ::ItemInstance *itm = source_item_instance->GetAugment(i);
-						if (itm && HasAugmentEquippedByID(itm->GetID())) {
+						if (itm && (HasAugmentEquippedByID_Mod(itm->GetID()) || HasAugmentEquippedByID(itm->GetID()))) {
 							fail_state = swapAugLore;
 							return false;
 						}
@@ -386,9 +386,11 @@ bool EQ::InventoryProfile::SwapItem(
 			auto source_item = source_item_instance->GetItem();			
 			if (source_item->IsClassBag() && source_item->LoreGroup == -1) {
 				for (int i = EQ::invslot::GENERAL_BEGIN; i <= EQ::invslot::GENERAL_END; i++) {
-					if (GetItem(i) && GetItem(i)->GetID() == source_item->ID) {
-						fail_state = swapItemLore;
-						return false;
+					if (GetItem(i)) {
+						if ((GetItem(i)->GetID() % 1000000 == source_item->ID % 1000000 && source_item->ID < 110000000) || GetItem(i)->GetID() == source_item->ID) {
+							fail_state = swapItemLore;
+							return false;
+						}
 					}
 				}
 			}
@@ -638,6 +640,22 @@ bool EQ::InventoryProfile::HasAugmentEquippedByID(uint32 item_id)
 	return has_equipped;
 }
 
+bool EQ::InventoryProfile::HasAugmentEquippedByID_Mod(uint32 item_id)
+{
+	bool has_equipped = false;
+	ItemInstance* item = nullptr;
+
+	for (int slot_id = EQ::invslot::EQUIPMENT_BEGIN; slot_id <= EQ::invslot::EQUIPMENT_END; ++slot_id) {
+		item = GetItem(slot_id);
+		if (item && item->ContainsAugmentByID_Mod(item_id)) {
+			has_equipped = true;
+			break;
+		}
+	}
+
+	return has_equipped;
+}
+
 int EQ::InventoryProfile::CountAugmentEquippedByID(uint32 item_id)
 {
 	int quantity = 0;
@@ -663,6 +681,28 @@ bool EQ::InventoryProfile::HasItemEquippedByID(uint32 item_id)
 		if (item && item->GetID() == item_id) {
 			has_equipped = true;
 			break;
+		}
+	}
+
+	return has_equipped;
+}
+
+bool EQ::InventoryProfile::HasItemEquippedByID_Mod(uint32 item_id)
+{
+	bool has_equipped = false;
+	ItemInstance* item = nullptr;
+
+	if (HasItemEquippedByID(item_id)) {
+		return true;
+	}
+
+	for (int slot_id = EQ::invslot::EQUIPMENT_BEGIN; slot_id <= EQ::invslot::EQUIPMENT_END; ++slot_id) {
+		item = GetItem(slot_id);
+		if (item) {
+			if (item->GetID() % 1000000 == item_id % 1000000 && (item_id < 110000000)) {
+				has_equipped = true;
+				break;
+			}
 		}
 	}
 

@@ -304,7 +304,7 @@ bool SharedDatabase::UpdateInventorySlot(uint32 char_id, const EQ::ItemInstance*
 		class_id = atoi(row[0]);
 	}
 
-	if (slot_id > EQ::invslot::EQUIPMENT_END) {
+	if (slot_id > EQ::invslot::EQUIPMENT_END || slot_id == EQ::invslot::slotPowerSource) {
 		class_id = 0;
 	}
 

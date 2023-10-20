@@ -3151,13 +3151,13 @@ void Client::Handle_OP_AugmentItem(const EQApplicationPacket *app)
 					Message(Chat::Red, "Error: No augment found on cursor for inserting.");
 					return;
 				} else {
-					if (RuleB(Items, LoreEquipOnly) && user_inv.HasAugmentEquippedByID(new_aug->GetID())) {
+					if (RuleB(Items, LoreEquipOnly) && (user_inv.HasAugmentEquippedByID_Mod(new_aug->GetID()) || user_inv.HasAugmentEquippedByID(new_aug->GetID()))) {
 						if (item_slot >= EQ::invslot::EQUIPMENT_BEGIN && item_slot <= EQ::invslot::EQUIPMENT_END) {
 							Message(Chat::Red, "You already have this LORE augment equipped.");
 							return;
 						}						
 					}
-					if (!RuleB(Inventory, AllowMultipleOfSameAugment) && tobe_auged->ContainsAugmentByID(new_aug->GetID())) {
+					if (!RuleB(Inventory, AllowMultipleOfSameAugment) && (tobe_auged->ContainsAugmentByID_Mod(new_aug->GetID()) || tobe_auged->ContainsAugmentByID(new_aug->GetID()))) {
 						Message(Chat::Red, "Error: Cannot put multiple of the same augment in an item.");
 						return;
 					}

@@ -141,6 +141,7 @@ namespace EQ
 		ItemInstance* RemoveAugment(uint8 index);
 		bool IsAugmented();
 		bool ContainsAugmentByID(uint32 item_id);
+		bool ContainsAugmentByID_Mod(uint32 item_id);
 		int CountAugmentByID(uint32 item_id);
 		bool IsOrnamentationAugment(EQ::ItemInstance* augment) const;
 		ItemInstance* GetOrnamentationAugment() const;

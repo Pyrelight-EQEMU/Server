@@ -145,12 +145,14 @@ namespace EQ
 
 		// Check if player has a specific item equipped by Item ID
 		bool HasItemEquippedByID(uint32 item_id);
+		bool HasItemEquippedByID_Mod(uint32 item_id);
 
 		// Check how many of a specific item the player has equipped by Item ID
 		int CountItemEquippedByID(uint32 item_id);
 
 		// Check if player has a specific augment equipped by Item ID
 		bool HasAugmentEquippedByID(uint32 item_id);
+		bool HasAugmentEquippedByID_Mod(uint32 item_id);
 
 		// Check how many of a specific augment the player has equipped by Item ID
 		int CountAugmentEquippedByID(uint32 item_id);

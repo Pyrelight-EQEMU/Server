@@ -403,7 +403,7 @@ void Client::OPCombatAbility(const CombatAbility_Struct *ca_atk)
 					int effective_hDEX = GetHeroicDEX() - zone->random.Int(1,500);
 					int attack_count = 0;		
 					while (effective_hDEX > 0 && successful_hit) {
-						effective_hDEX -= zone->random.Int(1,500);	
+						effective_hDEX -= zone->random.Int(100,500);	
 						successful_hit = successful_hit || (ca_atk->m_skill == EQ::skills::SkillArchery) ? RangedAttack(GetTarget(), true) : ThrowingAttack(GetTarget(), true);
 						attack_count++;
 					}	

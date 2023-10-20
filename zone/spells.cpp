@@ -4449,15 +4449,7 @@ bool Mob::SpellOnTarget(
 	if ((spelltar->IsClient() || spelltar->IsPetOwnerClient()) && IsBeneficialSpell(spell_id) && !IsPetSpell(spell_id) && !is_mirror) {
 		Client* c = IsClient() ? CastToClient() : GetOwner()->CastToClient();
 
-		bool epic_equip = false;
-		for(int i = 0; i <= 10; i++) {
-			if (c->GetInv().HasAugmentEquippedByID(8495 + (i*1000000))) {
-				epic_equip = true;
-				break;
-			}			
-		}
-
-		if (c && c->GetPet() && epic_equip) {
+		if (c && c->GetPet() && c->GetInv().HasAugmentEquippedByID_Mod(8495)) {
 			LogDebug("Spell is eligible for mirroring.");
 			Mob* extratar = spelltar->IsClient() ? spelltar->GetPet() : spelltar->GetOwner();
 

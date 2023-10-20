@@ -51,7 +51,7 @@ public:
 	)
 	{
 		auto query = fmt::format(
-			"SELECT `id` FROM {} WHERE LOWER(`name`) LIKE '%%{}%%' ORDER BY id ASC",
+			"SELECT `id` FROM {} WHERE LOWER(`name`) LIKE '%%{}%%' AND (id <= 999999 OR (id >= 120000000 and id < 200000000)) ORDER BY id ASC",
 			TableName(),
 			search_string
 		);
