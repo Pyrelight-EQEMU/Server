@@ -392,9 +392,26 @@ void Client::OPCombatAbility(const CombatAbility_Struct *ca_atk)
 		case EQ::skills::SkillThrowing:
 			if (ca_atk->m_atk == EQ::invslot::slotRange) {
 				SetAttackTimer();
-				(ca_atk->m_skill == EQ::skills::SkillArchery) ? RangedAttack(GetTarget()) : ThrowingAttack(GetTarget());
-				if (CheckDoubleRangedAttack())
-					(ca_atk->m_skill == EQ::skills::SkillArchery) ? RangedAttack(GetTarget()) : ThrowingAttack(GetTarget());
+				bool successful_hit = (ca_atk->m_skill == EQ::skills::SkillArchery) ? RangedAttack(GetTarget()) : ThrowingAttack(GetTarget());
+				if (CheckDoubleRangedAttack()) {
+					successful_hit = successful_hit || (ca_atk->m_skill == EQ::skills::SkillArchery) ? RangedAttack(GetTarget(), true) : ThrowingAttack(GetTarget(), true);
+				}
+
+				// Pyrelight Custom Code
+				// Multi-Attack via Heroic DEX
+				if (IsClient() && GetHeroicDEX() > 0)  {
+					int effective_hDEX = GetHeroicDEX() - zone->random.Int(0,500);
+					int attack_count = 0;		
+					while (effective_hDEX > 0 && successful_hit) {
+						successful_hit = successful_hit || (ca_atk->m_skill == EQ::skills::SkillArchery) ? RangedAttack(GetTarget(), true) : ThrowingAttack(GetTarget(), true);
+						attack_count++;
+					}	
+
+					if (attack_count) {			
+						Message(Chat::NPCFlurry, "Your Heroic Dexterity allows you to unleash a flurry of attacks.");		
+					}					
+				}
+			
 			} else {
 				Message(Chat::Red, "You must equip an appropriate weapon to use this ability.");
 			}
@@ -663,19 +680,19 @@ void Mob::RogueAssassinate(Mob* who)
 	DoAnim(anim1HPiercing, 0, false);	//piercing animation
 }
 
-void Client::RangedAttack(Mob* who, bool CanDoubleAttack) {
+bool Client::RangedAttack(Mob* who, bool CanDoubleAttack) {
 	//conditions to use an attack checked before we are called
 	if (!who)
-		return;
+		return false;
 	else if (who == this)
-		return;
+		return false;
 	//make sure the attack and ranged timers are up
 	//if the ranged timer is disabled, then they have no ranged weapon and shouldent be attacking anyhow
 	if(!CanDoubleAttack && ((attack_timer.Enabled() && !attack_timer.Check(false)) || (ranged_timer.Enabled() && !ranged_timer.Check()))) {
 		LogCombat("Throwing attack canceled. Timer not up. Attack [{}], ranged [{}]", attack_timer.GetRemainingTime(), ranged_timer.GetRemainingTime());
 		// The server and client timers are not exact matches currently, so this would spam too often if enabled
 		//Message(0, "Error: Timer not up. Attack %d, ranged %d", attack_timer.GetRemainingTime(), ranged_timer.GetRemainingTime());
-		return;
+		return false;
 	}
 	const EQ::ItemInstance* RangeWeapon = m_inv[EQ::invslot::slotRange];
 
@@ -686,12 +703,12 @@ void Client::RangedAttack(Mob* who, bool CanDoubleAttack) {
 	if (!RangeWeapon || !RangeWeapon->IsClassCommon()) {
 		LogCombat("Ranged attack canceled. Missing or invalid ranged weapon ([{}]) in slot [{}]", GetItemIDAt(EQ::invslot::slotRange), EQ::invslot::slotRange);
 		Message(0, "Error: Rangeweapon: GetItem(%i)==0, you have no bow!", GetItemIDAt(EQ::invslot::slotRange));
-		return;
+		return false;
 	}
 	if (!Ammo || !Ammo->IsClassCommon()) {
 		LogCombat("Ranged attack canceled. Missing or invalid ammo item ([{}]) in slot [{}]", GetItemIDAt(EQ::invslot::slotAmmo), EQ::invslot::slotAmmo);
 		Message(0, "Error: Ammo: GetItem(%i)==0, you have no ammo!", GetItemIDAt(EQ::invslot::slotAmmo));
-		return;
+		return false;
 	}
 
 	const EQ::ItemData* RangeItem = RangeWeapon->GetItem();
@@ -700,12 +717,12 @@ void Client::RangedAttack(Mob* who, bool CanDoubleAttack) {
 	if (RangeItem->ItemType != EQ::item::ItemTypeBow) {
 		LogCombat("Ranged attack canceled. Ranged item is not a bow. type [{}]", RangeItem->ItemType);
 		Message(0, "Error: Rangeweapon: Item %d is not a bow.", RangeWeapon->GetID());
-		return;
+		return false;
 	}
 	if (AmmoItem->ItemType != EQ::item::ItemTypeArrow) {
 		LogCombat("Ranged attack canceled. Ammo item is not an arrow. type [{}]", AmmoItem->ItemType);
 		Message(0, "Error: Ammo: type %d != %d, you have the wrong type of ammo!", AmmoItem->ItemType, EQ::item::ItemTypeArrow);
-		return;
+		return false;
 	}
 
 	LogCombat("Shooting [{}] with bow [{}] ([{}]) and arrow [{}] ([{}])", who->GetName(), RangeItem->Name, RangeItem->ID, AmmoItem->Name, AmmoItem->ID);
@@ -761,11 +778,11 @@ void Client::RangedAttack(Mob* who, bool CanDoubleAttack) {
 	if (float dist = DistanceSquared(m_Position, who->GetPosition()); dist > range) {
 		LogCombat("Ranged attack out of range client should catch this. ([{}] > [{}]).\n", dist, range);
 		MessageString(Chat::Red,TARGET_OUT_OF_RANGE);//Client enforces range and sends the message, this is a backup just incase.
-		return;
+		return false;
 	}
 	else if (dist < (RuleI(Combat, MinRangedAttackDist)*RuleI(Combat, MinRangedAttackDist))){
 		MessageString(Chat::Yellow,RANGED_TOO_CLOSE);//Client enforces range and sends the message, this is a backup just incase.
-		return;
+		return false;
 	}
 
 	if (!IsAttackAllowed(who) ||
@@ -776,7 +793,7 @@ void Client::RangedAttack(Mob* who, bool CanDoubleAttack) {
 		IsFeared() ||
 		IsMezzed() ||
 		(GetAppearance() == eaDead)){
-		return;
+		return false;
 	}
 
 	//Shoots projectile and/or applies the archery damage
@@ -805,6 +822,7 @@ void Client::RangedAttack(Mob* who, bool CanDoubleAttack) {
 
 	CheckIncreaseSkill(EQ::skills::SkillArchery, GetTarget(), -15);
 	CommonBreakInvisibleFromCombat();
+	return true;
 }
 
 void Mob::DoArcheryAttackDmg(Mob *who, const EQ::ItemInstance *RangeWeapon, const EQ::ItemInstance *Ammo,
@@ -1416,17 +1434,17 @@ void NPC::DoRangedAttackDmg(Mob* who, bool Launch, int16 damage_mod, int16 chanc
 	}
 }
 
-void Client::ThrowingAttack(Mob* who, bool CanDoubleAttack) { //old was 51
+bool Client::ThrowingAttack(Mob* who, bool CanDoubleAttack) { //old was 51
 	//conditions to use an attack checked before we are called
 	if (!who)
-		return;
+		return false;
 	//make sure the attack and ranged timers are up
 	//if the ranged timer is disabled, then they have no ranged weapon and shouldent be attacking anyhow
 	if((!CanDoubleAttack && (attack_timer.Enabled() && !attack_timer.Check(false)) || (ranged_timer.Enabled() && !ranged_timer.Check()))) {
 		LogCombat("Throwing attack canceled. Timer not up. Attack [{}], ranged [{}]", attack_timer.GetRemainingTime(), ranged_timer.GetRemainingTime());
 		// The server and client timers are not exact matches currently, so this would spam too often if enabled
 		//Message(0, "Error: Timer not up. Attack %d, ranged %d", attack_timer.GetRemainingTime(), ranged_timer.GetRemainingTime());
-		return;
+		return false;
 	}
 
 	int ammo_slot = EQ::invslot::slotRange;
@@ -1435,14 +1453,14 @@ void Client::ThrowingAttack(Mob* who, bool CanDoubleAttack) { //old was 51
 	if (!RangeWeapon || !RangeWeapon->IsClassCommon()) {
 		LogCombat("Ranged attack canceled. Missing or invalid ranged weapon ([{}]) in slot [{}]", GetItemIDAt(EQ::invslot::slotRange), EQ::invslot::slotRange);
 		Message(0, "Error: Rangeweapon: GetItem(%i)==0, you have nothing to throw!", GetItemIDAt(EQ::invslot::slotRange));
-		return;
+		return false;
 	}
 
 	const EQ::ItemData* item = RangeWeapon->GetItem();
 	if (item->ItemType != EQ::item::ItemTypeLargeThrowing && item->ItemType != EQ::item::ItemTypeSmallThrowing) {
 		LogCombat("Ranged attack canceled. Ranged item [{}] is not a throwing weapon. type [{}]", item->ID, item->ItemType);
 		Message(0, "Error: Rangeweapon: GetItem(%i)==0, you have nothing useful to throw!", GetItemIDAt(EQ::invslot::slotRange));
-		return;
+		return false;
 	}
 
 	LogCombat("Throwing [{}] ([{}]) at [{}]", item->Name, item->ID, who->GetName());
@@ -1474,11 +1492,11 @@ void Client::ThrowingAttack(Mob* who, bool CanDoubleAttack) { //old was 51
 	if(dist > range) {
 		LogCombat("Throwing attack out of range client should catch this. ([{}] > [{}]).\n", dist, range);
 		MessageString(Chat::Red,TARGET_OUT_OF_RANGE);//Client enforces range and sends the message, this is a backup just incase.
-		return;
+		return false;
 	}
 	else if(dist < (RuleI(Combat, MinRangedAttackDist)*RuleI(Combat, MinRangedAttackDist))){
 		MessageString(Chat::Yellow,RANGED_TOO_CLOSE);//Client enforces range and sends the message, this is a backup just incase.
-		return;
+		return false;
 	}
 
 	if(!IsAttackAllowed(who) ||
@@ -1489,7 +1507,7 @@ void Client::ThrowingAttack(Mob* who, bool CanDoubleAttack) { //old was 51
 		IsFeared() ||
 		IsMezzed() ||
 		(GetAppearance() == eaDead)){
-		return;
+		return false;
 	}
 
 	DoThrowingAttackDmg(who, RangeWeapon, item, 0, 0, 0, 0, 0,ammo_slot);
@@ -1503,6 +1521,7 @@ void Client::ThrowingAttack(Mob* who, bool CanDoubleAttack) { //old was 51
 	}
 
 	CommonBreakInvisibleFromCombat();
+	return true;
 }
 
 void Mob::DoThrowingAttackDmg(Mob *who, const EQ::ItemInstance *RangeWeapon, const EQ::ItemData *AmmoItem,

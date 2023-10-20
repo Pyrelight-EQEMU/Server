@@ -1490,7 +1490,7 @@ void Mob::DoAttack(Mob *other, DamageHitInfo &hit, ExtraAttackOptions *opts, boo
 
 int Mob::GetDamageReductionCap() {
 	int cap = 50;
-	
+
 	// Using a Shield
 	if (IsClient() ) {
 		if (GetInv().GetItem(EQ::invslot::slotSecondary)->GetItemType() == 8) {
@@ -6542,7 +6542,7 @@ void Client::DoAttackRounds(Mob *target, int hand, bool IsFromSpell)
 					if (extraattackchance && zone->random.Roll(extraattackchance)) {
 						auto extraattackamt = std::max({aabonuses.ExtraAttackChance[SBIndex::EXTRA_ATTACK_NUM_ATKS], spellbonuses.ExtraAttackChance[SBIndex::EXTRA_ATTACK_NUM_ATKS], itembonuses.ExtraAttackChance[SBIndex::EXTRA_ATTACK_NUM_ATKS] });
 						for (int i = 0; i < extraattackamt; i++) {
-							Attack(target, hand, false, false, IsFromSpell);
+							successful_hit = successful_hit || Attack(target, hand, false, false, IsFromSpell);
 						}
 					}
 				}
@@ -6552,7 +6552,7 @@ void Client::DoAttackRounds(Mob *target, int hand, bool IsFromSpell)
 					if (extraattackchance_primary && zone->random.Roll(extraattackchance_primary)) {
 						auto extraattackamt_primary = std::max({aabonuses.ExtraAttackChancePrimary[SBIndex::EXTRA_ATTACK_NUM_ATKS], spellbonuses.ExtraAttackChancePrimary[SBIndex::EXTRA_ATTACK_NUM_ATKS], itembonuses.ExtraAttackChancePrimary[SBIndex::EXTRA_ATTACK_NUM_ATKS] });
 						for (int i = 0; i < extraattackamt_primary; i++) {
-							Attack(target, hand, false, false, IsFromSpell);
+							successful_hit = successful_hit || Attack(target, hand, false, false, IsFromSpell);
 						}
 					}
 				}
@@ -6564,7 +6564,7 @@ void Client::DoAttackRounds(Mob *target, int hand, bool IsFromSpell)
 				if (extraattackchance_secondary && zone->random.Roll(extraattackchance_secondary)) {
 					auto extraattackamt_secondary = std::max({aabonuses.ExtraAttackChanceSecondary[SBIndex::EXTRA_ATTACK_NUM_ATKS], spellbonuses.ExtraAttackChanceSecondary[SBIndex::EXTRA_ATTACK_NUM_ATKS], itembonuses.ExtraAttackChanceSecondary[SBIndex::EXTRA_ATTACK_NUM_ATKS] });
 					for (int i = 0; i < extraattackamt_secondary; i++) {
-						Attack(target, hand, false, false, IsFromSpell);
+						successful_hit = successful_hit || Attack(target, hand, false, false, IsFromSpell);
 					}
 				}
 			}
@@ -6573,17 +6573,33 @@ void Client::DoAttackRounds(Mob *target, int hand, bool IsFromSpell)
 			if (hand == EQ::invslot::slotPrimary && CanThisClassTripleAttack()) {
 				CheckIncreaseSkill(EQ::skills::SkillTripleAttack, target, -10);
 				if (CheckTripleAttack()) {
-					Attack(target, hand, false, false, IsFromSpell);
+					successful_hit = successful_hit || Attack(target, hand, false, false, IsFromSpell);
 					auto flurrychance = aabonuses.FlurryChance + spellbonuses.FlurryChance +
 							    itembonuses.FlurryChance;
 					if (flurrychance && zone->random.Roll(flurrychance)) {
 						Attack(target, hand, false, false, IsFromSpell);
 						if (zone->random.Roll(flurrychance))
-							Attack(target, hand, false, false, IsFromSpell);
+							successful_hit = successful_hit || Attack(target, hand, false, false, IsFromSpell);
 						MessageString(Chat::NPCFlurry, YOU_FLURRY);
 					}
 				}
 			}
+		}
+	}
+
+	// Pyrelight Custom Code
+	// Multi-Attack via Heroic DEX
+	if (IsClient() && GetHeroicDEX() > 0 && successful_hit)  {
+		int effective_hDEX = GetHeroicDEX() - zone->random.Int(0,500);
+		int attack_count = 0;		
+		while (effective_hDEX > 0 && successful_hit) {			
+			successful_hit = Attack(target, hand, false, false, IsFromSpell);
+			attack_count++;
+			effective_hDEX -= zone->random.Int(0,500);									
+		}
+
+		if (attack_count) {			
+			Message(Chat::NPCFlurry, "Your Heroic Dexterity allows you to unleash a flurry of attacks.");		
 		}
 	}
 }
@@ -6621,54 +6637,71 @@ void Mob::DoMainHandAttackRounds(Mob *target, ExtraAttackOptions *opts)
 	if (!target)
 		return;
 
+	bool successful_hit = false;
+
 	if (RuleB(Combat, UseLiveCombatRounds)) {
 		// A "quad" on live really is just a successful dual wield where both double attack
 		// The mobs that could triple lost the ability to when the triple attack skill was added in
 		Attack(target, EQ::invslot::slotPrimary, false, false, false, opts);
 		if (CanThisClassDoubleAttack() && CheckDoubleAttack()) {
-			Attack(target, EQ::invslot::slotPrimary, false, false, false, opts);
+			successful_hit = successful_hit || Attack(target, EQ::invslot::slotPrimary, false, false, false, opts);
 			if ((IsPet() || IsTempPet()) && IsPetOwnerClient()) {
 				int chance = spellbonuses.PC_Pet_Flurry + itembonuses.PC_Pet_Flurry + aabonuses.PC_Pet_Flurry;
 				if (chance && zone->random.Roll(chance))
-					Flurry(nullptr);
+					successful_hit = successful_hit || Flurry(nullptr);
 			}
 		}
-		return;
-	}
-
-	if (IsNPC()) {
-		int16 n_atk = CastToNPC()->GetNumberOfAttacks();
-		if (n_atk <= 1) {
-			Attack(target, EQ::invslot::slotPrimary, false, false, false, opts);
+	} else {
+		if (IsNPC()) {
+			int16 n_atk = CastToNPC()->GetNumberOfAttacks();
+			if (n_atk <= 1) {
+				successful_hit = successful_hit || Attack(target, EQ::invslot::slotPrimary, false, false, false, opts);
+			}
+			else {
+				for (int i = 0; i < n_atk; ++i) {
+					successful_hit = successful_hit || Attack(target, EQ::invslot::slotPrimary, false, false, false, opts);
+				}
+			}
 		}
 		else {
-			for (int i = 0; i < n_atk; ++i) {
-				Attack(target, EQ::invslot::slotPrimary, false, false, false, opts);
+			successful_hit = successful_hit || Attack(target, EQ::invslot::slotPrimary, false, false, false, opts);
+		}
+
+		// we use this random value in three comparisons with different
+		// thresholds, and if its truely random, then this should work
+		// out reasonably and will save us compute resources.
+		int32 RandRoll = zone->random.Int(0, 99);
+		if ((CanThisClassDoubleAttack() || GetSpecialAbility(SPECATK_TRIPLE) || GetSpecialAbility(SPECATK_QUAD))
+			// check double attack, this is NOT the same rules that clients use...
+			&&
+			RandRoll < (GetLevel() + NPCDualAttackModifier)) {
+			successful_hit = successful_hit || Attack(target, EQ::invslot::slotPrimary, false, false, false, opts);
+			// lets see if we can do a triple attack with the main hand
+			// pets are excluded from triple and quads...
+			if ((GetSpecialAbility(SPECATK_TRIPLE) || GetSpecialAbility(SPECATK_QUAD)) && !IsPet() &&
+				RandRoll < (GetLevel() + NPCTripleAttackModifier)) {
+				successful_hit = successful_hit || Attack(target, EQ::invslot::slotPrimary, false, false, false, opts);
+				// now lets check the quad attack
+				if (GetSpecialAbility(SPECATK_QUAD) && RandRoll < (GetLevel() + NPCQuadAttackModifier)) {
+					successful_hit = successful_hit || Attack(target, EQ::invslot::slotPrimary, false, false, false, opts);
+				}
 			}
 		}
 	}
-	else {
-		Attack(target, EQ::invslot::slotPrimary, false, false, false, opts);
-	}
 
-	// we use this random value in three comparisons with different
-	// thresholds, and if its truely random, then this should work
-	// out reasonably and will save us compute resources.
-	int32 RandRoll = zone->random.Int(0, 99);
-	if ((CanThisClassDoubleAttack() || GetSpecialAbility(SPECATK_TRIPLE) || GetSpecialAbility(SPECATK_QUAD))
-		// check double attack, this is NOT the same rules that clients use...
-		&&
-		RandRoll < (GetLevel() + NPCDualAttackModifier)) {
-		Attack(target, EQ::invslot::slotPrimary, false, false, false, opts);
-		// lets see if we can do a triple attack with the main hand
-		// pets are excluded from triple and quads...
-		if ((GetSpecialAbility(SPECATK_TRIPLE) || GetSpecialAbility(SPECATK_QUAD)) && !IsPet() &&
-			RandRoll < (GetLevel() + NPCTripleAttackModifier)) {
-			Attack(target, EQ::invslot::slotPrimary, false, false, false, opts);
-			// now lets check the quad attack
-			if (GetSpecialAbility(SPECATK_QUAD) && RandRoll < (GetLevel() + NPCQuadAttackModifier)) {
-				Attack(target, EQ::invslot::slotPrimary, false, false, false, opts);
-			}
+	// Pyrelight Custom Code
+	// Multi-Attack via Heroic DEX (Pets)
+	if (IsPetOwnerClient() && GetOwner() && GetOwner()->GetHeroicDEX() > 0 && successful_hit)  {
+		int effective_hDEX = GetHeroicDEX() - zone->random.Int(0,500);
+		int attack_count = 0;		
+		while (effective_hDEX > 0 && successful_hit) {			
+			successful_hit = Attack(target, EQ::invslot::slotPrimary, false, false, false, opts);
+			attack_count++;
+			effective_hDEX -= zone->random.Int(0,500);									
+		}
+
+		if (attack_count) {			
+			GetOwner()->Message(Chat::NPCFlurry, "Your Heroic Dexterity allows your pet to unleash a flurry of attacks.");		
 		}
 	}
 }
@@ -6683,14 +6716,30 @@ void Mob::DoOffHandAttackRounds(Mob *target, ExtraAttackOptions *opts)
 		(RuleB(Combat, UseLiveCombatRounds) && GetSpecialAbility(SPECATK_QUAD))) ||
 		GetEquippedItemFromTextureSlot(EQ::textures::weaponSecondary) != 0) {
 		if (CheckDualWield()) {
-			Attack(target, EQ::invslot::slotSecondary, false, false, false, opts);
+			bool successful_hit = Attack(target, EQ::invslot::slotSecondary, false, false, false, opts);
 			if (CanThisClassDoubleAttack() && GetLevel() > 35 && CheckDoubleAttack()) {
-				Attack(target, EQ::invslot::slotSecondary, false, false, false, opts);
+				successful_hit = successful_hit || Attack(target, EQ::invslot::slotSecondary, false, false, false, opts);
 
 				if ((IsPet() || IsTempPet()) && IsPetOwnerClient()) {
 					int chance = spellbonuses.PC_Pet_Flurry + itembonuses.PC_Pet_Flurry + aabonuses.PC_Pet_Flurry;
 					if (chance && zone->random.Roll(chance))
-						Flurry(nullptr);
+						successful_hit = successful_hit || Flurry(nullptr);
+				}
+			}
+
+			// Pyrelight Custom Code
+			// Multi-Attack via Heroic DEX (Pets)
+			if (IsPetOwnerClient() && GetOwner() && GetOwner()->GetHeroicDEX() > 0 && successful_hit)  {
+				int effective_hDEX = GetHeroicDEX() - zone->random.Int(0,500);
+				int attack_count = 0;		
+				while (effective_hDEX > 0 && successful_hit) {			
+					successful_hit = Attack(target, EQ::invslot::slotSecondary, false, false, false, opts);
+					attack_count++;
+					effective_hDEX -= zone->random.Int(0,500);									
+				}
+
+				if (attack_count) {			
+					GetOwner()->Message(Chat::NPCFlurry, "Your Heroic Dexterity allows your pet to unleash a flurry of attacks.");		
 				}
 			}
 		}
