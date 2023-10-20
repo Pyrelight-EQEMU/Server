@@ -1490,13 +1490,12 @@ void Mob::DoAttack(Mob *other, DamageHitInfo &hit, ExtraAttackOptions *opts, boo
 
 int Mob::GetDamageReductionCap() {
 	int cap = 50;
-
-	// Fiery Defender
-	if (IsClient() && GetInv().GetItem(EQ::invslot::slotPowerSource)->GetID() == 10099) {
-		cap += 5;
+	
+	// Using a Shield
+	if (IsClient() ) {
 		if (GetInv().GetItem(EQ::invslot::slotSecondary)->GetItemType() == 8) {
 			cap += 10;
-		}
+		}		
 	}
 
 	return std::min(90, cap);
