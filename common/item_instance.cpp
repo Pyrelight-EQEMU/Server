@@ -765,7 +765,7 @@ bool EQ::ItemInstance::ContainsAugmentByID_Mod(uint32 item_id)
 	}
 
 	for (uint8 augment_slot = invaug::SOCKET_BEGIN; augment_slot <= invaug::SOCKET_END; ++augment_slot) {
-		if (GetAugmentItemID(augment_slot) % 1000000 == item_id && (item_id < 110000000)) {
+		if (GetAugmentItemID(augment_slot) % 1000000 == item_id % 1000000) {
 			return true;
 		}
 	}

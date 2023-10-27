@@ -363,20 +363,33 @@ bool EQ::InventoryProfile::SwapItem(
 			}
 			if (RuleB(Items, LoreEquipOnly)) {
 				if (source_item->LoreGroup == -1) {
-					if (HasItemEquippedByID_Mod(source_item->ID) || HasItemEquippedByID(source_item->ID)) {
+					bool has_aug;
+					if (source_item->ID <= 120000000) {
+						has_aug = HasItemEquippedByID(source_item->ID) || HasItemEquippedByID_Mod(source_item->ID);
+					} else {
+						has_aug = HasItemEquippedByID(source_item->ID);
+					}
+
+					if (has_aug) {
 						fail_state = swapItemLore;
 						return false;
 					}
 				}
-				if (source_item->LoreGroup != 0) {
-					//TODO Handle lore groups
-				}
 				if (source_item_instance->IsAugmented()) {
 					for (int i = EQ::invaug::SOCKET_BEGIN; i <= EQ::invaug::SOCKET_END; i++) {
 						EQ::ItemInstance *itm = source_item_instance->GetAugment(i);
-						if (itm && (HasAugmentEquippedByID_Mod(itm->GetID()) || HasAugmentEquippedByID(itm->GetID()))) {
-							fail_state = swapAugLore;
-							return false;
+						if (itm) {
+							bool has_aug;
+							if (itm->GetID() <= 120000000) {
+								has_aug = HasAugmentEquippedByID(itm->GetID()) || HasAugmentEquippedByID_Mod(itm->GetID());
+							} else {
+								has_aug = HasAugmentEquippedByID(itm->GetID());
+							}
+
+							if (has_aug) {
+								fail_state = swapAugLore;
+								return false;
+							}
 						}
 					}
 				}			
@@ -387,7 +400,14 @@ bool EQ::InventoryProfile::SwapItem(
 			if (source_item->IsClassBag() && source_item->LoreGroup == -1) {
 				for (int i = EQ::invslot::GENERAL_BEGIN; i <= EQ::invslot::GENERAL_END; i++) {
 					if (GetItem(i)) {
-						if ((GetItem(i)->GetID() % 1000000 == source_item->ID % 1000000 && source_item->ID < 110000000) || GetItem(i)->GetID() == source_item->ID) {
+						bool has_aug;
+						if (GetItem(i)->GetID() <= 120000000) {
+							has_aug = GetItem(i)->GetID() == source_item->ID || GetItem(i)->GetID() % 1000000 == source_item->ID % 1000000;
+						} else {
+							has_aug = GetItem(i)->GetID() == source_item->ID;
+						}
+
+						if (has_aug) {
 							fail_state = swapItemLore;
 							return false;
 						}
@@ -699,7 +719,7 @@ bool EQ::InventoryProfile::HasItemEquippedByID_Mod(uint32 item_id)
 	for (int slot_id = EQ::invslot::EQUIPMENT_BEGIN; slot_id <= EQ::invslot::EQUIPMENT_END; ++slot_id) {
 		item = GetItem(slot_id);
 		if (item) {
-			if (item->GetID() % 1000000 == item_id % 1000000 && (item_id < 110000000)) {
+			if (item->GetID() % 1000000 == item_id % 1000000) {
 				has_equipped = true;
 				break;
 			}
