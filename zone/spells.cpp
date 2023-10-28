@@ -4217,14 +4217,7 @@ bool Mob::SpellOnTarget(
 				false,
 				level_override
 			);
-		}
-		
-		// Pyrelight Custom Code - Heroic Charisma
-		if (RuleR(Character,Pyrelight_hCHA_ResistReroll) > 0) {
-			// This has been consistently nasty code.
-			// Simplify it down to 'spell becomes unresistable'.
-			
-		}		
+		}	
 
 		if (spell_effectiveness < 100) {
 			if (spell_effectiveness == 0 || !IsPartialResistableSpell(spell_id)) {
