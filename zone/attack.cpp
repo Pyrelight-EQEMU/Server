@@ -1489,16 +1489,16 @@ void Mob::DoAttack(Mob *other, DamageHitInfo &hit, ExtraAttackOptions *opts, boo
 }
 
 int Mob::GetDamageReductionCap() {
-	float cap = .50;
+	int cap = 50;
 
 	// Using a Shield
-	if (IsClient() && GetInv().GetItem(EQ::invslot::slotSecondary)) {
+	if (IsClient() ) {
 		if (GetInv().GetItem(EQ::invslot::slotSecondary)->GetItemType() == 8) {
-			cap += .10;
+			cap += 10;
 		}		
 	}
 
-	return std::min(static_cast<float>(.9), cap);
+	return std::min(90, cap);
 }
 
 //note: throughout this method, setting `damage` to a negative is a way to
@@ -1716,7 +1716,7 @@ bool Mob::Attack(Mob* other, int Hand, bool bRiposte, bool IsStrikethrough, bool
 		}
 
 		if ((IsClient() && GetHeroicSTR() > 0) || (IsPetOwnerClient() && GetOwner()->GetHeroicSTR() > 0)) {
-			if ((IsClient() || IsPetOwnerClient()) && (my_hit.damage_done > my_hit.original_damage) && my_hit.original_damage > 0) {				
+			if ((IsClient() || IsPetOwnerClient()) && (my_hit.damage_done > my_hit.original_damage)) {				
 				int increase_percentage = ((static_cast<float>(my_hit.damage_done) / static_cast<float>(my_hit.original_damage)) - 1) * 100;
 				if (GetOwner() && GetOwner()->IsClient() && GetOwner()->CastToClient()->GetAccountFlag("filter_hSTR") != "off") {
 					if (GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
@@ -6247,7 +6247,7 @@ void Mob::CommonOutgoingHitSuccess(Mob* defender, DamageHitInfo &hit, ExtraAttac
 		effective_hSTA = zone->random.Int(std::ceil(effective_hSTA) * 0.5 , std::ceil(effective_hSTA * 1.5));
 		if (effective_hSTA > 0) {
 			int64 damage_reduction_value = static_cast<int64>(std::ceil(RuleR(Character, Pyrelight_hSTA_DmgReduction) * effective_hSTA));
-			int64 damage_value = static_cast<int64>(std::max(static_cast<int64>(std::floor(hit.damage_done * (50/100))), // Capped Damage Reduction
+			int64 damage_value = static_cast<int64>(std::max(static_cast<int64>(hit.damage_done * GetDamageReductionCap() / 100), // Capped Damage Reduction
 																				hit.damage_done - damage_reduction_value)); // Reduced Damage
 
 			hit.original_damage = hit.damage_done;
