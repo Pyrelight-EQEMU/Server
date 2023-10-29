@@ -4158,7 +4158,7 @@ void Mob::DoBuffTic(const Buffs_Struct &buff, int slot, Mob *caster)
 
 				// Pyrelight Custom Code
 				// Pierce Resistence Focus
-				int64 focus_resist = GetFocusEffect(focusResistRate, spellid);
+				int64 focus_resist = GetFocusEffect(focusResistRate, buff.spellid);
 				bool pierce_resist = false;
 				int custom_resist_adjust = 0;	
 				if (zone->random.Roll0(100) < focus_resist) {
