@@ -4173,6 +4173,27 @@ void Mob::DoBuffTic(const Buffs_Struct &buff, int slot, Mob *caster)
 				LogDebug("Resist Check! [{}]", spells[buff.spellid].resist_difficulty);
 				int spell_effectiveness = std::max(static_cast<int>(target->ResistSpell(spells[buff.spellid].resist_type, buff.spellid, caster, true, spells[buff.spellid].resist_difficulty - custom_resist_adjust)), static_cast<int>(50 + focus_resist));
 
+				if (spell_effectiveness < 100) {
+					effect_value *= (spell_effectiveness / 100);
+				}
+
+				// Pyrelight Custom Code
+				// Pierce Resistence Focus
+				int64 focus_resist = GetFocusEffect(focusResistRate, buff.spellid);
+				bool pierce_resist = false;
+				int custom_resist_adjust = 0;	
+				if (zone->random.Roll0(100) < focus_resist) {
+					pierce_resist = true;
+					Message(Chat::SpellCrit, "You pierce your target's spell resistences!");
+
+				} else if (caster->IsClient() || caster->IsPetOwnerClient()) {
+					int effective_hcha = caster->IsClient() ? GetHeroicCHA() : caster->GetOwner()->GetHeroicCHA();			
+					custom_resist_adjust += 4 * effective_hcha;
+				}
+
+				LogDebug("Resist Check! [{}]", spells[buff.spellid].resist_difficulty);
+				int spell_effectiveness = std::max(static_cast<int>(target->ResistSpell(spells[buff.spellid].resist_type, buff.spellid, caster, true, spells[buff.spellid].resist_difficulty - custom_resist_adjust)), static_cast<int>(50 + focus_resist));
+
 				LogDebug("Effectiveness! [{}]", spell_effectiveness);
 				if (spell_effectiveness < 100) {
 					effect_value *= (spell_effectiveness / 100);
