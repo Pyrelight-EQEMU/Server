@@ -4187,26 +4187,14 @@ bool Mob::SpellOnTarget(
 	// Pierce Resistence Focus
 	int64 focus_resist = GetFocusEffect(focusResistRate, spell_id);
 	bool pierce_resist = false;
-	int custom_resist_adjust = 0;
+	int custom_resist_adjust = 0;	
 	if (zone->random.Roll0(100) < focus_resist) {
 		pierce_resist = true;
 		Message(Chat::SpellCrit, "You pierce your target's spell resistences!");
+
 	} else if (IsClient() || IsPetOwnerClient()) {
-		int effective_hcha = IsClient() ? GetHeroicCHA() : GetOwner()->GetHeroicCHA();		
-
-		if (effective_hcha >= 50) {
-			custom_resist_adjust += 3 * effective_hcha;
-			effective_hcha -= 50;
-		}
-
-		if (effective_hcha >= 100) {
-			custom_resist_adjust += 2 * effective_hcha;
-			effective_hcha -= 100;
-		}
-
-		if (effective_hcha > 0) {			
-			custom_resist_adjust += effective_hcha;
-		}
+		int effective_hcha = IsClient() ? GetHeroicCHA() : GetOwner()->GetHeroicCHA();			
+		custom_resist_adjust += 4 * effective_hcha;
 	}
 
 	// resist check - every spell can be resisted, beneficial or not
@@ -4214,6 +4202,8 @@ bool Mob::SpellOnTarget(
 	// not all unresistable, so changing this to only check certain spells
 	if (IsResistableSpell(spell_id) && !pierce_resist) {
 		spelltar->BreakInvisibleSpells(); //Any detrimental spell cast on you will drop invisible (can be AOE, non damage ect).
+
+		LogDebug("Resist Check! [{}]", resist_adjust);
 
 		if (
 			IsCharmSpell(spell_id) ||
@@ -4246,6 +4236,7 @@ bool Mob::SpellOnTarget(
 		}
 
 		if (spell_effectiveness < 100) {
+			spell_effectiveness = 50 + focus_resist;
 			if (spell_effectiveness == 0 || !IsPartialResistableSpell(spell_id)) {
 				LogSpells("Spell [{}] was completely resisted by [{}]", spell_id, spelltar->GetName());
 
