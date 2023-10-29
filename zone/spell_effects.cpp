@@ -4171,7 +4171,7 @@ void Mob::DoBuffTic(const Buffs_Struct &buff, int slot, Mob *caster)
 				}
 
 				LogDebug("Resist Check! [{}]", spells[buff.spellid].resist_difficulty);
-				int spell_effectiveness = std::max(static_cast<int>(target->ResistSpell(spells[buff.spellid].resist_type, buff.spellid, caster, true, spells[buff.spellid].resist_difficulty - custom_resist_adjust)), static_cast<int>(50 + focus_resist));
+				int spell_effectiveness = std::max(static_cast<int>(ResistSpell(spells[buff.spellid].resist_type, buff.spellid, caster, true, spells[buff.spellid].resist_difficulty - custom_resist_adjust)), static_cast<int>(10 + focus_resist));
 
 				LogDebug("Effectiveness! [{}]", spell_effectiveness);
 				if (spell_effectiveness < 100) {

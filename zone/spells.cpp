@@ -4226,8 +4226,8 @@ bool Mob::SpellOnTarget(
 				spells[spell_id].resist_type,
 				spell_id,
 				this,
-				use_resist_adjust - custom_resist_adjust,
-				resist_adjust,
+				use_resist_adjust,
+				resist_adjust - custom_resist_adjust,
 				false,
 				false,
 				false,
@@ -4238,7 +4238,7 @@ bool Mob::SpellOnTarget(
 		LogDebug("Effectiveness! [{}]", spell_effectiveness);
 
 		if (spell_effectiveness < 100) {
-			spell_effectiveness = 50 + focus_resist;
+			spell_effectiveness = 10 + focus_resist;
 			if (spell_effectiveness == 0 || !IsPartialResistableSpell(spell_id)) {
 				LogSpells("Spell [{}] was completely resisted by [{}]", spell_id, spelltar->GetName());
 
