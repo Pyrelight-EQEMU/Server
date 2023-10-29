@@ -4156,6 +4156,27 @@ void Mob::DoBuffTic(const Buffs_Struct &buff, int slot, Mob *caster)
 
 				effect_value = caster->GetActDoTDamage(buff.spellid, effect_value, this);
 
+				// Pyrelight Custom Code
+				// Pierce Resistence Focus
+				int64 focus_resist = GetFocusEffect(focusResistRate, spell_id);
+				bool pierce_resist = false;
+				int custom_resist_adjust = 0;	
+				if (zone->random.Roll0(100) < focus_resist) {
+					pierce_resist = true;
+					Message(Chat::SpellCrit, "You pierce your target's spell resistences!");
+
+				} else if (IsClient() || IsPetOwnerClient()) {
+					int effective_hcha = IsClient() ? GetHeroicCHA() : GetOwner()->GetHeroicCHA();			
+					custom_resist_adjust += 4 * effective_hcha;
+				}
+
+				LogDebug("Resist Check! [{}]", spells[buff.spellid].resist_difficulty);
+				int64 spell_effectiveness = max(target->ResistSpell(spells[buff.spellid].resist_type, buff.spellid, caster, true, spells[buff.spellid].resist_difficulty - custom_resist_adjust), (50 + focus_resist));
+
+				if (spell_effectiveness < 100) {
+					effect_value *= (spell_effectiveness / 100);
+				}
+
 				caster->ResourceTap(-effect_value, buff.spellid);
 				effect_value = -effect_value;
 				Damage(caster, effect_value, buff.spellid, spell.skill, false, i, true);
