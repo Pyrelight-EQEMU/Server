@@ -4183,10 +4183,36 @@ bool Mob::SpellOnTarget(
 		}
 	}
 
+	// Pyrelight Custom Code
+	// Pierce Resistence Focus
+	int64 focus_resist = GetFocusEffect(focusResistRate, spell_id);
+	bool pierce_resist = false;
+	int custom_resist_adjust = 0;
+	if (zone->random.Roll0(100) < focus_resist) {
+		pierce_resist = true;
+		Message(Chat::SpellCrit, "You pierce your target's spell resistences!");
+	} else if (IsClient() || IsPetOwnerClient()) {
+		int effective_hcha = IsClient() ? GetHeroicCHA() : GetOwner()->GetHeroicCHA();		
+
+		if (effective_hcha >= 50) {
+			custom_resist_adjust += 3 * effective_hcha;
+			effective_hcha -= 50;
+		}
+
+		if (effective_hcha >= 100) {
+			custom_resist_adjust += 2 * effective_hcha;
+			effective_hcha -= 100;
+		}
+
+		if (effective_hcha > 0) {			
+			custom_resist_adjust += effective_hcha;
+		}
+	}
+
 	// resist check - every spell can be resisted, beneficial or not
 	// add: ok this isn't true, eqlive's spell data is fucked up, buffs are
 	// not all unresistable, so changing this to only check certain spells
-	if (IsResistableSpell(spell_id)) {
+	if (IsResistableSpell(spell_id) && !pierce_resist) {
 		spelltar->BreakInvisibleSpells(); //Any detrimental spell cast on you will drop invisible (can be AOE, non damage ect).
 
 		if (
@@ -4199,7 +4225,7 @@ bool Mob::SpellOnTarget(
 				spell_id,
 				this,
 				use_resist_adjust,
-				resist_adjust,
+				resist_adjust - custom_resist_adjust,
 				true,
 				false,
 				false,
@@ -4210,7 +4236,7 @@ bool Mob::SpellOnTarget(
 				spells[spell_id].resist_type,
 				spell_id,
 				this,
-				use_resist_adjust,
+				use_resist_adjust - custom_resist_adjust,
 				resist_adjust,
 				false,
 				false,
@@ -4218,162 +4244,6 @@ bool Mob::SpellOnTarget(
 				level_override
 			);
 		}
-
-		// Pyrelight Custom Code - Heroic Charisma
-		// Reroll Hostile Spell Resists
-		if (RuleR(Character, Pyrelight_hCHA_ResistReroll) > 0 && (spellOwner->IsClient() || spellOwner->IsPetOwnerClient())) {
-
-			Mob* hCHA_source = spellOwner->IsClient() ? spellOwner : spellOwner->GetOwner();
-			int effective_hCHA = hCHA_source->GetHeroicCHA();
-			hCHA_source->CastToClient()->LoadAccountFlags();
-
-			int effective_resist_type = spells[spell_id].resist_type;
-
-			while (effective_hCHA > 0 && spell_effectiveness < 100) {
-				auto random = zone->random.Int(1, 100);
-				
-				if (random < effective_hCHA) {
-					int effective_resist_mod = resist_adjust - (effective_hCHA / 4); // Resist adjust is further modified by heroic_cha
-					
-					if (effective_resist_type != RESISTTYPE::RESIST_PRISMATIC && effective_hCHA > 100 && zone->random.Roll0(100) < 25) {
-
-						effective_resist_type = RESISTTYPE::RESIST_PRISMATIC;
-
-						if (spellOwner->GetOwner() && 
-							spellOwner->IsPetOwnerClient() &&
-							spellOwner->GetOwner()->CastToClient()->GetAccountFlag("filter_hCHA") != "off" &&
-							spellOwner->GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
-
-							hCHA_source->Message(Chat::PetSpell, "Your Heroic Charisma has modified your pet's spell to become Prismatic!");
-						} else if (spellOwner->IsClient() && spellOwner->CastToClient()->GetAccountFlag("filter_hCHA") != "off") {
-
-							hCHA_source->Message(Chat::Spells, "Your Heroic Charisma has modified your spell to become Prismatic!");
-						}
-					}
-
-					if (IsCharmSpell(spell_id) || IsMesmerizeSpell(spell_id) || IsFearSpell(spell_id)) {
-
-						spell_effectiveness = spelltar->ResistSpell(
-							spells[spell_id].resist_type,
-							spell_id,
-							this,
-							use_resist_adjust,
-							resist_adjust,
-							true,
-							false,
-							false,
-							level_override
-						);
-					} else {
-						spell_effectiveness = spelltar->ResistSpell(
-							spells[spell_id].resist_type,
-							spell_id,
-							this,
-							use_resist_adjust,
-							resist_adjust,
-							false,
-							false,
-							false,
-							level_override
-						);
-					}
-
-					if (spell_effectiveness >= 100) {
-						if (spellOwner->GetOwner() && 
-							spellOwner->IsPetOwnerClient() &&
-							spellOwner->GetOwner()->CastToClient()->GetAccountFlag("filter_hCHA") != "off" &&
-							spellOwner->GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
-
-							hCHA_source->Message(Chat::PetSpell, "Your Heroic Charisma has allowed your pet to break through its target's resistences!");
-						} else if (spellOwner->IsClient() && spellOwner->CastToClient()->GetAccountFlag("filter_hCHA") != "off") {
-							hCHA_source->Message(Chat::Spells, "Your Heroic Charisma has allowed you to break through your target's resistences!");
-						}
-						break;
-					}
- 					
-					effective_hCHA -= random;
-				}
-			}
-		}
-
-		/*
-		// Pyrelight Custom Code - Heroic Charisma
-		// Reroll Defensive spell resists
-		if (RuleR(Character, Pyrelight_hCHA_ResistReroll) > 0 && (spelltar->IsClient() || spelltar->IsPetOwnerClient())) {
-
-			Mob* hCHA_source = spelltar->IsClient() ? spelltar : spelltar->GetOwner();
-			int effective_hCHA = hCHA_source->GetHeroicCHA();
-			hCHA_source->CastToClient()->LoadAccountFlags();
-
-			int effective_resist_type = spells[spell_id].resist_type;
-
-			while (effective_hCHA > 0 && spell_effectiveness < 100) {
-				auto random = zone->random.Int(1, 100);
-				
-				if (random < effective_hCHA) {
-					int effective_resist_mod = resist_adjust + (effective_hCHA / 4); // Resist adjust is further modified by heroic_cha
-
-					if (effective_resist_type != RESISTTYPE::RESIST_CHROMATIC) {
-						if (spelltar->GetResist(RESISTTYPE::RESIST_CHROMATIC) > spelltar->GetResist(spells[spell_id].resist_type)) {				
-							if (effective_hCHA > 100 && zone->random.Roll0(100) < 25) {
-								if (spelltar->GetOwner() && 
-									spelltar->IsPetOwnerClient() &&
-									spelltar->GetOwner()->CastToClient()->GetAccountFlag("filter_hCHA") != "off" &&
-									spelltar->GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
-
-									hCHA_source->Message(Chat::PetSpell, "Your Heroic Charisma has modified the hostile spell to become Chromatic!");
-								} else if (spelltar->IsClient() && spelltar->CastToClient()->GetAccountFlag("filter_hCHA") != "off") {
-
-									hCHA_source->Message(Chat::Spells, "Your Heroic Charisma has modified your spell to become Chromatic!");
-								}
-							}
-						}
-					}
-
-					if (IsCharmSpell(spell_id) || IsMesmerizeSpell(spell_id) || IsFearSpell(spell_id)) {
-
-						spell_effectiveness = spelltar->ResistSpell(
-							spells[spell_id].resist_type,
-							spell_id,
-							this,
-							use_resist_adjust,
-							resist_adjust,
-							true,
-							false,
-							false,
-							level_override
-						);
-					} else {
-						spell_effectiveness = spelltar->ResistSpell(
-							spells[spell_id].resist_type,
-							spell_id,
-							this,
-							use_resist_adjust,
-							resist_adjust,
-							false,
-							false,
-							false,
-							level_override
-						);
-					}
-
-					if (spell_effectiveness >= 100) {
-						if (spelltar->GetOwner() && 
-							spelltar->IsPetOwnerClient() &&
-							spelltar->GetOwner()->CastToClient()->GetAccountFlag("filter_hCHA") != "off" &&
-							spelltar->GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
-
-							hCHA_source->Message(Chat::PetSpell, "Your Heroic Charisma has allowed your pet to break through its target's resistences!");
-						} else if (spelltar->IsClient() && spelltar->CastToClient()->GetAccountFlag("filter_hCHA") != "off") {
-
-							hCHA_source->Message(Chat::Spells, "Your Heroic Charisma has allowed you to break through your target's resistences!");
-						}
-					}
- 					
-					effective_hCHA -= random;
-				}
-			}
-		} */
 
 		if (spell_effectiveness < 100) {
 			if (spell_effectiveness == 0 || !IsPartialResistableSpell(spell_id)) {
