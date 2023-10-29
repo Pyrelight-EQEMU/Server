@@ -4286,9 +4286,9 @@ bool Mob::SpellOnTarget(
 
 							hCHA_source->Message(Chat::PetSpell, "Your Heroic Charisma has allowed your pet to break through its target's resistences!");
 						} else if (spellOwner->IsClient() && spellOwner->CastToClient()->GetAccountFlag("filter_hCHA") != "off") {
-
 							hCHA_source->Message(Chat::Spells, "Your Heroic Charisma has allowed you to break through your target's resistences!");
 						}
+						break;
 					}
  					
 					effective_hCHA -= random;
@@ -4296,6 +4296,7 @@ bool Mob::SpellOnTarget(
 			}
 		}
 
+		/*
 		// Pyrelight Custom Code - Heroic Charisma
 		// Reroll Defensive spell resists
 		if (RuleR(Character, Pyrelight_hCHA_ResistReroll) > 0 && (spelltar->IsClient() || spelltar->IsPetOwnerClient())) {
@@ -4372,7 +4373,7 @@ bool Mob::SpellOnTarget(
 					effective_hCHA -= random;
 				}
 			}
-		}		
+		} */
 
 		if (spell_effectiveness < 100) {
 			if (spell_effectiveness == 0 || !IsPartialResistableSpell(spell_id)) {
