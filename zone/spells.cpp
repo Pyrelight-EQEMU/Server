@@ -4183,12 +4183,28 @@ bool Mob::SpellOnTarget(
 		}
 	}
 
+	// Pyrelight Custom Code
+	// Pierce Resistence Focus
+	bool pierce_resist = false;
+	int custom_resist_adjust = 0;
+	int focus_resist = 0;
+	
+	if (IsClient() || IsPetOwnerClient()) {
+		focus_resist = GetFocusEffect(focusResistRate, spell_id);			
+		if (zone->random.Roll0(100) < focus_resist) {
+			pierce_resist = true;
+			Message(Chat::Spells, "You pierce your target's spell resistences!");
+		} else {
+			int effective_hcha = IsClient() ? GetHeroicCHA() : GetOwner()->GetHeroicCHA();			
+			custom_resist_adjust += effective_hcha * (2 + (static_cast<float>(focus_resist) / 100));
+		}
+	}
+
 	// resist check - every spell can be resisted, beneficial or not
 	// add: ok this isn't true, eqlive's spell data is fucked up, buffs are
 	// not all unresistable, so changing this to only check certain spells
-	if (IsResistableSpell(spell_id)) {
+	if (!pierce_resist && IsResistableSpell(spell_id)) {
 		spelltar->BreakInvisibleSpells(); //Any detrimental spell cast on you will drop invisible (can be AOE, non damage ect).
-
 		if (
 			IsCharmSpell(spell_id) ||
 			IsMesmerizeSpell(spell_id) ||
@@ -4199,7 +4215,7 @@ bool Mob::SpellOnTarget(
 				spell_id,
 				this,
 				use_resist_adjust,
-				resist_adjust,
+				resist_adjust - custom_resist_adjust,
 				true,
 				false,
 				false,
@@ -4211,22 +4227,31 @@ bool Mob::SpellOnTarget(
 				spell_id,
 				this,
 				use_resist_adjust,
-				resist_adjust,
+				resist_adjust - custom_resist_adjust,
 				false,
 				false,
 				false,
 				level_override
 			);
 		}
-		
-		// Pyrelight Custom Code - Heroic Charisma
-		if (RuleR(Character,Pyrelight_hCHA_ResistReroll) > 0) {
-			// This has been consistently nasty code.
-			// Simplify it down to 'spell becomes unresistable'.
-			
-		}		
 
-		if (spell_effectiveness < 100) {
+		// Pyrelight Custom Code
+		// Remove Save-or-Suck
+		if(IsClient() || IsPetOwnerClient()) {
+			LogDebug("Player Spell, spell_effectiveness [{}], focus_resist [{}]", spell_effectiveness, focus_resist);
+			if (spell_effectiveness < 100) {
+				if (IsPartialResistableSpell(spell_id) && (spells[spell_id].buff_duration == 0 || spells[spell_id].effect_id[0] == SE_CurrentHPOnce)) {
+					if (spell_effectiveness < (10 + focus_resist)) {
+						spell_effectiveness = (10 + focus_resist);
+					}				
+					Message(Chat::SpellFailure, "Your spell was partially resisted!");
+				} else {
+					spell_effectiveness = 100;
+				}			
+			}
+		}
+
+		if (spell_effectiveness < 100) {			
 			if (spell_effectiveness == 0 || !IsPartialResistableSpell(spell_id)) {
 				LogSpells("Spell [{}] was completely resisted by [{}]", spell_id, spelltar->GetName());
 

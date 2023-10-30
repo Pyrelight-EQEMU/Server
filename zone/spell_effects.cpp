@@ -4154,8 +4154,36 @@ void Mob::DoBuffTic(const Buffs_Struct &buff, int slot, Mob *caster)
 						AddToHateList(caster, -effect_value);
 				}
 
-				effect_value = caster->GetActDoTDamage(buff.spellid, effect_value, this);
+				LogDebug("value: [{}]", effect_value);
 
+				// Pyrelight Custom Code
+				// Pierce Resistence Focus
+				if (caster->IsClient() || caster->IsPetOwnerClient()) {			
+					bool pierce_resist = false;
+					int focus_resist = caster->GetFocusEffect(focusResistRate, buff.spellid, caster, true);
+					int custom_resist_adjust = 0;
+					if (zone->random.Roll0(100) <= focus_resist) {
+						pierce_resist = true;
+						caster->Message(Chat::DotDamage, "Your affliction pierces your target's spell resistences!");
+					} else  {
+						int effective_hcha = caster->IsClient() ? GetHeroicCHA() : caster->GetOwner()->GetHeroicCHA();			
+						custom_resist_adjust += effective_hcha * (2 + (static_cast<float>(focus_resist) / 100));				
+
+						if (!pierce_resist) {
+							int spell_effectiveness = static_cast<int>(ResistSpell(spells[buff.spellid].resist_type, buff.spellid, caster, true, spells[buff.spellid].resist_difficulty - custom_resist_adjust));
+							if (spell_effectiveness < 100) {
+								if (spell_effectiveness < (10 + focus_resist)) {
+									spell_effectiveness = 10 + focus_resist;
+								}						
+								effect_value *= static_cast<float>(spell_effectiveness) / 100;
+
+								caster->Message(Chat::DotDamage, "Your affliction was partially resisted!");
+							}
+						}
+					}
+				}
+
+				effect_value = caster->GetActDoTDamage(buff.spellid, effect_value, this);
 				caster->ResourceTap(-effect_value, buff.spellid);
 				effect_value = -effect_value;
 				Damage(caster, effect_value, buff.spellid, spell.skill, false, i, true);
