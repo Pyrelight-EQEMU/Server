@@ -4166,7 +4166,7 @@ void Mob::DoBuffTic(const Buffs_Struct &buff, int slot, Mob *caster)
 				LogDebug("Random: [{}]", random);
 				if (random <= focus_resist) {
 					pierce_resist = true;
-					Message(Chat::SpellCrit, "You pierce your target's spell resistences!");
+					caster->Message(Chat::SpellCrit, "You pierce your target's spell resistences!");
 				} else if (caster->IsClient() || caster->IsPetOwnerClient()) {
 					int effective_hcha = caster->IsClient() ? GetHeroicCHA() : caster->GetOwner()->GetHeroicCHA();			
 					custom_resist_adjust += 4 * effective_hcha;
