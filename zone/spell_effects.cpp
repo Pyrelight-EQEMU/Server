@@ -4175,7 +4175,7 @@ void Mob::DoBuffTic(const Buffs_Struct &buff, int slot, Mob *caster)
 
 					LogDebug("Effectiveness! [{}]", spell_effectiveness);
 					if (spell_effectiveness < 100) {
-						if (spell_effectiveness = 0) {
+						if (spell_effectiveness == 0) {
 							spell_effectiveness = 10 + focus_resist;
 						}
 						LogDebug("Effectiveness Again! [{}]", spell_effectiveness);
