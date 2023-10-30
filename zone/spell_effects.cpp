@@ -4154,30 +4154,35 @@ void Mob::DoBuffTic(const Buffs_Struct &buff, int slot, Mob *caster)
 						AddToHateList(caster, -effect_value);
 				}
 
-				effect_value = caster->GetActDoTDamage(buff.spellid, effect_value, this);
+				
 
 				// Pyrelight Custom Code
 				// Pierce Resistence Focus
 				int64 focus_resist = GetFocusEffect(focusResistRate, buff.spellid);
 				bool pierce_resist = false;
-				int custom_resist_adjust = 0;	
+				int custom_resist_adjust = 0;
 				if (zone->random.Roll0(100) < focus_resist) {
 					pierce_resist = true;
 					Message(Chat::SpellCrit, "You pierce your target's spell resistences!");
-
 				} else if (caster->IsClient() || caster->IsPetOwnerClient()) {
 					int effective_hcha = caster->IsClient() ? GetHeroicCHA() : caster->GetOwner()->GetHeroicCHA();			
 					custom_resist_adjust += 4 * effective_hcha;
 				}
 
-				LogDebug("Resist Check! [{}]", spells[buff.spellid].resist_difficulty);
-				int spell_effectiveness = std::max(static_cast<int>(ResistSpell(spells[buff.spellid].resist_type, buff.spellid, caster, true, spells[buff.spellid].resist_difficulty - custom_resist_adjust)), static_cast<int>(10 + focus_resist));
+				if (!pierce_resist) {
+					LogDebug("Resist Check! [{}]", spells[buff.spellid].resist_difficulty);
+					int spell_effectiveness = std::max(static_cast<int>(ResistSpell(spells[buff.spellid].resist_type, buff.spellid, caster, true, spells[buff.spellid].resist_difficulty - custom_resist_adjust)), static_cast<int>(10 + focus_resist));
 
-				LogDebug("Effectiveness! [{}]", spell_effectiveness);
-				if (spell_effectiveness < 100) {
-					effect_value *= (spell_effectiveness / 100);
+					LogDebug("Effectiveness! [{}]", spell_effectiveness);
+					if (spell_effectiveness < 100) {
+						if (spell_effectiveness = 0) {
+							spell_effectiveness = 10 + focus_resist;
+						}
+						effect_value *= (spell_effectiveness / 100);
+					}
 				}
 
+				effect_value = caster->GetActDoTDamage(buff.spellid, effect_value, this);
 				caster->ResourceTap(-effect_value, buff.spellid);
 				effect_value = -effect_value;
 				Damage(caster, effect_value, buff.spellid, spell.skill, false, i, true);
