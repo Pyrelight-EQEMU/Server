@@ -4238,7 +4238,7 @@ bool Mob::SpellOnTarget(
 				if (spell_effectiveness < (10 + focus_resist)) {
 					spell_effectiveness = (10 + focus_resist);
 				}				
-				Message(Chat::SpellFailure, "Your spell was partially resisted ({})!", spell_effectiveness);
+				Message(Chat::SpellFailure, "Your spell was partially resisted!");
 			} else {
 				spell_effectiveness == 100;
 			}			
