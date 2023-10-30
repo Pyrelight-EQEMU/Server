@@ -4177,7 +4177,7 @@ void Mob::DoBuffTic(const Buffs_Struct &buff, int slot, Mob *caster)
 						}						
 						effect_value *= static_cast<float>(spell_effectiveness) / 100;
 
-						Message(Chat::DotDamage, "Your affliction was partially resisted!");
+						caster->Message(Chat::DotDamage, "Your affliction was partially resisted!");
 					}
 				}
 
