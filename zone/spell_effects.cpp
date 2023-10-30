@@ -4166,7 +4166,7 @@ void Mob::DoBuffTic(const Buffs_Struct &buff, int slot, Mob *caster)
 					caster->Message(Chat::DotDamage, "Your affliction pierces your target's spell resistences!");
 				} else if (caster->IsClient() || caster->IsPetOwnerClient()) {
 					int effective_hcha = caster->IsClient() ? GetHeroicCHA() : caster->GetOwner()->GetHeroicCHA();			
-					custom_resist_adjust += effective_hcha * (2 + (static_cast<float>focus_resist / 100));
+					custom_resist_adjust += effective_hcha * (2 + (static_cast<float>(focus_resist) / 100));
 				}
 
 				if (!pierce_resist) {

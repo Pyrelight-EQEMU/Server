@@ -4193,7 +4193,7 @@ bool Mob::SpellOnTarget(
 		Message(Chat::Spells, "You pierce your target's spell resistences!");
 	} else if (IsClient() || IsPetOwnerClient()) {
 		int effective_hcha = IsClient() ? GetHeroicCHA() : GetOwner()->GetHeroicCHA();			
-		custom_resist_adjust += effective_hcha * (2 + (static_cast<float>focus_resist / 100));
+		custom_resist_adjust += effective_hcha * (2 + (static_cast<float>(focus_resist) / 100));
 	}
 
 	// resist check - every spell can be resisted, beneficial or not
