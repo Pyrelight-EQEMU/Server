@@ -4166,18 +4166,18 @@ void Mob::DoBuffTic(const Buffs_Struct &buff, int slot, Mob *caster)
 					caster->Message(Chat::DotDamage, "Your affliction pierces your target's spell resistences!");
 				} else if (caster->IsClient() || caster->IsPetOwnerClient()) {
 					int effective_hcha = caster->IsClient() ? GetHeroicCHA() : caster->GetOwner()->GetHeroicCHA();			
-					custom_resist_adjust += effective_hcha * (2 + (static_cast<float>(focus_resist) / 100));
-				}
+					custom_resist_adjust += effective_hcha * (2 + (static_cast<float>(focus_resist) / 100));				
 
-				if (!pierce_resist) {
-					int spell_effectiveness = static_cast<int>(ResistSpell(spells[buff.spellid].resist_type, buff.spellid, caster, true, spells[buff.spellid].resist_difficulty - custom_resist_adjust));
-					if (spell_effectiveness < 100) {
-						if (spell_effectiveness == 0) {
-							spell_effectiveness = 10 + focus_resist;
-						}						
-						effect_value *= static_cast<float>(spell_effectiveness) / 100;
+					if (!pierce_resist) {
+						int spell_effectiveness = static_cast<int>(ResistSpell(spells[buff.spellid].resist_type, buff.spellid, caster, true, spells[buff.spellid].resist_difficulty - custom_resist_adjust));
+						if (spell_effectiveness < 100) {
+							if (spell_effectiveness == 0) {
+								spell_effectiveness = 10 + focus_resist;
+							}						
+							effect_value *= static_cast<float>(spell_effectiveness) / 100;
 
-						caster->Message(Chat::DotDamage, "Your affliction was partially resisted!");
+							caster->Message(Chat::DotDamage, "Your affliction was partially resisted!");
+						}
 					}
 				}
 

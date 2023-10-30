@@ -4233,7 +4233,7 @@ bool Mob::SpellOnTarget(
 
 		// Pyrelight Custom Code
 		// Remove Save-or-Suck
-		if (spell_effectiveness < 100) {
+		if (spell_effectiveness < 100 && (IsClient() || IsPetOwnerClient())) {
 			if (IsPartialResistableSpell(spell_id)) {
 				if (spell_effectiveness < (10 + focus_resist)) {
 					spell_effectiveness = (10 + focus_resist);
