@@ -249,7 +249,7 @@ int64 Mob::GetActSpellDamage(uint16 spell_id, int64 value, Mob* target) {
 		value -= GetExtraSpellAmt(spell_id, GetSpellDmg(), base_value);
 	}
 
-	if (IsClient() && GetClass == MAGICIAN) {
+	if (IsClient() && GetClass() == MAGICIAN) {
 		value *= std::ceil(1.25);
 	}
 
