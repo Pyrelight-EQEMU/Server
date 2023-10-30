@@ -4179,7 +4179,7 @@ void Mob::DoBuffTic(const Buffs_Struct &buff, int slot, Mob *caster)
 							spell_effectiveness = 10 + focus_resist;
 						}
 						LogDebug("Effectiveness Again! [{}], value: [{}]", spell_effectiveness, effect_value);
-						effect_value *= (spell_effectiveness / 100);
+						effect_value *= static_cast<float>(spell_effectiveness / 100);
 					}
 				}
 
