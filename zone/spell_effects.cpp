@@ -4157,33 +4157,25 @@ void Mob::DoBuffTic(const Buffs_Struct &buff, int slot, Mob *caster)
 				LogDebug("value: [{}]", effect_value);
 
 				// Pyrelight Custom Code
-				// Pierce Resistence Focus
-				int64 focus_resist = caster->GetFocusEffect(focusResistRate, buff.spellid, caster, true);
-				LogDebug("Focus: [{}]", focus_resist);
+				// Pierce Resistence Focus				
 				bool pierce_resist = false;
+				int focus_resist = caster->GetFocusEffect(focusResistRate, buff.spellid, caster, true);
 				int custom_resist_adjust = 0;
-				int random = zone->random.Roll0(100);
-				LogDebug("Random: [{}]", random);
-				if (random <= focus_resist) {
+				if (zone->random.Roll0(100) <= focus_resist) {
 					pierce_resist = true;
 					caster->Message(Chat::DotDamage, "Your affliction pierces your target's spell resistences!");
 				} else if (caster->IsClient() || caster->IsPetOwnerClient()) {
 					int effective_hcha = caster->IsClient() ? GetHeroicCHA() : caster->GetOwner()->GetHeroicCHA();			
-					custom_resist_adjust += 4 * effective_hcha;
+					custom_resist_adjust += effective_hcha * (2 + (static_cast<float>focus_resist / 100));
 				}
 
 				if (!pierce_resist) {
-					LogDebug("Resist Check! [{}]", spells[buff.spellid].resist_difficulty);
-					int spell_effectiveness = std::max(static_cast<int>(ResistSpell(spells[buff.spellid].resist_type, buff.spellid, caster, true, spells[buff.spellid].resist_difficulty - custom_resist_adjust)), static_cast<int>(10 + focus_resist));
-
-					LogDebug("Effectiveness! [{}]", spell_effectiveness);
+					int spell_effectiveness = static_cast<int>(ResistSpell(spells[buff.spellid].resist_type, buff.spellid, caster, true, spells[buff.spellid].resist_difficulty - custom_resist_adjust));
 					if (spell_effectiveness < 100) {
 						if (spell_effectiveness == 0) {
 							spell_effectiveness = 10 + focus_resist;
 						}
-						LogDebug("Effectiveness Again! [{}], value: [{}]", spell_effectiveness, effect_value);
 						effect_value *= static_cast<float>(spell_effectiveness) / 100;
-						LogDebug("Scaled Effect Value: [{}]", effect_value);
 					}
 				}
 

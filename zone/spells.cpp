@@ -4185,26 +4185,22 @@ bool Mob::SpellOnTarget(
 
 	// Pyrelight Custom Code
 	// Pierce Resistence Focus
-	int64 focus_resist = GetFocusEffect(focusResistRate, spell_id);
 	bool pierce_resist = false;
+	int focus_resist = GetFocusEffect(focusResistRate, spell_id);	
 	int custom_resist_adjust = 0;	
 	if (zone->random.Roll0(100) < focus_resist) {
 		pierce_resist = true;
-		Message(Chat::SpellCrit, "You pierce your target's spell resistences!");
-
+		Message(Chat::Spells, "You pierce your target's spell resistences!");
 	} else if (IsClient() || IsPetOwnerClient()) {
 		int effective_hcha = IsClient() ? GetHeroicCHA() : GetOwner()->GetHeroicCHA();			
-		custom_resist_adjust += 4 * effective_hcha;
+		custom_resist_adjust += effective_hcha * (2 + (static_cast<float>focus_resist / 100));
 	}
 
 	// resist check - every spell can be resisted, beneficial or not
 	// add: ok this isn't true, eqlive's spell data is fucked up, buffs are
 	// not all unresistable, so changing this to only check certain spells
-	if (IsResistableSpell(spell_id) && !pierce_resist) {
+	if (!pierce_resist && IsResistableSpell(spell_id)) {
 		spelltar->BreakInvisibleSpells(); //Any detrimental spell cast on you will drop invisible (can be AOE, non damage ect).
-
-		LogDebug("Resist Check! [{}]", resist_adjust);
-
 		if (
 			IsCharmSpell(spell_id) ||
 			IsMesmerizeSpell(spell_id) ||
@@ -4235,14 +4231,20 @@ bool Mob::SpellOnTarget(
 			);
 		}
 
-		LogDebug("Effectiveness! [{}]", spell_effectiveness);
-
+		// Pyrelight Custom Code
+		// Remove Save-or-Suck
 		if (spell_effectiveness < 100) {
-			spell_effectiveness = IsPartialResistableSpell(spell_id) ? (10 + focus_resist) : 100;
+			if (IsPartialResistableSpell(spell_id)) {
+				if (spell_effectiveness < (10 + focus_resist)) {
+					spell_effectiveness = (10 + focus_resist);
+				}				
+				Message(Chat::SpellFailure, "Your spell was partially resisted ({})!", spell_effectiveness);
+			} else {
+				spell_effectiveness == 100;
+			}			
 		}
 
 		if (spell_effectiveness < 100) {			
-			LogDebug("Effectiveness Again! [{}]", spell_effectiveness);
 			if (spell_effectiveness == 0 || !IsPartialResistableSpell(spell_id)) {
 				LogSpells("Spell [{}] was completely resisted by [{}]", spell_id, spelltar->GetName());
 
