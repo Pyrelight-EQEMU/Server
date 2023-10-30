@@ -4239,6 +4239,7 @@ bool Mob::SpellOnTarget(
 
 		if (spell_effectiveness < 100) {
 			spell_effectiveness = 10 + focus_resist;
+			LogDebug("Effectiveness Again! [{}]", spell_effectiveness);
 			if (spell_effectiveness == 0 || !IsPartialResistableSpell(spell_id)) {
 				LogSpells("Spell [{}] was completely resisted by [{}]", spell_id, spelltar->GetName());
 
