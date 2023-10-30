@@ -4780,73 +4780,75 @@ void Mob::TryDefensiveProc(Mob *on, uint16 hand) {
 // Pyrelight Custom Code
 // Modified so that it can be used to trigger everything for ungeneralized attacks if weapon_g is null;
 void Mob::TryCombatProcs(const EQ::ItemInstance* weapon_g, Mob *on, uint16 hand, const EQ::ItemData* weapon_data) {
-
-	if (!on) {
-		SetTarget(nullptr);
-		LogError("A null Mob object was passed to Mob::TryWeaponProc for evaluation!");
-		return;
-	}
-
-	if (!IsAttackAllowed(on) && !IsClient()) {
-		LogCombat("Preventing procing off of unattackable things");
-		return;
-	}
-
-	if (DivineAura()) {
-		LogCombat("Procs cancelled, Divine Aura is in effect");
-		return;
-	}
-
-	//used for special case when checking last ammo item on projectile hit.
-	if (!weapon_g && weapon_data) {
-		TryWeaponProc(nullptr, weapon_data, on, hand);
-		TrySpellProc(nullptr, weapon_data, on, hand);
-		return;
-	}
-
-	// Only do generalized Procs for Clients
-	if (IsClient()) {
-		// Do Epic/Power Source procs
-		EQ::ItemInstance *epic = GetInv().GetItem(EQ::invslot::slotPowerSource);
-		if (epic && on && !on->HasDied()) {
-			TryWeaponProc(epic, epic->GetItem(), on);
-		}
-	}
-
-	if (!weapon_g || hand == EQ::invslot::slotRange) {
-		TrySpellProc(nullptr, (const EQ::ItemData*)nullptr, on);
-
-		EQ::ItemInstance *primary = GetInv().GetItem(EQ::invslot::slotPrimary);
-		if (primary && on && !on->HasDied()) {
-			TryWeaponProc(primary, primary->GetItem(), on);
-		}
-
-		EQ::ItemInstance *secondary = GetInv().GetItem(EQ::invslot::slotSecondary);
-		if (secondary && on && !on->HasDied()) {
-			TryWeaponProc(secondary, secondary->GetItem(), on);
-		}
-
-		// Don't do ranged proc twice
-		EQ::ItemInstance *range = GetInv().GetItem(EQ::invslot::slotRange);
-		if (range && on && !on->HasDied()) {
-			TryWeaponProc(range, range->GetItem(), on);
-		}		
-
-		return;
-	} else {
-
-		if (!weapon_g->IsClassCommon()) {
-			TrySpellProc(nullptr, (const EQ::ItemData*)nullptr, on);
+	int loop = 0;
+	do {
+		if (!on) {
+			SetTarget(nullptr);
+			LogError("A null Mob object was passed to Mob::TryWeaponProc for evaluation!");
 			return;
 		}
 
-		// Innate + aug procs from weapons
-		// TODO: powersource procs -- powersource procs are on invis augs, so shouldn't need anything extra
-		TryWeaponProc(weapon_g, weapon_g->GetItem(), on, hand);
-		// Procs from Buffs and AA both melee and range
-		TrySpellProc(weapon_g, weapon_g->GetItem(), on, hand);
-	}	
-	return;
+		if (!IsAttackAllowed(on) && !IsClient()) {
+			LogCombat("Preventing procing off of unattackable things");
+			return;
+		}
+
+		if (DivineAura()) {
+			LogCombat("Procs cancelled, Divine Aura is in effect");
+			return;
+		}
+
+		//used for special case when checking last ammo item on projectile hit.
+		if (!weapon_g && weapon_data) {
+			TryWeaponProc(nullptr, weapon_data, on, hand);
+			TrySpellProc(nullptr, weapon_data, on, hand);
+			return;
+		}
+
+		// Only do generalized Procs for Clients
+		if (IsClient()) {
+			// Do Epic/Power Source procs
+			EQ::ItemInstance *epic = GetInv().GetItem(EQ::invslot::slotPowerSource);
+			if (epic && on && !on->HasDied()) {
+				TryWeaponProc(epic, epic->GetItem(), on);
+			}
+		}
+
+		if (!weapon_g || hand == EQ::invslot::slotRange) {
+			TrySpellProc(nullptr, (const EQ::ItemData*)nullptr, on);
+
+			EQ::ItemInstance *primary = GetInv().GetItem(EQ::invslot::slotPrimary);
+			if (primary && on && !on->HasDied()) {
+				TryWeaponProc(primary, primary->GetItem(), on);
+			}
+
+			EQ::ItemInstance *secondary = GetInv().GetItem(EQ::invslot::slotSecondary);
+			if (secondary && on && !on->HasDied()) {
+				TryWeaponProc(secondary, secondary->GetItem(), on);
+			}
+
+			// Don't do ranged proc twice
+			EQ::ItemInstance *range = GetInv().GetItem(EQ::invslot::slotRange);
+			if (range && on && !on->HasDied()) {
+				TryWeaponProc(range, range->GetItem(), on);
+			}		
+
+			return;
+		} else {
+
+			if (!weapon_g->IsClassCommon()) {
+				TrySpellProc(nullptr, (const EQ::ItemData*)nullptr, on);
+				return;
+			}
+
+			// Innate + aug procs from weapons
+			// TODO: powersource procs -- powersource procs are on invis augs, so shouldn't need anything extra
+			TryWeaponProc(weapon_g, weapon_g->GetItem(), on, hand);
+			// Procs from Buffs and AA both melee and range
+			TrySpellProc(weapon_g, weapon_g->GetItem(), on, hand);
+		}		
+    } while (GetClass() == CLERIC && loop++ < 2);
+    return;
 }
 
 void Mob::TryWeaponProc(const EQ::ItemInstance *inst, const EQ::ItemData *weapon, Mob *on, uint16 hand)
