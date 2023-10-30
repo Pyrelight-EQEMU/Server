@@ -4154,7 +4154,7 @@ void Mob::DoBuffTic(const Buffs_Struct &buff, int slot, Mob *caster)
 						AddToHateList(caster, -effect_value);
 				}
 
-				
+				LogDebug("value: [{}]", effect_value);
 
 				// Pyrelight Custom Code
 				// Pierce Resistence Focus
@@ -4178,7 +4178,7 @@ void Mob::DoBuffTic(const Buffs_Struct &buff, int slot, Mob *caster)
 						if (spell_effectiveness == 0) {
 							spell_effectiveness = 10 + focus_resist;
 						}
-						LogDebug("Effectiveness Again! [{}]", spell_effectiveness);
+						LogDebug("Effectiveness Again! [{}], value: [{}]", spell_effectiveness, effect_value);
 						effect_value *= (spell_effectiveness / 100);
 					}
 				}
