@@ -469,7 +469,7 @@ bool Mob::AvoidDamage(Mob *other, DamageHitInfo &hit)
 	*/
 
 	std::set<int> classes_double_riposte = { RANGER };
-	loops = IsClient() ? classes_double_riposte.count(GetClass()) > 0 ? 2 : 1 : 1;
+	loops = classes_double_riposte.count(GetClass()) > 0 ? 2 : 1;
 	do {
 		// Need to check if we have something in MainHand to actually attack with (or fists)
 		if (hit.hand != EQ::invslot::slotRange && (CanThisClassRiposte() || IsEnraged()) && InFront && !ImmuneRipo) {
@@ -508,7 +508,7 @@ bool Mob::AvoidDamage(Mob *other, DamageHitInfo &hit)
 			}
 		}
 		loops--;
-	} while (loops > 0);
+	} while (IsClient() && loops > 0);
 
 	// block
 	bool bBlockFromRear = false;
@@ -522,7 +522,7 @@ bool Mob::AvoidDamage(Mob *other, DamageHitInfo &hit)
 		bBlockFromRear = true;
 	
 	std::set<int> classes_double_block = { BEASTLORD };
-	loops = IsClient() ? classes_double_block.count(GetClass()) > 0 ? 2 : 1 : 1;
+	loops = classes_double_block.count(GetClass()) > 0 ? 2 : 1;
 	do {
 		if (CanThisClassBlock() && (InFront || bBlockFromRear)) {
 			if (IsClient())
@@ -551,11 +551,11 @@ bool Mob::AvoidDamage(Mob *other, DamageHitInfo &hit)
 			}
 		}
 		loops--;
-	} while (loops > 0);
+	} while (IsClient() && loops > 0);
 
 	// parry
 	std::set<int> classes_double_parry = { RANGER };
-	loops = IsClient() ? classes_double_parry.count(GetClass()) > 0 ? 2 : 1 : 1;
+	loops = classes_double_parry.count(GetClass()) > 0 ? 2 : 1;
 	do {
 		if (CanThisClassParry() && InFront && hit.hand != EQ::invslot::slotRange) {
 			if (IsClient())
@@ -583,11 +583,11 @@ bool Mob::AvoidDamage(Mob *other, DamageHitInfo &hit)
 			}
 		}
 		loops--;
-	} while (loops > 0);	
+	} while (IsClient() && loops > 0);	
 
 	// dodge
 	std::set<int> classes_double_dodge = {BEASTLORD, MAGICIAN, ENCHANTER, NECROMANCER, DRUID};
-	loops = IsClient() ? classes_double_dodge.count(GetClass()) > 0 ? 2 : 1 : 1;
+	loops = classes_double_dodge.count(GetClass()) > 0 ? 2 : 1;
 	do {
 		if (CanThisClassDodge() && (InFront || GetClass() == MONK || GetClass() == BEASTLORD)) {
 			if (IsClient())
@@ -615,7 +615,7 @@ bool Mob::AvoidDamage(Mob *other, DamageHitInfo &hit)
 			}
 		}
 		loops--;   
-	} while (loops > 0);
+	} while (IsClient() && loops > 0);
 
 	// Try Shield Block OR TwoHandBluntBlockCheck
 	if (HasShieldEquipped() && (aabonuses.ShieldBlock || spellbonuses.ShieldBlock || itembonuses.ShieldBlock) && (InFront || bBlockFromRear)) {
@@ -4869,7 +4869,7 @@ void Mob::TryCombatProcs(const EQ::ItemInstance* weapon_g, Mob *on, uint16 hand,
 			// Procs from Buffs and AA both melee and range
 			TrySpellProc(weapon_g, weapon_g->GetItem(), on, hand);
 		}		
-    } while (GetClass() == CLERIC && loop++ < 2);
+    } while (IsClient() && GetClass() == CLERIC && loop++ < 2);
     return;
 }
 
