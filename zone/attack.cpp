@@ -403,6 +403,8 @@ bool Mob::AvoidDamage(Mob *other, DamageHitInfo &hit)
 	int counter_parry   = 0;
 	int counter_dodge   = 0;
 
+	int loops 			= 0;
+
 	if (attacker->GetSpecialAbility(COUNTER_AVOID_DAMAGE)) {
 		counter_all     = attacker->GetSpecialAbilityParam(COUNTER_AVOID_DAMAGE, 0);
 		counter_riposte = attacker->GetSpecialAbilityParam(COUNTER_AVOID_DAMAGE, 1);
@@ -466,42 +468,47 @@ bool Mob::AvoidDamage(Mob *other, DamageHitInfo &hit)
 		-Attacker that is enraged is immune to riposte
 	*/
 
-	// Need to check if we have something in MainHand to actually attack with (or fists)
-	if (hit.hand != EQ::invslot::slotRange && (CanThisClassRiposte() || IsEnraged()) && InFront && !ImmuneRipo) {
-		if (IsEnraged()) {
-			hit.damage_done = DMG_RIPOSTED;
-			LogCombat("I am enraged, riposting frontal attack");
-			return true;
+	std::set<int> classes_double_riposte = { RANGER };
+	loops = classes_double_riposte.count(GetClass()) > 0 ? 2 : 1;
+	do {
+		// Need to check if we have something in MainHand to actually attack with (or fists)
+		if (hit.hand != EQ::invslot::slotRange && (CanThisClassRiposte() || IsEnraged()) && InFront && !ImmuneRipo) {
+			if (IsEnraged()) {
+				hit.damage_done = DMG_RIPOSTED;
+				LogCombat("I am enraged, riposting frontal attack");
+				return true;
+			}
+			if (IsClient())
+				CastToClient()->CheckIncreaseSkill(EQ::skills::SkillRiposte, other, -10);
+			// check auto discs ... I guess aa/items too :P
+			if (spellbonuses.RiposteChance == 10000 || aabonuses.RiposteChance == 10000 || itembonuses.RiposteChance == 10000) {
+				hit.damage_done = DMG_RIPOSTED;
+				return true;
+			}
+			int chance = GetSkill(EQ::skills::SkillRiposte) + 100;
+			chance += (chance * (aabonuses.RiposteChance + spellbonuses.RiposteChance + itembonuses.RiposteChance)) / 100;
+			chance /= 50;
+			chance += (itembonuses.HeroicDEX / 25) - std::min(hstrikethrough,(itembonuses.HeroicDEX / 25)); // "Heroic Strikethrough" subtracted here to counter HeroicDEX
+			if (counter_riposte || counter_all) {
+				float counter = (counter_riposte + counter_all) / 100.0f;
+				chance -= chance * counter;
+			}
+			if (modify_riposte || modify_all) {
+				float npc_modifier = (modify_riposte + modify_all) / 100.0f;
+				chance += chance * npc_modifier;
+			}
+			// AA Slippery Attacks
+			if (hit.hand == EQ::invslot::slotSecondary) {
+				int slip = aabonuses.OffhandRiposteFail + itembonuses.OffhandRiposteFail + spellbonuses.OffhandRiposteFail;
+				chance += chance * slip / 100;
+			}
+			if (chance > 0 && zone->random.Roll(chance)) { // could be <0 from offhand stuff
+				hit.damage_done = DMG_RIPOSTED;
+				return true;
+			}
 		}
-		if (IsClient())
-			CastToClient()->CheckIncreaseSkill(EQ::skills::SkillRiposte, other, -10);
-		// check auto discs ... I guess aa/items too :P
-		if (spellbonuses.RiposteChance == 10000 || aabonuses.RiposteChance == 10000 || itembonuses.RiposteChance == 10000) {
-			hit.damage_done = DMG_RIPOSTED;
-			return true;
-		}
-		int chance = GetSkill(EQ::skills::SkillRiposte) + 100;
-		chance += (chance * (aabonuses.RiposteChance + spellbonuses.RiposteChance + itembonuses.RiposteChance)) / 100;
-		chance /= 50;
-		chance += (itembonuses.HeroicDEX / 25) - std::min(hstrikethrough,(itembonuses.HeroicDEX / 25)); // "Heroic Strikethrough" subtracted here to counter HeroicDEX
-		if (counter_riposte || counter_all) {
-			float counter = (counter_riposte + counter_all) / 100.0f;
-			chance -= chance * counter;
-		}
-		if (modify_riposte || modify_all) {
-			float npc_modifier = (modify_riposte + modify_all) / 100.0f;
-			chance += chance * npc_modifier;
-		}
-		// AA Slippery Attacks
-		if (hit.hand == EQ::invslot::slotSecondary) {
-			int slip = aabonuses.OffhandRiposteFail + itembonuses.OffhandRiposteFail + spellbonuses.OffhandRiposteFail;
-			chance += chance * slip / 100;
-		}
-		if (chance > 0 && zone->random.Roll(chance)) { // could be <0 from offhand stuff
-			hit.damage_done = DMG_RIPOSTED;
-			return true;
-		}
-	}
+		loops--;
+	} while (loops > 0);
 
 	// block
 	bool bBlockFromRear = false;
@@ -513,87 +520,102 @@ bool Mob::AvoidDamage(Mob *other, DamageHitInfo &hit)
 
 	if (BlockBehindChance && zone->random.Roll(BlockBehindChance))
 		bBlockFromRear = true;
-
-	if (CanThisClassBlock() && (InFront || bBlockFromRear)) {
-		if (IsClient())
-			CastToClient()->CheckIncreaseSkill(EQ::skills::SkillBlock, other, -10);
-		// check auto discs ... I guess aa/items too :P
-		if (spellbonuses.IncreaseBlockChance == 10000 || aabonuses.IncreaseBlockChance == 10000 ||
-			itembonuses.IncreaseBlockChance == 10000) {
-			hit.damage_done = DMG_BLOCKED;
-			return true;
+	
+	std::set<int> classes_double_block = { BEASTLORD };
+	loops = classes_double_block.count(GetClass()) > 0 ? 2 : 1;
+	do {
+		if (CanThisClassBlock() && (InFront || bBlockFromRear)) {
+			if (IsClient())
+				CastToClient()->CheckIncreaseSkill(EQ::skills::SkillBlock, other, -10);
+			// check auto discs ... I guess aa/items too :P
+			if (spellbonuses.IncreaseBlockChance == 10000 || aabonuses.IncreaseBlockChance == 10000 ||
+				itembonuses.IncreaseBlockChance == 10000) {
+				hit.damage_done = DMG_BLOCKED;
+				return true;
+			}
+			int chance = GetSkill(EQ::skills::SkillBlock) + 100;
+			chance += (chance * (aabonuses.IncreaseBlockChance + spellbonuses.IncreaseBlockChance + itembonuses.IncreaseBlockChance)) / 100;
+			chance /= 25;
+			chance += (itembonuses.HeroicDEX / 25) - std::min(hstrikethrough,(itembonuses.HeroicDEX / 25)); // "Heroic Strikethrough" subtracted here to counter HeroicDEX
+			if (counter_block || counter_all) {
+				float counter = (counter_block + counter_all) / 100.0f;
+				chance -= chance * counter;
+			}
+			if (modify_block || modify_all) {
+				float npc_modifier = (modify_block + modify_all) / 100.0f;
+				chance += chance * npc_modifier;
+			}
+			if (zone->random.Roll(chance)) {
+				hit.damage_done = DMG_BLOCKED;
+				return true;
+			}
 		}
-		int chance = GetSkill(EQ::skills::SkillBlock) + 100;
-		chance += (chance * (aabonuses.IncreaseBlockChance + spellbonuses.IncreaseBlockChance + itembonuses.IncreaseBlockChance)) / 100;
-		chance /= 25;
-		chance += (itembonuses.HeroicDEX / 25) - std::min(hstrikethrough,(itembonuses.HeroicDEX / 25)); // "Heroic Strikethrough" subtracted here to counter HeroicDEX
-		if (counter_block || counter_all) {
-			float counter = (counter_block + counter_all) / 100.0f;
-			chance -= chance * counter;
-		}
-		if (modify_block || modify_all) {
-			float npc_modifier = (modify_block + modify_all) / 100.0f;
-			chance += chance * npc_modifier;
-		}
-		if (zone->random.Roll(chance)) {
-			hit.damage_done = DMG_BLOCKED;
-			return true;
-		}
-	}
+		loops--;
+	} while (loops > 0);
 
 	// parry
-	if (CanThisClassParry() && InFront && hit.hand != EQ::invslot::slotRange) {
-		if (IsClient())
-			CastToClient()->CheckIncreaseSkill(EQ::skills::SkillParry, other, -10);
-		// check auto discs ... I guess aa/items too :P
-		if (spellbonuses.ParryChance == 10000 || aabonuses.ParryChance == 10000 || itembonuses.ParryChance == 10000) {
-			hit.damage_done = DMG_PARRIED;
-			return true;
+	std::set<int> classes_double_parry = { RANGER };
+	loops = classes_double_parry.count(GetClass()) > 0 ? 2 : 1;
+	do {
+		if (CanThisClassParry() && InFront && hit.hand != EQ::invslot::slotRange) {
+			if (IsClient())
+				CastToClient()->CheckIncreaseSkill(EQ::skills::SkillParry, other, -10);
+			// check auto discs ... I guess aa/items too :P
+			if (spellbonuses.ParryChance == 10000 || aabonuses.ParryChance == 10000 || itembonuses.ParryChance == 10000) {
+				hit.damage_done = DMG_PARRIED;
+				return true;
+			}
+			int chance = GetSkill(EQ::skills::SkillParry) + 100;
+			chance += (chance * (aabonuses.ParryChance + spellbonuses.ParryChance + itembonuses.ParryChance)) / 100;
+			chance /= 45;
+			chance += (itembonuses.HeroicDEX / 25) - std::min(hstrikethrough,(itembonuses.HeroicDEX / 25)); // "Heroic Strikethrough" subtracted here to counter HeroicDEX
+			if (counter_parry || counter_all) {
+				float counter = (counter_parry + counter_all) / 100.0f;
+				chance -= chance * counter;
+			}
+			if (modify_parry || modify_all) {
+				float npc_modifier = (modify_parry + modify_all) / 100.0f;
+				chance += chance * npc_modifier;
+			}
+			if (zone->random.Roll(chance)) {
+				hit.damage_done = DMG_PARRIED;
+				return true;
+			}
 		}
-		int chance = GetSkill(EQ::skills::SkillParry) + 100;
-		chance += (chance * (aabonuses.ParryChance + spellbonuses.ParryChance + itembonuses.ParryChance)) / 100;
-		chance /= 45;
-		chance += (itembonuses.HeroicDEX / 25) - std::min(hstrikethrough,(itembonuses.HeroicDEX / 25)); // "Heroic Strikethrough" subtracted here to counter HeroicDEX
-		if (counter_parry || counter_all) {
-			float counter = (counter_parry + counter_all) / 100.0f;
-			chance -= chance * counter;
-		}
-		if (modify_parry || modify_all) {
-			float npc_modifier = (modify_parry + modify_all) / 100.0f;
-			chance += chance * npc_modifier;
-		}
-		if (zone->random.Roll(chance)) {
-			hit.damage_done = DMG_PARRIED;
-			return true;
-		}
-	}
+		loops--;
+	} while (loops > 0);	
 
 	// dodge
-	if (CanThisClassDodge() && (InFront || GetClass() == MONK || GetClass() == BEASTLORD)) {
-		if (IsClient())
-			CastToClient()->CheckIncreaseSkill(EQ::skills::SkillDodge, other, -10);
-		// check auto discs ... I guess aa/items too :P
-		if (spellbonuses.DodgeChance == 10000 || aabonuses.DodgeChance == 10000 || itembonuses.DodgeChance == 10000) {
-			hit.damage_done = DMG_DODGED;
-			return true;
+	std::set<int> classes_double_dodge = {BEASTLORD, MAGICIAN, ENCHANTER, NECROMANCER, DRUID};
+	loops = classes_double_dodge.count(GetClass()) > 0 ? 2 : 1;
+	do {
+		if (CanThisClassDodge() && (InFront || GetClass() == MONK || GetClass() == BEASTLORD)) {
+			if (IsClient())
+				CastToClient()->CheckIncreaseSkill(EQ::skills::SkillDodge, other, -10);
+			// check auto discs ... I guess aa/items too :P
+			if (spellbonuses.DodgeChance == 10000 || aabonuses.DodgeChance == 10000 || itembonuses.DodgeChance == 10000) {
+				hit.damage_done = DMG_DODGED;
+				return true;
+			}
+			int chance = GetSkill(EQ::skills::SkillDodge) + 100;
+			chance += (chance * (aabonuses.DodgeChance + spellbonuses.DodgeChance + itembonuses.DodgeChance)) / 100;
+			chance /= 45;
+			chance += (itembonuses.HeroicAGI / 25) - std::min(hstrikethrough,(itembonuses.HeroicAGI / 25)); // "Heroic Strikethrough" subtracted here to counter HeroicAGI
+			if (counter_dodge || counter_all) {
+				float counter = (counter_dodge + counter_all) / 100.0f;
+				chance -= chance * counter;
+			}
+			if (modify_dodge || modify_all) {
+				float npc_modifier = (modify_dodge + modify_all) / 100.0f;
+				chance += chance * npc_modifier;
+			}
+			if (zone->random.Roll(chance)) {
+				hit.damage_done = DMG_DODGED;
+				return true;
+			}
 		}
-		int chance = GetSkill(EQ::skills::SkillDodge) + 100;
-		chance += (chance * (aabonuses.DodgeChance + spellbonuses.DodgeChance + itembonuses.DodgeChance)) / 100;
-		chance /= 45;
-		chance += (itembonuses.HeroicAGI / 25) - std::min(hstrikethrough,(itembonuses.HeroicAGI / 25)); // "Heroic Strikethrough" subtracted here to counter HeroicAGI
-		if (counter_dodge || counter_all) {
-			float counter = (counter_dodge + counter_all) / 100.0f;
-			chance -= chance * counter;
-		}
-		if (modify_dodge || modify_all) {
-			float npc_modifier = (modify_dodge + modify_all) / 100.0f;
-			chance += chance * npc_modifier;
-		}
-		if (zone->random.Roll(chance)) {
-			hit.damage_done = DMG_DODGED;
-			return true;
-		}
-	}
+		loops--;   
+	} while (loops > 0);
 
 	// Try Shield Block OR TwoHandBluntBlockCheck
 	if (HasShieldEquipped() && (aabonuses.ShieldBlock || spellbonuses.ShieldBlock || itembonuses.ShieldBlock) && (InFront || bBlockFromRear)) {
