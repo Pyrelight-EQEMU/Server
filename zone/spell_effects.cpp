@@ -4162,7 +4162,9 @@ void Mob::DoBuffTic(const Buffs_Struct &buff, int slot, Mob *caster)
 				LogDebug("Focus: [{}]", focus_resist);
 				bool pierce_resist = false;
 				int custom_resist_adjust = 0;
-				if (zone->random.Roll0(100) < focus_resist) {
+				int random = zone->random.Roll0(100);
+				LogDebug("Random: [{}]", random);
+				if (random <= focus_resist) {
 					pierce_resist = true;
 					Message(Chat::SpellCrit, "You pierce your target's spell resistences!");
 				} else if (caster->IsClient() || caster->IsPetOwnerClient()) {
