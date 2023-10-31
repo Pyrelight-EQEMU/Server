@@ -64,7 +64,7 @@ int64 Mob::GetActSpellDamage(uint16 spell_id, int64 value, Mob* target) {
 	}
 
 	// Pyrelight Custom Code
-	if (RuleR(Character, Pyrelight_hINT_SpellDamage) > 0 && (IsClient() || (IsPetOwnerClient() && !IsCharmed())) && !spells[spell_id].good_effect) {
+	if (RuleR(Character, Pyrelight_hINT_SpellDamage) > 0 && (IsClient() || IsPetOwnerClient()) && !spells[spell_id].good_effect) {
 		int effective_hINT = 0;
 		effective_hINT = GetOwner() ? round(RuleR(Character, Pyrelight_HeroicPetMod) * GetOwner()->GetHeroicINT()) : GetHeroicINT();
 		if (effective_hINT > 0) {
@@ -129,7 +129,7 @@ int64 Mob::GetActSpellDamage(uint16 spell_id, int64 value, Mob* target) {
 		Critical = zone->random.Roll(chance);
 
 		// Pyrelight Custom Code
-		if (RuleR(Character, Pyrelight_hDEX_CriticalReroll) > 0 && (IsClient() || (IsPet() && !IsCharmed()))) {	
+		if (RuleR(Character, Pyrelight_hDEX_CriticalReroll) > 0) {	
 			if (IsClient()) {
 				CastToClient()->LoadAccountFlags();
 			} else if (GetOwner() && GetOwner()->IsClient()) {
@@ -305,7 +305,7 @@ int64 Mob::GetActDoTDamage(uint16 spell_id, int64 value, Mob* target, bool from_
 	}
 
 	// Pyrelight Custom Code
-	if (RuleR(Character, Pyrelight_hINT_SpellDamage) > 0 && (IsClient() || (IsPetOwnerClient() && !IsCharmed())) && spells[spell_id].good_effect != BENEFICIAL_EFFECT) {
+	if (RuleR(Character, Pyrelight_hINT_SpellDamage) > 0 && (IsClient() || IsPetOwnerClient()) && spells[spell_id].good_effect != BENEFICIAL_EFFECT) {
 		int effective_hINT = 0;
 		effective_hINT = GetOwner() ? round(RuleR(Character, Pyrelight_HeroicPetMod) * GetOwner()->GetHeroicINT()) : GetHeroicINT();
 		if (effective_hINT > 0) {
@@ -357,7 +357,7 @@ int64 Mob::GetActDoTDamage(uint16 spell_id, int64 value, Mob* target, bool from_
 		Critical = zone->random.Roll(chance);
 		
 		// Pyrelight Custom Code
-		if (RuleR(Character, Pyrelight_hDEX_CriticalReroll) > 0 && (IsClient() || (IsPet() && !IsCharmed()))) {			
+		if (RuleR(Character, Pyrelight_hDEX_CriticalReroll) > 0) {			
 			if (IsClient()) {
 				CastToClient()->LoadAccountFlags();
 			} else if (GetOwner() && GetOwner()->IsClient()) {
@@ -578,7 +578,7 @@ int64 Mob::GetActSpellHealing(uint16 spell_id, int64 value, Mob* target, bool fr
 		Critical = zone->random.Roll(critical_chance);
 
 		// Pyrelight Custom Code
-		if (RuleR(Character, Pyrelight_hDEX_CriticalReroll) > 0 && (IsClient() || (IsPet() && !IsCharmed()))) {	
+		if (RuleR(Character, Pyrelight_hDEX_CriticalReroll) > 0) {	
 			if (IsClient()) {
 				CastToClient()->LoadAccountFlags();
 			} else if (GetOwner() && GetOwner()->IsClient()) {

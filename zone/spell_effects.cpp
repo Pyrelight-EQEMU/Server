@@ -1360,7 +1360,7 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 				if (RuleB(Spells, RuneUseHealAmt) && (IsClient() || IsBot()))
 					effect_value += caster->GetExtraSpellAmt(spell_id, itembonuses.HealAmt, effect_value);
 				
-				if (RuleR(Character, Pyrelight_hINT_RunePower) > 0 && (caster->IsClient() || (caster->IsPetOwnerClient() && !caster->IsCharmed()))) {
+				if (RuleR(Character, Pyrelight_hINT_RunePower) > 0 && (caster->IsClient() || caster->IsPetOwnerClient())) {
 					int effective_hWIS = 0;
 					effective_hWIS = caster->GetOwner() ? round(RuleR(Character, Pyrelight_HeroicPetMod) * caster->GetOwner()->GetHeroicWIS()) : caster->GetHeroicWIS();
 					float bonus_ratio = effective_hWIS * RuleR(Character, Pyrelight_hINT_RunePower) / 100;
@@ -1402,7 +1402,7 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 				if (RuleB(Spells, RuneUseHealAmt) && (IsClient() || IsBot()))
 					effect_value += caster->GetExtraSpellAmt(spell_id, itembonuses.HealAmt, effect_value);
 				
-				if (RuleR(Character, Pyrelight_hINT_RunePower) > 0 && (caster->IsClient() || (caster->IsPetOwnerClient() && !caster->IsCharmed()))) {
+				if (RuleR(Character, Pyrelight_hINT_RunePower) > 0 && (caster->IsClient() || caster->IsPetOwnerClient())) {
 					int effective_hWIS = 0;
 					effective_hWIS = caster->GetOwner() ? round(RuleR(Character, Pyrelight_HeroicPetMod) * caster->GetOwner()->GetHeroicWIS()) : caster->GetHeroicWIS();
 					float bonus_ratio = effective_hWIS * RuleR(Character, Pyrelight_hINT_RunePower) / 100;
@@ -1446,7 +1446,7 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 				if (RuleB(Spells, RuneUseHealAmt) && (IsClient() || IsBot()))
 					effect_value += caster->GetExtraSpellAmt(spell_id, itembonuses.HealAmt, effect_value);
 				
-				if (RuleR(Character, Pyrelight_hINT_RunePower) > 0 && (caster->IsClient() || (caster->IsPetOwnerClient() && !caster->IsCharmed()))) {
+				if (RuleR(Character, Pyrelight_hINT_RunePower) > 0 && (caster->IsClient() || caster->IsPetOwnerClient())) {
 					int effective_hWIS = 0; 
 					effective_hWIS = caster->GetOwner() ? round(RuleR(Character, Pyrelight_HeroicPetMod) * caster->GetOwner()->GetHeroicWIS()) : caster->GetHeroicWIS();
 					float bonus_ratio = effective_hWIS * RuleR(Character, Pyrelight_hINT_RunePower) / 100;

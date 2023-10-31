@@ -2834,7 +2834,7 @@ int Mob::CalcBuffDuration(Mob *caster, Mob *target, uint16 spell_id, int32 caste
 
 		// Pyrelight Custom Code
 		// Increase Detrimental Durations based on Heroic Intelligence
-		if (RuleR(Character, Pyrelight_hINT_DetDurIncrease) > 0 && IsDetrimentalSpell(spell_id) && (caster->IsClient() || (caster->IsPetOwnerClient() && !caster->IsCharmed()))) {
+		if (RuleR(Character, Pyrelight_hINT_DetDurIncrease) > 0 && IsDetrimentalSpell(spell_id) && (caster->IsClient() || caster->IsPetOwnerClient())) {
 			int effective_hINT = 0;
 			effective_hINT = caster->GetOwner() ? std::ceil(RuleR(Character, Pyrelight_HeroicPetMod) * caster->GetOwner()->GetHeroicINT()) : caster->GetHeroicINT();
 			if (effective_hINT) {
