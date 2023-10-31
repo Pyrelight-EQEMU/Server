@@ -352,7 +352,7 @@ int64 Mob::GetActDoTDamage(uint16 spell_id, int64 value, Mob* target, bool from_
 
 	bool Critical = false;
 
-	if (chance > 0) {
+	if (chance > 0 && this != target) {
 
 		Critical = zone->random.Roll(chance);
 		

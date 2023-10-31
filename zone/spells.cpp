@@ -4189,7 +4189,7 @@ bool Mob::SpellOnTarget(
 	int custom_resist_adjust = 0;
 	int focus_resist = 0;
 	
-	if (IsClient() || IsPetOwnerClient()) {
+	if ((IsClient() || IsPetOwnerClient()) && spelltar != this) {
 		focus_resist = GetFocusEffect(focusResistRate, spell_id);			
 		if (zone->random.Roll0(100) < focus_resist) {
 			pierce_resist = true;
