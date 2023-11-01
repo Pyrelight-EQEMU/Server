@@ -4136,6 +4136,7 @@ void Mob::DoBuffTic(const Buffs_Struct &buff, int slot, Mob *caster)
 
 		switch (effect) {
 		case SE_CurrentHP: {
+			// Necro Quirk, make this effect happen twice
     		for (int execCounter = 0; execCounter < (caster && caster->GetClass() == NECROMANCER) ? 2 : 1; ++execCounter) {
 				if (spells[buff.spellid].limit_value[i] && !PassCastRestriction(spells[buff.spellid].limit_value[i])) {
 					break;
@@ -4199,20 +4200,20 @@ void Mob::DoBuffTic(const Buffs_Struct &buff, int slot, Mob *caster)
 							}
 						}	
 					}
-
-					// Pyrelight Custom Code
-					// Necro Epic DoT Procs
-					if (spells[buff.spellid].good_effect != BENEFICIAL_EFFECT) {					
-						if (caster->GetInv().HasAugmentEquippedByID_Mod(20544)) {
-							caster->TryCombatProcs(nullptr, this, EQ::invslot::slotRange);							
-						}								
-					}
-
 				} else if (effect_value > 0) {
 					// Regen spell...
 					// handled with bonuses
 				}
+			}		
+
+			// Pyrelight Custom Code
+			// Necro Epic DoT Procs
+			if (spells[buff.spellid].good_effect != BENEFICIAL_EFFECT) {					
+				if (caster->GetInv().HasAugmentEquippedByID_Mod(20544)) {
+					caster->TryCombatProcs(nullptr, this, EQ::invslot::slotRange);							
+				}								
 			}
+			
 			break;
 		}
 		case SE_HealOverTime: {
