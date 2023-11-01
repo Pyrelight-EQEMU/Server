@@ -4897,7 +4897,10 @@ bool Mob::IsImmuneToSpell(uint16 spell_id, Mob *caster)
 
 	if(IsCharmSpell(spell_id))
 	{
-		if(GetSpecialAbility(UNCHARMABLE))
+		std::unordered_set<int> valid_ids = { 2759, 2760, 2761, 5874, 5875, 5876 };
+		bool dire_charm = valid_ids.find(spells[spell_id].id) != valid_ids.end();		
+
+		if(GetSpecialAbility(UNCHARMABLE) && !dire_charm && caster->GetLevelCon(GetLevel()) != 13);
 		{
 			LogSpells("We are immune to Charm spells");
 			caster->MessageString(Chat::Red, CANNOT_CHARM);	// need to verify message type, not in MQ2Cast for easy look up
@@ -4920,7 +4923,10 @@ bool Mob::IsImmuneToSpell(uint16 spell_id, Mob *caster)
 		//let npcs cast whatever charm on anyone
 		// Pyrelight Custom Code - Enchanter Epic allows unrestricted charm spells.
 				
-		if(!caster->IsNPC() && !caster->GetClass() == ENCHANTER)
+		if(!caster->IsNPC() && 
+		   !caster->GetClass() == ENCHANTER ||
+		   (!caster->GetClass() == DRUID && spells[spell_id].target_type = SpellTargetType::ST_Animal) ||
+		   (!caster->GetClass() == NECROMANCER && spells[spell_id].target_type = SpellTargetType::ST_Undead))
 		{
 			// check level limit of charm spell
 			effect_index = GetSpellEffectIndex(spell_id, SE_Charm);
