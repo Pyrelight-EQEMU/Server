@@ -4811,10 +4811,16 @@ bool Mob::IsImmuneToSpell(uint16 spell_id, Mob *caster)
 		return false;
 
 	if(IsMesmerizeSpell(spell_id))
-	{
+	{	
+
+		// Enchanter Epic Effect
+		if (caster->GetInv().HasAugmentEquippedByID_Mod(10650)) {
+			return false;
+		}
+
 		if(GetSpecialAbility(UNMEZABLE)) {
-			LogSpells("We are immune to Mez spells");
-			caster->MessageString(Chat::SpellFailure, CANNOT_MEZ);
+			LogSpells("We are immune to Mez spells");CANNOT_MEZ
+			caster->MessageString(Chat::SpellFailure, );
 			int32 aggro = caster->CheckAggroAmount(spell_id, this);
 			if(aggro > 0) {
 				AddToHateList(caster, aggro);
@@ -4839,7 +4845,7 @@ bool Mob::IsImmuneToSpell(uint16 spell_id, Mob *caster)
 	}
 
 	// slow and haste spells
-	/*
+	
 	if(GetSpecialAbility(UNSLOWABLE) && IsEffectInSpell(spell_id, SE_AttackSpeed))
 	{
 		LogSpells("We are immune to Slow spells");
@@ -4851,8 +4857,7 @@ bool Mob::IsImmuneToSpell(uint16 spell_id, Mob *caster)
 			AddToHateList(caster, 1,0,true,false,false,spell_id);
 		}
 		return true;
-	}
-	*/
+	}	
 
 	// client vs client fear
 	if(IsEffectInSpell(spell_id, SE_Fear))
