@@ -4926,12 +4926,11 @@ bool Mob::IsImmuneToSpell(uint16 spell_id, Mob *caster)
 		}
 
 		//let npcs cast whatever charm on anyone
-		// Pyrelight Custom Code - Enchanter Epic allows unrestricted charm spells.
+		// Pyrelight Custom Code - Enchanter \ Druid \ Necromancer quirk
 				
-		if(!caster->IsNPC() && 
-		   !caster->GetClass() == ENCHANTER ||
-		   (!caster->GetClass() == DRUID && spells[spell_id].target_type = SpellTargetType::ST_Animal) ||
-		   (!caster->GetClass() == NECROMANCER && spells[spell_id].target_type = SpellTargetType::ST_Undead))
+		if((caster->GetClass() != ENCHANTER) &&
+	       (caster->GetClass() != DRUID && spells[spell_id].target_type != SpellTargetType::ST_Animal) &&
+		   (caster->GetClass() != NECROMANCER && spells[spell_id].target_type != SpellTargetType::ST_Undead))
 		{
 			// check level limit of charm spell
 			effect_index = GetSpellEffectIndex(spell_id, SE_Charm);
@@ -5259,13 +5258,18 @@ float Mob::ResistSpell(uint8 resist_type, uint16 spell_id, Mob *caster, bool use
 		resist_chance = spells[spell_id].min_resist;
 	}
 
-	//Average charm duration agianst mobs with 0% chance to resist on LIVE is ~ 68 ticks.
-	//Minimum resist chance should be caclulated factoring in the RuleI(Spells, CharmBreakCheckChance)
+	// Average charm duration against mobs with 0% chance to resist on LIVE is ~ 68 ticks.
+	// Minimum resist chance should be calculated factoring in the RuleI(Spells, CharmBreakCheckChance)
 	if (CharmTick) {
 
 		float min_charmbreakchance = ((100.0f/static_cast<float>(RuleI(Spells, CharmBreakCheckChance)))/66.0f * 100.0f)*2.0f;
-		if (resist_chance < static_cast<int>(min_charmbreakchance))
-			resist_chance = min_charmbreakchance;
+
+		// Assuming the caster has a 'heroic_charisma' attribute:
+		float hc_factor = 1.0f + (caster->GetHeroicCHA() * 0.01f); // This assumes each point of heroic_charisma extends charm duration by 1%. Adjust as needed.
+
+		min_charmbreakchance /= hc_factor; // Using division to reduce the break chance, hence extending the charm duration.
+		
+		resist_chance = static_cast<int>(min_charmbreakchance);
 
 		LogDebug("resist_chance: [{}]", resist_chance);
 	}
