@@ -3901,12 +3901,12 @@ void Mob::BuffProcess()
 	for (int buffs_i = 0; buffs_i < buff_count; ++buffs_i)
 	{
 		if (IsValidSpell(buffs[buffs_i].spellid))
-		{			
+		{	
 			DoBuffTic(buffs[buffs_i], buffs_i, entity_list.GetMob(buffs[buffs_i].casterid));
 			// If the Mob died during DoBuffTic, then the buff we are currently processing will have been removed
 			if(!IsValidSpell(buffs[buffs_i].spellid)) {
 				continue;
-			}
+			}			
 
 			// DF_Permanent uses -1 DF_Aura uses -4 but we need to check negatives for some spells for some reason?
 			if (spells[buffs[buffs_i].spellid].buff_duration_formula != DF_Permanent &&
@@ -4136,81 +4136,84 @@ void Mob::DoBuffTic(const Buffs_Struct &buff, int slot, Mob *caster)
 
 		switch (effect) {
 		case SE_CurrentHP: {
-			if (spells[buff.spellid].limit_value[i] && !PassCastRestriction(spells[buff.spellid].limit_value[i])) {
-				break;
-			}
-
-			effect_value = CalcSpellEffectValue(buff.spellid, i, buff.casterlevel, buff.instrument_mod,
-							    caster, buff.ticsremaining);
-			// Handle client cast DOTs here.
-			if (caster && effect_value < 0) {
-
-				if (IsDetrimentalSpell(buff.spellid)) {
-					if (caster->IsClient()) {
-						if (!caster->CastToClient()->GetFeigned())
-							AddToHateList(caster, -effect_value);
-					} else if (!IsClient()) // Allow NPC's to generate hate if casted on other
-								// NPC's.
-						AddToHateList(caster, -effect_value);
+			// Necro Quirk, make this effect happen twice
+    		for (int execCounter = 0; execCounter < (caster && caster->GetClass() == NECROMANCER) ? 2 : 1; ++execCounter) {
+				if (spells[buff.spellid].limit_value[i] && !PassCastRestriction(spells[buff.spellid].limit_value[i])) {
+					break;
 				}
 
-				LogDebug("value: [{}]", effect_value);
+				effect_value = CalcSpellEffectValue(buff.spellid, i, buff.casterlevel, buff.instrument_mod,
+									caster, buff.ticsremaining);
+				// Handle client cast DOTs here.
+				if (caster && effect_value < 0) {
 
-				// Pyrelight Custom Code
-				// Pierce Resistence Focus
-				if (caster->IsClient() || caster->IsPetOwnerClient()) {			
-					bool pierce_resist = false;
-					int focus_resist = caster->GetFocusEffect(focusResistRate, buff.spellid, caster, true);
-					int custom_resist_adjust = 0;
-					if (zone->random.Roll0(100) <= focus_resist) {
-						pierce_resist = true;
-						caster->Message(Chat::DotDamage, "Your affliction pierces your target's spell resistences!");
-					} else  {
-						int effective_hcha = caster->IsClient() ? GetHeroicCHA() : caster->GetOwner()->GetHeroicCHA();			
-						custom_resist_adjust += effective_hcha * (2 + (static_cast<float>(focus_resist) / 100));				
+					if (IsDetrimentalSpell(buff.spellid)) {
+						if (caster->IsClient()) {
+							if (!caster->CastToClient()->GetFeigned())
+								AddToHateList(caster, -effect_value);
+						} else if (!IsClient()) // Allow NPC's to generate hate if casted on other
+									// NPC's.
+							AddToHateList(caster, -effect_value);
+					}
 
-						if (!pierce_resist) {
-							int spell_effectiveness = static_cast<int>(ResistSpell(spells[buff.spellid].resist_type, buff.spellid, caster, true, spells[buff.spellid].resist_difficulty - custom_resist_adjust));
-							if (spell_effectiveness < 100) {
-								if (spell_effectiveness < (10 + focus_resist)) {
-									spell_effectiveness = 10 + focus_resist;
-								}						
-								effect_value *= static_cast<float>(spell_effectiveness) / 100;
+					LogDebug("value: [{}]", effect_value);
 
-								caster->Message(Chat::DotDamage, "Your affliction was partially resisted!");
+					// Pyrelight Custom Code
+					// Pierce Resistence Focus
+					if (caster->IsClient() || caster->IsPetOwnerClient()) {			
+						bool pierce_resist = false;
+						int focus_resist = caster->GetFocusEffect(focusResistRate, buff.spellid, caster, true);
+						int custom_resist_adjust = 0;
+						if (zone->random.Roll0(100) <= focus_resist) {
+							pierce_resist = true;
+							caster->Message(Chat::DotDamage, "Your affliction pierces your target's spell resistences!");
+						} else  {
+							int effective_hcha = caster->IsClient() ? GetHeroicCHA() : caster->GetOwner()->GetHeroicCHA();			
+							custom_resist_adjust += effective_hcha * (2 + (static_cast<float>(focus_resist) / 100));				
+
+							if (!pierce_resist) {
+								int spell_effectiveness = static_cast<int>(ResistSpell(spells[buff.spellid].resist_type, buff.spellid, caster, true, spells[buff.spellid].resist_difficulty - custom_resist_adjust));
+								if (spell_effectiveness < 100) {
+									if (spell_effectiveness < (10 + focus_resist)) {
+										spell_effectiveness = 10 + focus_resist;
+									}						
+									effect_value *= static_cast<float>(spell_effectiveness) / 100;
+
+									caster->Message(Chat::DotDamage, "Your affliction was partially resisted!");
+								}
 							}
 						}
 					}
+
+					effect_value = caster->GetActDoTDamage(buff.spellid, effect_value, this);
+					caster->ResourceTap(-effect_value, buff.spellid);
+					effect_value = -effect_value;
+					Damage(caster, effect_value, buff.spellid, spell.skill, false, i, true);
+
+					// Pyrelight Custom Code
+					// Shaman Epic DoT->Heal Effect
+					if (spells[buff.spellid].good_effect != BENEFICIAL_EFFECT) {					
+						if (caster->GetInv().HasAugmentEquippedByID_Mod(10651)) {
+							caster->HealDamage(round(effect_value * 0.25), caster, buff.spellid);
+							if (caster->GetPet()) {
+								caster->GetPet()->HealDamage(round(effect_value * 0.25), caster, buff.spellid);
+							}
+						}	
+					}
+				} else if (effect_value > 0) {
+					// Regen spell...
+					// handled with bonuses
 				}
+			}		
 
-				effect_value = caster->GetActDoTDamage(buff.spellid, effect_value, this);
-				caster->ResourceTap(-effect_value, buff.spellid);
-				effect_value = -effect_value;
-				Damage(caster, effect_value, buff.spellid, spell.skill, false, i, true);
-
-				// Pyrelight Custom Code
-				// Shaman Epic DoT->Heal Effect
-				if (spells[buff.spellid].good_effect != BENEFICIAL_EFFECT) {					
-					if (caster->GetInv().HasAugmentEquippedByID_Mod(10651)) {
-						caster->HealDamage(round(effect_value * 0.25), caster, buff.spellid);
-						if (caster->GetPet()) {
-							caster->GetPet()->HealDamage(round(effect_value * 0.25), caster, buff.spellid);
-						}
-					}	
-				}
-
-				// Pyrelight Custom Code
-				// Necro Epic DoT Procs
-				if (spells[buff.spellid].good_effect != BENEFICIAL_EFFECT) {					
-					if (caster->GetInv().HasAugmentEquippedByID_Mod(20544)) {
-						caster->TryCombatProcs(nullptr, this, EQ::invslot::slotRange);							
-					}								
-				}
-
-			} else if (effect_value > 0) {
-				// Regen spell...
-				// handled with bonuses
+			// Pyrelight Custom Code
+			// Necro Epic DoT Procs
+			if (spells[buff.spellid].good_effect != BENEFICIAL_EFFECT) {					
+				if (caster->GetInv().HasAugmentEquippedByID_Mod(20544)) {
+					caster->TryCombatProcs(nullptr, this, EQ::invslot::slotRange);							
+				}								
 			}
+			
 			break;
 		}
 		case SE_HealOverTime: {
