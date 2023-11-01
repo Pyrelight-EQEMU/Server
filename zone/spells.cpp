@@ -4903,7 +4903,9 @@ bool Mob::IsImmuneToSpell(uint16 spell_id, Mob *caster)
 	if(IsCharmSpell(spell_id))
 	{
 		std::unordered_set<int> valid_ids = { 2759, 2760, 2761, 5874, 5875, 5876 };
-		bool dire_charm = valid_ids.find(spells[spell_id].id) != valid_ids.end();		
+		bool dire_charm = valid_ids.find(spells[spell_id].id) != valid_ids.end();
+
+		LogDebug("dire_charm [{}], ConCode [{}]", dire_charm, caster->GetLevelCon(GetLevel()));		
 
 		if(GetSpecialAbility(UNCHARMABLE) && !dire_charm && caster->GetLevelCon(GetLevel()) != 13);
 		{
