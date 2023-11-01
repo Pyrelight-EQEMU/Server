@@ -4907,17 +4907,19 @@ bool Mob::IsImmuneToSpell(uint16 spell_id, Mob *caster)
 
 		LogDebug("dire_charm [{}], ConCode [{}]", dire_charm, caster->GetLevelCon(GetLevel()));		
 
-		if(GetSpecialAbility(UNCHARMABLE) && !dire_charm && caster->GetLevelCon(GetLevel()) != 13);
+		if(GetSpecialAbility(UNCHARMABLE))
 		{
-			LogSpells("We are immune to Charm spells");
-			caster->MessageString(Chat::Red, CANNOT_CHARM);	// need to verify message type, not in MQ2Cast for easy look up
-			int32 aggro = caster->CheckAggroAmount(spell_id, this);
-			if(aggro > 0) {
-				AddToHateList(caster, aggro);
-			} else {
-				AddToHateList(caster, 1,0,true,false,false,spell_id);
+			if(!(dire_charm && caster->GetLevelCon(GetLevel()) != 13)) {
+				LogSpells("We are immune to Charm spells");
+				caster->MessageString(Chat::Red, CANNOT_CHARM);	// need to verify message type, not in MQ2Cast for easy look up
+				int32 aggro = caster->CheckAggroAmount(spell_id, this);
+				if(aggro > 0) {
+					AddToHateList(caster, aggro);
+				} else {
+					AddToHateList(caster, 1,0,true,false,false,spell_id);
+				}
+				return true;
 			}
-			return true;
 		}
 
 		if(this == caster)
