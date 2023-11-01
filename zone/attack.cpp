@@ -6280,7 +6280,7 @@ void Mob::CommonOutgoingHitSuccess(Mob* defender, DamageHitInfo &hit, ExtraAttac
 		}
 
 		if (hots > 0) {
-			hit.damage_done = std::min(static_cast<int64>(hit.damage_done * 0.15 * hots), static_cast<int64>(hit.damage_done * 0.75));
+			hit.damage_done = std::min(static_cast<int64>(hit.damage_done * 0.25 * hots), static_cast<int64>(hit.damage_done * 0.75));
 		}
 	}
 
