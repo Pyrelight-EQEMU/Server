@@ -564,11 +564,7 @@ int8 NpcScaleManager::GetNPCScalingType(NPC *&npc)
 {
 	std::string npc_name = npc->GetName();
 
-	if (npc->IsRaidTarget()) {
-		return 2;
-	}
-
-	if (npc->IsRareSpawn() || npc_name.find('#') != std::string::npos || isupper(npc_name[0])) {
+	if (npc->IsRareSpawn() || npc_name.find('#') != std::string::npos || isupper(npc_name[0]) || npc->IsRaidTarget()) {
 		return 1;
 	}
 
