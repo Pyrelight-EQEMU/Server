@@ -6249,6 +6249,41 @@ void Mob::CommonOutgoingHitSuccess(Mob* defender, DamageHitInfo &hit, ExtraAttac
 		hit.damage_done -= hit.damage_done * defender->GetShieldTargetMitigation() / 100; //Default shielded takes 50 pct damage
 	}
 
+	// Pyrelight Custom Code
+	// Reduce Damage to Magician Pets based upon DS
+	if (defender->IsPet() && defender->IsPetOwnerClient() && defender->GetOwner()->GetClass() == MAGICIAN) {
+		int64 ds_reduction = static_cast<int64>((hit.damage_done * defender->spellbonuses.SpellDamageShield) / (10 * $defender->GetLevel()));
+		if (ds_reduction) {
+			hit.damage_done -= std::min(ds_reduction, static_cast<int64>(hit.damage_done * 0.75));
+			defender->GetOwner()->Message(Chat::OtherHitOther, "Your damage shield reduced the damage to your pet.");
+		}		
+	}
+
+	// Pyrelight Custom Code
+	// Reduce Damage to Druid based upon DS
+	if (defender->IsClient() && defender->GetClass() == DRUID) {
+		int64 ds_reduction = static_cast<int64>((hit.damage_done * defender->spellbonuses.SpellDamageShield) / (10 * $defender->GetLevel()));
+		if (ds_reduction) {
+			hit.damage_done -= std::min(ds_reduction, static_cast<int64>(hit.damage_done * 0.75));
+			defender->Message(Chat::OtherHitsYou, "Your damage shield reduced the damage to you.");
+		}		
+	}
+
+	// Pyrelight Custom Code
+	// Reduce Damage to Druid based upon DS
+	if (defender->IsClient() && defender->GetClass() == SHAMAN) {
+		int hots = false;
+		for(Buffs_Struct buff : defender->GetBuffs()) {
+			if (IsHealOverTimeSpell(buff.spellid) && buff.id == defender->GetID()) {
+				hots++;
+			}
+		}
+
+		if (hots > 0) {
+			hit.damage_done = std::min(static_cast<int64>(hit.damage_done * 0.15 * hots), static_cast<int64>(hit.damage_done * 0.75));
+		}
+	}
+
 	// Pyrelight Custom Code - Heroic Strength
 	if (RuleR(Character, Pyrelight_hSTR_DmgBonus) > 0) {
 		int effective_hSTR = (IsPetOwnerClient() && GetOwner()) ? RuleR(Character, Pyrelight_HeroicPetMod) * GetOwner()->GetHeroicSTR() : GetHeroicSTR();
