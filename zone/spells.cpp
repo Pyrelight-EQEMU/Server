@@ -4819,8 +4819,8 @@ bool Mob::IsImmuneToSpell(uint16 spell_id, Mob *caster)
 		}
 
 		if(GetSpecialAbility(UNMEZABLE)) {
-			LogSpells("We are immune to Mez spells");CANNOT_MEZ
-			caster->MessageString(Chat::SpellFailure, );
+			LogSpells("We are immune to Mez spells");
+			caster->MessageString(Chat::SpellFailure, CANNOT_MEZ);
 			int32 aggro = caster->CheckAggroAmount(spell_id, this);
 			if(aggro > 0) {
 				AddToHateList(caster, aggro);
