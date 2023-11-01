@@ -6252,7 +6252,7 @@ void Mob::CommonOutgoingHitSuccess(Mob* defender, DamageHitInfo &hit, ExtraAttac
 	// Pyrelight Custom Code
 	// Reduce Damage to Magician Pets based upon DS
 	if (defender->IsPet() && defender->IsPetOwnerClient() && defender->GetOwner()->GetClass() == MAGICIAN) {
-		int64 ds_reduction = static_cast<int64>((hit.damage_done * defender->spellbonuses.SpellDamageShield) / (10 * $defender->GetLevel()));
+		int64 ds_reduction = static_cast<int64>((hit.damage_done * defender->spellbonuses.SpellDamageShield) / (10 * defender->GetLevel()));
 		if (ds_reduction) {
 			hit.damage_done -= std::min(ds_reduction, static_cast<int64>(hit.damage_done * 0.75));
 			defender->GetOwner()->Message(Chat::OtherHitOther, "Your damage shield reduced the damage to your pet.");
@@ -6262,7 +6262,7 @@ void Mob::CommonOutgoingHitSuccess(Mob* defender, DamageHitInfo &hit, ExtraAttac
 	// Pyrelight Custom Code
 	// Reduce Damage to Druid based upon DS
 	if (defender->IsClient() && defender->GetClass() == DRUID) {
-		int64 ds_reduction = static_cast<int64>((hit.damage_done * defender->spellbonuses.SpellDamageShield) / (10 * $defender->GetLevel()));
+		int64 ds_reduction = static_cast<int64>((hit.damage_done * defender->spellbonuses.SpellDamageShield) / (10 * defender->GetLevel()));
 		if (ds_reduction) {
 			hit.damage_done -= std::min(ds_reduction, static_cast<int64>(hit.damage_done * 0.75));
 			defender->Message(Chat::OtherHitsYou, "Your damage shield reduced the damage to you.");
