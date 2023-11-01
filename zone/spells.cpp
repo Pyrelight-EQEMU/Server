@@ -4920,7 +4920,7 @@ bool Mob::IsImmuneToSpell(uint16 spell_id, Mob *caster)
 		//let npcs cast whatever charm on anyone
 		// Pyrelight Custom Code - Enchanter Epic allows unrestricted charm spells.
 				
-		if(!caster->IsNPC() || caster->GetClass() == ENCHANTER)
+		if(!caster->IsNPC() && !caster->GetClass() == ENCHANTER)
 		{
 			// check level limit of charm spell
 			effect_index = GetSpellEffectIndex(spell_id, SE_Charm);
