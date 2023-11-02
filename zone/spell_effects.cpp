@@ -3902,7 +3902,7 @@ void Mob::BuffProcess()
 	{
 		if (IsValidSpell(buffs[buffs_i].spellid))
 		{
-			Client* caster = entity_list.GetClientByName(buffs[buffs_i].caster_name);
+			
 			
 			DoBuffTic(buffs[buffs_i], buffs_i, entity_list.GetMob(buffs[buffs_i].casterid));
 			// If the Mob died during DoBuffTic, then the buff we are currently processing will have been removed
@@ -3910,9 +3910,9 @@ void Mob::BuffProcess()
 				continue;
 			}
 			
-			if (caster->GetClass() == NECROMANCER) {
+			Mob* buff_caster = entity_list.GetMob(buffs[buffs_i].casterid)
+			if (buff_caster->GetClass() == NECROMANCER) {
 				DoBuffTic(buffs[buffs_i], buffs_i, entity_list.GetMob(buffs[buffs_i].casterid));
-				// If the Mob died during DoBuffTic, then the buff we are currently processing will have been removed
 				if(!IsValidSpell(buffs[buffs_i].spellid)) {
 					continue;
 				}
@@ -3930,6 +3930,7 @@ void Mob::BuffProcess()
 					// We pause the timers on buffs that we or our group members cast, as long as those are spells they own
 					// Also do buff scaling with fake item here
 					if (!spells[buffs[buffs_i].spellid].short_buff_box && (IsClient() || (IsPet() && IsPetOwnerClient()))) {
+						Client* caster = entity_list.GetClientByName(buffs[buffs_i].caster_name);
 						Client* client = GetOwnerOrSelf()->CastToClient();						
 						uint32 spellid = buffs[buffs_i].spellid;
 						
