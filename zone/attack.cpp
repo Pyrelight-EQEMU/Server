@@ -6282,7 +6282,7 @@ void Mob::CommonOutgoingHitSuccess(Mob* defender, DamageHitInfo &hit, ExtraAttac
 		}
 
 		if (hots > 0) {
-			hit.damage_done -= std::max(static_cast<int64>(hit.damage_done * 0.25 * hots), static_cast<int64>(hit.damage_done * 0.75));
+			hit.damage_done -= (hit.damage_done * 0.25);
 			defender->Message(Chat::OtherHitYou, "Your healing mitigates some damage.");	
 		}
 	}
