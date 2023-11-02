@@ -588,12 +588,11 @@ bool Mob::AvoidDamage(Mob *other, DamageHitInfo &hit)
 		loops--;
 	} while (IsClient() && loops > 0);	
 
-	// Beastlord Quirk
 	// Magician Quirk
 	// Necromancer Quirk
 	// Enchanter Quirk
 	// Shaman Quirk
-	std::set<int> classes_double_dodge = {BEASTLORD, MAGICIAN, ENCHANTER, NECROMANCER, DRUID};
+	std::set<int> classes_double_dodge = {MAGICIAN, ENCHANTER, NECROMANCER, DRUID};
 	loops = classes_double_dodge.count(GetClass()) > 0 ? 2 : 1;
 	do {
 		if (CanThisClassDodge() && (InFront || GetClass() == MONK || GetClass() == BEASTLORD)) {
@@ -6263,6 +6262,24 @@ void Mob::CommonOutgoingHitSuccess(Mob* defender, DamageHitInfo &hit, ExtraAttac
 	}
 
 	// Pyrelight Custom Code
+	// Beastlord Quirk
+	// Beastlord's Pet acts as a shielder if it is close enough.
+	if (defender->IsClient() || defender->GetClass() == BEASTLORD) {
+		Mob* pet = defender->GetPet();
+		if (pet) {
+			if (defender->CalculateDistance(pet->GetX(), pet->GetY(), pet->GetZ()) < 25) {
+				int64 damage_reduction = round(hit.damage_done * 0.50);
+				hit.damage_done -= damage_reduction;
+				pet->Damage(this, hit.damage_done, SPELL_UNKNOWN, hit.skill, true, -1, false, m_specialattacks);
+				defender->Message(Chat::OtherMissYou, "Your companion shields you from %i damage.", damage_reduction);
+				// Do we want to send a message that the pet protected you from damage? Pretty spammy.
+			} else {
+				defender->Message(Chat::OtherMissYou, "Your companion was too far away to shield you.");
+			}
+		}
+	}
+
+	// Pyrelight Custom Code
 	// Reduce Damage to Magician Pets based upon DS
 	// Magician Quirk
 	if (defender->IsPet() && defender->IsPetOwnerClient() && defender->GetOwner()->GetClass() == MAGICIAN) {
@@ -6291,7 +6308,7 @@ void Mob::CommonOutgoingHitSuccess(Mob* defender, DamageHitInfo &hit, ExtraAttac
 			}
 		}
 		if (eligible) {
-			int64 damage_reduction = (hit.damage_done * 0.25);
+			int64 damage_reduction = round((hit.damage_done * 0.25));
 			hit.damage_done -= damage_reduction;
 			defender->Message(Chat::Spells, "The spirits reduce the damage dealt to you by %i.", damage_reduction);
 			if (caster) {
