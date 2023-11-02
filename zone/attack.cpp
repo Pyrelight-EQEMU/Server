@@ -6275,7 +6275,7 @@ void Mob::CommonOutgoingHitSuccess(Mob* defender, DamageHitInfo &hit, ExtraAttac
 		int hots 			= false;
 		int buff_count 		= GetMaxTotalSlots();
 		Buffs_Struct* buffs = defender->GetBuffs();
-		for(int buff_i = 0; buffs_i < buff_count; ++buffs_i) {
+		for(int buff_i = 0; buff_i < buff_count; ++buff_i) {
 			if (IsHealOverTimeSpell(buffs[buff_i].spellid) && buffs[buff_i].casterid == defender->GetID()) {
 				hots++;
 			}
