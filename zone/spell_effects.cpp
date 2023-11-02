@@ -4185,11 +4185,8 @@ void Mob::DoBuffTic(const Buffs_Struct &buff, int slot, Mob *caster)
 								if (spell_effectiveness < (10 + focus_resist)) {
 									spell_effectiveness = 10 + focus_resist;
 
-									if (caster && caster->IsClient() && IsDamageSpell(spell_id) && caster->GetClass() == DRUID) {
-										spell_effectiveness += 15;
-									}
-
-									if (caster->GetClass() == SHAMAN) {
+									// Shaman Quirk - minimum resistability increased by 25%
+									if (caster && caster->IsClient() && caster->GetClass() == SHAMAN) {
 										spell_effectiveness += 25;
 									}
 									
