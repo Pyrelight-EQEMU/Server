@@ -4810,7 +4810,7 @@ void Mob::TryDefensiveProc(Mob *on, uint16 hand) {
 void Mob::TryCombatProcs(const EQ::ItemInstance* weapon_g, Mob *on, uint16 hand, const EQ::ItemData* weapon_data) {
 	int loop = 0;
 	do {
-		if (!on) {
+		if (!on || on->HasDied()) {
 			SetTarget(nullptr);
 			LogError("A null Mob object was passed to Mob::TryWeaponProc for evaluation!");
 			return;
@@ -4826,13 +4826,6 @@ void Mob::TryCombatProcs(const EQ::ItemInstance* weapon_g, Mob *on, uint16 hand,
 			return;
 		}
 
-		//used for special case when checking last ammo item on projectile hit.
-		if (!weapon_g && weapon_data) {
-			TryWeaponProc(nullptr, weapon_data, on, hand);
-			TrySpellProc(nullptr, weapon_data, on, hand);
-			return;
-		}
-
 		// Only do generalized Procs for Clients
 		if (IsClient()) {
 			// Do Epic/Power Source procs
@@ -4840,29 +4833,47 @@ void Mob::TryCombatProcs(const EQ::ItemInstance* weapon_g, Mob *on, uint16 hand,
 			if (epic && on && !on->HasDied()) {
 				TryWeaponProc(epic, epic->GetItem(), on);
 			}
-		}
 
-		if (!weapon_g || hand == EQ::invslot::slotRange) {
-			TrySpellProc(nullptr, (const EQ::ItemData*)nullptr, on);
+			// If we were passed a valid weapon to use
+			if (weapon_g) {
+				EQ::ItemInstance *primary	= GetInv().GetItem(EQ::invslot::slotPrimary);
+				EQ::ItemInstance *secondary = GetInv().GetItem(EQ::invslot::slotSecondary);
+				EQ::ItemInstance *range 	= GetInv().GetItem(EQ::invslot::slotRange);
+				EQ::ItemInstance *option1 	= nullptr;
+				EQ::ItemInstance *option2 	= nullptr;
+				EQ::ItemInstance *other   	= nullptr;
 
-			EQ::ItemInstance *primary = GetInv().GetItem(EQ::invslot::slotPrimary);
-			if (primary && on && !on->HasDied()) {
-				TryWeaponProc(primary, primary->GetItem(), on);
+
+				if (hand == EQ::invslot::slotRange) {
+					option1 = primary;
+					option2 = secondary;
+				} else if (hand == EQ::invslot::slotPrimary || hand == EQ::invslot::slotSecondary) {
+					option1 = range;
+					option2 = (hand == EQ::invslot::slotPrimary) ? secondary : primary;
+				}
+
+				other = zone->random.Roll(50) ? option1 : option2;
+
+				TrySpellProc(weapon_g, weapon_g->GetItem(), on, hand);
+				TryWeaponProc(weapon_g, weapon_g->GetItem(), on, hand);
+				if (other && zone->random.Roll(50)) {
+					TryWeaponProc(other, other->GetItem(), on, hand);
+				}				
+			} else {
+				TrySpellProc(nullptr, (const EQ::ItemData*)nullptr, on);
 			}
-
-			EQ::ItemInstance *secondary = GetInv().GetItem(EQ::invslot::slotSecondary);
-			if (secondary && on && !on->HasDied()) {
-				TryWeaponProc(secondary, secondary->GetItem(), on);
-			}
-
-			// Don't do ranged proc twice
-			EQ::ItemInstance *range = GetInv().GetItem(EQ::invslot::slotRange);
-			if (range && on && !on->HasDied()) {
-				TryWeaponProc(range, range->GetItem(), on);
-			}		
-
-			return;
 		} else {
+			//used for special case when checking last ammo item on projectile hit.
+			if (!weapon_g && weapon_data) {
+				TryWeaponProc(nullptr, weapon_data, on, hand);
+				TrySpellProc(nullptr, weapon_data, on, hand);
+				return;
+			}
+
+			if (!weapon_g) {
+				TrySpellProc(nullptr, (const EQ::ItemData*)nullptr, on);
+				return;
+			}
 
 			if (!weapon_g->IsClassCommon()) {
 				TrySpellProc(nullptr, (const EQ::ItemData*)nullptr, on);
@@ -4874,7 +4885,8 @@ void Mob::TryCombatProcs(const EQ::ItemInstance* weapon_g, Mob *on, uint16 hand,
 			TryWeaponProc(weapon_g, weapon_g->GetItem(), on, hand);
 			// Procs from Buffs and AA both melee and range
 			TrySpellProc(weapon_g, weapon_g->GetItem(), on, hand);
-		}		
+			return;
+		}
     } while (IsClient() && GetClass() == CLERIC && loop++ < 2);
     return;
 }
@@ -6266,7 +6278,7 @@ void Mob::CommonOutgoingHitSuccess(Mob* defender, DamageHitInfo &hit, ExtraAttac
 	if (defender->IsClient() || defender->GetClass() == BEASTLORD) {
 		Mob* pet = defender->GetPet();
 		if (pet) {
-			if (defender->CalculateDistance(pet->GetX(), pet->GetY(), pet->GetZ()) < 25) {
+			if (defender->CalculateDistance(pet->GetX(), pet->GetY(), pet->GetZ()) < 100) {
 				int64 damage_reduction = round(hit.damage_done * 0.50);
 				hit.damage_done -= damage_reduction;
 				pet->Damage(this, hit.damage_done, SPELL_UNKNOWN, hit.skill, true, -1, false, m_specialattacks);
@@ -6282,9 +6294,9 @@ void Mob::CommonOutgoingHitSuccess(Mob* defender, DamageHitInfo &hit, ExtraAttac
 	// Reduce Damage to Magician Pets based upon DS
 	// Magician Quirk
 	if (defender->IsPet() && defender->IsPetOwnerClient() && defender->GetOwner()->GetClass() == MAGICIAN) {
-		int64 ds_reduction = defender->spellbonuses.SpellDamageShield;
+		int64 ds_reduction = -2 * defender->spellbonuses.DamageShield;
 		if (ds_reduction) {
-			hit.damage_done -= ds_reduction;
+			hit.damage_done -= std::min(ds_reduction, hit.damage_done / 4);
 			defender->GetOwner()->Message(Chat::Spells, "The damage shield reduced the damage to your pet by %i.", ds_reduction);
 		}		
 	}
@@ -6298,7 +6310,7 @@ void Mob::CommonOutgoingHitSuccess(Mob* defender, DamageHitInfo &hit, ExtraAttac
 		bool  eligible 		= false;		
 		Mob* caster 		= nullptr;
 		for(int i = 0; i < buff_count; ++i) {
-			if(IsEffectInSpell(buffs[i].spellid, SE_DamageShield)) {
+			if(IsEffectInSpell(buffs[i].spellid, SE_DamageShield) && IsBeneficialSpell(buffs[i].spellid)) {
 				caster = entity_list.GetMob(buffs[i].casterid);
 				if (caster && caster->IsClient() && caster->GetClass() == DRUID) {
 					eligible = true;

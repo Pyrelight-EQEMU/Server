@@ -4817,28 +4817,28 @@ bool Mob::IsImmuneToSpell(uint16 spell_id, Mob *caster)
 	if(IsMesmerizeSpell(spell_id))
 	{	
 
-		// Enchanter Epic Effect
-		if (caster->GetInv().HasAugmentEquippedByID_Mod(10650)) {
-			return false;
-		}
-
 		if(GetSpecialAbility(UNMEZABLE)) {
-			LogSpells("We are immune to Mez spells");
-			caster->MessageString(Chat::SpellFailure, CANNOT_MEZ);
-			int32 aggro = caster->CheckAggroAmount(spell_id, this);
-			if(aggro > 0) {
-				AddToHateList(caster, aggro);
-			} else {
-				AddToHateList(caster, 1,0,true,false,false,spell_id);
-			}
-			return true;
+			// Pyrelight Custom Code
+			// Enchanter Epic effect; Bypass unmezzable.
+			if (!(caster->IsClient() && caster->GetInv().HasAugmentEquippedByID_Mod(22015))) {
+				LogSpells("We are immune to Mez spells");
+				caster->MessageString(Chat::SpellFailure, CANNOT_MEZ);
+				int32 aggro = caster->CheckAggroAmount(spell_id, this);
+				if(aggro > 0) {
+					AddToHateList(caster, aggro);
+				} else {
+					AddToHateList(caster, 1,0,true,false,false,spell_id);
+				}
+				return true;
+			}		
 		}
 
 		// check max level for spell
 		effect_index = GetSpellEffectIndex(spell_id, SE_Mez);
 		assert(effect_index >= 0);
 		// NPCs get to ignore the max level
-		if((GetLevel() > spells[spell_id].max_value[effect_index]) &&
+		int level_mod = (caster->IsClient() && caster->GetInv().HasAugmentEquippedByID_Mod(22015)) ? 10 : 0;
+		if((GetLevel() > (spells[spell_id].max_value[effect_index] + level_mod)) &&
 			(!caster->IsNPC() || (caster->IsNPC() && !RuleB(Spells, NPCIgnoreBaseImmunity))))
 		{
 			LogSpells("Our level ([{}]) is higher than the limit of this Mez spell ([{}])", GetLevel(), spells[spell_id].max_value[effect_index]);
@@ -4849,7 +4849,7 @@ bool Mob::IsImmuneToSpell(uint16 spell_id, Mob *caster)
 	}
 
 
-	if(GetSpecialAbility(UNSLOWABLE))
+	if(GetSpecialAbility(UNSLOWABLE) && IsEffectInSpell(spell_id, SE_AttackSpeed))
 	{
 		LogSpells("We are immune to Slow spells");
 		caster->MessageString(Chat::Red, IMMUNE_ATKSPEED);
