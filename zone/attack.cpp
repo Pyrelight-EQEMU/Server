@@ -6265,7 +6265,7 @@ void Mob::CommonOutgoingHitSuccess(Mob* defender, DamageHitInfo &hit, ExtraAttac
 		int64 ds_reduction = static_cast<int64>((hit.damage_done * defender->spellbonuses.SpellDamageShield) / (10 * defender->GetLevel()));
 		if (ds_reduction) {
 			hit.damage_done -= std::min(ds_reduction, static_cast<int64>(hit.damage_done * 0.75));
-			defender->Message(Chat::OtherHitsYou, "Your damage shield reduced the damage to you.");
+			defender->Message(Chat::OtherHitYou, "Your damage shield reduced the damage to you.");
 		}		
 	}
 
@@ -6280,7 +6280,8 @@ void Mob::CommonOutgoingHitSuccess(Mob* defender, DamageHitInfo &hit, ExtraAttac
 		}
 
 		if (hots > 0) {
-			hit.damage_done = std::min(static_cast<int64>(hit.damage_done * 0.25 * hots), static_cast<int64>(hit.damage_done * 0.75));
+			hit.damage_done -= std::min(static_cast<int64>(hit.damage_done * 0.25 * hots), static_cast<int64>(hit.damage_done * 0.75));
+			defender->Message(Chat::OtherHitYou, "Your healing mitigates some damage.");	
 		}
 	}
 
