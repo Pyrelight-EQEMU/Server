@@ -4244,12 +4244,8 @@ bool Mob::SpellOnTarget(
 					if (spell_effectiveness < (10 + focus_resist)) {
 						spell_effectiveness = (10 + focus_resist);
 
-						if (caster && caster->IsClient() && IsDamageSpell(spell_id) && caster->GetClass() == MAGICIAN) {
+						if (IsDamageSpell(spell_id) && GetClass() == MAGICIAN) {
 							spell_effectiveness += 25;
-						}
-
-						if (caster && caster->IsClient() && IsDamageSpell(spell_id) && caster->GetClass() == DRUID) {
-							spell_effectiveness += 15;
 						}
 					}				
 					Message(Chat::SpellFailure, "Your spell was partially resisted!");
