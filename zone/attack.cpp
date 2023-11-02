@@ -6290,6 +6290,33 @@ void Mob::CommonOutgoingHitSuccess(Mob* defender, DamageHitInfo &hit, ExtraAttac
 	}
 
 	// Pyrelight Custom Code
+	// Reduce Damage to subjects of your DS
+	// Druid Quirk
+	if (defender->IsClient() || defender->IsPetOwnerClient()) {
+		int  buff_count 	= GetMaxTotalSlots();
+		Buffs_Struct* buffs = defender->GetBuffs();
+		bool  eligible 		= false;		
+		Mob* caster 		= nullptr;
+		for(int i = 0; i < buff_count; ++i) {
+			if(IsEffectInSpell(buffs[i].spellid, SE_DamageShield)) {
+				caster = entity_list.GetMob(buffs[i].casterid);
+				if (caster && caster->IsClient() && caster->GetClass() == DRUID) {
+					eligible = true;
+					break;
+				}
+			}
+		}
+		if (eligible) {
+			int64 damage_reduction = round((hit.damage_done * 0.25));
+			hit.damage_done -= damage_reduction;
+			defender->Message(Chat::Spells, "The natural shield protects you from %i damage.", damage_reduction);
+			if (caster && caster != defender) {
+				caster->Message(Chat::Spells, "The natural shield you command reduced the damage dealt to %s by %i.", defender->GetCleanName(), damage_reduction);
+			}
+		}
+	}
+
+	// Pyrelight Custom Code
 	// Reduce Damage to subject of your HoT spells.
 	// Shaman Quirk
 	if (defender->IsClient() || defender->IsPetOwnerClient()) {
@@ -6310,8 +6337,8 @@ void Mob::CommonOutgoingHitSuccess(Mob* defender, DamageHitInfo &hit, ExtraAttac
 			int64 damage_reduction = round((hit.damage_done * 0.25));
 			hit.damage_done -= damage_reduction;
 			defender->Message(Chat::Spells, "The spirits reduce the damage dealt to you by %i.", damage_reduction);
-			if (caster) {
-				caster->Message(Chat::Spells, "The spirits at your command reduce the damage dealt to %s by %i.", defender->GetCleanName(), damage_reduction);
+			if (caster && caster != defender) {
+				caster->Message(Chat::Spells, "The spirits at your command reduced the damage dealt to %s by %i.", defender->GetCleanName(), damage_reduction);
 			}
 		}
 	}
