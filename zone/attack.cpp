@@ -467,7 +467,9 @@ bool Mob::AvoidDamage(Mob *other, DamageHitInfo &hit)
 		-Attacker with SPA 173 is immune to riposte
 		-Attacker that is enraged is immune to riposte
 	*/
+	
 
+	// Ranger Quirk
 	std::set<int> classes_double_riposte = { RANGER };
 	loops = classes_double_riposte.count(GetClass()) > 0 ? 2 : 1;
 	do {
@@ -521,6 +523,7 @@ bool Mob::AvoidDamage(Mob *other, DamageHitInfo &hit)
 	if (BlockBehindChance && zone->random.Roll(BlockBehindChance))
 		bBlockFromRear = true;
 	
+	// Beastlord Quirk
 	std::set<int> classes_double_block = { BEASTLORD };
 	loops = classes_double_block.count(GetClass()) > 0 ? 2 : 1;
 	do {
@@ -553,7 +556,7 @@ bool Mob::AvoidDamage(Mob *other, DamageHitInfo &hit)
 		loops--;
 	} while (IsClient() && loops > 0);
 
-	// parry
+	// Ranger Quirk
 	std::set<int> classes_double_parry = { RANGER };
 	loops = classes_double_parry.count(GetClass()) > 0 ? 2 : 1;
 	do {
@@ -585,7 +588,11 @@ bool Mob::AvoidDamage(Mob *other, DamageHitInfo &hit)
 		loops--;
 	} while (IsClient() && loops > 0);	
 
-	// dodge
+	// Beastlord Quirk
+	// Magician Quirk
+	// Necromancer Quirk
+	// Enchanter Quirk
+	// Shaman Quirk
 	std::set<int> classes_double_dodge = {BEASTLORD, MAGICIAN, ENCHANTER, NECROMANCER, DRUID};
 	loops = classes_double_dodge.count(GetClass()) > 0 ? 2 : 1;
 	do {
@@ -5998,6 +6005,12 @@ bool Mob::TryRootFadeByDamage(int buffslot, Mob* attacker) {
 		return false;
 	}
 
+	// Druid Quirk
+	// Damage from Druid does not break roots
+	if (attacker && attacker->IsClient() && attacker->GetClass() == DRUID) {
+		return false;
+	}
+
 	if (IsDetrimentalSpell(buffs[spellbonuses.Root[SBIndex::ROOT_BUFFSLOT]].spellid) && spellbonuses.Root[SBIndex::ROOT_BUFFSLOT] != buffslot) {
 
 		int BreakChance = RuleI(Spells, RootBreakFromSpells);
@@ -6251,39 +6264,39 @@ void Mob::CommonOutgoingHitSuccess(Mob* defender, DamageHitInfo &hit, ExtraAttac
 
 	// Pyrelight Custom Code
 	// Reduce Damage to Magician Pets based upon DS
+	// Magician Quirk
 	if (defender->IsPet() && defender->IsPetOwnerClient() && defender->GetOwner()->GetClass() == MAGICIAN) {
-		int64 ds_reduction = static_cast<int64>((hit.damage_done * defender->spellbonuses.SpellDamageShield) / (10 * defender->GetLevel()));
+		int64 ds_reduction = defender->spellbonuses.SpellDamageShield;
 		if (ds_reduction) {
-			hit.damage_done -= std::max(ds_reduction, static_cast<int64>(hit.damage_done * 0.75));
-			defender->GetOwner()->Message(Chat::OtherHitOther, "Your damage shield reduced the damage to your pet.");
+			hit.damage_done -= ds_reduction;
+			defender->GetOwner()->Message(Chat::Spells, "The damage shield reduced the damage to your pet by %i.", ds_reduction);
 		}		
 	}
 
 	// Pyrelight Custom Code
-	// Reduce Damage to Druid based upon DS
-	if (defender->IsClient() && defender->GetClass() == DRUID) {
-		int64 ds_reduction = static_cast<int64>((hit.damage_done * defender->spellbonuses.SpellDamageShield) / (10 * defender->GetLevel()));
-		if (ds_reduction) {
-			hit.damage_done -= std::max(ds_reduction, static_cast<int64>(hit.damage_done * 0.75));
-			defender->Message(Chat::OtherHitYou, "Your damage shield reduced the damage to you.");
-		}		
-	}
-
-	// Pyrelight Custom Code
-	// Reduce Damage to Shaman based on hots
-	if (defender->IsClient() && defender->GetClass() == SHAMAN) {
-		int hots 			= false;
-		int buff_count 		= GetMaxTotalSlots();
+	// Reduce Damage to subject of your HoT spells.
+	// Shaman Quirk
+	if (defender->IsClient() || defender->IsPetOwnerClient()) {
+		int  buff_count 	= GetMaxTotalSlots();
 		Buffs_Struct* buffs = defender->GetBuffs();
-		for(int buff_i = 0; buff_i < buff_count; ++buff_i) {
-			if (IsHealOverTimeSpell(buffs[buff_i].spellid) && buffs[buff_i].casterid == defender->GetID()) {
-				hots++;
+		bool eligible 		= false;		
+		Mob* caster 		= null;
+		for(int i = 0; i < buff_count; ++i) {
+			if (IsHealOverTimeSpell(buffs[i].spellid)) {
+				caster = entity_list.GetMob(buffs[i].casterid);
+				if (caster && caster->IsClient() && caster->GetClass() == SHAMAN) {
+					eligible = true;
+					break;
+				}
 			}
 		}
-
-		if (hots > 0) {
-			hit.damage_done -= (hit.damage_done * 0.25);
-			defender->Message(Chat::OtherHitYou, "Your healing mitigates some damage.");	
+		if (eligible) {
+			int64 damage_reduction = (hit.damage_done * 0.25);
+			hit.damage_done -= damage_reduction;
+			defender->Message(Chat::Spells, "The spirits reduce your damage by %i.", damage_reduction);
+			if (caster) {
+				caster->Message(Chat::Spells, "The spirits at your command reduce the damage to %s by %i.", defender->GetCleanName(), damage_reduction);
+			}
 		}
 	}
 

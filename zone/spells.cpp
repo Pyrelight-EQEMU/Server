@@ -4243,6 +4243,14 @@ bool Mob::SpellOnTarget(
 				if (IsPartialResistableSpell(spell_id) && (spells[spell_id].buff_duration == 0 || spells[spell_id].effect_id[0] == SE_CurrentHPOnce)) {
 					if (spell_effectiveness < (10 + focus_resist)) {
 						spell_effectiveness = (10 + focus_resist);
+
+						if (caster && caster->IsClient() && IsDamageSpell(spell_id) && caster->GetClass() == MAGICIAN) {
+							spell_effectiveness += 25;
+						}
+
+						if (caster && caster->IsClient() && IsDamageSpell(spell_id) && caster->GetClass() == DRUID) {
+							spell_effectiveness += 15;
+						}
 					}				
 					Message(Chat::SpellFailure, "Your spell was partially resisted!");
 				} else {
@@ -4845,8 +4853,9 @@ bool Mob::IsImmuneToSpell(uint16 spell_id, Mob *caster)
 	}
 
 	// slow and haste spells
-	
-	if(GetSpecialAbility(UNSLOWABLE) && IsEffectInSpell(spell_id, SE_AttackSpeed))
+	// Pyrelight Custom Code
+	// Shaman Quirk - Pierce unslowable
+	if(GetSpecialAbility(UNSLOWABLE) && IsEffectInSpell(spell_id, SE_AttackSpeed) && !(caster && caster->IsClient() && caster->GetClass == SHAMAN))
 	{
 		LogSpells("We are immune to Slow spells");
 		caster->MessageString(Chat::Red, IMMUNE_ATKSPEED);
@@ -4955,16 +4964,20 @@ bool Mob::IsImmuneToSpell(uint16 spell_id, Mob *caster)
 		IsEffectInSpell(spell_id, SE_MovementSpeed)
 	)
 	{
-		if(GetSpecialAbility(UNSNAREABLE)) {
-			LogSpells("We are immune to Snare spells");
-			caster->MessageString(Chat::Red, IMMUNE_MOVEMENT);
-			int32 aggro = caster->CheckAggroAmount(spell_id, this);
-			if(aggro > 0) {
-				AddToHateList(caster, aggro);
-			} else {
-				AddToHateList(caster, 1,0,true,false,false,spell_id);
+		// Druid Quirk
+		// Bypass UNSNAREABLE
+		if (!(caster && caster->IsClient() && caster->GetClass() == DRUID)) {
+			if(GetSpecialAbility(UNSNAREABLE)) {
+				LogSpells("We are immune to Snare spells");
+				caster->MessageString(Chat::Red, IMMUNE_MOVEMENT);
+				int32 aggro = caster->CheckAggroAmount(spell_id, this);
+				if(aggro > 0) {
+					AddToHateList(caster, aggro);
+				} else {
+					AddToHateList(caster, 1,0,true,false,false,spell_id);
+				}
+				return true;
 			}
-			return true;
 		}
 	}
 

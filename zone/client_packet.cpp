@@ -10832,12 +10832,9 @@ void Client::Handle_OP_PetCommands(const EQApplicationPacket *app)
 			bool taunt_status = mypet->CastToNPC()->IsTaunting();			
 			if (RuleB(Pets, TauntTogglesPetTanking)) {
 				if (!taunt_status) {
-					mypet->SetSpecialAbility(25, 0);
 					mypet->SetSpecialAbility(41, 1);
 				} else {					
-					mypet->SetSpecialAbility(25, 1);
 					mypet->SetSpecialAbility(41, 0);
-					entity_list.RemoveFromTargets(mypet);
 				}
 			}
 			mypet->CastToNPC()->SetTaunting(!taunt_status);

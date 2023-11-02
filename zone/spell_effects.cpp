@@ -4185,9 +4185,14 @@ void Mob::DoBuffTic(const Buffs_Struct &buff, int slot, Mob *caster)
 								if (spell_effectiveness < (10 + focus_resist)) {
 									spell_effectiveness = 10 + focus_resist;
 
-									if (caster->GetClass() == MAGICIAN) {
+									if (caster && caster->IsClient() && IsDamageSpell(spell_id) && caster->GetClass() == DRUID) {
+										spell_effectiveness += 15;
+									}
+
+									if (caster->GetClass() == SHAMAN) {
 										spell_effectiveness += 25;
 									}
+									
 								}						
 								effect_value *= static_cast<float>(spell_effectiveness) / 100;
 

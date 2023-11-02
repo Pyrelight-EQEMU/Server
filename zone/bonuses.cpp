@@ -2079,6 +2079,8 @@ void Mob::ApplySpellsBonuses(uint16 spell_id, uint8 casterlevel, StatBonuses *ne
 	int i, effect_value, limit_value, max_value, spell_effect_id;
 	bool AdditiveWornBonus = false;
 
+	Mob * caster = entity_list.GetMob(casterId);
+
 	if(!IsAISpellEffect && !IsValidSpell(spell_id))
 		return;
 
