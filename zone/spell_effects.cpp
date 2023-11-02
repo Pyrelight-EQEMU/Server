@@ -3911,7 +3911,7 @@ void Mob::BuffProcess()
 			}
 			
 			Mob* buff_caster = entity_list.GetMob(buffs[buffs_i].casterid);
-			if (buff_caster && buff_caster->GetClass() == NECROMANCER) {
+			if (buff_caster && buff_caster->GetClass() == NECROMANCER && buff_caster.IsClient()) {
 				DoBuffTic(buffs[buffs_i], buffs_i, entity_list.GetMob(buffs[buffs_i].casterid));
 				if(!IsValidSpell(buffs[buffs_i].spellid)) {
 					continue;
