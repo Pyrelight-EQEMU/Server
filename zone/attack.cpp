@@ -6254,7 +6254,7 @@ void Mob::CommonOutgoingHitSuccess(Mob* defender, DamageHitInfo &hit, ExtraAttac
 	if (defender->IsPet() && defender->IsPetOwnerClient() && defender->GetOwner()->GetClass() == MAGICIAN) {
 		int64 ds_reduction = static_cast<int64>((hit.damage_done * defender->spellbonuses.SpellDamageShield) / (10 * defender->GetLevel()));
 		if (ds_reduction) {
-			hit.damage_done -= std::min(ds_reduction, static_cast<int64>(hit.damage_done * 0.75));
+			hit.damage_done -= std::max(ds_reduction, static_cast<int64>(hit.damage_done * 0.75));
 			defender->GetOwner()->Message(Chat::OtherHitOther, "Your damage shield reduced the damage to your pet.");
 		}		
 	}
@@ -6264,7 +6264,7 @@ void Mob::CommonOutgoingHitSuccess(Mob* defender, DamageHitInfo &hit, ExtraAttac
 	if (defender->IsClient() && defender->GetClass() == DRUID) {
 		int64 ds_reduction = static_cast<int64>((hit.damage_done * defender->spellbonuses.SpellDamageShield) / (10 * defender->GetLevel()));
 		if (ds_reduction) {
-			hit.damage_done -= std::min(ds_reduction, static_cast<int64>(hit.damage_done * 0.75));
+			hit.damage_done -= std::max(ds_reduction, static_cast<int64>(hit.damage_done * 0.75));
 			defender->Message(Chat::OtherHitYou, "Your damage shield reduced the damage to you.");
 		}		
 	}
