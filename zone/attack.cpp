@@ -6280,7 +6280,7 @@ void Mob::CommonOutgoingHitSuccess(Mob* defender, DamageHitInfo &hit, ExtraAttac
 		int  buff_count 	= GetMaxTotalSlots();
 		Buffs_Struct* buffs = defender->GetBuffs();
 		bool eligible 		= false;		
-		Mob* caster 		= null;
+		Mob* caster 		= nullptr;
 		for(int i = 0; i < buff_count; ++i) {
 			if (IsHealOverTimeSpell(buffs[i].spellid)) {
 				caster = entity_list.GetMob(buffs[i].casterid);
