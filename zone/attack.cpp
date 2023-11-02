@@ -6270,7 +6270,7 @@ void Mob::CommonOutgoingHitSuccess(Mob* defender, DamageHitInfo &hit, ExtraAttac
 	}
 
 	// Pyrelight Custom Code
-	// Reduce Damage to Druid based upon DS
+	// Reduce Damage to Shaman based on hots
 	if (defender->IsClient() && defender->GetClass() == SHAMAN) {
 		int hots 			= false;
 		int buff_count 		= GetMaxTotalSlots();
@@ -6282,6 +6282,7 @@ void Mob::CommonOutgoingHitSuccess(Mob* defender, DamageHitInfo &hit, ExtraAttac
 		}
 
 		if (hots > 0) {
+			LogDebug("hots: [{}]", hots);
 			hit.damage_done -= std::min(static_cast<int64>(hit.damage_done * 0.25 * hots), static_cast<int64>(hit.damage_done * 0.75));
 			defender->Message(Chat::OtherHitYou, "Your healing mitigates some damage.");	
 		}
