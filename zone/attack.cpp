@@ -6004,13 +6004,12 @@ bool Mob::TryRootFadeByDamage(int buffslot, Mob* attacker) {
 		return false;
 	}
 
-	// Druid Quirk
-	// Damage from Druid does not break roots
-	if (attacker && attacker->IsClient() && attacker->GetClass() == DRUID) {
-		return false;
-	}
-
-	if (IsDetrimentalSpell(buffs[spellbonuses.Root[SBIndex::ROOT_BUFFSLOT]].spellid) && spellbonuses.Root[SBIndex::ROOT_BUFFSLOT] != buffslot) {
+	if (IsDetrimentalSpell(buffs[spellbonuses.Root[SBIndex::ROOT_BUFFSLOT]].spellid) && spellbonuses.Root[SBIndex::ROOT_BUFFSLOT] != buffslot) {		
+		// Druid Quirk
+		// Damage from Druid has a low chance to break root
+		if (attacker && attacker->IsClient() && attacker->GetClass() == DRUID) {		
+			return (zone->random.Roll(10)) ? true : false;
+		}
 
 		int BreakChance = RuleI(Spells, RootBreakFromSpells);
 		BreakChance -= BreakChance * buffs[spellbonuses.Root[SBIndex::ROOT_BUFFSLOT]].RootBreakChance / 100;
