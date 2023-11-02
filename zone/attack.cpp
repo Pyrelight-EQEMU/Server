@@ -6272,9 +6272,11 @@ void Mob::CommonOutgoingHitSuccess(Mob* defender, DamageHitInfo &hit, ExtraAttac
 	// Pyrelight Custom Code
 	// Reduce Damage to Druid based upon DS
 	if (defender->IsClient() && defender->GetClass() == SHAMAN) {
-		int hots = false;
-		for(Buffs_Struct buff : defender->GetBuffs()) {
-			if (IsHealOverTimeSpell(buff.spellid) && buff.id == defender->GetID()) {
+		int hots 			= false;
+		int buff_count 		= GetMaxTotalSlots();
+		Buffs_Struct* buffs = defender->GetBuffs();
+		for(int buff_i = 0; buffs_i < buff_count; ++buffs_i) {
+			if (IsHealOverTimeSpell(buffs[buff_i].spellid) && buffs[buff_i].casterid == defender->GetID()) {
 				hots++;
 			}
 		}
