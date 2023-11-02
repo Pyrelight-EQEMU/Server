@@ -6293,9 +6293,9 @@ void Mob::CommonOutgoingHitSuccess(Mob* defender, DamageHitInfo &hit, ExtraAttac
 		if (eligible) {
 			int64 damage_reduction = (hit.damage_done * 0.25);
 			hit.damage_done -= damage_reduction;
-			defender->Message(Chat::Spells, "The spirits reduce your damage by %i.", damage_reduction);
+			defender->Message(Chat::Spells, "The spirits reduce the damage dealt to you by %i.", damage_reduction);
 			if (caster) {
-				caster->Message(Chat::Spells, "The spirits at your command reduce the damage to %s by %i.", defender->GetCleanName(), damage_reduction);
+				caster->Message(Chat::Spells, "The spirits at your command reduce the damage dealt to %s by %i.", defender->GetCleanName(), damage_reduction);
 			}
 		}
 	}
