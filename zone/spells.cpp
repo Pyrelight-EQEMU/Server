@@ -4848,10 +4848,8 @@ bool Mob::IsImmuneToSpell(uint16 spell_id, Mob *caster)
 		}
 	}
 
-	// slow and haste spells
-	// Pyrelight Custom Code
-	// Shaman Quirk - Pierce unslowable
-	if(GetSpecialAbility(UNSLOWABLE) && IsEffectInSpell(spell_id, SE_AttackSpeed) && !(caster && caster->IsClient() && caster->GetClass == SHAMAN))
+
+	if(GetSpecialAbility(UNSLOWABLE))
 	{
 		LogSpells("We are immune to Slow spells");
 		caster->MessageString(Chat::Red, IMMUNE_ATKSPEED);
