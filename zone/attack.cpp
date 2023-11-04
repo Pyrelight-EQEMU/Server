@@ -4808,12 +4808,14 @@ void Mob::TryDefensiveProc(Mob *on, uint16 hand) {
 // Pyrelight Custom Code
 // Modified so that it can be used to trigger everything for ungeneralized attacks if weapon_g is null;
 void Mob::_TryCombatProcs(const EQ::ItemInstance* weapon_g, Mob *on, uint16 hand, const EQ::ItemData* weapon_data) {
-
+	
+	TryCombatProcs(weapon_g, on, hand, weapon_data);
 	if (GetClass() == CLERIC) {
 		LogDebug("Cleric Quirk Activated");
-		_TryCombatProcs(weapon_g, on, hand, weapon_data);
+		TryCombatProcs(weapon_g, on, hand, weapon_data);
 	}
 }
+
 
 void Mob::TryWeaponProc(const EQ::ItemInstance *inst, const EQ::ItemData *weapon, Mob *on, uint16 hand)
 {
