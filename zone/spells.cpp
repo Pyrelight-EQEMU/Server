@@ -1645,7 +1645,7 @@ void Mob::CastedSpellFinished(uint16 spell_id, uint32 target_id, CastingSlot slo
 	if(IsOfClientBotMerc() && slot <= CastingSlot::Gem12) {
 		TrySympatheticProc(target, spell_id);
 
-		if (IsClient()) {
+		if (IsClient && !IsMesmerizeSpell(spell_id)) {
 			TryCombatProcs(nullptr, target, EQ::invslot::slotRange);
 		}
 	}
