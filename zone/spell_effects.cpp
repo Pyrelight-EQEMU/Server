@@ -4168,7 +4168,7 @@ void Mob::DoBuffTic(const Buffs_Struct &buff, int slot, Mob *caster)
 
 				// Pyrelight Custom Code
 				// Pierce Resistence Focus
-				if (caster->IsClient() || caster->IsPetOwnerClient()) {			
+				if ((caster->IsClient() || caster->IsPetOwnerClient()) && caster != this) {			
 					bool pierce_resist = false;
 					int focus_resist = caster->GetFocusEffect(focusResistRate, buff.spellid, caster, true);
 					int custom_resist_adjust = 0;
@@ -4206,7 +4206,7 @@ void Mob::DoBuffTic(const Buffs_Struct &buff, int slot, Mob *caster)
 
 				// Pyrelight Custom Code
 				// Shaman Epic DoT->Heal Effect
-				if (spells[buff.spellid].good_effect != BENEFICIAL_EFFECT) {					
+				if ((spells[buff.spellid].good_effect != BENEFICIAL_EFFECT) && caster != this) {					
 					if (caster->GetInv().HasAugmentEquippedByID_Mod(10651)) {
 						caster->HealDamage(round(effect_value * 0.25), caster, buff.spellid);
 						if (caster->GetPet()) {
@@ -4217,7 +4217,7 @@ void Mob::DoBuffTic(const Buffs_Struct &buff, int slot, Mob *caster)
 
 				// Pyrelight Custom Code
 				// Necro Epic DoT Procs
-				if (spells[buff.spellid].good_effect != BENEFICIAL_EFFECT) {					
+				if ((spells[buff.spellid].good_effect != BENEFICIAL_EFFECT) && caster != this) {					
 					if (caster->GetInv().HasAugmentEquippedByID_Mod(20544)) {
 						caster->TryCombatProcs(nullptr, this, EQ::invslot::slotRange);							
 					}								

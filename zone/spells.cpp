@@ -4189,7 +4189,7 @@ bool Mob::SpellOnTarget(
 	int custom_resist_adjust = 0;
 	int focus_resist = 0;
 	
-	if (IsClient() || IsPetOwnerClient()) {
+	if ((IsClient() || IsPetOwnerClient()) && spelltar != this) {
 		focus_resist = GetFocusEffect(focusResistRate, spell_id);			
 		if (zone->random.Roll0(100) < focus_resist) {
 			pierce_resist = true;
@@ -4473,19 +4473,32 @@ bool Mob::SpellOnTarget(
 	LogSpells("Cast of [{}] by [{}] on [{}] complete successfully", spell_id, GetName(), spelltar->GetName());
 
 	// Pyrelight Custom Code
-	// Beastlord Epic Effect - Mirror spells between Pet and Owner
-	
-	if ((spelltar->IsClient() || spelltar->IsPetOwnerClient()) && IsBeneficialSpell(spell_id) && !IsPetSpell(spell_id) && !is_mirror) {
+	// Beastlord Epic Effect - Mirror spells between Pet and Owner	
+	if ((spelltar->IsClient() || spelltar->IsPetOwnerClient()) &&
+		IsBeneficialSpell(spell_id) && 
+		!IsPetSpell(spell_id) && 
+		!is_mirror) {
+		
 		Client* c = IsClient() ? CastToClient() : GetOwner()->CastToClient();
 
 		if (c && c->GetPet() && c->GetInv().HasAugmentEquippedByID_Mod(8495)) {
-			LogDebug("Spell is eligible for mirroring.");
-			Mob* extratar = spelltar->IsClient() ? spelltar->GetPet() : spelltar->GetOwner();
+			if (spells[spell_id].target_type == ST_Target || 
+				spells[spell_id].target_type == ST_Self ||
+				spells[spell_id].target_type == ST_TargetOptional ||
+				spells[spell_id].target_type == ST_Animal ||
+				spells[spell_id].target_type == ST_Undead ||
+				spells[spell_id].target_type == ST_Plant ||
+				spells[spell_id].target_type == ST_Giant ||
+				spells[spell_id].target_type == ST_Dragon) {
 
-			LogDebug("extraTar [{}]", extratar->GetName());
-			SpellOnTarget(spell_id, extratar, reflect_effectiveness, use_resist_adjust, resist_adjust, isproc, level_override, duration_override, disable_buff_overwrite, true);
+				LogDebug("Spell is eligible for mirroring.");
+				Mob* extratar = spelltar->IsClient() ? spelltar->GetPet() : spelltar->GetOwner();
+
+				LogDebug("extraTar [{}]", extratar->GetName());
+				SpellOnTarget(spell_id, extratar, reflect_effectiveness, use_resist_adjust, resist_adjust, isproc, level_override, duration_override, disable_buff_overwrite, true);
+			}
 		}
-	}	
+	}
 
 	return true;
 }

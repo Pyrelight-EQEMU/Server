@@ -5561,6 +5561,9 @@ void Mob::TriggerDefensiveProcs(Mob *on, uint16 hand, bool FromSkillProc, int64 
 
 	if (!FromSkillProc) {
 		on->TryDefensiveProc(this, hand);
+		if (on->GetClass() == CLERIC) {
+			on->TryDefensiveProc(this, hand);
+		}
 	}
 
 	//Defensive Skill Procs
