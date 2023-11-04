@@ -4803,103 +4803,75 @@ void Mob::TryDefensiveProc(Mob *on, uint16 hand) {
 		}
 	}
 }
-
-
 // Pyrelight Custom Code
 // Modified so that it can be used to trigger everything for ungeneralized attacks if weapon_g is null;
 void Mob::_TryCombatProcs(const EQ::ItemInstance* weapon_g, Mob *on, uint16 hand, const EQ::ItemData* weapon_data) {
-	
-	TryCombatProcs(weapon_g, on, hand, weapon_data);
-	if (GetClass() == CLERIC) {
-		LogDebug("Cleric Quirk Activated");
-		TryCombatProcs(weapon_g, on, hand, weapon_data);
-	}
-}
 
-
-void Mob::TryWeaponProc(const EQ::ItemInstance *inst, const EQ::ItemData *weapon, Mob *on, uint16 hand)
-{
 	if (!on) {
+		SetTarget(nullptr);
+		LogError("A null Mob object was passed to Mob::TryWeaponProc for evaluation!");
 		return;
 	}
-	if (!weapon)
+
+	if (!IsAttackAllowed(on) && !IsClient()) {
+		LogCombat("Preventing procing off of unattackable things");
 		return;
-	uint16 skillinuse = 28;
-	int ourlevel = GetLevel();
-	float ProcBonus = static_cast<float>(aabonuses.ProcChanceSPA +
-		spellbonuses.ProcChanceSPA + itembonuses.ProcChanceSPA);
-	ProcBonus += static_cast<float>(itembonuses.ProcChance) / 10.0f; // Combat Effects
-	float ProcChance = GetProcChances(ProcBonus, hand);
+	}
 
-	if (hand == EQ::invslot::slotSecondary)
-		ProcChance /= 2;
+	if (DivineAura()) {
+		LogCombat("Procs cancelled, Divine Aura is in effect");
+		return;
+	}
 
-	// Try innate proc on weapon
-	// We can proc once here, either weapon or one aug
-	bool proced = false; // silly bool to prevent augs from going if weapon does
+	//used for special case when checking last ammo item on projectile hit.
+	if (!weapon_g && weapon_data) {
+		TryWeaponProc(nullptr, weapon_data, on, hand);
+		TrySpellProc(nullptr, weapon_data, on, hand);
+		return;
+	}
 
-	if (weapon->Proc.Type == EQ::item::ItemEffectCombatProc && IsValidSpell(weapon->Proc.Effect)) {
-		float WPC = ProcChance * (100.0f + // Proc chance for this weapon
-			static_cast<float>(weapon->ProcRate)) / 100.0f;
-		if (zone->random.Roll(WPC)) {	// 255 dex = 0.084 chance of proc. No idea what this number should be really.
-			if (weapon->Proc.Level2 > ourlevel) {
-				LogCombat("Tried to proc ([{}]), but our level ([{}]) is lower than required ([{}])",
-					weapon->Name, ourlevel, weapon->Proc.Level2);
-				if (IsPet()) {
-					Mob *own = GetOwner();
-					if (own)
-						own->MessageString(Chat::Red, PROC_PETTOOLOW);
-				}
-				else {
-					MessageString(Chat::Red, PROC_TOOLOW);
-				}
-			}
-			else {
-				LogCombat("Attacking weapon ([{}]) successfully procing spell [{}] ([{}] percent chance)", weapon->Name, weapon->Proc.Effect, WPC * 100);
-				ExecWeaponProc(inst, weapon->Proc.Effect, on);
-				proced = true;
-			}
+	// Only do generalized Procs for Clients
+	if (IsClient()) {
+		// Do Epic/Power Source procs
+		EQ::ItemInstance *epic = GetInv().GetItem(EQ::invslot::slotPowerSource);
+		if (epic && on && !on->HasDied()) {
+			TryWeaponProc(epic, epic->GetItem(), on);
 		}
 	}
-	//If OneProcPerWeapon is not enabled, we reset the try for that weapon regardless of if we procced or not.
-	//This is for some servers that may want to have as many procs triggering from weapons as possible in a single round.
-	if (!RuleB(Combat, OneProcPerWeapon))
-		proced = false;
 
-	if (!proced && inst) {
-		for (int r = EQ::invaug::SOCKET_BEGIN; r <= EQ::invaug::SOCKET_END; r++) {
-			const EQ::ItemInstance *aug_i = inst->GetAugment(r);
-			if (!aug_i) // no aug, try next slot!
-				continue;
-			const EQ::ItemData *aug = aug_i->GetItem();
-			if (!aug)
-				continue;
+	if (!weapon_g || hand == EQ::invslot::slotRange) {
+		TrySpellProc(nullptr, (const EQ::ItemData*)nullptr, on);
 
-			if (aug->Proc.Type == EQ::item::ItemEffectCombatProc && IsValidSpell(aug->Proc.Effect)) {
-				float APC = ProcChance * (100.0f + // Proc chance for this aug
-					static_cast<float>(aug->ProcRate)) / 100.0f;
-				if (zone->random.Roll(APC)) {
-					if (aug->Proc.Level2 > ourlevel) {
-						if (IsPet()) {
-							Mob *own = GetOwner();
-							if (own)
-								own->MessageString(Chat::Red, PROC_PETTOOLOW);
-						}
-						else {
-							MessageString(Chat::Red, PROC_TOOLOW);
-						}
-					}
-					else {
-						ExecWeaponProc(aug_i, aug->Proc.Effect, on);
-						if (RuleB(Combat, OneProcPerWeapon))
-							break;
-					}
-				}
-			}
+		EQ::ItemInstance *primary = GetInv().GetItem(EQ::invslot::slotPrimary);
+		if (primary && on && !on->HasDied()) {
+			TryWeaponProc(primary, primary->GetItem(), on);
 		}
-	}
-	// TODO: Powersource procs -- powersource procs are from augs so shouldn't need anything extra
 
+		EQ::ItemInstance *secondary = GetInv().GetItem(EQ::invslot::slotSecondary);
+		if (secondary && on && !on->HasDied()) {
+			TryWeaponProc(secondary, secondary->GetItem(), on);
+		}
+
+		// Don't do ranged proc twice
+		EQ::ItemInstance *range = GetInv().GetItem(EQ::invslot::slotRange);
+		if (range && on && !on->HasDied()) {
+			TryWeaponProc(range, range->GetItem(), on);
+		}		
+
+		return;
+	} else {
+
+		if (!weapon_g->IsClassCommon()) {
+			TrySpellProc(nullptr, (const EQ::ItemData*)nullptr, on);
+			return;
+		}
+
+		// Innate + aug procs from weapons
+		// TODO: powersource procs -- powersource procs are on invis augs, so shouldn't need anything extra
+		TryWeaponProc(weapon_g, weapon_g->GetItem(), on, hand);
+		// Procs from Buffs and AA both melee and range
+		TrySpellProc(weapon_g, weapon_g->GetItem(), on, hand);
+	}	
 	return;
 }
 
