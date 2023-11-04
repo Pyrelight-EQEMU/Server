@@ -4489,7 +4489,9 @@ bool Mob::SpellOnTarget(
 				spells[spell_id].target_type == ST_Undead ||
 				spells[spell_id].target_type == ST_Plant ||
 				spells[spell_id].target_type == ST_Giant ||
-				spells[spell_id].target_type == ST_Dragon) {
+				spells[spell_id].target_type == ST_Dragon ||
+				spells[spell_id].target_type == ST_Pet ||
+				spells[spell_id].target_type == ST_PetMaster) {
 
 				LogDebug("Spell is eligible for mirroring.");
 				Mob* extratar = spelltar->IsClient() ? spelltar->GetPet() : spelltar->GetOwner();
