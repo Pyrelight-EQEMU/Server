@@ -6068,3 +6068,76 @@ float Mob::CheckHeroicBonusesDataBuckets(std::string bucket_name)
 
 	return Strings::ToFloat(bucket_value);
 }
+
+int64 Mob::PL_GetHeroicSTRDamage(int64 damage_value) {
+    if (!(IsClient() || (IsPet() && GetOwner() && IsPetOwnerClient()))) {
+        return 0;
+    }
+
+    Mob* source = IsClient() ? this : GetOwner();
+    double modifier 	= RuleR(Custom, Pyrelight_HeroicSTR_MeleeBonus) * source->GetHeroicSTR();
+    double modifier_pet = IsPet() ? modifier : 0;
+
+    switch(source->GetClass()) {
+        case PALADIN:
+        case SHADOWKNIGHT:
+        case RANGER:
+        case BEASTLORD:
+            modifier += RuleR(Custom, Pyrelight_HeroicCHA_MeleeBonus) * source->GetHeroicCHA();
+            break;
+        case SHAMAN:
+        case DRUID:
+        case CLERIC:
+        case ENCHANTER:
+        case NECROMANCER:
+        case MAGICIAN:
+            modifier_pet += RuleR(Custom, Pyrelight_HeroicCHA_MeleeBonus) * source->GetHeroicCHA();
+            break;
+        default:            
+    }
+
+    if (IsPet()) {
+        modifier_pet *= IsCharmed() ? RuleR(Custom, Pyrelight_Heroic_CharmPetMod) :
+                                      RuleR(Custom, Pyrelight_Heroic_PetMod);
+        return static_cast<int64>(modifier_pet * damage_value);
+    } else {
+        return static_cast<int64>(modifier * damage_value);
+    }
+}
+
+int64 Mob::PL_GetHeroicSTAReduction(int64 original_damage) {
+    if (!(IsClient() || (IsPet() && GetOwner() && IsPetOwnerClient()))) {
+        return 0;
+    }
+
+	Mob* source = IsClient() ? this : GetOwner();
+	int64 reduced_damage = RuleI(Custom, Pyrelight_HeroicSTA_DamageReductionValue) * source->GetHeroicSTA();
+
+	
+	return std::min(static_cast<int64>(PL_GetHeroicSTAReductionCap() * original_damage), reduced_damage);
+}
+
+double Mob::PL_GetHeroicSTAReductionCap() {
+    if (!(IsClient() || (IsPet() && GetOwner() && IsPetOwnerClient()))) {
+        return 0.0;
+    }
+
+	double reduction_cap = RuleR(Custom, Pyrelight_HeroicSTA_BaseReductionCap);
+
+	switch(source->GetClass()) {
+		case PALADIN:
+		case SHADOWKNIGHT:
+			reduction_cap += 0.05; // Intrinsic Bonus for Knights
+			// Intentional fall-through
+		case SHAMAN:
+		case CLERIC:
+		case DRUID:
+			if (source->HasShieldEquipped()) {
+				reduction_cap += 0.10; // Intrinsic Bonus for using a shield
+			}			
+		default:
+			break;
+	}
+
+	return std::max(reduction_cap, 0.90);	
+}
