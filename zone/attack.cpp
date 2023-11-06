@@ -1726,58 +1726,6 @@ bool Mob::Attack(Mob* other, int Hand, bool bRiposte, bool IsStrikethrough, bool
 	///////////////////////////////////////////////////////////
 	other->Damage(this, my_hit.damage_done, SPELL_UNKNOWN, my_hit.skill, true, -1, false, m_specialattacks);
 
-	//Pyrelight Custom Code - Send info about damage absorbed by runes.
-
-
-	//Pyrelight Custom Code - Send info about the hSTA/hSTR damage modification to clients
-	// This is a boilerplate with dead code paths.
-	if (my_hit.damage_done > 0 && my_hit.original_damage > 0) {
-		if (IsClient()) {
-			CastToClient()->LoadAccountFlags();
-		} else if (GetOwner() && GetOwner()->IsClient()) {
-			GetOwner()->CastToClient()->LoadAccountFlags();
-		} 
-		if (other->IsClient()) {
-			other->CastToClient()->LoadAccountFlags();
-		} else if (other->GetOwner() && other->GetOwner()->IsClient()) {
-			other->GetOwner()->CastToClient()->LoadAccountFlags();
-		}
-
-		if ((IsClient() && GetHeroicSTR() > 0) || (IsPetOwnerClient() && GetOwner()->GetHeroicSTR() > 0)) {
-			if ((IsClient() || IsPetOwnerClient()) && (my_hit.damage_done > my_hit.original_damage)) {				
-				int increase_percentage = ((static_cast<float>(my_hit.damage_done) / static_cast<float>(my_hit.original_damage)) - 1) * 100;
-				if (GetOwner() && GetOwner()->IsClient() && GetOwner()->CastToClient()->GetAccountFlag("filter_hSTR") != "off") {
-					if (GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
-						GetOwner()->Message(Chat::MyPet, "Your pet's strike was increased by %i (%i%%) by your Heroic Strength!", 
-											my_hit.damage_done - my_hit.original_damage,
-											increase_percentage);
-					}
-				} else if (IsClient() && CastToClient()->GetAccountFlag("filter_hSTR") != "off") {
-					Message(Chat::YouHitOther, "Your strike was increased by %i (%i%%) by your Heroic Strength!", 
-							my_hit.damage_done - my_hit.original_damage,
-							increase_percentage);
-				}
-			}
-		}
-
-		if ((other->IsClient() && other->GetHeroicSTA() > 0) || (other->IsPetOwnerClient() && other->GetOwner()->GetHeroicSTA() > 0)) {
-			if ((other->IsClient() || other->IsPetOwnerClient()) && (my_hit.original_damage > my_hit.damage_done)) {				
-				int reduction_percentage = (1 - static_cast<float>(my_hit.damage_done) / static_cast<float>(my_hit.original_damage)) * 100;
-				if (other->GetOwner() && other->GetOwner()->IsClient()  && other->GetOwner()->CastToClient()->GetAccountFlag("filter_hSTA") != "off") {
-					if (other->GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {					
-						other->GetOwner()->Message(Chat::MyPet, "The damage to your pet was reduced by %i (%i%%) by your Heroic Stamina!", 
-												my_hit.original_damage - my_hit.damage_done,
-												reduction_percentage);
-					}
-				} else if (other->IsClient() && other->CastToClient()->GetAccountFlag("filter_hSTA") != "off") {
-					other->Message(Chat::OtherHitYou,"The damage to you was reduced by %i (%i%%) by your Heroic Stamina!", 
-								my_hit.original_damage - my_hit.damage_done,
-								reduction_percentage);
-				}
-			}		
-		}	
-	}
-
 	if (CastToClient()->IsDead() || (IsBot() && GetAppearance() == eaDead)) {
 		return false;
 	}
@@ -2417,57 +2365,7 @@ bool NPC::Attack(Mob* other, int Hand, bool bRiposte, bool IsStrikethrough, bool
 	}
 
 	if (GetHP() > 0 && !other->HasDied()) {
-		other->Damage(this, my_hit.damage_done, SPELL_UNKNOWN, my_hit.skill, true, -1, false, m_specialattacks); // Not avoidable client already had thier chance to Avoid
-		
-		//Pyrelight Custom Code - Send info about the hSTA/hSTR damage modification to clients
-		// This is a boilerplate with dead code paths.		
-		if (my_hit.damage_done > 0 && my_hit.original_damage > 0) {
-			if (IsClient()) {
-				CastToClient()->LoadAccountFlags();
-			} else if (GetOwner() && GetOwner()->IsClient()) {
-				GetOwner()->CastToClient()->LoadAccountFlags();
-			} 
-			if (other->IsClient()) {
-				other->CastToClient()->LoadAccountFlags();
-			} else if (other->GetOwner() && other->GetOwner()->IsClient()) {
-				other->GetOwner()->CastToClient()->LoadAccountFlags();
-			}
-
-			if ((IsClient() && GetHeroicSTR() > 0) || (IsPetOwnerClient() && GetOwner()->GetHeroicSTR() > 0)) {
-				if ((IsClient() || IsPetOwnerClient()) && (my_hit.damage_done > my_hit.original_damage)) {				
-					int increase_percentage = ((static_cast<float>(my_hit.damage_done) / static_cast<float>(my_hit.original_damage)) - 1) * 100;
-					if (GetOwner() && GetOwner()->IsClient() && GetOwner()->CastToClient()->GetAccountFlag("filter_hSTR") != "off") {
-						if (GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
-							GetOwner()->Message(Chat::MyPet, "Your pet's strike was increased by %i (%i%%) by your Heroic Strength!", 
-												my_hit.damage_done - my_hit.original_damage,
-												increase_percentage);
-						}
-					} else if (IsClient() && CastToClient()->GetAccountFlag("filter_hSTR") != "off") {
-						Message(Chat::YouHitOther, "Your strike was increased by %i (%i%%) by your Heroic Strength!", 
-								my_hit.damage_done - my_hit.original_damage,
-								increase_percentage);
-					}
-				}
-			}
-			
-			if ((other->IsClient() && other->GetHeroicSTA() > 0) || (other->IsPetOwnerClient() && other->GetOwner()->GetHeroicSTA() > 0)) {
-				if ((other->IsClient() || other->IsPetOwnerClient()) && (my_hit.original_damage > my_hit.damage_done)) {				
-					int reduction_percentage = (1 - static_cast<float>(my_hit.damage_done) / static_cast<float>(my_hit.original_damage)) * 100;
-					if (other->GetOwner() && other->GetOwner()->IsClient()  && other->GetOwner()->CastToClient()->GetAccountFlag("filter_hSTA") != "off") {
-						if (other->GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
-							other->GetOwner()->Message(Chat::MyPet, "The damage to your pet was reduced by %i (%i%%) by your Heroic Stamina!", 
-													my_hit.original_damage - my_hit.damage_done,
-													reduction_percentage);
-						}
-					} else if (other->IsClient() && other->CastToClient()->GetAccountFlag("filter_hSTA") != "off") {
-						other->Message(Chat::OtherHitYou,"The damage to you was reduced by %i (%i%%) by your Heroic Stamina!", 
-									my_hit.original_damage - my_hit.damage_done,
-									reduction_percentage);
-					}
-				}
-			}			
-		}
-
+		other->Damage(this, my_hit.damage_done, SPELL_UNKNOWN, my_hit.skill, true, -1, false, m_specialattacks); // Not avoidable client already had thier chance to Avoid	
 	} else
 		return false;
 
@@ -5242,9 +5140,7 @@ bool Mob::TryCriticalHit(Mob *defender, DamageHitInfo &hit, ExtraAttackOptions *
 				int SlayDmgBonus = std::max(
 				{aabonuses.SlayUndead[SBIndex::SLAYUNDEAD_DMG_MOD], itembonuses.SlayUndead[SBIndex::SLAYUNDEAD_DMG_MOD], spellbonuses.SlayUndead[SBIndex::SLAYUNDEAD_DMG_MOD] });
 				hit.damage_done = std::max(hit.damage_done, hit.base_damage) + 5;
-				hit.original_damage = std::max(hit.original_damage, hit.base_damage) + 5;
 				hit.damage_done = (hit.damage_done * SlayDmgBonus) / 100;
-				hit.original_damage = (hit.original_damage * SlayDmgBonus) / 100;
 
 				entity_list.FilteredMessageCloseString(
 					this, /* Sender */
@@ -5309,14 +5205,12 @@ bool Mob::TryCriticalHit(Mob *defender, DamageHitInfo &hit, ExtraAttackOptions *
 			hit.damage_done = std::max(hit.damage_done, hit.base_damage) + 5;
 			hit.original_damage = std::max(hit.original_damage, hit.base_damage) + 5;
 			int og_damage = hit.damage_done;
-			int og_damage2 = hit.original_damage;
 			int crit_mod = 170 + GetCritDmgMod(hit.skill);
 			if (crit_mod < 100) {
 				crit_mod = 100;
 			}
 
 			hit.damage_done = (hit.damage_done * crit_mod) / 100;
-			hit.original_damage = (hit.original_damage * crit_mod) / 100;
 			LogCombat("Crit success roll [{}] dex chance [{}] og dmg [{}] crit_mod [{}] new dmg [{}]", roll, dex_bonus, og_damage, crit_mod, hit.damage_done);
 
 			// step 3: check deadly strike
@@ -5331,7 +5225,6 @@ bool Mob::TryCriticalHit(Mob *defender, DamageHitInfo &hit, ExtraAttackOptions *
 							return true;
 						}
 						hit.damage_done = hit.damage_done * 200 / 100;
-						hit.original_damage = hit.original_damage * 200 / 100;
 
 						entity_list.FilteredMessageCloseString(
 							this, /* Sender */
@@ -5360,7 +5253,6 @@ bool Mob::TryCriticalHit(Mob *defender, DamageHitInfo &hit, ExtraAttackOptions *
 
 			if (IsBerserk() || berserk) {
 				hit.damage_done += og_damage * 119 / 100;
-				hit.original_damage += og_damage2 * 119 / 100;
 				LogCombat("Crip damage [{}]", hit.damage_done);
 
 				entity_list.FilteredMessageCloseString(
@@ -6357,20 +6249,11 @@ void Mob::CommonOutgoingHitSuccess(Mob* defender, DamageHitInfo &hit, ExtraAttac
 				caster->Message(Chat::Spells, "The spirits at your command reduced the damage dealt to %s by %i.", defender->GetCleanName(), damage_reduction);
 			}
 		}
-	}
+	}	
 
 	// Pyrelight Custom Code - Heroic Strength
 	if (RuleR(Character, Pyrelight_hSTR_DmgBonus) > 0) {
-		int effective_hSTR = (IsPetOwnerClient() && GetOwner()) ? RuleR(Character, Pyrelight_HeroicPetMod) * GetOwner()->GetHeroicSTR() : GetHeroicSTR();
-		if (effective_hSTR > 0) {
-			if (RuleB(Character, Pyrelight_hStat_Randomize)) {
-				effective_hSTR *= zone->random.Real(1 - RuleR(Character, Pyrelight_hStat_RandomizationFactor), 1 + RuleR(Character, Pyrelight_hStat_RandomizationFactor));
-			}
-
-			float damage_scalar = 1 + ((RuleR(Character, Pyrelight_hSTR_DmgBonus) / 100) * effective_hSTR);
-
-			hit.original_damage = hit.damage_done;			
-			hit.damage_done = static_cast<int64>(std::floor(hit.damage_done * damage_scalar));
+			hit.damage_done =+ PL_GetHeroicSTRDamage(hit.damage_done);
 		}
 	}
 

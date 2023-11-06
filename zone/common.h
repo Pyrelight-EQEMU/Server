@@ -907,7 +907,6 @@ struct DamageHitInfo {
 	int64 base_damage;
 	int64 min_damage;
 	int64 damage_done;
-	int64 original_damage;
 	int offense;
 	int tohit;
 	int hand;

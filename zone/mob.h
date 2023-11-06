@@ -1446,6 +1446,11 @@ public:
 
 	void CalcHeroicBonuses(StatBonuses* newbon);
 
+	// Pyrelight Custom Code
+	int64 Mob::PL_GetHeroicSTRDamage(int64 damage_value);
+	int64 Mob::PL_GetHeroicSTAReduction(int64 original_damage);
+	double Mob::PL_GetHeroicSTAReductionCap();
+
 protected:
 	void CommonDamage(Mob* other, int64 &damage, const uint16 spell_id, const EQ::skills::SkillType attack_skill, bool &avoidable, const int8 buffslot, const bool iBuffTic, eSpecialAttacks specal = eSpecialAttacks::None);
 	static uint16 GetProcID(uint16 spell_id, uint8 effect_index);
