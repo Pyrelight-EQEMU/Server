@@ -4219,7 +4219,7 @@ void Mob::DoBuffTic(const Buffs_Struct &buff, int slot, Mob *caster)
 				// Necro Epic DoT Procs
 				if ((spells[buff.spellid].good_effect != BENEFICIAL_EFFECT) && caster != this) {					
 					if (caster->GetInv().HasAugmentEquippedByID_Mod(20544)) {
-						caster->TryCombatProcs(nullptr, this, EQ::invslot::slotRange);							
+						caster->TryCombatProcs(nullptr, this, EQ::invslot::slotPrimary);							
 					}								
 				}
 
