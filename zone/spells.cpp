@@ -1646,7 +1646,7 @@ void Mob::CastedSpellFinished(uint16 spell_id, uint32 target_id, CastingSlot slo
 		TrySympatheticProc(target, spell_id);
 
 		if (IsClient()) {
-			TryCombatProcs(nullptr, target, EQ::invslot::slotRange);
+			TryCombatProcs(nullptr, target, EQ::invslot::slotPrimary);
 		}
 	}
 
