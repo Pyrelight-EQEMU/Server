@@ -6268,7 +6268,7 @@ void Mob::CommonOutgoingHitSuccess(Mob* defender, DamageHitInfo &hit, ExtraAttac
 	// Pyrelight Custom Code
 	// Beastlord Quirk
 	// Beastlord's Pet acts as a shielder if it is close enough.
-	if (defender->IsClient() || defender->GetClass() == BEASTLORD) {
+	if (defender->IsClient() && defender->GetClass() == BEASTLORD) {
 		Mob* pet = defender->GetPet();
 		if (pet) {
 			if (defender->CalculateDistance(pet->GetX(), pet->GetY(), pet->GetZ()) < 100) {
@@ -6276,11 +6276,22 @@ void Mob::CommonOutgoingHitSuccess(Mob* defender, DamageHitInfo &hit, ExtraAttac
 				hit.damage_done -= damage_reduction;
 				pet->Damage(this, hit.damage_done, SPELL_UNKNOWN, hit.skill, true, -1, false, m_specialattacks);
 				defender->Message(Chat::OtherMissYou, "Your companion shields you from %i damage.", damage_reduction);
-				// Do we want to send a message that the pet protected you from damage? Pretty spammy.
 			} else {
 				defender->Message(Chat::OtherMissYou, "Your companion was too far away to shield you.");
 			}
 		}
+	} else if (defender->IsPet() && defender->IsPetOwnerClient() && defender->GetOwner()->GetClass() == BEASTLORD) {
+		Mob* owner = defender->GetOwner();
+		if (owner) {
+			if (defender->CalculateDistance(owner->GetX(), owner->GetY(), owner->GetZ()) < 100) {
+				int64 damage_reduction = round(hit.damage_done * 0.50);
+				hit.damage_done -= damage_reduction;
+				owner->Damage(this, hit.damage_done, SPELL_UNKNOWN, hit.skill, true, -1, false, m_specialattacks);
+				defender->Message(Chat::OtherMissYou, "You shield your companion from %i damage.", damage_reduction);
+			} else {
+				defender->Message(Chat::OtherMissYou, "You were too far away to shield your companion.");
+			}
+		}	
 	}
 
 	// Pyrelight Custom Code
