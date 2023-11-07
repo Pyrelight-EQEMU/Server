@@ -3944,7 +3944,7 @@ void Mob::BuffProcess()
 										switch (effect) {
 											case SE_Rune:
 												if (buffs[buffs_i].melee_rune < max) {
-													buffs[buffs_i].melee_rune = min(max, buffs[buffs_i].melee_rune + regen_amount);
+													buffs[buffs_i].melee_rune = std::min(max, buffs[buffs_i].melee_rune + regen_amount);
 													regenerated = true;
 												}
 												break;
