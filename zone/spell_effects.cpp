@@ -1152,13 +1152,8 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 						IsBeneficialSpell(buffs[slot].spellid) &&
 						spells[buffs[slot].spellid].dispel_flag == 0)
 					{
-						if (zone->random.Int(1, 1000) <= chance) {
-							if (RuleB(Spells,DispelBeneficialReduceDuration) && !caster->IsClient()) {
-								buffs[slot].ticsremaining = zone->random.Int(1,buffs[slot].ticsremaining);
-								buffs[slot].UpdateClient = true;
-							} else {
-								BuffFadeBySlot(slot);
-							}							
+						if (zone->random.Int(1, 1000) <= chance) {							
+							BuffFadeBySlot(slot);
 							slot = buff_count;
 						}
 					}
@@ -2004,10 +1999,10 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 					}
 
 					if (caster == this) {
-						Message(Chat::Spells, 'You have applied a %i-hit perfect rune to protect yourself.', effect_value);
+						Message(Chat::Spells, "You have applied a %i-hit perfect rune to protect yourself.", effect_value);
 					} else {
 						Message(Chat::Spells, "%s has applied a %i-hit perfect rune to protect you!", caster->GetCleanName(), effect_value);
-						caster->Message(Chat::Spells, 'You have applied a %i-hit perfect rune to protect your target.', effect_value);
+						caster->Message(Chat::Spells, "You have applied a %i-hit perfect rune to protect your target.", effect_value);
 					}
 
 					buffs[buffslot].hit_number = effect_value;
