@@ -6168,7 +6168,7 @@ bool Mob::PL_DoHeroicAGIEvasionReroll(Mob *attacker, DamageHitInfo &hit, bool av
     return avoided;
 }
 
-bool Mob::PL_DoHeroicDEXCriticalReroll(Mob *defender, DamageHitInfo &hit, ExtraAttackOptions *opts, int spell_crit_chance, bool crit) {
+bool Mob::PL_DoHeroicDEXMeleeCriticalReroll(Mob *defender, DamageHitInfo &hit, ExtraAttackOptions *opts, bool crit) {
 	if ((IsClient() || (IsPet() && GetOwner() && IsPetOwnerClient()))) {
 		if (RuleR(Custom, Pyrelight_Heroic_CriticalReroll) > 0) {
 			Mob* source = IsClient() ? this : GetOwner();
@@ -6183,7 +6183,32 @@ bool Mob::PL_DoHeroicDEXCriticalReroll(Mob *defender, DamageHitInfo &hit, ExtraA
 				int roll = zone->random.Roll0(100);
 				int inner_effective_hDEX = effective_hDEX;
 				if (roll <= inner_effective_hDEX) {
-					crit = spell_crit_chance ? zone->random.Roll(spell_crit_chance) : TryCriticalHit(defender, hit, opts);
+					crit = TryCriticalHit(defender, hit, opts);
+					effective_hDEX -= roll;
+				}
+			}
+		}
+	}
+
+	return crit;
+}
+
+bool Mob::PL_DoHeroicDEXSpellCriticalReroll(Mob *defender, int spell_critical, bool crit) {
+	if ((IsClient() || (IsPet() && GetOwner() && IsPetOwnerClient()))) {
+		if (RuleR(Custom, Pyrelight_Heroic_CriticalReroll) > 0) {
+			Mob* source = IsClient() ? this : GetOwner();
+			int  effective_hDEX = source->GetHeroicDEX();
+
+			if (IsPet()) {
+				effective_hDEX *= IsCharmed() ? RuleR(Custom, Pyrelight_Heroic_CharmPetMod) :
+												RuleR(Custom, Pyrelight_Heroic_PetMod);
+			}
+
+			while(!crit && effective_hDEX > 0) {
+				int roll = zone->random.Roll0(100);
+				int inner_effective_hDEX = effective_hDEX;
+				if (roll <= inner_effective_hDEX) {
+					crit = zone->random.Roll(spell_critical);
 					effective_hDEX -= roll;
 				}
 			}

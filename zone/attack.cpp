@@ -6220,7 +6220,7 @@ void Mob::CommonOutgoingHitSuccess(Mob* defender, DamageHitInfo &hit, ExtraAttac
 	// Pyrelight Custom Code
 	// Heroic DEX Rerolls critical attempts
 	if (!crit && RuleR(Custom, Pyrelight_Heroic_CriticalReroll) > 0) {
-		crit = PL_DoHeroicDEXCriticalReroll(defender, hit, opts);
+		crit = PL_DoHeroicDEXMeleeCriticalReroll(defender, hit, opts);
 	}
 
 	CheckNumHitsRemaining(NumHit::OutgoingHitSuccess);
