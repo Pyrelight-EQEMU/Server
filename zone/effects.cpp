@@ -298,7 +298,7 @@ int64 Mob::GetActDoTDamage(uint16 spell_id, int64 value, Mob* target, bool from_
 		Critical = zone->random.Roll(chance);
 		
 		// Pyrelight Custom Code
-		if (RuleR(Character, Pyrelight_hDEX_CriticalReroll) > 0) {			
+		if (RuleR(Character, Pyrelight_Heroic_CriticalReroll) > 0) {			
 			Critical = PL_DoHeroicDEXSpellCriticalReroll(target, chance);
 		}
 	}
@@ -477,7 +477,7 @@ int64 Mob::GetActSpellHealing(uint16 spell_id, int64 value, Mob* target, bool fr
 		Critical = zone->random.Roll(critical_chance);
 
 		// Pyrelight Custom Code
-		if (RuleR(Character, Pyrelight_hDEX_CriticalReroll) > 0 && !Critical) {	
+		if (RuleR(Character, Pyrelight_Heroic_CriticalReroll) > 0 && !Critical) {	
 			Critical = PL_DoHeroicDEXSpellCriticalReroll(target, critical_chance);
 		}
 
