@@ -1375,10 +1375,10 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 					}
 
 					if (caster == this) {
-						Message(Chat::Spells, 'You have applied a %i point melee rune to protect yourself.', effect_value);
+						Message(Chat::Spells, "You have applied a %i point melee rune to protect yourself.", effect_value);
 					} else {
 						Message(Chat::Spells, "%s has applied a %i point melee rune to protect you!", caster->GetCleanName(), effect_value);
-						caster->Message(Chat::Spells, 'You have applied a %i point melee rune to protect your target.', effect_value);
+						caster->Message(Chat::Spells, "You have applied a %i point melee rune to protect your target.", effect_value);
 					}
 
 					buffs[buffslot].melee_rune = effect_value;				
@@ -1394,10 +1394,10 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 					}
 
 					if (caster == this) {
-						Message(Chat::Spells, 'You have applied a %i point spell rune to protect yourself.', effect_value);
+						Message(Chat::Spells, "You have applied a %i point spell rune to protect yourself.", effect_value);
 					} else {
 						Message(Chat::Spells, "%s has applied a %i point spell rune to protect you!", caster->GetCleanName(), effect_value);
-						caster->Message(Chat::Spells, 'You have applied a %i point spell rune to protect your target.', effect_value);
+						caster->Message(Chat::Spells, "You have applied a %i point spell rune to protect your target.", effect_value);
 					}
 
 					buffs[buffslot].magic_rune = effect_value;
@@ -1415,10 +1415,10 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 					}
 
 					if (caster == this) {
-						Message(Chat::Spells, 'You have applied a %i point partial melee rune to protect yourself.', rune_value);
+						Message(Chat::Spells, "You have applied a %i point partial melee rune to protect yourself.", rune_value);
 					} else {
 						Message(Chat::Spells, "%s has applied a %i point partial melee rune to protect you!", caster->GetCleanName(), rune_value);
-						caster->Message(Chat::Spells, 'You have applied a %i point partial melee rune to protect your target.', rune_value);
+						caster->Message(Chat::Spells, "You have applied a %i point partial melee rune to protect your target.", rune_value);
 					}
 
 					buffs[buffslot].melee_rune = rune_value;
@@ -1436,10 +1436,10 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 					}
 
 					if (caster == this) {
-						Message(Chat::Spells, 'You have applied a %i point partial melee rune to protect yourself.', rune_value);
+						Message(Chat::Spells, "You have applied a %i point partial melee rune to protect yourself.", rune_value);
 					} else {
 						Message(Chat::Spells, "%s has applied a %i point partial melee rune to protect you!", caster->GetCleanName(), rune_value);
-						caster->Message(Chat::Spells, 'You have applied a %i point partial melee rune to protect your target.', rune_value);
+						caster->Message(Chat::Spells, "You have applied a %i point partial melee rune to protect your target.", rune_value);
 					}
 
 					buffs[buffslot].melee_rune = rune_value;
@@ -1457,10 +1457,10 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 					}
 
 					if (caster == this) {
-						Message(Chat::Spells, 'You have applied a %i point partial spell rune to protect yourself.', rune_value);
+						Message(Chat::Spells, "You have applied a %i point partial spell rune to protect yourself.", rune_value);
 					} else {
 						Message(Chat::Spells, "%s has applied a %i point partial spell rune to protect you!", caster->GetCleanName(), rune_value);
-						caster->Message(Chat::Spells, 'You have applied a %i point partial spell rune to protect your target.', rune_value);
+						caster->Message(Chat::Spells, "You have applied a %i point partial spell rune to protect your target.", rune_value);
 					}
 
 					buffs[buffslot].magic_rune = rune_value;
@@ -1478,10 +1478,10 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 					}
 
 					if (caster == this) {
-						Message(Chat::Spells, 'You have applied a %i point partial spell rune to protect yourself.', rune_value);
+						Message(Chat::Spells, "You have applied a %i point partial spell rune to protect yourself.", rune_value);
 					} else {
 						Message(Chat::Spells, "%s has applied a %i point partial spell rune to protect you!", caster->GetCleanName(), rune_value);
-						caster->Message(Chat::Spells, 'You have applied a %i point partial spell rune to protect your target.', rune_value);
+						caster->Message(Chat::Spells, "You have applied a %i point partial spell rune to protect your target.", rune_value);
 					}
 
 					buffs[buffslot].magic_rune = rune_value;
@@ -1499,10 +1499,10 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 					}
 
 					if (caster == this) {
-						Message(Chat::Spells, 'You have applied a %i point partial spell rune to protect yourself.', rune_value);
+						Message(Chat::Spells, "You have applied a %i point partial spell rune to protect yourself.", rune_value);
 					} else {
 						Message(Chat::Spells, "%s has applied a %i point partial spell rune to protect you!", caster->GetCleanName(), rune_value);
-						caster->Message(Chat::Spells, 'You have applied a %i point partial spell rune to protect your target.', rune_value);
+						caster->Message(Chat::Spells, "You have applied a %i point partial spell rune to protect your target.", rune_value);
 					}
 
 					buffs[buffslot].dot_rune = rune_value;
