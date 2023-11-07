@@ -6060,7 +6060,7 @@ int64 Mob::PL_GetHeroicSTRDamage(int64 damage_value) {
     if (IsClient() || (IsPet() && GetOwner() && IsPetOwnerClient())) {
         if (RuleR(Custom, Pyrelight_Heroic_MeleeBonus) > 0) {
 			Mob*   source 		= IsClient() ? this : GetOwner();
-			double modifier 	= RuleR(Custom, Pyrelight_Heroic_MeleeBonus) * source->GetHeroicSTR();
+			double modifier 	= RuleR(Custom, Pyrelight_Heroic_MeleeBonus) * source->GetHeroicSTR() / 100;
 			double modifier_pet = IsPet() ? modifier : 0;			
 
 			switch(source->GetClass()) {
@@ -6068,7 +6068,7 @@ int64 Mob::PL_GetHeroicSTRDamage(int64 damage_value) {
 				case SHADOWKNIGHT:
 				case RANGER:
 				case BEASTLORD:
-					modifier += RuleR(Custom, Pyrelight_Heroic_MeleeBonus) * source->GetHeroicCHA() / 2;
+					modifier += RuleR(Custom, Pyrelight_Heroic_MeleeBonus) * source->GetHeroicCHA() / 2 / 100;
 					break;
 				case SHAMAN:
 				case DRUID:
@@ -6076,7 +6076,7 @@ int64 Mob::PL_GetHeroicSTRDamage(int64 damage_value) {
 				case ENCHANTER:
 				case NECROMANCER:
 				case MAGICIAN:
-					modifier_pet += RuleR(Custom, Pyrelight_Heroic_MeleeBonus) * source->GetHeroicCHA() / 2;
+					modifier_pet += RuleR(Custom, Pyrelight_Heroic_MeleeBonus) * source->GetHeroicCHA() / 2 / 100;
 					break;
 				default:
 					break;         
@@ -6089,8 +6089,10 @@ int64 Mob::PL_GetHeroicSTRDamage(int64 damage_value) {
 			} else {
 				damage = static_cast<int64>(modifier * damage_value);
 			}
-		}		
-	
+
+			LogDebug("Damage Increased by [{}]", damage);
+		}	
+
     }
 
 	return damage;
