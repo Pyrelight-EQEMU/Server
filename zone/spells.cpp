@@ -4201,7 +4201,7 @@ bool Mob::SpellOnTarget(
 							if (GetClass() == MAGICIAN) {
 								spell_effectiveness += 25;
 							}
-							spell_effectiveness += min(20, static_cast<int>(floor(caster->GetHeroicCHA() * 0.05)));
+							spell_effectiveness += std::min(20, static_cast<int>(floor(GetHeroicCHA() * 0.05)));
 						}
 					}				
 					Message(Chat::SpellFailure, "Your spell was partially resisted!");

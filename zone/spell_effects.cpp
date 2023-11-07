@@ -4108,7 +4108,7 @@ void Mob::DoBuffTic(const Buffs_Struct &buff, int slot, Mob *caster)
 											spell_effectiveness += 25;
 										}
 
-										spell_effectiveness += min(20, static_cast<int>(floor(caster->GetHeroicCHA() * 0.05)));
+										spell_effectiveness += std::min(20, static_cast<int>(floor(caster->GetHeroicCHA() * 0.05)));
 									}
 
 
