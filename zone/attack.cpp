@@ -4582,10 +4582,6 @@ float Mob::GetProcChances(float ProcBonus, uint16 hand)
 		ProcChance += ProcChance * ProcBonus / 100.0f;
 	}
 
-	if (GetClass() == CLERIC) {
-		ProcChance *= RuleR(Character, ClericBonusProcRate);
-	}
-
 	LogCombat("Proc chance [{}] ([{}] from bonuses)", ProcChance, ProcBonus);
 	return ProcChance;
 }
@@ -5033,7 +5029,6 @@ bool Mob::TryPetCriticalHit(Mob *defender, DamageHitInfo &hit)
 			critMod += GetCritDmgMod(hit.skill, owner);
 			hit.damage_done += 5;
 			hit.damage_done = (hit.damage_done * critMod) / 100;
-			hit.original_damage = (hit.original_damage * critMod) / 100;
 
 			entity_list.FilteredMessageCloseString(
 				this, /* Sender */
