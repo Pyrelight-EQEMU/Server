@@ -6225,7 +6225,7 @@ bool Mob::PL_DoHeroicDEXMultiAttack(Mob* target, int Hand, bool bRiposte, bool I
 		if (RuleR(Custom, Pyrelight_Heroic_MultiAttack) > 0) {
 			Mob* source = IsClient() ? this : GetOwner();
 			int  effective_hDEX = source->GetHeroicDEX();			
-			bool extra_attack_occurred = false;
+			int extra_attack_occurred = 0;
 
 			if (IsPet()) {
 				effective_hDEX *= IsCharmed() ? RuleR(Custom, Pyrelight_Heroic_CharmPetMod) :
@@ -6236,7 +6236,8 @@ bool Mob::PL_DoHeroicDEXMultiAttack(Mob* target, int Hand, bool bRiposte, bool I
 				int roll = zone->random.Roll0(100);
 				int inner_effective_hDEX = effective_hDEX;
 				if (roll <= inner_effective_hDEX) {
-					if (extra_attack_occurred) {
+					extra_attack_occurred++;
+					if (extra_attack_occurred == 1) {
 						if (IsClient()) {
 							MessageString(Chat::NPCFlurry, YOU_FLURRY);
 						}
@@ -6247,15 +6248,12 @@ bool Mob::PL_DoHeroicDEXMultiAttack(Mob* target, int Hand, bool bRiposte, bool I
 													  NPC_FLURRY, 
 													  GetCleanName(), 
 													  target->GetCleanName());					
-					} else {
-						extra_attack_occurred = true;
 					}
-
 					successful_attack = Attack(target, Hand, bRiposte, IsStrikethrough, IsFromSpell, opts);
 					effective_hDEX -= roll;
 				}
 			}
-			successful_attack = extra_attack_occurred;
+			successful_attack = extra_attack_occurred > 0;
 		}
 	}
 
