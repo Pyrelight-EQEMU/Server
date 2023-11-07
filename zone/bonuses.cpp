@@ -6397,7 +6397,7 @@ int64 Mob::PL_GetHeroicDurationBonus(int64 base_value) {
 	return value;
 }
 
-bool Mob::PL_DoHeroicChannelReroll(float channelchance, bool channel = false) {
+bool Mob::PL_DoHeroicChannelReroll(float channelchance, bool channel) {
 	if (IsClient()) {
 		if (RuleR(Custom, Pyrelight_Heroic_ChannelReroll) > 0) {
 			Mob* source = IsClient() ? this : GetOwner();
