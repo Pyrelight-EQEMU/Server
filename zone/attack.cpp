@@ -5123,7 +5123,7 @@ bool Mob::TryCriticalHit(Mob *defender, DamageHitInfo &hit, ExtraAttackOptions *
 		if ((IsClient() || (IsPet() && GetOwner() && IsPetOwnerClient()))) {
 			if (RuleR(Custom,Pyrelight_Heroic_CritChance) > 0) {
 				Mob* source = IsClient() ? this : GetOwner();
-				crit_chance += min(static_cast<int64>(floor(source->GetHeroicCHA() * RuleR(Custom,Pyrelight_Heroic_CritChance) / 10)), 25);
+				crit_chance += std::min(static_cast<int64>(floor(source->GetHeroicCHA() * RuleR(Custom,Pyrelight_Heroic_CritChance) / 10)), 25);
 			}
 		}
 	}
@@ -5159,7 +5159,6 @@ bool Mob::TryCriticalHit(Mob *defender, DamageHitInfo &hit, ExtraAttackOptions *
 
 			// step 2: calculate damage
 			hit.damage_done = std::max(hit.damage_done, hit.base_damage) + 5;
-			hit.original_damage = std::max(hit.original_damage, hit.base_damage) + 5;
 			int og_damage = hit.damage_done;
 			int crit_mod = 170 + GetCritDmgMod(hit.skill);
 			if (crit_mod < 100) {
@@ -6208,29 +6207,19 @@ void Mob::CommonOutgoingHitSuccess(Mob* defender, DamageHitInfo &hit, ExtraAttac
 	}	
 
 	// Pyrelight Custom Code - Heroic Strength
-	if (RuleR(Character, Pyrelight_hSTR_DmgBonus) > 0) {
-		hit.damage_done =+ PL_GetHeroicSTRDamage(hit.damage_done);		
+	if (RuleR(Character, Pyrelight_Heroic_MeleeBonus) > 0) {
+		hit.damage_done += PL_GetHeroicSTRDamage(hit.damage_done);		
 	}
 
 	// Pyrelight Custom Code - Heroic Stamina
-	int64 damage_reduction_final = 0;
-	if (RuleR(Character, Pyrelight_hSTA_DmgReduction) > 0) {		
-		int effective_hSTA = (defender->IsPetOwnerClient() && defender->GetOwner()) ? (RuleR(Character, Pyrelight_HeroicPetMod) * defender->GetOwner()->GetHeroicSTA()) : defender->GetHeroicSTA();
-		effective_hSTA = zone->random.Int(std::ceil(effective_hSTA) * 0.5 , std::ceil(effective_hSTA * 1.5));
-		if (effective_hSTA > 0) {
-			int64 damage_reduction_value = static_cast<int64>(std::ceil(RuleR(Character, Pyrelight_hSTA_DmgReduction) * effective_hSTA));
-			int64 damage_value = static_cast<int64>(std::max(static_cast<int64>(hit.damage_done * GetDamageReductionCap() / 100), // Capped Damage Reduction
-																				hit.damage_done - damage_reduction_value)); // Reduced Damage
-
-			hit.original_damage = hit.damage_done;
-			hit.damage_done = damage_value;
-		}
+	if (RuleR(Character, Pyrelight_Heroic_DamageReductionValue) > 0) {		
+		hit.damage_done -= PL_GetHeroicSTAReduction(hit.damage_done);
 	}	
 
 	bool crit = TryCriticalHit(defender, hit, opts);
 	// Pyrelight Custom Code
 	// Heroic DEX Rerolls critical attempts
-	if (!crit && RuleR(Custom, Pyrelight_HeroicDEX_CriticalReroll) > 0) {
+	if (!crit && RuleR(Custom, Pyrelight_Heroic_CriticalReroll) > 0) {
 		crit = PL_DoHeroicDEXCriticalReroll(defender, hit, opts);
 	}
 
