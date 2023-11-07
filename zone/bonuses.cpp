@@ -6235,6 +6235,8 @@ bool Mob::PL_DoHeroicDEXMultiAttack(Mob* target, int Hand, bool bRiposte, bool I
 			while (successful_attack && effective_hDEX > 0) {
 				int roll = zone->random.Roll0(100);
 				int inner_effective_hDEX = effective_hDEX;
+				LogDebug("Flurry Roll: [{}] vs inner_effective_hDEX: [{}]", roll, inner_effective_hDEX);
+				
 				if (roll <= inner_effective_hDEX) {
 					extra_attack_occurred++;
 					if (extra_attack_occurred == 1) {
@@ -6275,6 +6277,8 @@ bool Mob::PL_DoHeroicDEXMultiRangedAttack(uint64 skill, Mob* target, bool succes
 			while (successful_attack && effective_hDEX > 0) {
 				int roll = zone->random.Roll0(100);
 				int inner_effective_hDEX = effective_hDEX;
+				LogDebug("Flurry Roll: [{}] vs inner_effective_hDEX: [{}]", roll, inner_effective_hDEX);
+				
 				if (roll <= inner_effective_hDEX) {
 					extra_attack_occurred++;
 					if (extra_attack_occurred) {
