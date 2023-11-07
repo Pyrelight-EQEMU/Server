@@ -6241,7 +6241,7 @@ bool Mob::PL_DoHeroicDEXMultiAttack(Mob* target, int Hand, bool bRiposte, bool I
 						if (IsClient()) {
 							MessageString(Chat::NPCFlurry, YOU_FLURRY);
 						}
-						entity_list.MessageCloseString(source, 
+						entity_list.MessageCloseString(this, 
 													  true, 
 													  200, 
 													  IsPet() ? Chat::PetFlurry : Chat::NPCFlurry, 
@@ -6260,12 +6260,12 @@ bool Mob::PL_DoHeroicDEXMultiAttack(Mob* target, int Hand, bool bRiposte, bool I
 	return successful_attack;
 }
 
-bool Mob::PL_DoHeroicDEXMultiRangedAttack(uint64 skill, Mob* other, bool successful_attack) {
-	bool extra_attack_occurred = false;
+bool Mob::PL_DoHeroicDEXMultiRangedAttack(uint64 skill, Mob* target, bool successful_attack) {	
 	if ((IsClient())) {
 		if (RuleR(Custom, Pyrelight_Heroic_MultiAttack) > 0) {
 			Mob* source = IsClient() ? this : GetOwner();
-			int  effective_hDEX = source->GetHeroicDEX();			
+			int  effective_hDEX = source->GetHeroicDEX();
+			int extra_attack_occurred = 0;			
 
 			if (IsPet()) {
 				effective_hDEX *= IsCharmed() ? RuleR(Custom, Pyrelight_Heroic_CharmPetMod) :
@@ -6276,29 +6276,31 @@ bool Mob::PL_DoHeroicDEXMultiRangedAttack(uint64 skill, Mob* other, bool success
 				int roll = zone->random.Roll0(100);
 				int inner_effective_hDEX = effective_hDEX;
 				if (roll <= inner_effective_hDEX) {
+					extra_attack_occurred++;
 					if (extra_attack_occurred) {
 						if (source->IsClient()) {
 							source->MessageString(Chat::NPCFlurry, YOU_FLURRY);
 						}
-						entity_list.MessageCloseString(source, 
+						entity_list.MessageCloseString(this, 
 						                               true, 
 													   200, 
-													   source->IsPet()? Chat::PetFlurry : Chat::NPCFlurry, 
+													   Chat::NPCFlurry, 
 													   NPC_FLURRY, 
-													   source->GetCleanName(), 
-													   source->GetTarget()->GetCleanName());					
+													   GetCleanName(), 
+													   target->GetCleanName());					
 					} else {
 						extra_attack_occurred = true;
 					}
 
-					successful_attack = (skill == EQ::skills::SkillThrowing) ? CastToClient()->ThrowingAttack(other, true) : CastToClient()->RangedAttack(other, true);
+					successful_attack = (skill == EQ::skills::SkillThrowing) ? CastToClient()->ThrowingAttack(target, true) : CastToClient()->RangedAttack(target, true);
 					effective_hDEX -= roll;
 				}
 			}
+			successful_attack = (extra_attack_occurred > 0);
 		}
 	}
 
-	return extra_attack_occurred;
+	return successful_attack;
 }
 
 int64 Mob::PL_GetHeroicSpellDamage(int64 damage_value) {
