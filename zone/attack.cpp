@@ -1490,7 +1490,7 @@ void Mob::DoAttack(Mob *other, DamageHitInfo &hit, ExtraAttackOptions *opts, boo
 							Chat::Spells,
 							OTHER_REGAIN_CAST,
 							GetCleanName());
-					} else
+					} else {
 						other->Stun(3000); // yuck -- 3 seconds
 					}
 				}
@@ -1502,6 +1502,7 @@ void Mob::DoAttack(Mob *other, DamageHitInfo &hit, ExtraAttackOptions *opts, boo
 			}
 			LogCombat("Final damage after all reductions: [{}]", hit.damage_done);
 		}
+
 	} else {
 		LogCombat("Attack missed. Damage set to 0");
 		hit.damage_done = 0;
