@@ -1446,7 +1446,7 @@ void Mob::DoAttack(Mob *other, DamageHitInfo &hit, ExtraAttackOptions *opts, boo
 
 	if (other->CheckHitChance(this, hit)) {	
 		bool avoided = other->AvoidDamage(this, hit);
-		if (RuleR(Custom, Pyrelight_HeroicAGI_EvasionReroll) > 0 && !avoided) {
+		if (RuleR(Custom, Pyrelight_Heroic_EvasionReroll) > 0 && !avoided) {
 			avoided = other->PL_DoHeroicAGIEvasionReroll(this, hit);
 		}
 

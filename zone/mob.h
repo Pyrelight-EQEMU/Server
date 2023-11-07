@@ -1457,7 +1457,7 @@ public:
 	int64  PL_GetHeroicSpellDamage(int64 damage_value);
 	int64  PL_GetHeroicDSBonus(int64 base_value);
 	int64  PL_GetHeroicDurationBonus(int64 base_value);
-	bool   PL_DoHeroicChannelReroll(float channelchance, bool channel);
+	bool   PL_DoHeroicChannelReroll(float channelchance, bool channel = false);
 	double PL_GetHeroicSTAReductionCap();
 
 protected:
