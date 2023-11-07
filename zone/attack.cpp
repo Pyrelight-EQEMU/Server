@@ -5117,7 +5117,7 @@ bool Mob::TryCriticalHit(Mob *defender, DamageHitInfo &hit, ExtraAttackOptions *
 	else if (GetClass() == ROGUE && GetLevel() >= 12 && hit.skill == EQ::skills::SkillThrowing)
 		innate_crit = true;
 
-	if ((GetClass() == PALDIN || GetClass() == SHADOWKNIGHT || GetClass() == BEASTLORD || GetClass() == RANGER) && GetLevel() >= 12) {
+	if ((GetClass() == PALADIN || GetClass() == SHADOWKNIGHT || GetClass() == BEASTLORD || GetClass() == RANGER) && GetLevel() >= 12) {
 		// Pyrelight Custom Code
 		// Crit Chance based on HeroicCHA
 		if ((IsClient() || (IsPet() && GetOwner() && IsPetOwnerClient()))) {
