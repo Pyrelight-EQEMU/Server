@@ -1427,7 +1427,7 @@ void Mob::CastedSpellFinished(uint16 spell_id, uint32 target_id, CastingSlot slo
 				channelchance += channelchance * channelbonuses / 100.0f;
 
 				//Pyrelight Custom Code - Minimum 25% channel chance from combat.
-				channelchance = max(channelchance, 25.0f);
+				channelchance = std::max(channelchance, 25.0f);
 			} else {
 				// NPCs are just hard to interrupt, otherwise they get pwned
 				channelchance = 85;
