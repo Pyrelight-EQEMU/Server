@@ -3955,6 +3955,7 @@ void Mob::BuffProcess()
 												}
 												break;
 											default:
+												break;
 										}
 
 										if (regenerated) {
