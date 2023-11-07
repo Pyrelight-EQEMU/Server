@@ -6218,7 +6218,7 @@ bool Mob::PL_DoHeroicDEXMultiAttack(Mob* other, int Hand, bool bRiposte, bool Is
 						extra_attack_occurred = true;
 					}
 
-					successful_attack = Attack(target, hand, false, false, IsFromSpell, opts);
+					successful_attack = Attack(target, Hand, false, false, IsFromSpell, opts);
 					effective_hDEX -= roll;
 				}
 			}
