@@ -6213,7 +6213,7 @@ void Mob::CommonOutgoingHitSuccess(Mob* defender, DamageHitInfo &hit, ExtraAttac
 
 	// Pyrelight Custom Code - Heroic Stamina
 	if (RuleR(Character, Pyrelight_Heroic_DamageReductionValue) > 0) {		
-		hit.damage_done -= PL_GetHeroicSTAReduction(hit.damage_done);
+		hit.damage_done -= defender->PL_GetHeroicSTAReduction(hit.damage_done);
 	}	
 
 	bool crit = TryCriticalHit(defender, hit, opts);
