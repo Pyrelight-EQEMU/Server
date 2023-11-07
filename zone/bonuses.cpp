@@ -6251,9 +6251,9 @@ bool Mob::PL_DoHeroicDEXMultiAttack(Mob* target, int Hand, bool bRiposte, bool I
 													  GetCleanName(), 
 													  target->GetCleanName());					
 					}
-					successful_attack = Attack(target, Hand, bRiposte, IsStrikethrough, IsFromSpell, opts);
-					effective_hDEX -= roll;
+					successful_attack = Attack(target, Hand, bRiposte, IsStrikethrough, IsFromSpell, opts);					
 				}
+				effective_hDEX -= roll;
 			}
 			successful_attack = (extra_attack_occurred > 0);
 		}
@@ -6265,23 +6265,18 @@ bool Mob::PL_DoHeroicDEXMultiAttack(Mob* target, int Hand, bool bRiposte, bool I
 bool Mob::PL_DoHeroicDEXMultiRangedAttack(uint64 skill, Mob* target, bool successful_attack) {	
 	if ((IsClient())) {
 		if (RuleR(Custom, Pyrelight_Heroic_MultiAttack) > 0) {
-			Mob* source = IsClient() ? this : GetOwner();
+			Mob* source = this;
 			int  effective_hDEX = source->GetHeroicDEX();
-			int extra_attack_occurred = 0;			
-
-			if (IsPet()) {
-				effective_hDEX *= IsCharmed() ? RuleR(Custom, Pyrelight_Heroic_CharmPetMod) :
-												RuleR(Custom, Pyrelight_Heroic_PetMod);
-			}
+			int  extra_attack_occurred = 0;	
 
 			while (successful_attack && effective_hDEX > 0) {
 				int roll = zone->random.Roll0(100);
 				int inner_effective_hDEX = effective_hDEX;
 				LogDebug("Flurry Roll: [{}] vs inner_effective_hDEX: [{}]", roll, inner_effective_hDEX);
-				
+
 				if (roll <= inner_effective_hDEX) {
 					extra_attack_occurred++;
-					if (extra_attack_occurred) {
+					if (extra_attack_occurred == 1) {
 						if (source->IsClient()) {
 							source->MessageString(Chat::NPCFlurry, YOU_FLURRY);
 						}
@@ -6292,13 +6287,10 @@ bool Mob::PL_DoHeroicDEXMultiRangedAttack(uint64 skill, Mob* target, bool succes
 													   NPC_FLURRY, 
 													   GetCleanName(), 
 													   target->GetCleanName());					
-					} else {
-						extra_attack_occurred = true;
 					}
-
-					successful_attack = (skill == EQ::skills::SkillThrowing) ? CastToClient()->ThrowingAttack(target, true) : CastToClient()->RangedAttack(target, true);
-					effective_hDEX -= roll;
+					successful_attack = (skill == EQ::skills::SkillThrowing) ? CastToClient()->ThrowingAttack(target, true) : CastToClient()->RangedAttack(target, true);					
 				}
+				effective_hDEX -= roll;
 			}
 			successful_attack = (extra_attack_occurred > 0);
 		}
