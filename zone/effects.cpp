@@ -99,7 +99,7 @@ int64 Mob::GetActSpellDamage(uint16 spell_id, int64 value, Mob* target) {
 			if ((IsClient() || (IsPet() && GetOwner() && IsPetOwnerClient()))) {
 				if (RuleR(Custom,Pyrelight_Heroic_CritChance) > 0) {
 					Mob* source = IsClient() ? this : GetOwner();
-					chance += min(static_cast<int64>(floor(source->GetHeroicCHA() * RuleR(Custom,Pyrelight_Heroic_CritChance) / 10)), 25);
+					chance += std::min(static_cast<int>(floor(source->GetHeroicCHA() * RuleR(Custom,Pyrelight_Heroic_CritChance) / 10)), 25);
 				}
 			}
 		}
