@@ -6570,27 +6570,27 @@ void Mob::DoMainHandAttackRounds(Mob *target, ExtraAttackOptions *opts)
 		// The mobs that could triple lost the ability to when the triple attack skill was added in
 		Attack(target, EQ::invslot::slotPrimary, false, false, false, opts);
 		if (CanThisClassDoubleAttack() && CheckDoubleAttack()) {
-			successful_hit = successful_hit || Attack(target, EQ::invslot::slotPrimary, false, false, false, opts);
+			successful_hit |= Attack(target, EQ::invslot::slotPrimary, false, false, false, opts);
 			if ((IsPet() || IsTempPet()) && IsPetOwnerClient()) {
 				int chance = spellbonuses.PC_Pet_Flurry + itembonuses.PC_Pet_Flurry + aabonuses.PC_Pet_Flurry;
 				if (chance && zone->random.Roll(chance))
-					successful_hit = successful_hit || Flurry(nullptr);
+					successful_hit |= Flurry(nullptr);
 			}
 		}
 	} else {
 		if (IsNPC()) {
 			int16 n_atk = CastToNPC()->GetNumberOfAttacks();
 			if (n_atk <= 1) {
-				successful_hit = successful_hit || Attack(target, EQ::invslot::slotPrimary, false, false, false, opts);
+				successful_hit |= Attack(target, EQ::invslot::slotPrimary, false, false, false, opts);
 			}
 			else {
 				for (int i = 0; i < n_atk; ++i) {
-					successful_hit = successful_hit || Attack(target, EQ::invslot::slotPrimary, false, false, false, opts);
+					successful_hit |= Attack(target, EQ::invslot::slotPrimary, false, false, false, opts);
 				}
 			}
 		}
 		else {
-			successful_hit = successful_hit || Attack(target, EQ::invslot::slotPrimary, false, false, false, opts);
+			successful_hit |= Attack(target, EQ::invslot::slotPrimary, false, false, false, opts);
 		}
 
 		// we use this random value in three comparisons with different
@@ -6601,15 +6601,15 @@ void Mob::DoMainHandAttackRounds(Mob *target, ExtraAttackOptions *opts)
 			// check double attack, this is NOT the same rules that clients use...
 			&&
 			RandRoll < (GetLevel() + NPCDualAttackModifier)) {
-			successful_hit = successful_hit || Attack(target, EQ::invslot::slotPrimary, false, false, false, opts);
+			successful_hit |= Attack(target, EQ::invslot::slotPrimary, false, false, false, opts);
 			// lets see if we can do a triple attack with the main hand
 			// pets are excluded from triple and quads...
 			if ((GetSpecialAbility(SPECATK_TRIPLE) || GetSpecialAbility(SPECATK_QUAD)) && !IsPet() &&
 				RandRoll < (GetLevel() + NPCTripleAttackModifier)) {
-				successful_hit = successful_hit || Attack(target, EQ::invslot::slotPrimary, false, false, false, opts);
+				successful_hit |= Attack(target, EQ::invslot::slotPrimary, false, false, false, opts);
 				// now lets check the quad attack
 				if (GetSpecialAbility(SPECATK_QUAD) && RandRoll < (GetLevel() + NPCQuadAttackModifier)) {
-					successful_hit = successful_hit || Attack(target, EQ::invslot::slotPrimary, false, false, false, opts);
+					successful_hit |= Attack(target, EQ::invslot::slotPrimary, false, false, false, opts);
 				}
 			}
 		}
@@ -6634,12 +6634,12 @@ void Mob::DoOffHandAttackRounds(Mob *target, ExtraAttackOptions *opts)
 		if (CheckDualWield()) {
 			bool successful_hit = Attack(target, EQ::invslot::slotSecondary, false, false, false, opts);
 			if (CanThisClassDoubleAttack() && GetLevel() > 35 && CheckDoubleAttack()) {
-				successful_hit = successful_hit || Attack(target, EQ::invslot::slotSecondary, false, false, false, opts);
+				successful_hit =| Attack(target, EQ::invslot::slotSecondary, false, false, false, opts);
 
 				if ((IsPet() || IsTempPet()) && IsPetOwnerClient()) {
 					int chance = spellbonuses.PC_Pet_Flurry + itembonuses.PC_Pet_Flurry + aabonuses.PC_Pet_Flurry;
 					if (chance && zone->random.Roll(chance))
-						successful_hit = successful_hit || Flurry(nullptr);
+						successful_hit =| Flurry(nullptr);
 				}
 			}
 
