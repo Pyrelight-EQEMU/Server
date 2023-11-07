@@ -6220,7 +6220,7 @@ bool Mob::PL_DoHeroicDEXSpellCriticalReroll(Mob *defender, int spell_critical, b
 	return crit;
 }
 
-bool Mob::PL_DoHeroicDEXMultiAttack(Mob* other, int Hand, bool bRiposte, bool IsStrikethrough, bool IsFromSpell, ExtraAttackOptions *opts, bool successful_attack) {
+bool Mob::PL_DoHeroicDEXMultiAttack(Mob* target, int Hand, bool bRiposte, bool IsStrikethrough, bool IsFromSpell, ExtraAttackOptions *opts, bool successful_attack) {
 	if ((IsClient() || (IsPet() && GetOwner() && IsPetOwnerClient()))) {
 		if (RuleR(Custom, Pyrelight_Heroic_MultiAttack) > 0) {
 			Mob* source = IsClient() ? this : GetOwner();
@@ -6237,15 +6237,21 @@ bool Mob::PL_DoHeroicDEXMultiAttack(Mob* other, int Hand, bool bRiposte, bool Is
 				int inner_effective_hDEX = effective_hDEX;
 				if (roll <= inner_effective_hDEX) {
 					if (extra_attack_occurred) {
-						if (source->IsClient()) {
-							source->MessageString(Chat::NPCFlurry, YOU_FLURRY);
+						if (IsClient()) {
+							MessageString(Chat::NPCFlurry, YOU_FLURRY);
 						}
-						entity_list.MessageCloseString(source, true, 200, source->IsPet()? Chat::PetFlurry : Chat::NPCFlurry, NPC_FLURRY, source->GetCleanName(), source->GetTarget()->GetCleanName());					
+						entity_list.MessageCloseString(source, 
+													  true, 
+													  200, 
+													  IsPet() ? Chat::PetFlurry : Chat::NPCFlurry, 
+													  NPC_FLURRY, 
+													  GetCleanName(), 
+													  target->GetCleanName());					
 					} else {
 						extra_attack_occurred = true;
 					}
 
-					successful_attack = Attack(target, Hand, false, false, IsFromSpell, opts);
+					successful_attack = Attack(target, Hand, bRiposte, IsStrikethrough, IsFromSpell, opts);
 					effective_hDEX -= roll;
 				}
 			}
