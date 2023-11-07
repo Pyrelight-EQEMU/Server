@@ -352,7 +352,7 @@ void Client::OPCombatAbility(const CombatAbility_Struct *ca_atk)
 				// Pyrelight Custom Code
 				// Multi-Attack via Heroic DEX
 				if (successful_hit && RuleR(Custom, Pyrelight_Heroic_MultiAttack) > 0) {
-					PL_DoHeroicDEXMultiRangedAttack(m_skill, GetTarget());
+					PL_DoHeroicDEXMultiRangedAttack(ca_atk->m_skill, GetTarget());
 				}
 			
 			} else {
