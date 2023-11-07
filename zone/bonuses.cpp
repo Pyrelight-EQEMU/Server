@@ -6059,16 +6059,19 @@ int64 Mob::PL_GetHeroicSTRDamage(int64 damage_value) {
 
     if (IsClient() || (IsPet() && GetOwner() && IsPetOwnerClient())) {
         if (RuleR(Custom, Pyrelight_Heroic_MeleeBonus) > 0) {
-			Mob*   source 		= IsClient() ? this : GetOwner();
-			double modifier 	= RuleR(Custom, Pyrelight_Heroic_MeleeBonus) * source->GetHeroicSTR() / 100;
-			double modifier_pet = IsPet() ? modifier : 0;			
+			Mob*   	source 		= IsClient() ? this : GetOwner();
+			int32 	heroic_str = source->GetHeroicSTR() / 100;
+			int32  	heroic_cha = source->GetHeroicCHA() / 100;	
+			double 	modifier 	= RuleR(Custom, Pyrelight_Heroic_MeleeBonus) * heroic_str;
+			double 	modifier_pet = IsPet() ? modifier : 0;
+		
 
 			switch(source->GetClass()) {
 				case PALADIN:
 				case SHADOWKNIGHT:
 				case RANGER:
 				case BEASTLORD:
-					modifier += RuleR(Custom, Pyrelight_Heroic_MeleeBonus) * source->GetHeroicCHA() / 2 / 100;
+					modifier += RuleR(Custom, Pyrelight_Heroic_MeleeBonus) * heroic_cha / 2;
 					break;
 				case SHAMAN:
 				case DRUID:
@@ -6076,7 +6079,7 @@ int64 Mob::PL_GetHeroicSTRDamage(int64 damage_value) {
 				case ENCHANTER:
 				case NECROMANCER:
 				case MAGICIAN:
-					modifier_pet += RuleR(Custom, Pyrelight_Heroic_MeleeBonus) * source->GetHeroicCHA() / 2 / 100;
+					modifier_pet += RuleR(Custom, Pyrelight_Heroic_MeleeBonus) * heroic_cha / 2;
 					break;
 				default:
 					break;         
@@ -6138,7 +6141,7 @@ double Mob::PL_GetHeroicSTAReductionCap() {
 			default:
 				break;
 		}
-		reduction_cap = std::max(reduction_cap, 0.90);
+		reduction_cap = std::min(reduction_cap, 0.90);
 		LogDebug("HeroicSTA damage reduction cap: [{}]", reduction_cap);
 	}
 
@@ -6305,9 +6308,9 @@ int64 Mob::PL_GetHeroicSpellDamage(int64 damage_value) {
         if (RuleR(Custom, Pyrelight_Heroic_SpellDamage) > 0) {
 			Mob*   source 		= IsClient() ? this : GetOwner();
 			double modifier 	= 0;
-			int64  heroic_wis   = source->GetHeroicWIS();
-			int64  heroic_int   = source->GetHeroicINT();
-			int64  heroic_cha   = source->GetHeroicCHA();
+			int64  heroic_wis   = source->GetHeroicWIS() / 100;
+			int64  heroic_int   = source->GetHeroicINT() / 100;
+			int64  heroic_cha   = source->GetHeroicCHA() / 100;
 
 			switch(source->GetClass()) {
 				case PALADIN:
