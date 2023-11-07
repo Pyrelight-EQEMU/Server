@@ -6525,7 +6525,7 @@ void Client::DoAttackRounds(Mob *target, int hand, bool IsFromSpell)
 
 	// Pyrelight Custom Code
 	// Multi-Attack via Heroic DEX
-	if (successful_hit && RuleR(Custom, Pyrelight_HeroicDEX_MultiAttack) > 0) {
+	if (successful_hit && RuleR(Custom, Pyrelight_Heroic_MultiAttack) > 0) {
 		PL_DoHeroicDEXMultiAttack(target, hand, false, false, IsFromSpell);
 	}
 }
@@ -6617,7 +6617,7 @@ void Mob::DoMainHandAttackRounds(Mob *target, ExtraAttackOptions *opts)
 
 	// Pyrelight Custom Code
 	// Multi-Attack via Heroic DEX
-	if (successful_hit && RuleR(Custom, Pyrelight_HeroicDEX_MultiAttack) > 0) {
+	if (successful_hit && RuleR(Custom, Pyrelight_Heroic_MultiAttack) > 0) {
 		PL_DoHeroicDEXMultiAttack(target, EQ::invslot::slotPrimary, false, false, false, opts);
 	}
 }
@@ -6645,7 +6645,7 @@ void Mob::DoOffHandAttackRounds(Mob *target, ExtraAttackOptions *opts)
 
 			// Pyrelight Custom Code
 			// Multi-Attack via Heroic DEX
-			if (successful_hit && RuleR(Custom, Pyrelight_HeroicDEX_MultiAttack) > 0) {
+			if (successful_hit && RuleR(Custom, Pyrelight_Heroic_MultiAttack) > 0) {
 				PL_DoHeroicDEXMultiAttack(target, EQ::invslot::slotSecondary, false, false, false, opts);
 			}
 		}		
