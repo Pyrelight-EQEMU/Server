@@ -6303,14 +6303,15 @@ bool Mob::PL_DoHeroicDEXMultiRangedAttack(uint64 skill, Mob* target, bool succes
 }
 
 int64 Mob::PL_GetHeroicSpellDamage(int64 damage_value) {
-	int64  damage = 0;
     if (IsClient() || (IsPet() && GetOwner() && IsPetOwnerClient())) {
         if (RuleR(Custom, Pyrelight_Heroic_SpellDamage) > 0) {
 			Mob*   source 		= IsClient() ? this : GetOwner();
 			double modifier 	= 0;
-			int64  heroic_wis   = source->GetHeroicWIS() / 100;
-			int64  heroic_int   = source->GetHeroicINT() / 100;
-			int64  heroic_cha   = source->GetHeroicCHA() / 100;
+			int64  heroic_wis   = source->GetHeroicWIS();
+			int64  heroic_int   = source->GetHeroicINT();
+			int64  heroic_cha   = source->GetHeroicCHA();
+
+			double 
 
 			switch(source->GetClass()) {
 				case PALADIN:
@@ -6342,12 +6343,12 @@ int64 Mob::PL_GetHeroicSpellDamage(int64 damage_value) {
 										  RuleR(Custom, Pyrelight_Heroic_PetMod);
 			}
 
-			damage = static_cast<int64>(floor(damage_value * modifier));
-			LogDebug("original: [{}], modifier: [{}], damage: [{}]", damage_value, modifier, damage);
+			damage_value = static_cast<int64>(ceil(damage_value * modifier)/100);
+			LogDebug("damage_value:[{}], modifier:[{}]", damage_value, modifier);
 		}
     }
 
-	return damage;
+	return damage_value;
 }
 
 int64 Mob::PL_GetHeroicDSBonus(int64 base_value) {
