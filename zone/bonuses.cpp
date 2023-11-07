@@ -6253,7 +6253,7 @@ bool Mob::PL_DoHeroicDEXMultiAttack(Mob* target, int Hand, bool bRiposte, bool I
 					effective_hDEX -= roll;
 				}
 			}
-			successful_attack = extra_attack_occurred > 0;
+			successful_attack = (extra_attack_occurred > 0);
 		}
 	}
 
