@@ -6099,9 +6099,9 @@ int64 Mob::PL_GetHeroicSTRDamage(int64 damage_value) {
 int64 Mob::PL_GetHeroicSTAReduction(int64 original_damage) {
 	int64 reduced_damage = 0;
     if (IsClient() || (IsPet() && GetOwner() && IsPetOwnerClient())) {
-		if (RuleI(Custom, Pyrelight_Heroic_DamageReductionValue) > 0) {
+		if (RuleR(Custom, Pyrelight_Heroic_DamageReductionValue) > 0) {
 			Mob* source = IsClient() ? this : GetOwner();
-			reduced_damage = RuleI(Custom, Pyrelight_Heroic_DamageReductionValue) * source->GetHeroicSTA();
+			reduced_damage = RuleR(Custom, Pyrelight_Heroic_DamageReductionValue) * source->GetHeroicSTA();
 
 			if (IsPet()) {
 				reduced_damage *= IsCharmed() ? RuleR(Custom, Pyrelight_Heroic_CharmPetMod) :
