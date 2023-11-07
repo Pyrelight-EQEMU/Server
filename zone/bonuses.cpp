@@ -6108,7 +6108,7 @@ int64 Mob::PL_GetHeroicSTAReduction(int64 original_damage) {
 												RuleR(Custom, Pyrelight_Heroic_PetMod);
 			}
 
-			reduced_damage = std::min(static_cast<int64>(PL_GetHeroicSTAReductionCap() * original_damage), reduced_damage);
+			reduced_damage = std::min(static_cast<int64>(source->PL_GetHeroicSTAReductionCap() * original_damage), reduced_damage);
 
 			LogDebug("HeroicSTA damage reduction: [{}]", reduced_damage);
 		}
@@ -6122,7 +6122,7 @@ double Mob::PL_GetHeroicSTAReductionCap() {
 
     if (IsClient() || (IsPet() && GetOwner() && IsPetOwnerClient())) {
 		reduction_cap = RuleR(Custom, Pyrelight_Heroic_BaseReductionCap);
-		switch(source->GetClass()) {
+		switch(GetClass()) {
 			case PALADIN:
 			case SHADOWKNIGHT:
 				reduction_cap += 0.05; // Intrinsic Bonus for Knights
@@ -6130,7 +6130,7 @@ double Mob::PL_GetHeroicSTAReductionCap() {
 			case SHAMAN:
 			case CLERIC:
 			case DRUID:
-				if (source->HasShieldEquipped()) {
+				if (HasShieldEquipped()) {
 					reduction_cap += 0.10; // Intrinsic Bonus for using a shield
 				}			
 			default:
