@@ -6229,7 +6229,7 @@ bool Mob::PL_DoHeroicDEXMultiAttack(Mob* other, int Hand, bool bRiposte, bool Is
 	return successful_attack;
 }
 
-bool Mob::PL_DoHeroicDEXMultiRangedAttack(uint64 skill, Mob* other) {
+bool Mob::PL_DoHeroicDEXMultiRangedAttack(uint64 skill, Mob* other, bool successful_attack) {
 	bool extra_attack_occurred = false;
 	if ((IsClient() || (IsPet() && GetOwner() && IsPetOwnerClient()))) {
 		if (RuleR(Custom, Pyrelight_Heroic_MultiAttack) > 0) {
