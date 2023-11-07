@@ -6309,9 +6309,7 @@ int64 Mob::PL_GetHeroicSpellDamage(int64 damage_value) {
 			double modifier 	= 0;
 			int64  heroic_wis   = source->GetHeroicWIS();
 			int64  heroic_int   = source->GetHeroicINT();
-			int64  heroic_cha   = source->GetHeroicCHA();
-
-			double 
+			int64  heroic_cha   = source->GetHeroicCHA();			
 
 			switch(source->GetClass()) {
 				case PALADIN:
