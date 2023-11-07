@@ -6193,7 +6193,7 @@ bool Mob::PL_DoHeroicDEXCriticalReroll(Mob *defender, DamageHitInfo &hit, ExtraA
 	return crit;
 }
 
-bool Mob::PL_DoHeroicDEXMultiAttack(Mob* other, int Hand, bool bRiposte, bool IsStrikethrough, bool IsFromSpell, ExtraAttackOptions *opts = nullptr, bool successful_attack) {
+bool Mob::PL_DoHeroicDEXMultiAttack(Mob* other, int Hand, bool bRiposte, bool IsStrikethrough, bool IsFromSpell, ExtraAttackOptions *opts, bool successful_attack) {
 	if ((IsClient() || (IsPet() && GetOwner() && IsPetOwnerClient()))) {
 		if (RuleR(Custom, Pyrelight_Heroic_MultiAttack) > 0) {
 			Mob* source = IsClient() ? this : GetOwner();
