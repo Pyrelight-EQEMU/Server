@@ -6078,7 +6078,8 @@ int64 Mob::PL_GetHeroicSTRDamage(int64 damage_value) {
 				case MAGICIAN:
 					modifier_pet += RuleR(Custom, Pyrelight_Heroic_MeleeBonus) * source->GetHeroicCHA() / 2;
 					break;
-				default:            
+				default:
+					break;         
 			}
 
 			if (IsPet()) {
