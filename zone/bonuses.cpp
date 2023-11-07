@@ -6231,7 +6231,7 @@ bool Mob::PL_DoHeroicDEXMultiAttack(Mob* other, int Hand, bool bRiposte, bool Is
 
 bool Mob::PL_DoHeroicDEXMultiRangedAttack(uint64 skill, Mob* other, bool successful_attack) {
 	bool extra_attack_occurred = false;
-	if ((IsClient() || (IsPet() && GetOwner() && IsPetOwnerClient()))) {
+	if ((IsClient())) {
 		if (RuleR(Custom, Pyrelight_Heroic_MultiAttack) > 0) {
 			Mob* source = IsClient() ? this : GetOwner();
 			int  effective_hDEX = source->GetHeroicDEX();			
@@ -6260,7 +6260,7 @@ bool Mob::PL_DoHeroicDEXMultiRangedAttack(uint64 skill, Mob* other, bool success
 						extra_attack_occurred = true;
 					}
 
-					successful_attack = (skill == EQ::skills::SkillThrowing) ? ThrowingAttack(other, true) : RangedAttack(other, true);
+					successful_attack = (skill == EQ::skills::SkillThrowing) ? CastToClient()->ThrowingAttack(other, true) : CastToClient()->RangedAttack(other, true);
 					effective_hDEX -= roll;
 				}
 			}
