@@ -6070,74 +6070,382 @@ float Mob::CheckHeroicBonusesDataBuckets(std::string bucket_name)
 }
 
 int64 Mob::PL_GetHeroicSTRDamage(int64 damage_value) {
-    if (!(IsClient() || (IsPet() && GetOwner() && IsPetOwnerClient()))) {
-        return 0;
+	int64  damage = 0;
+
+    if (IsClient() || (IsPet() && GetOwner() && IsPetOwnerClient())) {
+        if (RuleR(Custom, Pyrelight_Heroic_MeleeBonus) > 0) {
+			Mob*   source 		= IsClient() ? this : GetOwner();
+			double modifier 	= RuleR(Custom, Pyrelight_Heroic_MeleeBonus) * source->GetHeroicSTR();
+			double modifier_pet = IsPet() ? modifier : 0;			
+
+			switch(source->GetClass()) {
+				case PALADIN:
+				case SHADOWKNIGHT:
+				case RANGER:
+				case BEASTLORD:
+					modifier += RuleR(Custom, Pyrelight_Heroic_MeleeBonus) * source->GetHeroicCHA() / 2;
+					break;
+				case SHAMAN:
+				case DRUID:
+				case CLERIC:
+				case ENCHANTER:
+				case NECROMANCER:
+				case MAGICIAN:
+					modifier_pet += RuleR(Custom, Pyrelight_Heroic_MeleeBonus) * source->GetHeroicCHA() / 2;
+					break;
+				default:            
+			}
+
+			if (IsPet()) {
+				modifier_pet *= IsCharmed() ? RuleR(Custom, Pyrelight_Heroic_CharmPetMod) :
+											  RuleR(Custom, Pyrelight_Heroic_PetMod);
+				damage = static_cast<int64>(modifier_pet * damage_value);
+			} else {
+				damage = static_cast<int64>(modifier * damage_value);
+			}
+		}		
+	
     }
 
-    Mob* source = IsClient() ? this : GetOwner();
-    double modifier 	= RuleR(Custom, Pyrelight_HeroicSTR_MeleeBonus) * source->GetHeroicSTR();
-    double modifier_pet = IsPet() ? modifier : 0;
-
-    switch(source->GetClass()) {
-        case PALADIN:
-        case SHADOWKNIGHT:
-        case RANGER:
-        case BEASTLORD:
-            modifier += RuleR(Custom, Pyrelight_HeroicCHA_MeleeBonus) * source->GetHeroicCHA();
-            break;
-        case SHAMAN:
-        case DRUID:
-        case CLERIC:
-        case ENCHANTER:
-        case NECROMANCER:
-        case MAGICIAN:
-            modifier_pet += RuleR(Custom, Pyrelight_HeroicCHA_MeleeBonus) * source->GetHeroicCHA();
-            break;
-        default:            
-    }
-
-    if (IsPet()) {
-        modifier_pet *= IsCharmed() ? RuleR(Custom, Pyrelight_Heroic_CharmPetMod) :
-                                      RuleR(Custom, Pyrelight_Heroic_PetMod);
-        return static_cast<int64>(modifier_pet * damage_value);
-    } else {
-        return static_cast<int64>(modifier * damage_value);
-    }
+	return damage;
 }
 
 int64 Mob::PL_GetHeroicSTAReduction(int64 original_damage) {
-    if (!(IsClient() || (IsPet() && GetOwner() && IsPetOwnerClient()))) {
-        return 0;
-    }
+	int64 reduced_damage = 0;
+    if (IsClient() || (IsPet() && GetOwner() && IsPetOwnerClient())) {
+		if (RuleI(Custom, Pyrelight_Heroic_DamageReductionValue) > 0) {
+			Mob* source = IsClient() ? this : GetOwner();
+			reduced_damage = RuleI(Custom, Pyrelight_Heroic_DamageReductionValue) * source->GetHeroicSTA();
 
-	Mob* source = IsClient() ? this : GetOwner();
-	int64 reduced_damage = RuleI(Custom, Pyrelight_HeroicSTA_DamageReductionValue) * source->GetHeroicSTA();
+			if (IsPet()) {
+				reduced_damage *= IsCharmed() ? RuleR(Custom, Pyrelight_Heroic_CharmPetMod) :
+												RuleR(Custom, Pyrelight_Heroic_PetMod);
+			}
 
-	
-	return std::min(static_cast<int64>(PL_GetHeroicSTAReductionCap() * original_damage), reduced_damage);
+			reduced_damage = std::min(static_cast<int64>(PL_GetHeroicSTAReductionCap() * original_damage), reduced_damage);
+
+			LogDebug("HeroicSTA damage reduction: [{}]", reduced_damage);
+		}
+	}
+
+	return reduced_damage;
 }
 
 double Mob::PL_GetHeroicSTAReductionCap() {
-    if (!(IsClient() || (IsPet() && GetOwner() && IsPetOwnerClient()))) {
-        return 0.0;
-    }
+	double reduction_cap = 0.0;
 
-	double reduction_cap = RuleR(Custom, Pyrelight_HeroicSTA_BaseReductionCap);
-
-	switch(source->GetClass()) {
-		case PALADIN:
-		case SHADOWKNIGHT:
-			reduction_cap += 0.05; // Intrinsic Bonus for Knights
-			// Intentional fall-through
-		case SHAMAN:
-		case CLERIC:
-		case DRUID:
-			if (source->HasShieldEquipped()) {
-				reduction_cap += 0.10; // Intrinsic Bonus for using a shield
-			}			
-		default:
-			break;
+    if (IsClient() || (IsPet() && GetOwner() && IsPetOwnerClient())) {
+		reduction_cap = RuleR(Custom, Pyrelight_Heroic_BaseReductionCap);
+		switch(source->GetClass()) {
+			case PALADIN:
+			case SHADOWKNIGHT:
+				reduction_cap += 0.05; // Intrinsic Bonus for Knights
+				// Intentional fall-through
+			case SHAMAN:
+			case CLERIC:
+			case DRUID:
+				if (source->HasShieldEquipped()) {
+					reduction_cap += 0.10; // Intrinsic Bonus for using a shield
+				}			
+			default:
+				break;
+		}
+		reduction_cap = std::max(reduction_cap, 0.90);
+		LogDebug("HeroicSTA damage reduction cap: [{}]", reduction_cap);
 	}
 
-	return std::max(reduction_cap, 0.90);	
+	return reduction_cap;	
+}
+
+bool Mob::PL_DoHeroicAGIEvasionReroll(Mob *attacker, DamageHitInfo &hit, bool avoided = false) {
+    if ((IsClient() || (IsPet() && GetOwner() && IsPetOwnerClient()))) {
+		if (RuleR(Custom, Pyrelight_Heroic_EvasionReroll) > 0) {
+			Mob* source = IsClient() ? this : GetOwner();
+			int  effective_hAGI = source->GetHeroicAGI();
+
+			if (IsPet()) {
+				effective_hAGI *= IsCharmed() ? RuleR(Custom, Pyrelight_Heroic_CharmPetMod) :
+												RuleR(Custom, Pyrelight_Heroic_PetMod);
+			}
+
+			while (!avoided && effective_hAGI > 0) {
+				int roll = zone->random.Roll0(100);
+				int inner_effective_hAGI = effective_hAGI + (source->GetHeroicCHA() * RuleR(Custom, Pyrelight_Heroic_EvasionReroll));
+				if (roll <= inner_effective_hAGI) {
+					avoided = AvoidDamage(attacker, hit);
+					effective_hAGI -= roll;
+				}
+			}
+		}        
+    }
+
+    return avoided;
+}
+
+bool Mob::PL_DoHeroicDEXCriticalReroll(Mob *defender, DamageHitInfo &hit, ExtraAttackOptions *opts, int spell_crit_chance = 0, bool crit = false) {
+	if ((IsClient() || (IsPet() && GetOwner() && IsPetOwnerClient()))) {
+		if (RuleR(Custom, Pyrelight_Heroic_CriticalReroll) > 0) {
+			Mob* source = IsClient() ? this : GetOwner();
+			int  effective_hDEX = source->GetHeroicDEX();
+
+			if (IsPet()) {
+				effective_hDEX *= IsCharmed() ? RuleR(Custom, Pyrelight_Heroic_CharmPetMod) :
+												RuleR(Custom, Pyrelight_Heroic_PetMod);
+			}
+
+			while(!crit && effective_hDEX > 0) {
+				int roll = zone->random.Roll0(100);
+				int inner_effective_hDEX = effective_hDEX;
+				if (roll <= inner_effective_hDEX) {
+					crit = spell_crit_chance ? zone->random.Roll(spell_crit_chance) : TryCriticalHit(defender, hit, opts);
+					effective_hDEX -= roll;
+				}
+			}
+		}
+	}
+
+	return crit;
+}
+
+bool Mob::PL_DoHeroicDEXMultiAttack(Mob* other, int Hand, bool bRiposte, bool IsStrikethrough, bool IsFromSpell, ExtraAttackOptions *opts = nullptr, bool successful_attack = true) {
+	if ((IsClient() || (IsPet() && GetOwner() && IsPetOwnerClient()))) {
+		if (RuleR(Custom, Pyrelight_Heroic_MultiAttack) > 0) {
+			Mob* source = IsClient() ? this : GetOwner();
+			int  effective_hDEX = source->GetHeroicDEX();			
+			bool extra_attack_occurred = false;
+
+			if (IsPet()) {
+				effective_hDEX *= IsCharmed() ? RuleR(Custom, Pyrelight_Heroic_CharmPetMod) :
+												RuleR(Custom, Pyrelight_Heroic_PetMod);
+			}
+
+			while (successful_attack && effective_hDEX > 0) {
+				int roll = zone->random.Roll0(100);
+				int inner_effective_hDEX = effective_hDEX;
+				if (roll <= inner_effective_hDEX) {
+					if (extra_attack_occurred) {
+						if (source->IsClient()) {
+							source->MessageString(Chat::NPCFlurry, YOU_FLURRY);
+						}
+						entity_list.MessageCloseString(source, true, 200, source->IsPet()? Chat::PetFlurry : Chat::NPCFlurry, NPC_FLURRY, source->GetCleanName(), source->GetTarget()->GetCleanName());					
+					} else {
+						extra_attack_occurred = true;
+					}
+
+					successful_attack = Attack(target, hand, false, false, IsFromSpell, opts);
+					effective_hDEX -= roll;
+				}
+			}
+			successful_attack = extra_attack_occurred;
+		}
+	}
+
+	return successful_attack;
+}
+
+bool Mob::PL_DoHeroicDEXMultiRangedAttack(uint64 skill, Mob* other) {
+	bool extra_attack_occurred = false;
+	if ((IsClient() || (IsPet() && GetOwner() && IsPetOwnerClient()))) {
+		if (RuleR(Custom, Pyrelight_Heroic_MultiAttack) > 0) {
+			Mob* source = IsClient() ? this : GetOwner();
+			int  effective_hDEX = source->GetHeroicDEX();			
+
+			if (IsPet()) {
+				effective_hDEX *= IsCharmed() ? RuleR(Custom, Pyrelight_Heroic_CharmPetMod) :
+												RuleR(Custom, Pyrelight_Heroic_PetMod);
+			}
+
+			while (successful_attack && effective_hDEX > 0) {
+				int roll = zone->random.Roll0(100);
+				int inner_effective_hDEX = effective_hDEX;
+				if (roll <= inner_effective_hDEX) {
+					if (extra_attack_occurred) {
+						if (source->IsClient()) {
+							source->MessageString(Chat::NPCFlurry, YOU_FLURRY);
+						}
+						entity_list.MessageCloseString(source, 
+						                               true, 
+													   200, 
+													   source->IsPet()? Chat::PetFlurry : Chat::NPCFlurry, 
+													   NPC_FLURRY, 
+													   source->GetCleanName(), 
+													   source->GetTarget()->GetCleanName());					
+					} else {
+						extra_attack_occurred = true;
+					}
+
+					successful_attack = (skill == EQ::skills::SkillThrowing) ? ThrowingAttack(other, true) : RangedAttack(other, true);
+					effective_hDEX -= roll;
+				}
+			}
+		}
+	}
+
+	return extra_attack_occurred;
+}
+
+int64 Mob::PL_GetHeroicSpellDamage(int64 damage_value) {
+	int64  damage = 0;
+    if (IsClient() || (IsPet() && GetOwner() && IsPetOwnerClient())) {
+        if (RuleR(Custom, Pyrelight_Heroic_SpellDamage) > 0) {
+			Mob*   source 		= IsClient() ? this : GetOwner();
+			double modifier 	= 0;
+			int64  heroic_wis   = source->GetHeroicWIS();
+			int64  heroic_int   = source->GetHeroicINT();
+			int64  heroic_cha   = source->GetHeroicCHA();
+
+			switch(source->GetClass()) {
+				case PALADIN:
+				case RANGER:
+				case BEASTLORD:
+					modifier += RuleR(Custom, Pyrelight_Heroic_SpellDamage) * heroic_wis / 2;
+					break;
+				case SHAMAN:
+				case DRUID:
+				case CLERIC:
+					modifier += RuleR(Custom, Pyrelight_Heroic_SpellDamage) * heroic_wis;
+					modifier += RuleR(Custom, Pyrelight_Heroic_SpellDamage) * heroic_cha / 2;
+					break;
+				case SHADOWKNIGHT:
+					modifier += RuleR(Custom, Pyrelight_Heroic_SpellDamage) * heroic_int / 2;
+					break;
+				case ENCHANTER:
+				case NECROMANCER:
+				case MAGICIAN:
+					modifier += RuleR(Custom, Pyrelight_Heroic_SpellDamage) * heroic_int;
+					modifier += RuleR(Custom, Pyrelight_Heroic_SpellDamage) * heroic_cha / 2;
+					break;
+				default:
+					break;       
+			}
+
+			if (IsPet()) {
+				modifier *= IsCharmed() ? RuleR(Custom, Pyrelight_Heroic_CharmPetMod) :
+										  RuleR(Custom, Pyrelight_Heroic_PetMod);
+			}
+
+			damage = static_cast<int64>(floor(damage_value * modifier));
+		}
+    }
+
+	return damage;
+}
+
+int64 Mob::PL_GetHeroicDSBonus(int64 base_value) {
+	int64  damage = 0;
+    if (IsClient() || (IsPet() && GetOwner() && IsPetOwnerClient())) {
+        if (RuleR(Custom, Pyrelight_Heroic_DSBonus) > 0) {
+			Mob*   source 		= IsClient() ? this : GetOwner();
+			double modifier 	= 0;
+			int64  heroic_wis   = source->GetHeroicWIS();
+			int64  heroic_int   = source->GetHeroicINT();
+
+			switch(source->GetClass()) {
+				case PALADIN:
+				case RANGER:
+				case BEASTLORD:
+				case SHAMAN:
+				case DRUID:
+				case CLERIC:
+					modifier += RuleR(Custom, Pyrelight_Heroic_DSBonus) * heroic_wis;
+					break;
+				case SHADOWKNIGHT:
+				case ENCHANTER:
+				case NECROMANCER:
+				case MAGICIAN:
+					modifier += RuleR(Custom, Pyrelight_Heroic_DSBonus) * heroic_int;
+					break;
+				default:
+					break;       
+			}
+
+			if (IsPet()) {
+				modifier *= IsCharmed() ? RuleR(Custom, Pyrelight_Heroic_CharmPetMod) :
+										  RuleR(Custom, Pyrelight_Heroic_PetMod);
+			}
+
+			damage = static_cast<int64>(floor(base_value * modifier));
+		}
+    }
+
+	return damage;
+}
+
+int64 Mob::PL_GetHeroicDurationBonus(int64 base_value) {
+	int64 value = 0;
+    if (IsClient() || (IsPet() && GetOwner() && IsPetOwnerClient())) {
+        if (RuleR(Custom, Pyrelight_Heroic_DurationBonus) > 0) {
+			Mob*   source 		= IsClient() ? this : GetOwner();
+			double modifier 	= 0;
+			int64  heroic_wis   = source->GetHeroicWIS();
+			int64  heroic_int   = source->GetHeroicINT();
+
+			switch(source->GetClass()) {
+				case PALADIN:
+				case RANGER:
+				case BEASTLORD:
+				case SHAMAN:
+				case DRUID:
+				case CLERIC:
+					modifier += RuleR(Custom, Pyrelight_Heroic_DSBonus) * heroic_int;
+					break;
+				case SHADOWKNIGHT:
+				case ENCHANTER:
+				case NECROMANCER:
+				case MAGICIAN:
+					modifier += RuleR(Custom, Pyrelight_Heroic_DSBonus) * heroic_wis;
+					break;
+				default:
+					break;       
+			}
+
+			if (IsPet()) {
+				modifier *= IsCharmed() ? RuleR(Custom, Pyrelight_Heroic_CharmPetMod) :
+										  RuleR(Custom, Pyrelight_Heroic_PetMod);
+			}
+
+			value = static_cast<int64>(floor(base_value * modifier));
+		}
+    }
+
+	return value;
+}
+
+bool Mob::PL_DoHeroicChannelReroll(float channelchance, bool channel = false) {
+	if (IsClient()) {
+		if (RuleR(Custom, Pyrelight_Heroic_ChannelReroll) > 0) {
+			Mob* source = IsClient() ? this : GetOwner();
+			int  effective_hSTA = source->GetHeroicSTA();
+
+			while(!channel && effective_hSTA > 0) {
+				int roll = zone->random.Roll0(100);
+				int inner_effective_hSTA = effective_hSTA;
+				if (roll <= inner_effective_hSTA) {
+					channel = zone->random.Roll(channelchance);
+					effective_hSTA -= roll;
+				}
+			}
+		}
+	}
+
+	return channel;
+}
+
+int Mob::PL_HeroicRuneBonus(int effect_value) {
+    if (IsClient() || (IsPet() && GetOwner() && IsPetOwnerClient())) {
+        if (RuleR(Custom, Pyrelight_Heroic_RuneBonus) > 0) {
+			Mob*   source 			= IsClient() ? this : GetOwner();
+			int64  effective_hCHA   = source->GetHeroicCHA();
+			double modifier 		= effective_hCHA * RuleR(Character, Pyrelight_Heroic_RuneBonus) / 100;			
+
+			if (IsPet()) {
+				modifier *= IsCharmed() ? RuleR(Custom, Pyrelight_Heroic_CharmPetMod) :
+										  RuleR(Custom, Pyrelight_Heroic_PetMod);
+			}
+
+			value = static_cast<int>(floor(base_value * modifier));
+		}
+    }
+
+	return value;
 }

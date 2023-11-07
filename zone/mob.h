@@ -1447,8 +1447,17 @@ public:
 	void CalcHeroicBonuses(StatBonuses* newbon);
 
 	// Pyrelight Custom Code
-	int64 PL_GetHeroicSTRDamage(int64 damage_value);
-	int64 PL_GetHeroicSTAReduction(int64 original_damage);
+	// Heroic Bonus Effects
+	int64  PL_GetHeroicSTRDamage(int64 damage_value);
+	int64  PL_GetHeroicSTAReduction(int64 original_damage);
+	bool   PL_DoHeroicAGIEvasionReroll(Mob *attacker, DamageHitInfo &hit, bool avoided = false);
+	bool   PL_DoHeroicDEXCriticalReroll(Mob *defender, DamageHitInfo &hit, ExtraAttackOptions *opts, int spell_crit_chance = 0, bool crit = false)
+	bool   PL_DoHeroicDEXMultiAttack(Mob* other, int Hand, bool bRiposte, bool IsStrikethrough, bool IsFromSpell, ExtraAttackOptions *opts = nullptr, bool successful_attack = true);
+	bool   PL_DoHeroicDEXMultiRangedAttack(uint64 skill, Mob* other);
+	int64  PL_GetHeroicSpellDamage(int64 damage_value);
+	int64  PL_GetHeroicDSBonus(int64 base_value);
+	int64  PL_GetHeroicDurationBonus(int64 base_value);
+	bool   PL_DoHeroicChannelReroll(float channelchance, bool channel);
 	double PL_GetHeroicSTAReductionCap();
 
 protected:

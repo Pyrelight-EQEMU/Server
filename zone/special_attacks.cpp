@@ -351,24 +351,8 @@ void Client::OPCombatAbility(const CombatAbility_Struct *ca_atk)
 
 				// Pyrelight Custom Code
 				// Multi-Attack via Heroic DEX
-				if (IsClient() && GetHeroicDEX() > 0)  {
-					int effective_hDEX = GetHeroicDEX() - zone->random.Int(1,500);
-					int attack_count = 0;		
-					while (effective_hDEX > 0 && successful_hit) {
-						effective_hDEX -= zone->random.Int(100,500);	
-						successful_hit = successful_hit || (ca_atk->m_skill == EQ::skills::SkillArchery) ? RangedAttack(GetTarget(), true) : ThrowingAttack(GetTarget(), true);
-						attack_count++;
-					}	
-
-					if (attack_count) {			
-						LoadAccountFlags();
-						if (GetAccountFlag("filter_hDEX") != "off") {
-							Message(Chat::NPCFlurry, 
-									"Your Heroic Dexterity allows you to unleash a flurry of %u additional attack%s.", 
-									attack_count, 
-									(attack_count > 1 ? "s" : ""));
-						}		
-					}				
+				if (successful_hit && RuleR(Custom, Pyrelight_HeroicDEX_MultiAttack) > 0) {
+					PL_DoHeroicDEXMultiRangedAttack(GetTarget());
 				}
 			
 			} else {

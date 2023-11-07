@@ -1445,32 +1445,9 @@ void Mob::DoAttack(Mob *other, DamageHitInfo &hit, ExtraAttackOptions *opts, boo
 	}
 
 	if (other->CheckHitChance(this, hit)) {	
-		bool avoided = other->AvoidDamage(this, hit);						
-		// Pyrelight Custom Code - Repeat Evasion checks based on defender hAGI
-		if (RuleR(Character, Pyrelight_hAGI_EvasionReroll) > 0) {
-			if (other->IsClient()) {
-				other->CastToClient()->LoadAccountFlags();
-			} else if (other->GetOwner() && other->GetOwner()->IsClient()) {
-				other->GetOwner()->CastToClient()->LoadAccountFlags();
-			}
-			int effective_hAGI = 0;
-			effective_hAGI = (other->IsPetOwnerClient() && other->GetOwner()) ? std::ceil(RuleR(Character, Pyrelight_HeroicPetMod) * other->GetOwner()->GetHeroicAGI()) : other->GetHeroicAGI();	
-			while (!avoided && effective_hAGI > 0) {
-				auto random = zone->random.Int(1,100);
-				if (random <= (effective_hAGI * RuleR(Character, Pyrelight_hAGI_EvasionReroll))) {
-					avoided = other->AvoidDamage(this, hit);
-					if (avoided) {			
-						if (other->IsClient() && other->CastToClient()->GetAccountFlag("filter_hAGI") != "off") {
-							other->Message(Chat::OtherMissYou, "Your Heroic Agility allowed you to evade the attack!");
-						} else if (other->GetOwner() && other->GetOwner()->IsClient() && other->GetOwner()->CastToClient()->GetAccountFlag("filter_hAGI") != "off") {
-							if (other->GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
-								other->GetOwner()->Message(Chat::MyPet, "Your Heroic Agility allowed your pet to evade the attack!");
-							}					
-						}		
-					}		
-				}		
-				effective_hAGI -= random * RuleR(Character, Pyrelight_HeroicRerollDecayRate);		
-			}
+		bool avoided = other->AvoidDamage(this, hit);
+		if (RuleR(Custom, Pyrelight_HeroicAGI_EvasionReroll) > 0 && !avoided) {
+			avoided = other->PL_DoHeroicAGIEvasionReroll(this, hit);
 		}
 
 		// check to see if we hit..	
@@ -1494,11 +1471,26 @@ void Mob::DoAttack(Mob *other, DamageHitInfo &hit, ExtraAttackOptions *opts, boo
 				if (zone->random.Roll(12)) {
 					int stun_resist2 = other->spellbonuses.FrontalStunResist + other->itembonuses.FrontalStunResist + other->aabonuses.FrontalStunResist;
 					int stun_resist = other->spellbonuses.StunResist + other->itembonuses.StunResist + other->aabonuses.StunResist;
+
+					// Pyrelight Custom Code
+					// Hook for Channeling to Resist Stuns
+
+					int channelchance = 30 + other->GetSkill(EQ::skills::SkillChanneling) / 400.0f * 100;
+
 					if (zone->random.Roll(stun_resist2)) {
 						other->MessageString(Chat::Stun, AVOID_STUNNING_BLOW);
 					} else if (zone->random.Roll(stun_resist)) {
 						other->MessageString(Chat::Stun, SHAKE_OFF_STUN);
-					} else {
+					} else if (zone->random.Roll(channelchance) || PL_DoHeroicChannelReroll(channelchance)) {
+						other->MessageString(Chat::Spells, REGAIN_AND_CONTINUE);
+						entity_list.MessageCloseString(
+							other,
+							true,
+							RuleI(Range, SpellMessages),
+							Chat::Spells,
+							OTHER_REGAIN_CAST,
+							GetCleanName());
+					} else
 						other->Stun(3000); // yuck -- 3 seconds
 					}
 				}
@@ -3228,28 +3220,10 @@ void Mob::DamageShield(Mob* attacker, bool spell_ds) {
 				effIDX = GetSpellEffectIndex(spellid, SE_ReverseDS);
 			}
 			if (effIDX > -1) {
-				amount = spells[spellid].base_value[effIDX];
-			}
-			if (amount != 0) {
-				Client* client = GetOwnerOrSelf()->CastToClient();
-				Client* caster = entity_list.GetClientByName(buffs[buffs_i].caster_name);				
-
-				if (caster && client && caster->IsClient() && client->IsClient()) {
-					if (caster == client || (client->GetGroup() && client->GetGroup()->IsGroupMember(caster))) {
-						if (caster->FindSpellBookSlotBySpellID(spellid) >= 0 || caster->GetInv().IsClickEffectEquipped(spellid)) {
-							int effective_hWIS = caster->GetHeroicWIS();
-
-							if (RuleB(Character, Pyrelight_hStat_Randomize)) {
-								effective_hWIS *= zone->random.Real(1 - RuleR(Character, Pyrelight_hStat_RandomizationFactor), 1 + RuleR(Character, Pyrelight_hStat_RandomizationFactor));
-							}
-
-							float bonus_ratio = effective_hWIS * RuleR(Character, Pyrelight_hINT_SpellDamage) / 100;
-							int bonus = round(amount * bonus_ratio);						
-							DS += bonus;
-
-							LogDebug("Adding bonus [{}]  for buff [{}] to DS due to caster's hWIS.", bonus, spells[spellid].name);						
-						}
-					}
+				amount = spells[spellid].base_value[effIDX];			
+				if (amount != 0) {
+					Client* caster = entity_list.GetClientByName(buffs[buffs_i].caster_name);
+					DS += caster->PL_GetHeroicDSBonus(DS);	
 				}
 			}
 		}
@@ -4701,8 +4675,7 @@ void Mob::TryDefensiveProc(Mob *on, uint16 hand) {
 		}
 	}
 }
-// Pyrelight Custom Code
-// Modified so that it can be used to trigger everything for ungeneralized attacks if weapon_g is null;
+
 void Mob::_TryCombatProcs(const EQ::ItemInstance* weapon_g, Mob *on, uint16 hand, const EQ::ItemData* weapon_data) {
 
 	if (!on) {
@@ -4711,7 +4684,7 @@ void Mob::_TryCombatProcs(const EQ::ItemInstance* weapon_g, Mob *on, uint16 hand
 		return;
 	}
 
-	if (!IsAttackAllowed(on) && !IsClient()) {
+	if (!IsAttackAllowed(on)) {
 		LogCombat("Preventing procing off of unattackable things");
 		return;
 	}
@@ -4728,48 +4701,22 @@ void Mob::_TryCombatProcs(const EQ::ItemInstance* weapon_g, Mob *on, uint16 hand
 		return;
 	}
 
-	// Only do generalized Procs for Clients
-	if (IsClient()) {
-		// Do Epic/Power Source procs
-		EQ::ItemInstance *epic = GetInv().GetItem(EQ::invslot::slotPowerSource);
-		if (epic && on && !on->HasDied()) {
-			TryWeaponProc(epic, epic->GetItem(), on);
-		}
+	if (!weapon_g) {
+		TrySpellProc(nullptr, (const EQ::ItemData*)nullptr, on);
+		return;
 	}
 
-	if (!weapon_g || hand == EQ::invslot::slotRange) {
+	if (!weapon_g->IsClassCommon()) {
 		TrySpellProc(nullptr, (const EQ::ItemData*)nullptr, on);
-
-		EQ::ItemInstance *primary = GetInv().GetItem(EQ::invslot::slotPrimary);
-		if (primary && on && !on->HasDied()) {
-			TryWeaponProc(primary, primary->GetItem(), on);
-		}
-
-		EQ::ItemInstance *secondary = GetInv().GetItem(EQ::invslot::slotSecondary);
-		if (secondary && on && !on->HasDied()) {
-			TryWeaponProc(secondary, secondary->GetItem(), on);
-		}
-
-		// Don't do ranged proc twice
-		EQ::ItemInstance *range = GetInv().GetItem(EQ::invslot::slotRange);
-		if (range && on && !on->HasDied()) {
-			TryWeaponProc(range, range->GetItem(), on);
-		}		
-
 		return;
-	} else {
+	}
 
-		if (!weapon_g->IsClassCommon()) {
-			TrySpellProc(nullptr, (const EQ::ItemData*)nullptr, on);
-			return;
-		}
+	// Innate + aug procs from weapons
+	// TODO: powersource procs -- powersource procs are on invis augs, so shouldn't need anything extra
+	TryWeaponProc(weapon_g, weapon_g->GetItem(), on, hand);
+	// Procs from Buffs and AA both melee and range
+	TrySpellProc(weapon_g, weapon_g->GetItem(), on, hand);
 
-		// Innate + aug procs from weapons
-		// TODO: powersource procs -- powersource procs are on invis augs, so shouldn't need anything extra
-		TryWeaponProc(weapon_g, weapon_g->GetItem(), on, hand);
-		// Procs from Buffs and AA both melee and range
-		TrySpellProc(weapon_g, weapon_g->GetItem(), on, hand);
-	}	
 	return;
 }
 
@@ -5171,6 +5118,17 @@ bool Mob::TryCriticalHit(Mob *defender, DamageHitInfo &hit, ExtraAttackOptions *
 		innate_crit = true;
 	else if (GetClass() == ROGUE && GetLevel() >= 12 && hit.skill == EQ::skills::SkillThrowing)
 		innate_crit = true;
+
+	if ((GetClass() == PALDIN || GetClass() == SHADOWKNIGHT || GetClass() == BEASTLORD || GetClass() == RANGER) && GetLevel() >= 12) {
+		// Pyrelight Custom Code
+		// Crit Chance based on HeroicCHA
+		if ((IsClient() || (IsPet() && GetOwner() && IsPetOwnerClient()))) {
+			if (RuleR(Custom,Pyrelight_HeroicCHA_CritChance) > 0) {
+				Mob* source = IsClient() ? this : GetOwner();
+				crit_chance += min(static_cast<int64>(floor(source->GetHeroicCHA() * RuleR(Custom,Pyrelight_HeroicCHA_CritChance) / 10)), 25);
+			}
+		}
+	}
 
 	// we have a chance to crit!
 	if (innate_crit || crit_chance) {
@@ -5983,7 +5941,7 @@ int32 Mob::RuneAbsorb(int64 damage, uint16 type)
 				}
 
 				if (original_damage > 0 && damage < original_damage) {
-					Message(Chat::Spells, "Your rune has absorbed %i points of damage (%i points of protection remain)!", damage < 1 ? original_damage : original_damage - damage, melee_rune_left);
+					Message(Chat::Spells, "Your rune has absorbed %i points of damage!", damage < 1 ? original_damage : original_damage - damage, melee_rune_left);
 				}
 			}
 		}
@@ -6023,7 +5981,7 @@ int32 Mob::RuneAbsorb(int64 damage, uint16 type)
 				}
 
 				if (original_damage > 0 && damage < original_damage) {
-					Message(Chat::Spells, "Your spell rune has absorbed %i points of damage (%i points of protection remain)!", damage < 1 ? original_damage : original_damage - damage, magic_rune_left);
+					Message(Chat::Spells, "Your spell rune has absorbed %i points of damage!", damage < 1 ? original_damage : original_damage - damage, magic_rune_left);
 				}
 			}			
 		}
@@ -6253,8 +6211,7 @@ void Mob::CommonOutgoingHitSuccess(Mob* defender, DamageHitInfo &hit, ExtraAttac
 
 	// Pyrelight Custom Code - Heroic Strength
 	if (RuleR(Character, Pyrelight_hSTR_DmgBonus) > 0) {
-			hit.damage_done =+ PL_GetHeroicSTRDamage(hit.damage_done);
-		}
+		hit.damage_done =+ PL_GetHeroicSTRDamage(hit.damage_done);		
 	}
 
 	// Pyrelight Custom Code - Heroic Stamina
@@ -6270,35 +6227,13 @@ void Mob::CommonOutgoingHitSuccess(Mob* defender, DamageHitInfo &hit, ExtraAttac
 			hit.original_damage = hit.damage_done;
 			hit.damage_done = damage_value;
 		}
-	}
+	}	
 
 	bool crit = TryCriticalHit(defender, hit, opts);
-
 	// Pyrelight Custom Code
-	if (RuleR(Character, Pyrelight_hDEX_CriticalReroll) > 0) {
-		if (IsClient()) {
-			CastToClient()->LoadAccountFlags();
-		} else if (GetOwner() && GetOwner()->IsClient()) {
-			GetOwner()->CastToClient()->LoadAccountFlags();
-		}
-		int effective_hDEX = 0;
-		effective_hDEX = (IsPetOwnerClient() && GetOwner()) ? std::ceil(RuleR(Character, Pyrelight_HeroicPetMod) * GetOwner()->GetHeroicDEX()) : GetHeroicDEX();	
-		while (effective_hDEX > 0 && !crit) {	
-			auto random = zone->random.Int(1,100);
-			if (random <= (effective_hDEX * RuleR(Character, Pyrelight_hDEX_CriticalReroll))) {
-				crit = TryCriticalHit(defender, hit, opts);				
-				if (crit) {
-					if (IsClient() && CastToClient()->GetAccountFlag("filter_hDEX") != "off") {
-						Message(Chat::MeleeCrit, "Your Heroic Dexterity allows you to execute a critical hit!");
-					} else if (GetOwner() && GetOwner()->IsClient() && 
-							   GetOwner()->CastToClient()->GetAccountFlag("filter_hDEX") != "off" && 
-							   GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
-						GetOwner()->Message(Chat::PetCritical, "Your Heroic Dexterity allows your pet to execute a critical hit!");
-					}
-				}
-			}	
-			effective_hDEX -= random * RuleR(Character, Pyrelight_HeroicRerollDecayRate);	
-		}
+	// Heroic DEX Rerolls critical attempts
+	if (!crit && RuleR(Custom, Pyrelight_HeroicDEX_CriticalReroll) > 0) {
+		crit = PL_DoHeroicDEXCriticalReroll(defender, hit, opts);
 	}
 
 	CheckNumHitsRemaining(NumHit::OutgoingHitSuccess);
@@ -6603,24 +6538,8 @@ void Client::DoAttackRounds(Mob *target, int hand, bool IsFromSpell)
 
 	// Pyrelight Custom Code
 	// Multi-Attack via Heroic DEX
-	if (IsClient() && GetHeroicDEX() > 0 && successful_hit)  {
-		int effective_hDEX = GetHeroicDEX() - zone->random.Int(1,500);
-		int attack_count = 0;		
-		while (effective_hDEX > 0 && successful_hit) {			
-			successful_hit = Attack(target, hand, false, false, IsFromSpell);
-			attack_count++;
-			effective_hDEX -= zone->random.Int(100,500);									
-		}
-
-		if (attack_count) {
-			LoadAccountFlags();
-			if (GetAccountFlag("filter_hDEX") != "off") {
-				Message(Chat::NPCFlurry, 
-						"Your Heroic Dexterity allows you to unleash a flurry of %u additional attack%s.", 
-						attack_count, 
-						(attack_count > 1 ? "s" : ""));
-			}		
-		}
+	if (successful_hit && RuleR(Custom, Pyrelight_HeroicDEX_MultiAttack) > 0) {
+		PL_DoHeroicDEXMultiAttack(target, hand, false, false, IsFromSpell);
 	}
 }
 
@@ -6710,27 +6629,9 @@ void Mob::DoMainHandAttackRounds(Mob *target, ExtraAttackOptions *opts)
 	}
 
 	// Pyrelight Custom Code
-	// Multi-Attack via Heroic DEX (Pets)
-	if (IsPetOwnerClient() && GetOwner() && GetOwner()->GetHeroicDEX() > 0 && successful_hit)  {
-		LogDebug("Checking Pet hDex Flurry... [{}]", GetOwner()->GetHeroicDEX());
-		int effective_hDEX = GetOwner()->GetHeroicDEX() - zone->random.Int(1,500);
-		int attack_count = 0;		
-		while (effective_hDEX > 0 && successful_hit) {			
-			successful_hit = Attack(target, EQ::invslot::slotPrimary, false, false, false, opts);
-			attack_count++;
-			effective_hDEX -= zone->random.Int(1100,500);									
-		}
-
-		if (attack_count) {			
-			GetOwner()->CastToClient()->LoadAccountFlags();
-			if (GetOwner()->CastToClient()->GetAccountFlag("filter_hDEX") != "off") {
-				GetOwner()->Message(Chat::NPCFlurry, 
-									"Your Heroic Dexterity allows your pet to unleash a flurry of %u additional attack%s.", 
-									attack_count, 
-									(attack_count > 1 ? "s" : ""));
-
-			}		
-		}
+	// Multi-Attack via Heroic DEX
+	if (successful_hit && RuleR(Custom, Pyrelight_HeroicDEX_MultiAttack) > 0) {
+		PL_DoHeroicDEXMultiAttack(target, EQ::invslot::slotPrimary, false, false, false, opts);
 	}
 }
 
@@ -6756,28 +6657,11 @@ void Mob::DoOffHandAttackRounds(Mob *target, ExtraAttackOptions *opts)
 			}
 
 			// Pyrelight Custom Code
-			// Multi-Attack via Heroic DEX (Pets)
-			if (IsPetOwnerClient() && GetOwner() && GetOwner()->GetHeroicDEX() > 0 && successful_hit)  {
-				LogDebug("Checking Pet hDex Flurry... [{}]", GetOwner()->GetHeroicDEX());
-				int effective_hDEX = GetOwner()->GetHeroicDEX() - zone->random.Int(1,500);
-				int attack_count = 0;		
-				while (effective_hDEX > 0 && successful_hit) {			
-					successful_hit = Attack(target, EQ::invslot::slotSecondary, false, false, false, opts);
-					attack_count++;
-					effective_hDEX -= zone->random.Int(100,500);									
-				}
-
-				if (attack_count) {			
-					GetOwner()->CastToClient()->LoadAccountFlags();
-					if (GetOwner()->CastToClient()->GetAccountFlag("filter_hDEX") != "off") {
-						GetOwner()->Message(Chat::NPCFlurry, 
-											"Your Heroic Dexterity allows your pet to unleash a flurry of %u additional attack%s.", 
-											attack_count, 
-											(attack_count > 1 ? "s" : ""));
-					}		
-				}
+			// Multi-Attack via Heroic DEX
+			if (successful_hit && RuleR(Custom, Pyrelight_HeroicDEX_MultiAttack) > 0) {
+				PL_DoHeroicDEXMultiAttack(target, EQ::invslot::slotSecondary, false, false, false, opts);
 			}
-		}
+		}		
 	}
 }
 

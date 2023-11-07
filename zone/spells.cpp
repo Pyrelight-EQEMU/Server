@@ -1425,11 +1425,14 @@ void Mob::CastedSpellFinished(uint16 spell_id, uint32 target_id, CastingSlot slo
 				channelchance = 30 + GetSkill(EQ::skills::SkillChanneling) / 400.0f * 100;
 				channelchance -= attacked_count * 2;
 				channelchance += channelchance * channelbonuses / 100.0f;
+
+				//Pyrelight Custom Code - Minimum 25% channel chance from combat.
+				channelchance = max(channelchance, 25.0f);
 			} else {
 				// NPCs are just hard to interrupt, otherwise they get pwned
 				channelchance = 85;
 				channelchance -= attacked_count;
-			}
+			}			
 
 			// as you get farther from your casting location,
 			// it gets squarely harder to regain concentration
@@ -1454,11 +1457,19 @@ void Mob::CastedSpellFinished(uint16 spell_id, uint32 target_id, CastingSlot slo
 
 			LogSpells("Checking Interruption: spell x: [{}] spell y: [{}] cur x: [{}] cur y: [{}] channelchance [{}] channeling skill [{}]\n", GetSpellX(), GetSpellY(), GetX(), GetY(), channelchance, GetSkill(EQ::skills::SkillChanneling));
 
-			if(!spells[spell_id].uninterruptable && zone->random.Real(0, 100) > channelchance) {
-				LogSpells("Casting of [{}] canceled: interrupted", spell_id);
-				InterruptSpell();
-				return;
+			if(!spells[spell_id].uninterruptable) {
+				bool channel = zone->random.Roll(channelchance);
+				if (!channel && RuleR(Custom, Pyrelight_Heroic_ChannelReroll) > 0) {
+					channel = PL_DoHeroicChannelReroll(channelchance);
+				}
+				if (!channel) {				
+					LogSpells("Casting of [{}] canceled: interrupted", spell_id);
+					InterruptSpell();
+					return;
+				}
 			}
+
+
 			// if we got here, we regained concentration
 			regain_conc = true;
 			MessageString(Chat::Spells, REGAIN_AND_CONTINUE);
@@ -2830,75 +2841,17 @@ int Mob::CalcBuffDuration(Mob *caster, Mob *target, uint16 spell_id, int32 caste
 		IsEffectInSpell(spell_id, SE_Illusion)
 	) {
 		res = 10000; // ~16h override
-	} else if (inform_client) {
+	}
 
-		// Pyrelight Custom Code
-		// Increase Detrimental Durations based on Heroic Intelligence
-		if (RuleR(Character, Pyrelight_hINT_DetDurIncrease) > 0 && IsDetrimentalSpell(spell_id) && (caster->IsClient() || caster->IsPetOwnerClient())) {
-			int effective_hINT = 0;
-			effective_hINT = caster->GetOwner() ? std::ceil(RuleR(Character, Pyrelight_HeroicPetMod) * caster->GetOwner()->GetHeroicINT()) : caster->GetHeroicINT();
-			if (effective_hINT) {
-				int res_add = round(res * (RuleR(Character, Pyrelight_hINT_DetDurIncrease) * effective_hINT / 100));
-				int increase = round(((static_cast<float>(res_add) / res)) * 100);
-
-				LogDebug("res_add: [{}], increase: [{}]", res_add, increase);
-
-				Client* msgTarget = (caster->GetOwner() && caster->GetOwner()->IsClient()) ? caster->GetOwner()->CastToClient() :caster->CastToClient();
-
-				if (res_add > 0 && msgTarget && msgTarget->IsClient()) {
-					msgTarget->LoadAccountFlags();		
-				
-					if (effective_hINT > 0) {
-						if (msgTarget->GetAccountFlag("filter_hINT") != "off") {
-							if (caster->IsPet() && !caster->IsClient() && msgTarget->GetAccountFlag("filter_hPets") != "off") {
-								msgTarget->Message(Chat::Spells, "Your Heroic Intelligence has increased the duration of your pet's spell effect by %i%% (%i ticks)!", increase, res_add);
-							} else if (caster->IsClient()) {
-								msgTarget->Message(Chat::Spells, "Your Heroic Intelligence has increased the duration of your spell effect by %i%% (%i ticks)!", increase, res_add);
-							}
-						}
-					}
-
-				res += res_add;
-				}
-			}
-		}
-
-		// Pyrelight Custom Code
-		// Increase Short Duration Buff Durations based on Heroic Wisdom		
-		if (RuleR(Character, Pyrelight_hWIS_ShortBuff) > 0 && IsShortDurationBuff(spell_id) && !IsEffectInSpell(spell_id, 40) && (caster->IsClient() || caster->IsPetOwnerClient())) {
-			int effective_hWIS = 0;
-			effective_hWIS = caster->GetOwner() ? std::ceil(RuleR(Character, Pyrelight_HeroicPetMod) * caster->GetOwner()->GetHeroicWIS()) : caster->GetHeroicWIS();
-			if (effective_hWIS > 0) {
-				int res_add = round(res * (RuleR(Character, Pyrelight_hWIS_ShortBuff) * effective_hWIS / 100));
-				int increase = round(((static_cast<float>(res_add) / res)) * 100);
-
-				LogDebug("res_add: [{}], increase: [{}]", res_add, increase);
-
-				Client* msgTarget = (caster->GetOwner() && caster->GetOwner()->IsClient()) ? caster->GetOwner()->CastToClient() :caster->CastToClient();
-
-				if (res_add > 0 && msgTarget && msgTarget->IsClient()) {
-					msgTarget->LoadAccountFlags();			
-
-					if (effective_hWIS > 0) {
-						if (msgTarget->GetAccountFlag("filter_hWIS") != "off") {
-							if (caster->IsPet() && !caster->IsClient() && msgTarget->GetAccountFlag("filter_hPets") != "off") {
-								msgTarget->Message(Chat::Spells, "Your Heroic Wisdom has increased the duration of your pet's spell effect by %i%% (%i ticks)!", increase, res_add);
-							} else if (caster->IsClient()) {
-								msgTarget->Message(Chat::Spells, "Your Heroic Wisdom has increased the duration of your spell effect by %i%% (%i ticks)!", increase, res_add);
-							}
-						}
-					}
-
-				res += res_add;
-				}
-			}
-		}
-
-	}	
+	// Pyrelight Custom Code
+	// Increase Detrimental Durations based on Heroic Stats
+	if (RuleR(Custom, Pyrelight_Heroic_DurationBonus) > 0 && IsDetrimentalSpell(spell_id)) {
+		res += PL_GetHeroicDurationBonus(res);
+	}
 
 	// Pyrelight Custom Code
 	// Force maximum duration of beneficial 'long buffs'
-	if (IsBeneficialSpell(spell_id) && !IsShortDurationBuff(spell_id) && res > 300) {
+	if (IsBeneficialSpell(spell_id) && res > 300) {		
 		res = 300;
 	}
 
@@ -4244,8 +4197,11 @@ bool Mob::SpellOnTarget(
 					if (spell_effectiveness < (10 + focus_resist)) {
 						spell_effectiveness = (10 + focus_resist);
 
-						if (IsDamageSpell(spell_id) && GetClass() == MAGICIAN) {
-							spell_effectiveness += 25;
+						if (IsDamageSpell(spell_id)) {
+							if (GetClass() == MAGICIAN) {
+								spell_effectiveness += 25;
+							}
+							spell_effectiveness += min(20, static_cast<int>(floor(caster->GetHeroicCHA() * 0.05)));
 						}
 					}				
 					Message(Chat::SpellFailure, "Your spell was partially resisted!");
@@ -5300,8 +5256,8 @@ float Mob::ResistSpell(uint8 resist_type, uint16 spell_id, Mob *caster, bool use
 		LogDebug("resist_chance: [{}]", resist_chance);
 	}
 
-	//Average root duration agianst mobs with 0% chance to resist on LIVE is ~ 22 ticks (6% resist chance).
-	//Minimum resist chance should be caclulated factoring in the RuleI(Spells, RootBreakCheckChance)
+	// Average root duration agianst mobs with 0% chance to resist on LIVE is ~ 22 ticks (6% resist chance).
+	// Minimum resist chance should be caclulated factoring in the RuleI(Spells, RootBreakCheckChance)
 	if (IsRoot) {
 
 		float min_rootbreakchance = ((100.0f/static_cast<float>(RuleI(Spells, RootBreakCheckChance)))/22.0f * 100.0f)*2.0f;

@@ -449,10 +449,6 @@ RULE_BOOL(Spells, TargetsTargetRequiresCombatRange, true, "Disable to remove com
 RULE_BOOL(Spells, NPCBuffLevelRestrictions, false, "Impose BuffLevelRestrictions on NPCs if true")
 RULE_INT(Spells, ResurrectionEffectBlock, 2, "0 = allow overwrites/rule disabled. If set to 1 = Block all buffs that would overwrite Resurrection Effects. If set to 2 = Will not overwrite Resurrection Effects, instead moves new buff to an empty slot if available. Default is 2.")
 RULE_BOOL(Spells, WaterMatchRequiredForLoS, true, "Enable/Disable the requirement of both the attacker/victim being both in or out of water for spells LoS to pass.")
-RULE_BOOL(Spells, RuneUseHealAmt, false, "Applies Heal Amount stat to Rune-type effects.")
-RULE_BOOL(Spells, DispelBeneficialReduceDuration, true, "NPC-cast dispels reduce remaining duration on beneficial spells instead of removing them.")
-RULE_REAL(Spells, NonCasterSpellDmgPenalty, 1, "Factor to multiply non-caster spell damage by")
-RULE_INT(Spells,InnateCasterSpellDamage, 2, "Base factor for Innate Caster Spell Damage bonus. T1 is base, T2 is squared, T3 is cubed.")
 RULE_CATEGORY_END()
 
 RULE_CATEGORY(Combat)
@@ -878,13 +874,24 @@ RULE_BOOL(Items, DisableSpellFocusEffects, false, "Enable this to disable Spell 
 RULE_CATEGORY_END()
 
 RULE_CATEGORY(Custom)
-RULE_REAL(Custom, Pyrelight_Heroic_PetMod, 1.0, "Scalar to multiply custom Heroic Stat effects on Summoned pets by.")
-RULE_REAL(Custom, Pyrelight_Heroic_CharmPetMod, 1.0, "Scalar to multiply custom Heroic Stat effects on Charmed pets by.")
-RULE_REAL(Custom, Pyrelight_HeroicSTR_MeleeBonus, 2.0, "Percentage that each point of Heroic STR should add to melee & ranged damage.")
-RULE_REAL(Custom, Pyrelight_HeroicSTA_BaseReductionCap, 0.50, "Maximum percentage of total damage that can be absorbed of Heroic Stamina")
-RULE_INT(Custom, Pyrelight_HeroicSTA_DamageReductionValue, 5, "Number of damage for each point of Heroic STA to absorb, up to the cap.")
-RULE_REAL(Custom, Pyrelight_HeroicCHA_MeleeBonus, 0.5, "Percentage that each point of Heroic CHA should add to melee & ranged damage (For PAL,SHD,RNG,BST).")
-RULE_BOOL(Custom, TauntTogglesPetTanking, false, "Setting to true allows player to toggle the 'Allow Tank' (41) special attack flag on their pet by using the Taunt button in the pet window.")
+RULE_REAL(Custom, Pyrelight_Heroic_PetMod, 				 0.7, "Scalar to multiply the effects of Heroic Stats on summoned pets. A value of 1.0 means the summoned pets' Heroic Stats are used at full value for defensive and offensive calculations, just like their owner's.")
+RULE_REAL(Custom, Pyrelight_Heroic_CharmPetMod, 		 0.5, "Scalar to adjust the impact of Heroic Stats on charmed pets. A multiplier of 1.0 denotes that the Heroic Stats on charmed pets are fully effective for their combat abilities, mirroring the influence these stats have on their owners.")
+
+RULE_REAL(Custom, Pyrelight_Heroic_MeleeBonus, 			 2.0, "Defines the additional percentage of melee and ranged damage per point of Heroic STR. Default is 2%, meaning each Heroic STR point increases damage by 2%.")
+RULE_REAL(Custom, Pyrelight_Heroic_BaseReductionCap, 	 0.5, "Maximum percentage of total damage that can be absorbed of Heroic Stamina")
+RULE_REAL(Custom, Pyrelight_Heroic_DamageReductionValue, 5.0, "Number of damage for each point of Heroic STA to absorb, up to the cap.")
+RULE_REAL(Custom, Pyrelight_Heroic_EvasionReroll, 		 1.0, "Specifies the initial percentage chance that a character's Heroic Agility (AGI) adds to the probability of triggering a reroll during defensive checks. Each point of Heroic AGI increases the evasion reroll chance by this amount, which is consumed in portions during evasion attempts within a single defense action; each successful evasion reroll reduces the remaining Heroic AGI bonus by the value of the roll used for that reroll.")
+RULE_REAL(Custom, Pyrelight_Heroic_CriticalReroll, 		 2.0, "Grants additional reroll chances for critical hits based on a character's Heroic DEX. This rule applies to both clients and pets owned by clients, with pet chances modified by charm and general pet modifiers.")
+RULE_REAL(Custom, Pyrelight_Heroic_MultiAttack, 		 1.0, "Modifies chance for additional melee or ranged attacks per Heroic DEX point.")
+RULE_REAL(Custom, Pyrelight_Heroic_SpellDamage, 		 2.0, "Applied as a percentage of additional damage to non-melee attacks.")
+RULE_REAL(Custom, Pyrelight_Heroic_CritChance, 			 0.5, "Adds specified percentage chance to criticallt hit with Melee and Spell abilities for Melee (PAL,SHD,BST,RNG) and (CLR,DRU,SHM,MAG,ENC,NEC) respectively.")
+RULE_REAL(Custom, Pyrelight_Heroic_DSBonus, 			 1.0, "Increases the damage of DS spells that you cast by the specified percentage per primary mental Heroic stat")
+RULE_REAL(Custom, Pyrelight_Heroic_DurationBonus, 		 1.0, "Increase the duration of Detrimental spells based on per-class heroic mental statistic")
+RULE_REAL(Custom, Pyrelight_Heroic_ChannelReroll,		 2.0, "Percent per point chance to reroll channeling checks")
+RULE_REAL(Custom, Pyrelight_Heroic_RuneBonus, 			 2.0, "Percent per point to empower rune spells.")
+
+RULE_REAL(Custom, Pyrelight_Rune_Regen_Rate, 			 5.0, "Percent per tick to regenerate runes in combat.")
+RULE_BOOL(Custom, TauntTogglesPetTanking, 				 false, "Setting to true allows player to toggle the 'Allow Tank' (41) special attack flag on their pet by using the Taunt button in the pet window.")
 RULE_CATEGORY_END()
 
 #undef RULE_CATEGORY
