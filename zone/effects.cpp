@@ -436,42 +436,6 @@ int64 Mob::GetActSpellHealing(uint16 spell_id, int64 value, Mob* target, bool fr
 	if (RuleB(Spells, AllowExtraDmgSkill) && RuleB(Character, ItemExtraSkillDamageCalcAsPercent) && GetSkillDmgAmt(spells[spell_id].skill) > 0) {
 		value *= std::abs(GetSkillDmgAmt(spells[spell_id].skill) / 100);
 	}
-	
-	// Pyrelight Custom Code
-	if (RuleR(Character, Pyrelight_hWIS_HealPower) > 0) {
-		int effective_hWIS = 0;
-		effective_hWIS = GetOwner() ? round(RuleR(Character, Pyrelight_HeroicPetMod) * GetOwner()->GetHeroicWIS()) : GetHeroicWIS();
-
-		if (RuleB(Character, Pyrelight_hStat_Randomize)) {
-			effective_hWIS *= zone->random.Real(1 - RuleR(Character, Pyrelight_hStat_RandomizationFactor), 1 + RuleR(Character, Pyrelight_hStat_RandomizationFactor));
-		}
-
-		float bonus_ratio = effective_hWIS * RuleR(Character, Pyrelight_hWIS_HealPower) / 100;
-		int bonus_amount = round(value * bonus_ratio);
-
-		LogDebug("effective_hWIS: [{}], bonus_ratio: [{}], bonus_amount: [{}]", effective_hWIS, bonus_ratio, bonus_amount);
-
-		if (effective_hWIS > 0) {
-			if ((IsHealOverTimeSpell(spell_id) && from_buff_tic) || (!IsHealOverTimeSpell(spell_id))) {
-				if (IsClient()) {
-					CastToClient()->LoadAccountFlags(); 
-				} else if (GetOwner() && GetOwner()->IsClient()) {
-					GetOwner()->CastToClient()->LoadAccountFlags();
-				}
-
-				if (IsClient() && CastToClient()->GetAccountFlag("filter_hWIS") != "off") {
-					Message(Chat::Spells, "Your Heroic Wisdom has increased the power of your magic by %i (%i%%)!", abs(bonus_amount), static_cast<int>(bonus_ratio * 100));
-				} else if (GetOwner() && GetOwner()->IsClient() && 
-							GetOwner()->CastToClient()->GetAccountFlag("filter_hWIS") != "off" && 
-							GetOwner()->CastToClient()->GetAccountFlag("filter_hPets") != "off") {
-					GetOwner()->Message(Chat::Spells, "Your Heroic Wisdom has increased the power of your pet's magic by %i (%i%%)!", abs(bonus_amount), static_cast<int>(bonus_ratio * 100));
-				}
-			}
-		}
-
-		value += bonus_amount;
-	}
-	// End Pyrelight Custom Code
 
 	bool Critical = false;
 	int64 base_value = value;
