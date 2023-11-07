@@ -3206,7 +3206,7 @@ void Mob::DamageShield(Mob* attacker, bool spell_ds) {
 		return;
 
 	// Pyrelight Custom Code. Scale Damage shield based on DS caster's hWIS
-	if (RuleR(Character, Pyrelight_hWIS_BuffPower) > 0 && (IsClient() || IsPetOwnerClient())) {
+	if (RuleR(Character, Pyrelight_Heroic_DSBonus) > 0) {
 		int buff_count = GetMaxTotalSlots();
 
 		for (int buffs_i = 0; buffs_i < buff_count; ++buffs_i) {
@@ -3223,7 +3223,9 @@ void Mob::DamageShield(Mob* attacker, bool spell_ds) {
 				amount = spells[spellid].base_value[effIDX];			
 				if (amount != 0) {
 					Client* caster = entity_list.GetClientByName(buffs[buffs_i].caster_name);
-					DS += caster->PL_GetHeroicDSBonus(DS);	
+					if (caster) {
+						DS += caster->PL_GetHeroicDSBonus(DS);
+					}
 				}
 			}
 		}
