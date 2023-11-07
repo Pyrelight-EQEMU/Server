@@ -3950,7 +3950,7 @@ void Mob::BuffProcess()
 												break;
 											case SE_AbsorbMagicAtt:
 												if (buffs[buffs_i].magic_rune < max) {
-													buffs[buffs_i].magic_rune = min(max, buffs[buffs_i].magic_rune + regen_amount);
+													buffs[buffs_i].magic_rune = std::min(max, buffs[buffs_i].magic_rune + regen_amount);
 													regenerated = true;
 												}
 												break;
