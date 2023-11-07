@@ -108,21 +108,6 @@ void Client::CalcBonuses()
 
 	SetAttackTimer();
 
-	// Pyrelight Custom Code
-	// Give Casters an innate bonus to spell damage based on level.
-	if (RuleI(spells,InnateCasterSpellDamage) > 0 && IsClient() && IsCasterClass(GetClass())) {
-		int spelldmgbonus = 0;
-		if (GetLevel() <= 60) {
-			spelldmgbonus = (GetLevel() * RuleI(spells,InnateCasterSpellDamage));
-		} else if (GetLevel() <= 70) {
-			spelldmgbonus = 120 + ((GetLevel() - 60) * static_cast<int>(pow(RuleI(spells,InnateCasterSpellDamage), 2)));
-		} else if (GetLevel() <= 75) {
-			spelldmgbonus = 160 + ((GetLevel() - 70) * static_cast<int>(pow(RuleI(spells,InnateCasterSpellDamage), 3)));
-		}
-		itembonuses.SpellDmg += spelldmgbonus;
-		itembonuses.HealAmt += spelldmgbonus;
-	}
-
 	rooted = FindType(SE_Root);
 
 	XPRate = 100 + spellbonuses.XPRateMod;
