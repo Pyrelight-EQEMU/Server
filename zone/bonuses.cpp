@@ -6143,7 +6143,7 @@ double Mob::PL_GetHeroicSTAReductionCap() {
 	return reduction_cap;	
 }
 
-bool Mob::PL_DoHeroicAGIEvasionReroll(Mob *attacker, DamageHitInfo &hit, bool avoided = false) {
+bool Mob::PL_DoHeroicAGIEvasionReroll(Mob *attacker, DamageHitInfo &hit, bool avoided) {
     if ((IsClient() || (IsPet() && GetOwner() && IsPetOwnerClient()))) {
 		if (RuleR(Custom, Pyrelight_Heroic_EvasionReroll) > 0) {
 			Mob* source = IsClient() ? this : GetOwner();
@@ -6168,7 +6168,7 @@ bool Mob::PL_DoHeroicAGIEvasionReroll(Mob *attacker, DamageHitInfo &hit, bool av
     return avoided;
 }
 
-bool Mob::PL_DoHeroicDEXCriticalReroll(Mob *defender, DamageHitInfo &hit, ExtraAttackOptions *opts, int spell_crit_chance = 0, bool crit = false) {
+bool Mob::PL_DoHeroicDEXCriticalReroll(Mob *defender, DamageHitInfo &hit, ExtraAttackOptions *opts, int spell_crit_chance, bool crit) {
 	if ((IsClient() || (IsPet() && GetOwner() && IsPetOwnerClient()))) {
 		if (RuleR(Custom, Pyrelight_Heroic_CriticalReroll) > 0) {
 			Mob* source = IsClient() ? this : GetOwner();
@@ -6193,7 +6193,7 @@ bool Mob::PL_DoHeroicDEXCriticalReroll(Mob *defender, DamageHitInfo &hit, ExtraA
 	return crit;
 }
 
-bool Mob::PL_DoHeroicDEXMultiAttack(Mob* other, int Hand, bool bRiposte, bool IsStrikethrough, bool IsFromSpell, ExtraAttackOptions *opts = nullptr, bool successful_attack = true) {
+bool Mob::PL_DoHeroicDEXMultiAttack(Mob* other, int Hand, bool bRiposte, bool IsStrikethrough, bool IsFromSpell, ExtraAttackOptions *opts = nullptr, bool successful_attack) {
 	if ((IsClient() || (IsPet() && GetOwner() && IsPetOwnerClient()))) {
 		if (RuleR(Custom, Pyrelight_Heroic_MultiAttack) > 0) {
 			Mob* source = IsClient() ? this : GetOwner();
