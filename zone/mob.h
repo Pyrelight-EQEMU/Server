@@ -1459,6 +1459,7 @@ public:
 	int64  PL_GetHeroicDurationBonus(int64 base_value);
 	bool   PL_DoHeroicChannelReroll(float channelchance, bool channel = false);
 	double PL_GetHeroicSTAReductionCap();
+	int    PL_HeroicRuneBonus(int effect_value);
 
 protected:
 	void CommonDamage(Mob* other, int64 &damage, const uint16 spell_id, const EQ::skills::SkillType attack_skill, bool &avoidable, const int8 buffslot, const bool iBuffTic, eSpecialAttacks specal = eSpecialAttacks::None);
