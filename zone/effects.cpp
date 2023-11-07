@@ -106,7 +106,7 @@ int64 Mob::GetActSpellDamage(uint16 spell_id, int64 value, Mob* target) {
 
 		Critical = zone->random.Roll(chance);
 		// Pyrelight Custom Code
-		if (RuleR(Character, Pyrelight_HeroicDEX_CriticalReroll) > 0 && !Critical) {	
+		if (RuleR(Character, Pyrelight_Heroic_CriticalReroll) > 0 && !Critical) {	
 			Critical = PL_DoHeroicDEXCriticalReroll(nullptr, nullptr, nullptr, chance);
 		}
 
