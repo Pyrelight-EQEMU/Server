@@ -6343,7 +6343,7 @@ int64 Mob::PL_GetHeroicSpellDamage(int64 damage_value) {
 										  RuleR(Custom, Pyrelight_Heroic_PetMod);
 			}
 
-			damage_value = static_cast<int64>(ceil(damage_value * modifier)/100);
+			damage_value = static_cast<int64>(ceil(damage_value * modifier / 100));
 			LogDebug("damage_value:[{}], modifier:[{}]", damage_value, modifier);
 		}
     }
