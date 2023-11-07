@@ -5121,9 +5121,9 @@ bool Mob::TryCriticalHit(Mob *defender, DamageHitInfo &hit, ExtraAttackOptions *
 		// Pyrelight Custom Code
 		// Crit Chance based on HeroicCHA
 		if ((IsClient() || (IsPet() && GetOwner() && IsPetOwnerClient()))) {
-			if (RuleR(Custom,Pyrelight_HeroicCHA_CritChance) > 0) {
+			if (RuleR(Custom,Pyrelight_Heroic_CritChance) > 0) {
 				Mob* source = IsClient() ? this : GetOwner();
-				crit_chance += min(static_cast<int64>(floor(source->GetHeroicCHA() * RuleR(Custom,Pyrelight_HeroicCHA_CritChance) / 10)), 25);
+				crit_chance += min(static_cast<int64>(floor(source->GetHeroicCHA() * RuleR(Custom,Pyrelight_Heroic_CritChance) / 10)), 25);
 			}
 		}
 	}

@@ -97,9 +97,9 @@ int64 Mob::GetActSpellDamage(uint16 spell_id, int64 value, Mob* target) {
 			// Pyrelight Custom Code
 			// Crit Chance based on HeroicCHA
 			if ((IsClient() || (IsPet() && GetOwner() && IsPetOwnerClient()))) {
-				if (RuleR(Custom,Pyrelight_HeroicCHA_CritChance) > 0) {
+				if (RuleR(Custom,Pyrelight_Heroic_CritChance) > 0) {
 					Mob* source = IsClient() ? this : GetOwner();
-					chance += min(static_cast<int64>(floor(source->GetHeroicCHA() * RuleR(Custom,Pyrelight_HeroicCHA_CritChance) / 10)), 25);
+					chance += min(static_cast<int64>(floor(source->GetHeroicCHA() * RuleR(Custom,Pyrelight_Heroic_CritChance) / 10)), 25);
 				}
 			}
 		}
@@ -286,9 +286,9 @@ int64 Mob::GetActDoTDamage(uint16 spell_id, int64 value, Mob* target, bool from_
 	// Crit Chance based on HeroicCHA
 	if (GetClass() == DRUID || GetClass() == NECROMANCER || GetClass() == ENCHANTER || GetClass() == SHAMAN) {
 		if ((IsClient() || (IsPet() && GetOwner() && IsPetOwnerClient()))) {
-			if (RuleR(Custom,Pyrelight_HeroicCHA_CritChance) > 0) {
+			if (RuleR(Custom,Pyrelight_Heroic_CritChance) > 0) {
 				Mob* source = IsClient() ? this : GetOwner();
-				chance += min(static_cast<int64>(floor(source->GetHeroicCHA() * RuleR(Custom,Pyrelight_HeroicCHA_CritChance) / 10)), 25);
+				chance += min(static_cast<int64>(floor(source->GetHeroicCHA() * RuleR(Custom,Pyrelight_Heroic_CritChance) / 10)), 25);
 			}
 		}
 	}
@@ -502,9 +502,9 @@ int64 Mob::GetActSpellHealing(uint16 spell_id, int64 value, Mob* target, bool fr
 		// Pyrelight Custom Code
 		// Crit Chance based on HeroicCHA
 		if ((IsClient() || (IsPet() && GetOwner() && IsPetOwnerClient()))) {
-			if (RuleR(Custom,Pyrelight_HeroicCHA_CritChance) > 0) {
+			if (RuleR(Custom,Pyrelight_Heroic_CritChance) > 0) {
 				Mob* source = IsClient() ? this : GetOwner();
-				critical_chance += min(static_cast<int64>(floor(source->GetHeroicCHA() * RuleR(Custom,Pyrelight_HeroicCHA_CritChance) / 10)), 25);
+				critical_chance += min(static_cast<int64>(floor(source->GetHeroicCHA() * RuleR(Custom,Pyrelight_Heroic_CritChance) / 10)), 25);
 			}
 		}
 	}
