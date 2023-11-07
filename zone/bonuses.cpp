@@ -6090,7 +6090,7 @@ int64 Mob::PL_GetHeroicSTRDamage(int64 damage_value) {
 				damage = static_cast<int64>(modifier * damage_value);
 			}
 
-			LogDebug("Damage Increased by [{}]", damage);
+			LogDebug("Final Damage: [{}], Modifier: [{}], initial damage: [{}]", damage, modifier, damage_value);
 		}	
 
     }
