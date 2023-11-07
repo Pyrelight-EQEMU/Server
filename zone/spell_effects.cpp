@@ -3954,7 +3954,7 @@ void Mob::BuffProcess()
 													regenerated = true;
 												}
 												break;
-											case default:
+											default:
 										}
 
 										if (regenerated) {
