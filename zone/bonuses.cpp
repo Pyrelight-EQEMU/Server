@@ -6353,10 +6353,10 @@ int64 Mob::PL_GetHeroicDSBonus(int64 base_value) {
 	int64  damage = 0;
     if (IsClient() || (IsPet() && GetOwner() && IsPetOwnerClient())) {
         if (RuleR(Custom, Pyrelight_Heroic_DSBonus) > 0) {
-			Mob*   source 		= IsClient() ? this : GetOwner();
-			double modifier 	= 0;
-			int64  heroic_wis   = source->GetHeroicWIS();
-			int64  heroic_int   = source->GetHeroicINT();
+			Mob*   source 			= IsClient() ? this : GetOwner();
+			double modifier 		= 0;
+			int64  effective_hWIS   = (source->GetHeroicWIS() / 4);
+			int64  effective_hINT   = (source->GetHeroicINT() / 4);
 
 			switch(source->GetClass()) {
 				case PALADIN:
@@ -6365,13 +6365,13 @@ int64 Mob::PL_GetHeroicDSBonus(int64 base_value) {
 				case SHAMAN:
 				case DRUID:
 				case CLERIC:
-					modifier += RuleR(Custom, Pyrelight_Heroic_DSBonus) * heroic_wis;
+					modifier += RuleR(Custom, Pyrelight_Heroic_DSBonus) * effective_hWIS;
 					break;
 				case SHADOWKNIGHT:
 				case ENCHANTER:
 				case NECROMANCER:
 				case MAGICIAN:
-					modifier += RuleR(Custom, Pyrelight_Heroic_DSBonus) * heroic_int;
+					modifier += RuleR(Custom, Pyrelight_Heroic_DSBonus) * effective_hINT;
 					break;
 				default:
 					break;       
@@ -6387,6 +6387,17 @@ int64 Mob::PL_GetHeroicDSBonus(int64 base_value) {
     }
 
 	return damage;
+}
+
+double _DiminishEffectiveness(int value) {
+    const double k = 0.0045; // Constant that affects the rate of diminishing returns
+    double effectiveness = 1.0; // Start at 100% effectiveness
+
+    if (value > 100) {
+        effectiveness = 1.0 / (1.0 + k * (value - 100));
+    }
+
+    return effectiveness;
 }
 
 int64 Mob::PL_GetHeroicDurationBonus(int64 base_value) {
