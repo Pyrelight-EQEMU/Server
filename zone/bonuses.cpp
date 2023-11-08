@@ -6472,7 +6472,7 @@ int Mob::PL_HeroicRuneBonus(int effect_value) {
 										  RuleR(Custom, Pyrelight_Heroic_PetMod);
 			}
 
-			effect_value = static_cast<int>(floor(effect_value * modifier) / 100);
+			effect_value = static_cast<int>(floor(effect_value * modifier));
 		}
     }
 
