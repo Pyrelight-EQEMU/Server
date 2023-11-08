@@ -874,11 +874,16 @@ RULE_BOOL(Items, DisableSpellFocusEffects, false, "Enable this to disable Spell 
 RULE_CATEGORY_END()
 
 RULE_CATEGORY(Custom)
+// Works
 RULE_REAL(Custom, Pyrelight_Heroic_PetMod, 				 0.7, "Scalar to multiply the effects of Heroic Stats on summoned pets. A value of 1.0 means the summoned pets' Heroic Stats are used at full value for defensive and offensive calculations, just like their owner's.")
+// Works
 RULE_REAL(Custom, Pyrelight_Heroic_CharmPetMod, 		 0.5, "Scalar to adjust the impact of Heroic Stats on charmed pets. A multiplier of 1.0 denotes that the Heroic Stats on charmed pets are fully effective for their combat abilities, mirroring the influence these stats have on their owners.")
 
+// Works
 RULE_REAL(Custom, Pyrelight_Heroic_MeleeBonus, 			 2.0, "Defines the additional percentage of melee and ranged damage per point of Heroic STR. Default is 2%, meaning each Heroic STR point increases damage by 2%.")
+
 RULE_REAL(Custom, Pyrelight_Heroic_BaseReductionCap, 	 0.5, "Maximum percentage of total damage that can be absorbed of Heroic Stamina")
+// Works
 RULE_REAL(Custom, Pyrelight_Heroic_DamageReductionValue, 5.0, "Number of damage for each point of Heroic STA to absorb, up to the cap.")
 RULE_REAL(Custom, Pyrelight_Heroic_EvasionReroll, 		 1.0, "Specifies the initial percentage chance that a character's Heroic Agility (AGI) adds to the probability of triggering a reroll during defensive checks. Each point of Heroic AGI increases the evasion reroll chance by this amount, which is consumed in portions during evasion attempts within a single defense action; each successful evasion reroll reduces the remaining Heroic AGI bonus by the value of the roll used for that reroll.")
 RULE_REAL(Custom, Pyrelight_Heroic_CriticalReroll, 		 2.0, "Grants additional reroll chances for critical hits based on a character's Heroic DEX. This rule applies to both clients and pets owned by clients, with pet chances modified by charm and general pet modifiers.")

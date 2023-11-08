@@ -4692,29 +4692,62 @@ void Mob::_TryCombatProcs(const EQ::ItemInstance* weapon_g, Mob *on, uint16 hand
 		LogCombat("Procs cancelled, Divine Aura is in effect");
 		return;
 	}
+	if (!(IsClient())) {
+		// NPC Procs, same as vanilla code
+		//used for special case when checking last ammo item on projectile hit.
+		if (!weapon_g && weapon_data) {
+			TryWeaponProc(nullptr, weapon_data, on, hand);
+			TrySpellProc(nullptr, weapon_data, on, hand);
+			return;
+		}
 
-	//used for special case when checking last ammo item on projectile hit.
-	if (!weapon_g && weapon_data) {
-		TryWeaponProc(nullptr, weapon_data, on, hand);
-		TrySpellProc(nullptr, weapon_data, on, hand);
-		return;
+		if (!weapon_g) {
+			TrySpellProc(nullptr, (const EQ::ItemData*)nullptr, on);
+			return;
+		}
+
+		if (!weapon_g->IsClassCommon()) {
+			TrySpellProc(nullptr, (const EQ::ItemData*)nullptr, on);
+			return;
+		}
+
+		// Innate + aug procs from weapons
+		// TODO: powersource procs -- powersource procs are on invis augs, so shouldn't need anything extra
+		TryWeaponProc(weapon_g, weapon_g->GetItem(), on, hand);
+		// Procs from Buffs and AA both melee and range
+		TrySpellProc(weapon_g, weapon_g->GetItem(), on, hand);
+	} else {
+		// Power Source proc
+		EQ::ItemInstance* power_source 	= CastToClient()->GetInv().GetItem(EQ::invslot::slotPowerSource);
+		TryWeaponProc(power_source, power_source->GetItem(), on, EQ::invslot::slotPowerSource);
+
+		EQ::ItemInstance* equipmentSlots[] = { primary, secondary, ranged };
+		EQ::invslot::Slot slotIDs[] = { EQ::invslot::slotPrimary, EQ::invslot::slotSecondary, EQ::invslot::slotRange };
+
+		// Assuming hand is either primary (0), secondary (1), or ranged (2)
+		int handIndex = (hand == EQ::invslot::slotPrimary) ? 0 :
+						(hand == EQ::invslot::slotSecondary) ? 1 : 2;
+
+		// Always proc the weapon in the hand slot first
+		if (equipmentSlots[handIndex]) {
+			TryWeaponProc(equipmentSlots[handIndex], equipmentSlots[handIndex]->GetItem(), on, slotIDs[handIndex]);
+		}
+
+		// Determine the index for the next slot to proc
+		int nextSlotIndex = (handIndex + (zone->random.Roll(50) ? 1 : 2)) % 3;
+		// Make sure not to proc the same slot as hand again
+		if (nextSlotIndex == handIndex) {
+			nextSlotIndex = (nextSlotIndex + 1) % 3;
+		}
+
+		// Proc the weapon in the next slot
+		if (equipmentSlots[nextSlotIndex]) {
+			TryWeaponProc(equipmentSlots[nextSlotIndex], equipmentSlots[nextSlotIndex]->GetItem(), on, slotIDs[nextSlotIndex]);
+		}
+
+		// Procs from Buffs and AA both melee and range
+		TrySpellProc(weapon_g, weapon_g->GetItem(), on, hand);
 	}
-
-	if (!weapon_g) {
-		TrySpellProc(nullptr, (const EQ::ItemData*)nullptr, on);
-		return;
-	}
-
-	if (!weapon_g->IsClassCommon()) {
-		TrySpellProc(nullptr, (const EQ::ItemData*)nullptr, on);
-		return;
-	}
-
-	// Innate + aug procs from weapons
-	// TODO: powersource procs -- powersource procs are on invis augs, so shouldn't need anything extra
-	TryWeaponProc(weapon_g, weapon_g->GetItem(), on, hand);
-	// Procs from Buffs and AA both melee and range
-	TrySpellProc(weapon_g, weapon_g->GetItem(), on, hand);
 
 	return;
 }
