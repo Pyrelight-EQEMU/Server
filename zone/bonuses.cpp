@@ -6163,9 +6163,9 @@ bool Mob::PL_DoHeroicAGIEvasionReroll(Mob *attacker, DamageHitInfo &hit, bool av
 				int roll = zone->random.Roll0(100);
 				int inner_effective_hAGI = effective_hAGI + (source->GetHeroicCHA() * RuleR(Custom, Pyrelight_Heroic_EvasionReroll));
 				if (roll <= inner_effective_hAGI) {
-					avoided = AvoidDamage(attacker, hit);
-					effective_hAGI -= roll;
+					avoided = AvoidDamage(attacker, hit);					
 				}
+				effective_hAGI -= roll;
 			}
 		}        
     }
@@ -6188,9 +6188,9 @@ bool Mob::PL_DoHeroicDEXMeleeCriticalReroll(Mob *defender, DamageHitInfo &hit, E
 				int roll = zone->random.Roll0(100);
 				int inner_effective_hDEX = effective_hDEX;
 				if (roll <= inner_effective_hDEX) {
-					crit = TryCriticalHit(defender, hit, opts);
-					effective_hDEX -= roll;
+					crit = TryCriticalHit(defender, hit, opts);					
 				}
+				effective_hDEX -= roll;
 			}
 		}
 	}
@@ -6213,9 +6213,9 @@ bool Mob::PL_DoHeroicDEXSpellCriticalReroll(Mob *defender, int spell_critical, b
 				int roll = zone->random.Roll0(100);
 				int inner_effective_hDEX = effective_hDEX;
 				if (roll <= inner_effective_hDEX) {
-					crit = zone->random.Roll(spell_critical);
-					effective_hDEX -= roll;
+					crit = zone->random.Roll(spell_critical);					
 				}
+				effective_hDEX -= roll;
 			}
 		}
 	}
@@ -6382,7 +6382,7 @@ int64 Mob::PL_GetHeroicDSBonus(int64 base_value) {
 										  RuleR(Custom, Pyrelight_Heroic_PetMod);
 			}
 
-			damage = static_cast<int64>(floor(base_value * modifier));
+			damage = static_cast<int64>(floor(base_value * modifier / 100));
 		}
     }
 
@@ -6439,9 +6439,9 @@ bool Mob::PL_DoHeroicChannelReroll(float channelchance, bool channel) {
 				int roll = zone->random.Roll0(100);
 				int inner_effective_hSTA = effective_hSTA;
 				if (roll <= inner_effective_hSTA) {
-					channel = zone->random.Roll(channelchance);
-					effective_hSTA -= roll;
+					channel = zone->random.Roll(channelchance);					
 				}
+				effective_hSTA -= roll;
 			}
 		}
 	}
