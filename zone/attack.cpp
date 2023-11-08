@@ -4717,48 +4717,48 @@ void Mob::_TryCombatProcs(const EQ::ItemInstance* weapon_g, Mob *on, uint16 hand
 		// Procs from Buffs and AA both melee and range
 		TrySpellProc(weapon_g, weapon_g->GetItem(), on, hand);
 	} else {
-		// Power Source proc
-		EQ::ItemInstance* power_source  = CastToClient()->GetInv().GetItem(EQ::invslot::slotPowerSource);
-		EQ::ItemInstance* primary       = CastToClient()->GetInv().GetItem(EQ::invslot::slotPrimary);
-		EQ::ItemInstance* secondary     = CastToClient()->GetInv().GetItem(EQ::invslot::slotSecondary);
-		EQ::ItemInstance* ranged        = CastToClient()->GetInv().GetItem(EQ::invslot::slotRange);
-
-		EQ::ItemInstance* equipmentSlots[] = { primary, secondary, ranged };
-		EQ::invslot::InventorySlots slotIDs[] = { EQ::invslot::slotPrimary, EQ::invslot::slotSecondary, EQ::invslot::slotRange };
-
-		// Determine the hand index based on the hand slot
-		int handIndex = -1; // Initialize to an invalid index
-		if (hand == EQ::invslot::slotPrimary) {
-			handIndex = 0;
-		} else if (hand == EQ::invslot::slotSecondary) {
-			handIndex = 1;
-		} else if (hand == EQ::invslot::slotRange) {
-			handIndex = 2;
+		// Phase 1: Proc the power source
+		EQ::ItemInstance* power_source = CastToClient()->GetInv().GetItem(EQ::invslot::slotPowerSource);
+		if (power_source) {
+			TryWeaponProc(power_source, power_source->GetItem(), on, EQ::invslot::slotPowerSource);
 		}
 
-		// If handIndex is valid and the hand slot is not empty, proc it
-		if (handIndex >= 0 && handIndex < 3 && equipmentSlots[handIndex]) {
-			TryWeaponProc(equipmentSlots[handIndex], equipmentSlots[handIndex]->GetItem(), on, slotIDs[handIndex]);
+		// Phase 2: Proc the hand passed in
+		EQ::ItemInstance* handItem = CastToClient()->GetInv().GetItem(hand);
+		if (handItem) {
+			TryWeaponProc(handItem, handItem->GetItem(), on, hand);
 		}
 
-		// Determine the index for the next slot to proc
-		// We only consider the next slot if the handIndex was valid
-		if (handIndex >= 0) {
-			int nextSlotIndex = (handIndex + (zone->random.Roll(50) ? 1 : 2)) % 3;
+		// Phase 3: Attempt to proc the 'extra'
+		EQ::invslot::InventorySlots slotIDs[] = {EQ::invslot::slotPrimary, EQ::invslot::slotSecondary, EQ::invslot::slotRange};
+		int numSlots = sizeof(slotIDs) / sizeof(slotIDs[0]);
+		int handIndex = -1;
 
-			// Make sure not to proc the same slot as hand again
-			if (nextSlotIndex == handIndex) {
-				nextSlotIndex = (nextSlotIndex + 1) % 3;
-			}
-
-			// Proc the weapon in the next slot if it's not empty
-			if (equipmentSlots[nextSlotIndex]) {
-				TryWeaponProc(equipmentSlots[nextSlotIndex], equipmentSlots[nextSlotIndex]->GetItem(), on, slotIDs[nextSlotIndex]);
+		for (int i = 0; i < numSlots; ++i) {
+			if (slotIDs[i] == hand) {
+				handIndex = i;
+				break;
 			}
 		}
 
-		// Procs from Buffs and AA both melee and range
-		// This needs to be called with the correct item instance and data, ensure weapon_g is defined and valid
+		if (handIndex != -1) {
+			int extraSlotIndex = (handIndex + (zone->random.Roll(50) ? 1 : 2)) % numSlots;
+			if (extraSlotIndex == handIndex) { // Ensure it's not the same as hand
+				extraSlotIndex = (extraSlotIndex + 1) % numSlots;
+			}
+
+			EQ::ItemInstance* extraSlotItem = CastToClient()->GetInv().GetItem(slotIDs[extraSlotIndex]);
+			if (!extraSlotItem && numSlots > 2) { // If chosen slot is empty and there's another slot to check
+				extraSlotIndex = (extraSlotIndex + 1) % numSlots; // Use the other slot
+				extraSlotItem = CastToClient()->GetInv().GetItem(slotIDs[extraSlotIndex]);
+			}
+
+			if (extraSlotItem) {
+				TryWeaponProc(extraSlotItem, extraSlotItem->GetItem(), on, slotIDs[extraSlotIndex]);
+			}
+		}
+
+		// Phase 4: Do spell proc
 		if (weapon_g) {
 			TrySpellProc(weapon_g, weapon_g->GetItem(), on, hand);
 		}
