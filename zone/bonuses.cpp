@@ -6342,7 +6342,7 @@ int64 Mob::PL_GetHeroicSpellDamage(int64 damage_value) {
 			}
 
 			damage_value = static_cast<int64>(ceil(damage_value * modifier / 100));
-			LogDebug("damage_value:[{}], modifier:[{}]", damage_value, modifier);
+			LogDebug("damage_value:[{}], modifier:[{}]", damage_value, (modifier / 100));
 		}
     }
 
