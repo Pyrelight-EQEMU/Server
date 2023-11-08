@@ -4717,6 +4717,7 @@ void Mob::_TryCombatProcs(const EQ::ItemInstance* weapon_g, Mob *on, uint16 hand
 		// Procs from Buffs and AA both melee and range
 		TrySpellProc(weapon_g, weapon_g->GetItem(), on, hand);
 	} else {
+
 		// Phase 1: Proc the power source
 		EQ::ItemInstance* power_source = CastToClient()->GetInv().GetItem(EQ::invslot::slotPowerSource);
 		if (power_source) {
@@ -4729,32 +4730,14 @@ void Mob::_TryCombatProcs(const EQ::ItemInstance* weapon_g, Mob *on, uint16 hand
 			TryWeaponProc(handItem, handItem->GetItem(), on, hand);
 		}
 
-		// Phase 3: Attempt to proc the 'extra'
+		// Phase 3: Attempt to proc the 'extras'
 		EQ::invslot::InventorySlots slotIDs[] = {EQ::invslot::slotPrimary, EQ::invslot::slotSecondary, EQ::invslot::slotRange};
 		int numSlots = sizeof(slotIDs) / sizeof(slotIDs[0]);
-		int handIndex = -1;
 
-		for (int i = 0; i < numSlots; ++i) {
-			if (slotIDs[i] == hand) {
-				handIndex = i;
-				break;
-			}
-		}
-
-		if (handIndex != -1) {
-			int extraSlotIndex = (handIndex + (zone->random.Roll(50) ? 1 : 2)) % numSlots;
-			if (extraSlotIndex == handIndex) { // Ensure it's not the same as hand
-				extraSlotIndex = (extraSlotIndex + 1) % numSlots;
-			}
-
-			EQ::ItemInstance* extraSlotItem = CastToClient()->GetInv().GetItem(slotIDs[extraSlotIndex]);
-			if (!extraSlotItem && numSlots > 2) { // If chosen slot is empty and there's another slot to check
-				extraSlotIndex = (extraSlotIndex + 1) % numSlots; // Use the other slot
-				extraSlotItem = CastToClient()->GetInv().GetItem(slotIDs[extraSlotIndex]);
-			}
-
-			if (extraSlotItem) {
-				TryWeaponProc(extraSlotItem, extraSlotItem->GetItem(), on, slotIDs[extraSlotIndex]);
+		for (EQ::invslot::InventorySlots slot : slotIDs) {
+			EQ::ItemInstance* item = CastToClient()->GetInv().GetItem(slot);
+			if (item && zone->random.Roll(50) && !(slot == hand)) {
+				TryWeaponProc(item, item->GetItem(), on, hand);
 			}
 		}
 
@@ -4762,6 +4745,7 @@ void Mob::_TryCombatProcs(const EQ::ItemInstance* weapon_g, Mob *on, uint16 hand
 		if (weapon_g) {
 			TrySpellProc(weapon_g, weapon_g->GetItem(), on, hand);
 		}
+		
 	}
 
 	return;

@@ -1657,7 +1657,9 @@ void Mob::CastedSpellFinished(uint16 spell_id, uint32 target_id, CastingSlot slo
 		TrySympatheticProc(target, spell_id);
 
 		if (IsClient() && !IsMesmerizeSpell(spell_id)) {
-			TryCombatProcs(nullptr, target, EQ::invslot::slotPrimary);
+			if (GetClass() != PALADIN && GetClass() != SHADOWKNIGHT || GetClass() != RANGER || GetClass() != BEASTLORD) {
+				TryCombatProcs(nullptr, target, EQ::invslot::slotPrimary);
+			}
 		}
 	}
 
