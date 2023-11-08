@@ -4724,7 +4724,7 @@ void Mob::_TryCombatProcs(const EQ::ItemInstance* weapon_g, Mob *on, uint16 hand
 		EQ::ItemInstance* ranged  		= CastToClient()->GetInv().GetItem(EQ::invslot::slotRange);
 
 		EQ::ItemInstance* equipmentSlots[] = { primary, secondary, ranged };
-		EQ::invslot slotIDs[] = { EQ::invslot::slotPrimary, EQ::invslot::slotSecondary, EQ::invslot::slotRange };
+		EQ::invslot::InventorySlots slotIDs[] = { EQ::invslot::slotPrimary, EQ::invslot::slotSecondary, EQ::invslot::slotRange };
 
 		// Assuming hand is either primary (0), secondary (1), or ranged (2)
 		int handIndex = (hand == EQ::invslot::slotPrimary) ? 0 :
