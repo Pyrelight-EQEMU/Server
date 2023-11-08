@@ -3938,7 +3938,7 @@ void Mob::BuffProcess()
 									int64 max = CalcSpellEffectValue(buffs[buffs_i].spellid, GetSpellEffectIndex(buffs[buffs_i].spellid, effect), caster->GetLevel(), 10, caster);
 									max += caster->PL_HeroicRuneBonus(max);							
 
-									uint32 regen_amount = client->CanFastRegen() ? max : static_cast<int64>(ceil(max * RuleR(Custom, Pyrelight_Rune_Regen_Rate) / 100));
+									int64 regen_amount = client->CanFastRegen() ? max : static_cast<int64>(ceil(max * RuleR(Custom, Pyrelight_Rune_Regen_Rate) / 100));
 
 									if (regen_amount > 0) {
 										uint32 *rune = nullptr; // Pointer to the appropriate rune
