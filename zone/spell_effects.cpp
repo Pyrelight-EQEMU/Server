@@ -3941,7 +3941,7 @@ void Mob::BuffProcess()
 									int64 regen_amount = client->CanFastRegen() ? max : static_cast<int64>(ceil(max * RuleR(Custom, Pyrelight_Rune_Regen_Rate) / 100));
 
 									if (regen_amount > 0) {
-										int64 *rune = nullptr; // Pointer to the appropriate rune
+										uint32 *rune = nullptr; // Pointer to the appropriate rune
 
 										switch (effect) {
 											case SE_Rune:
