@@ -6433,7 +6433,7 @@ int64 Mob::PL_GetHeroicDurationBonus(int64 base_value) {
 										  RuleR(Custom, Pyrelight_Heroic_PetMod);
 			}
 
-			value = static_cast<int64>(floor(base_value * modifier));
+			value = static_cast<int64>(floor(base_value * modifier) / 100);
 		}
     }
 
@@ -6472,7 +6472,7 @@ int Mob::PL_HeroicRuneBonus(int effect_value) {
 										  RuleR(Custom, Pyrelight_Heroic_PetMod);
 			}
 
-			effect_value = static_cast<int>(floor(effect_value * modifier));
+			effect_value = static_cast<int>(floor(effect_value * modifier) / 100);
 		}
     }
 
