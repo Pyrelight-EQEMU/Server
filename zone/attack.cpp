@@ -4719,7 +4719,9 @@ void Mob::_TryCombatProcs(const EQ::ItemInstance* weapon_g, Mob *on, uint16 hand
 	} else {
 		// Power Source proc
 		EQ::ItemInstance* power_source 	= CastToClient()->GetInv().GetItem(EQ::invslot::slotPowerSource);
-		TryWeaponProc(power_source, power_source->GetItem(), on, EQ::invslot::slotPowerSource);
+		EQ::ItemInstance* primary 		= CastToClient()->GetInv().GetItem(EQ::invslot::slotPrimary);
+		EQ::ItemInstance* secondary 	= CastToClient()->GetInv().GetItem(EQ::invslot::slotSecondary);
+		EQ::ItemInstance* ranged  		= CastToClient()->GetInv().GetItem(EQ::invslot::slotRange);
 
 		EQ::ItemInstance* equipmentSlots[] = { primary, secondary, ranged };
 		EQ::invslot::Slot slotIDs[] = { EQ::invslot::slotPrimary, EQ::invslot::slotSecondary, EQ::invslot::slotRange };
