@@ -205,7 +205,7 @@ int64 Mob::GetActSpellDamage(uint16 spell_id, int64 value, Mob* target) {
 	}
 
 	// Pyrelight Custom Code
-	if (RuleR(Custom, Pyrelight_Heroic_SpellDamage) > 0) {
+	if (RuleR(Custom, Pyrelight_Heroic_SpellDamage) > 0 && IsDetrimentalSpell(spell_id)) {
 		if (IsFromTriggeredSpell(casting_spell_slot, casting_spell_inventory_slot) && GetClass() != CLERIC) {
 			value += (PL_GetHeroicSpellDamage(value) / 2);
 		} else {
@@ -366,7 +366,7 @@ int64 Mob::GetActDoTDamage(uint16 spell_id, int64 value, Mob* target, bool from_
 	value -= extra_dmg;
 
 	// Pyrelight Custom Code
-	if (RuleR(Custom, Pyrelight_Heroic_SpellDamage) > 0) {
+	if (RuleR(Custom, Pyrelight_Heroic_SpellDamage) > 0 && IsDetrimentalSpell(spell_id)) {
 		value += PL_GetHeroicSpellDamage(value);
 	}
 

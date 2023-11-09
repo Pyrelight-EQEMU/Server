@@ -3958,10 +3958,7 @@ void Mob::BuffProcess()
 											uint32 original_value = *rune; // Store original value
 											*rune = std::min(max, original_value + regen_amount); // Update the rune value
 											regen_amount = *rune - original_value; // Set regen_amount to the actual amount regenerated
-											regenerated = true; // Set flag to true as regeneration occurred
-
-											buffs[buffs_i].hit_number = *rune;
-											
+											regenerated = true; // Set flag to true as regeneration occurred											
 										}
 
 										if (regenerated) {
