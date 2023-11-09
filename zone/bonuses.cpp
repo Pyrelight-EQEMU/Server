@@ -6434,6 +6434,7 @@ int64 Mob::PL_GetHeroicDurationBonus(int64 base_value) {
 			}
 
 			value = static_cast<int64>(floor(base_value * modifier) / 100);
+			LogDebug("Duration: [{}], modifier: [{}], base_value: [{}]", value, modifier, base_value);
 		}
     }
 
