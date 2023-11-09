@@ -6416,13 +6416,13 @@ int64 Mob::PL_GetHeroicDurationBonus(int64 base_value) {
 				case SHAMAN:
 				case DRUID:
 				case CLERIC:
-					modifier += RuleR(Custom, Pyrelight_Heroic_DSBonus) * heroic_int;
+					modifier += RuleR(Custom, Pyrelight_Heroic_DurationBonus) * heroic_int;
 					break;
 				case SHADOWKNIGHT:
 				case ENCHANTER:
 				case NECROMANCER:
 				case MAGICIAN:
-					modifier += RuleR(Custom, Pyrelight_Heroic_DSBonus) * heroic_wis;
+					modifier += RuleR(Custom, Pyrelight_Heroic_DurationBonus) * heroic_wis;
 					break;
 				default:
 					break;       

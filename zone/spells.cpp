@@ -2846,12 +2846,6 @@ int Mob::CalcBuffDuration(Mob *caster, Mob *target, uint16 spell_id, int32 caste
 	}
 
 	// Pyrelight Custom Code
-	// Increase Detrimental Durations based on Heroic Stats
-	if (RuleR(Custom, Pyrelight_Heroic_DurationBonus) > 0 && IsDetrimentalSpell(spell_id)) {
-		res += PL_GetHeroicDurationBonus(res);
-	}
-
-	// Pyrelight Custom Code
 	// Force maximum duration of beneficial 'long buffs'
 	if (IsBeneficialSpell(spell_id) && res > 300) {		
 		res = 300;
@@ -3358,8 +3352,15 @@ int Mob::AddBuff(Mob *caster, uint16 spell_id, int duration, int32 level_overrid
 	if (duration == 0) {
 		duration = CalcBuffDuration(caster, this, spell_id, -1, true);
 
-		if (caster && duration > 0) // negatives are perma buffs
+		if (caster && duration > 0) { // negatives are perma buffs
 			duration = caster->GetActSpellDuration(spell_id, duration);
+		}
+
+		// Pyrelight Custom Code
+		// Increase Detrimental Durations based on Heroic Stats
+		if (RuleR(Custom, Pyrelight_Heroic_DurationBonus) > 0 && IsDetrimentalSpell(spell_id)) {
+			duration += PL_GetHeroicDurationBonus(duration);
+		}
 	}
 
 	if (duration == 0) {
