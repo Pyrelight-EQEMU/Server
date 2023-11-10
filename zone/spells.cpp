@@ -3366,7 +3366,7 @@ int Mob::AddBuff(Mob *caster, uint16 spell_id, int duration, int32 level_overrid
 	// Increase Detrimental Durations based on Heroic Stats
 	LogDebug("WTF: [{}]", RuleR(Custom, Pyrelight_Heroic_DurationBonus));
 	if (RuleR(Custom, Pyrelight_Heroic_DurationBonus) > 0) {
-		LogDebug("WTF?");
+		LogDebug("WTF2? : {{}}", PL_GetHeroicDurationBonus(duration));
 		duration += PL_GetHeroicDurationBonus(duration);
 	}
 
