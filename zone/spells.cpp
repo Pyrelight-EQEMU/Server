@@ -3355,17 +3355,17 @@ int Mob::AddBuff(Mob *caster, uint16 spell_id, int duration, int32 level_overrid
 		if (caster && duration > 0) { // negatives are perma buffs
 			duration = caster->GetActSpellDuration(spell_id, duration);
 		}
-
-		// Pyrelight Custom Code
-		// Increase Detrimental Durations based on Heroic Stats
-		if (RuleR(Custom, Pyrelight_Heroic_DurationBonus) > 0 && IsDetrimentalSpell(spell_id)) {
-			duration += PL_GetHeroicDurationBonus(duration);
-		}
 	}
 
 	if (duration == 0) {
 		LogSpells("Buff [{}] failed to add because its duration came back as 0", spell_id);
 		return -2;	// no duration? this isn't a buff
+	}
+
+	// Pyrelight Custom Code
+	// Increase Detrimental Durations based on Heroic Stats
+	if (RuleR(Custom, Pyrelight_Heroic_DurationBonus) > 0 && IsDetrimentalSpell(spell_id)) {
+		duration += PL_GetHeroicDurationBonus(duration);
 	}
 
 	LogSpells("Trying to add buff [{}] cast by [{}] (cast level [{}]) with duration [{}]",

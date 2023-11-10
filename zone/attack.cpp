@@ -4718,19 +4718,16 @@ void Mob::_TryCombatProcs(const EQ::ItemInstance* weapon_g, Mob *on, uint16 hand
 		TrySpellProc(weapon_g, weapon_g->GetItem(), on, hand);
 	} else {
 
-		// Phase 1: Proc the power source
 		EQ::ItemInstance* power_source = CastToClient()->GetInv().GetItem(EQ::invslot::slotPowerSource);
 		if (power_source) {
 			TryWeaponProc(power_source, power_source->GetItem(), on, EQ::invslot::slotPowerSource);
 		}
 
-		// Phase 2: Proc the hand passed in
 		EQ::ItemInstance* handItem = CastToClient()->GetInv().GetItem(hand);
 		if (handItem) {
 			TryWeaponProc(handItem, handItem->GetItem(), on, hand);
 		}
 
-		// Phase 3: Attempt to proc the 'extras'
 		EQ::invslot::InventorySlots slotIDs[] = {EQ::invslot::slotPrimary, EQ::invslot::slotSecondary, EQ::invslot::slotRange};
 		int numSlots = sizeof(slotIDs) / sizeof(slotIDs[0]);
 
@@ -4741,7 +4738,6 @@ void Mob::_TryCombatProcs(const EQ::ItemInstance* weapon_g, Mob *on, uint16 hand
 			}
 		}
 
-		// Phase 4: Do spell proc
 		if (weapon_g) {
 			TrySpellProc(weapon_g, weapon_g->GetItem(), on, hand);
 		}
@@ -4841,8 +4837,6 @@ void Mob::TryWeaponProc(const EQ::ItemInstance *inst, const EQ::ItemData *weapon
 			}
 		}
 	}
-	// TODO: Powersource procs -- powersource procs are from augs so shouldn't need anything extra
-
 	return;
 }
 
