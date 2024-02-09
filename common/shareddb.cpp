@@ -216,10 +216,12 @@ bool SharedDatabase::VerifyInventory(uint32 account_id, int16 slot_id, const EQ:
 	                                       "WHERE acctid = %d AND slotid = %d",
 	                                       account_id, slot_id);
     auto results = QueryDatabase(query);
-	if (!results.Success()) {
+	if (!results.Success()) {		
 		//returning true is less harmful in the face of a query error
 		return true;
 	}
+
+	LogDebug("SlotID: [{}], Account [{}], RowCount: [{}]", slot_id, account_id, results.RowCount());
 
 	if (results.RowCount() == 0)
         return false;

@@ -2044,6 +2044,8 @@ bool Client::SwapItem(MoveItem_Struct* move_in) {
 
 		return false;
 	}
+
+	/*
 	//verify shared bank transactions in the database
 	if (src_inst &&
 		(src_slot_id >= EQ::invslot::SHARED_BANK_BEGIN) && (src_slot_id <= EQ::invslot::SHARED_BANK_END) ||
@@ -2083,6 +2085,7 @@ bool Client::SwapItem(MoveItem_Struct* move_in) {
 			}
 		}
 	}
+	*/
 
 
 	// Check for No Drop Hacks
