@@ -872,7 +872,7 @@ bool SharedDatabase::GetInventory(uint32 account_id, char *name, EQ::InventoryPr
 		}
 
 		int16 put_slot_id;
-		if (slot_id >= 80000 && slot_id <= 89999)
+		if (slot_id >= 14000 && slot_id <= 14999)
 			put_slot_id = inv->PushCursor(*inst);
 		else
 			put_slot_id = inv->PutItem(slot_id, *inst);
